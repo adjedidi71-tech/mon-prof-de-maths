@@ -121,6 +121,39 @@ if st.button("Tester la sauvegarde Supabase"):
         st.error("La sauvegarde a échoué.")
         st.write("Type d'erreur :", type(e).__name__)
 
+def recuperer_serie(code):
+    resultat = (
+        supabase_privee.table("series_exercices")
+        .select("code_reprise, exercices, reponses, progression")
+        .eq("code_reprise", code.strip().upper())
+        .limit(1)
+        .execute()
+    )
+    if resultat.data:
+        return resultat.data[0]
+    return None
+
+
+st.subheader("Reprendre mes exercices")
+
+code_saisi = st.text_input(
+    "Saisis ton code de reprise"
+)
+
+if st.button("Retrouver mes exercices"):
+    if not code_saisi.strip():
+        st.warning("Saisis d'abord ton code.")
+    else:
+        try:
+            serie = recuperer_serie(code_saisi)
+            if serie:
+                st.success("Série retrouvée !")
+                st.json(serie["exercices"])
+            else:
+                st.warning("Aucune série trouvée avec ce code.")
+        except Exception:
+            st.error("Impossible de récupérer la série.")
+
 if st.button("Générer mes exercices"):
     st.success("Configuration enregistrée !")
     st.write("Chapitre :", chapitre)
