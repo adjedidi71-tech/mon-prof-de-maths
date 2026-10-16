@@ -1,5 +1,16 @@
 import streamlit as st
 
+from supabase import create_client
+
+@st.cache_resource
+def connexion_supabase():
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_KEY"]
+    )
+
+supabase = connexion_supabase()
+  
 st.set_page_config(
     page_title="Mon Prof de Maths",
     page_icon="📐"
