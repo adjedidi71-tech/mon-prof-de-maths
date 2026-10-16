@@ -105,6 +105,21 @@ def sauvegarder_serie(exercices):
             continue
     raise RuntimeError("Impossible de sauvegarder la série.")
 
+if st.button("Tester la sauvegarde Supabase"):
+    exercices_test = [
+        {
+            "enonce": "Calculer 3 × 4",
+            "correction": "12"
+        }
+    ]
+
+    try:
+        code = sauvegarder_serie(exercices_test)
+        st.success("Sauvegarde réussie !")
+        st.code(code)
+    except Exception:
+        st.error("La sauvegarde a échoué.")
+
 if st.button("Générer mes exercices"):
     st.success("Configuration enregistrée !")
     st.write("Chapitre :", chapitre)
