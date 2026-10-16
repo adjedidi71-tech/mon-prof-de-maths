@@ -121,22 +121,6 @@ if st.button("Tester la sauvegarde Supabase"):
         st.error("La sauvegarde a échoué.")
         st.write("Type d'erreur :", type(e).__name__)
 
-    exercices_test = [
-        {
-            "enonce": "Calculer 3 × 4",
-            "correction": "12"
-        }
-    ]
-
-    try:
-        code = sauvegarder_serie(exercices_test)
-        st.success("Sauvegarde réussie !")
-        st.code(code)
-
-    except Exception as e:
-        st.error("La sauvegarde a échoué.")
-        st.write("Diagnostic :", str(e))
-
 if st.button("Générer mes exercices"):
     st.success("Configuration enregistrée !")
     st.write("Chapitre :", chapitre)
