@@ -148,7 +148,13 @@ if st.button("Retrouver mes exercices"):
             serie = recuperer_serie(code_saisi)
             if serie:
                 st.success("Série retrouvée !")
-                st.json(serie["exercices"])
+                for numero, exercice in enumerate(serie["exercices"], 1):
+                    st.subheader(f"Exercice {numero}")
+                    st.write(exercice["enonce"])
+
+                    with st.expander("Voir la correction"):
+                        st.write(exercice["correction"])
+
             else:
                 st.warning("Aucune série trouvée avec ce code.")
         except Exception:
