@@ -90,21 +90,21 @@ def generer_code_reprise():
         secrets.choice(caracteres) for _ in range(16)
     )
     
-def sauvegarder_serie(exercices):
-    for _ in range(5):
-        code = generer_code_reprise()
-        try:
-            supabase_privee.table("series_exercices").insert({
-                "code_reprise": code,
-                "exercices": exercices,
-                "reponses": {},
-                "progression": 0
-            }).execute()
-            return code
-        except Exception:
-            continue
-    raise RuntimeError("Impossible de sauvegarder la série.")
 
+def sauvegarder_serie(exercices):
+    code = generer_code_reprise()
+    try:
+        supabase_privee.table("series_exercices").insert({
+            "code_reprise": code,
+            "exercices": exercices,
+            "reponses": {},
+            "progression": 0
+        }).execute()
+        return code
+    except Exception as e:
+        raise RuntimeError(
+            f"Erreur Supabase : {type(e).__name__}"
+        ) from None
 
 if st.button("Tester la sauvegarde Supabase"):
     exercices_test = [
