@@ -81,6 +81,30 @@ nombre = st.selectbox(
     index=2
 )
 
+import secrets
+import string
+
+def generer_code_reprise():
+    caracteres = string.ascii_uppercase + string.digits
+    return "".join(
+        secrets.choice(caracteres) for _ in range(16)
+    )
+    
+def sauvegarder_serie(exercices):
+    for _ in range(5):
+        code = generer_code_reprise()
+        try:
+            supabase_privee.table("series_exercices").insert({
+                "code_reprise": code,
+                "exercices": exercices,
+                "reponses": {},
+                "progression": 0
+            }).execute()
+            return code
+        except Exception:
+            continue
+    raise RuntimeError("Impossible de sauvegarder la série.")
+
 if st.button("Générer mes exercices"):
     st.success("Configuration enregistrée !")
     st.write("Chapitre :", chapitre)
