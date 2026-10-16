@@ -117,8 +117,9 @@ if st.button("Tester la sauvegarde Supabase"):
         code = sauvegarder_serie(exercices_test)
         st.success("Sauvegarde réussie !")
         st.code(code)
-    except Exception:
-        st.error("La sauvegarde a échoué.")
+    except Exception as e:
+    st.error("La sauvegarde a échoué.")
+    st.write("Type d'erreur :", type(e).__name__)
 
 if st.button("Générer mes exercices"):
     st.success("Configuration enregistrée !")
