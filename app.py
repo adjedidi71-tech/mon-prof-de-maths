@@ -11,6 +11,15 @@ def connexion_supabase():
 
 supabase = connexion_supabase()
   
+@st.cache_resource
+def connexion_supabase_privee():
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_SECRET_KEY"]
+    )
+
+supabase_privee = connexion_supabase_privee()
+
 st.set_page_config(
     page_title="Mon Prof de Maths",
     page_icon="📐"
