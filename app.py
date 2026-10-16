@@ -90,7 +90,6 @@ def generer_code_reprise():
         secrets.choice(caracteres) for _ in range(16)
     )
     
-
 def sauvegarder_serie(exercices):
     code = generer_code_reprise()
     try:
@@ -136,7 +135,7 @@ if st.button("Tester la sauvegarde Supabase"):
 
     except Exception as e:
         st.error("La sauvegarde a échoué.")
-        st.write("Type d'erreur :", type(e).__name__)
+        st.write("Diagnostic :", str(e))
 
 if st.button("Générer mes exercices"):
     st.success("Configuration enregistrée !")
