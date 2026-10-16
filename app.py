@@ -160,12 +160,46 @@ if st.button("Retrouver mes exercices"):
         except Exception:
             st.error("Impossible de récupérer la série.")
 
+import random
+
+def generer_exercice(chapitre, partie, difficulte, type_exercice):
+    maximum = 5 * difficulte + 5
+    a = random.randint(2, maximum)
+    b = random.randint(2, maximum)
+
+    if chapitre == "Fractions":
+        enonce = f"Calcule et simplifie : {a}/{b} + {a}/{b}"
+        correction = f"{a}/{b} + {a}/{b} = {2*a}/{b}. Simplifie si possible."
+
+    elif chapitre == "Nombres relatifs":
+        enonce = f"Calcule : (-{a}) + {b}"
+        correction = f"(-{a}) + {b} = {b-a}"
+
+    else:
+        enonce = f"Calcule la valeur de {a} × x + {b} pour x = 3."
+        correction = f"{a} × 3 + {b} = {3*a+b}"
+
+    return {"enonce": enonce, "correction": correction}
+
+
 if st.button("Générer mes exercices"):
-    st.success("Configuration enregistrée !")
-    st.write("Chapitre :", chapitre)
-    st.write("Sous-chapitre :", partie)
-    st.write("Type :", type_exercice)
-    st.write("Difficulté :", difficulte, "/5")
-    st.write("Nombre d'exercices :", nombre)
-    st.info("La génération IA sera ajoutée ensuite.")
+    exercices = [
+        generer_exercice(chapitre, partie, difficulte, type_exercice)
+        for _ in range(nombre)
+    ]
+
+    try:
+        code = sauvegarder_serie(exercices)
+        st.success("Exercices générés et sauvegardés !")
+        st.write("Ton code de reprise :")
+        st.code(code)
+    except Exception:
+        st.error("Sauvegarde impossible.")
+
+    for numero, exercice in enumerate(exercices, start=1):
+        st.subheader(f"Exercice {numero}")
+        st.write(exercice["enonce"])
+
+        with st.expander("Voir la correction"):
+            st.write(exercice["correction"])
 
