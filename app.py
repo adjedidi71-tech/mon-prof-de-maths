@@ -1,7 +1,5 @@
 import streamlit as st
 
-from auth_persistante import obtenir_cookies
-
 from supabase import create_client
 
 @st.cache_resource
@@ -26,8 +24,6 @@ st.set_page_config(
     page_title="Mon Prof de Maths",
     page_icon="📐"
 )
-
-cookies = obtenir_cookies()
 
 st.title("Mon Prof de Maths")
 st.write("Prépare tes exercices de mathématiques !")
