@@ -370,9 +370,11 @@ if st.session_state.exercices_actuels:
         if exercice.get("reponse_attendue") is not None:
             reponse_eleve = st.number_input(
                 "Ta réponse :",
-                value=None,
-                step=1,
-                key=f"reponse_{numero}"
+                 value=None,
+                 step=1,
+                 key=f"reponse_{numero}",
+                 on_change=enregistrer_reponse_auto,
+                 args=(numero,)
             )
 
             if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
