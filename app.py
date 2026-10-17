@@ -326,6 +326,24 @@ if st.button("Générer mes exercices"):
         st.subheader(f"Exercice {numero}")
         st.write(exercice["enonce"])
 
-        with st.expander("Voir la correction"):
-            st.write(exercice["correction"])
+        
+    if exercice.get("reponse_attendue") is not None:
+        reponse_eleve = st.number_input(
+            "Ta réponse :",
+            value=None,
+            step=1,
+            key=f"reponse_{numero}"
+        )
+
+        if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
+            if reponse_eleve is None:
+                st.warning("Saisis d'abord ta réponse.")
+            elif reponse_eleve == exercice["reponse_attendue"]:
+                st.success("Bonne réponse !")
+            else:
+                st.error("Réponse incorrecte. Essaie encore.")
+
+    with st.expander("Voir la correction"):
+        st.write(exercice["correction"])
+
 
