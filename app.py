@@ -214,7 +214,6 @@ def recuperer_serie(code):
         return resultat.data[0]
     return None
 
-
 st.subheader("Reprendre mes exercices")
 
 code_saisi = st.text_input(
@@ -286,6 +285,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 
         elif partie == "Priorités opératoires":
             enonce = f"Calcule : {a} + {b} × 3"
+            reponse_attendue = a + b * 3
             correction = (
                 f"On effectue d'abord la multiplication : "
                 f"{b} × 3 = {b * 3}. "
