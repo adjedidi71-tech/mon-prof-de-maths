@@ -307,12 +307,15 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
     "correction": correction,
     "reponse_attendue": reponse_attendue if chapitre == "1. Opérations" and partie == "Priorités opératoires" else None
 }
-
+    
+if "exercices_actuels" not in st.session_state:
+    st.session_state.exercices_actuels = []
 if st.button("Générer mes exercices"):
     exercices = [
         generer_exercice(chapitre, partie, difficulte, type_exercice)
         for _ in range(nombre)
     ]
+    st.session_state.exercices_actuels = exercices
 
     try:
         code = sauvegarder_serie(exercices)
@@ -322,11 +325,11 @@ if st.button("Générer mes exercices"):
     except Exception:
         st.error("Sauvegarde impossible.")
 
-    for numero, exercice in enumerate(exercices, start=1):
-        st.subheader(f"Exercice {numero}")
-        st.write(exercice["enonce"])
+    if st.session_state.exercices_actuels:
+        for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
+            st.subheader(f"Exercice {numero}")
+            st.write(exercice["enonce"])
 
-        
     if exercice.get("reponse_attendue") is not None:
         reponse_eleve = st.number_input(
             "Ta réponse :",
@@ -343,7 +346,7 @@ if st.button("Générer mes exercices"):
             else:
                 st.error("Réponse incorrecte. Essaie encore.")
 
-    with st.expander("Voir la correction"):
-        st.write(exercice["correction"])
+        with st.expander("Voir la correction"):
+             st.write(exercice["correction"])
 
 
