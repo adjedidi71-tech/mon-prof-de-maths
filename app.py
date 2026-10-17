@@ -76,6 +76,35 @@ with st.expander("Créer mon compte"):
                     "ou réessaie plus tard."
                 )
 
+with st.expander("Se connecter"):
+    with st.form("formulaire_connexion"):
+        email_connexion = st.text_input("Ton adresse e-mail")
+        mdp_connexion = st.text_input(
+            "Ton mot de passe",
+            type="password"
+        )
+        connexion = st.form_submit_button("Se connecter")
+
+    if connexion:
+        try:
+            client_connexion = create_client(
+                st.secrets["SUPABASE_URL"],
+                st.secrets["SUPABASE_KEY"]
+            )
+            resultat = client_connexion.auth.sign_in_with_password({
+                "email": email_connexion.strip(),
+                "password": mdp_connexion
+            })
+
+            if resultat.user and resultat.session:
+                st.session_state["eleve_id"] = resultat.user.id
+                st.session_state["session_eleve"] = resultat.session
+                st.success("Connexion réussie !")
+            else:
+                st.error("Connexion impossible.")
+        except Exception:
+            st.error("E-mail ou mot de passe incorrect.")
+
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
