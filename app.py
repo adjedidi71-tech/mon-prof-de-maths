@@ -227,9 +227,9 @@ if st.button("Retrouver mes exercices"):
         try:
             serie = recuperer_serie(code_saisi)
             
-                if serie:
-                    st.session_state.exercices_actuels = serie["exercices"]
-                    st.session_state.code_actuel = code_saisi.strip()
+            if serie:
+                st.session_state.exercices_actuels = serie["exercices"]
+                st.session_state.code_actuel = code_saisi.strip()
 
                     reponses = serie.get("reponses") or {}
 
