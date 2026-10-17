@@ -29,20 +29,101 @@ st.title("Mon Prof de Maths")
 st.write("Prépare tes exercices de mathématiques !")
 
 chapitres = {
-    "Expressions littérales": [
-        "Écrire une expression",
-        "Calculer une expression",
-        "Réduire une expression",
-        "Distributivité",
-        "Tester une égalité"
+    "1. Opérations": [
+        "Addition, soustraction et multiplication de nombres décimaux",
+        "Division euclidienne, multiples et diviseurs",
+        "Division par un nombre décimal",
+        "Priorités opératoires",
+        "Distributivité simple"
     ],
-    "Fractions": [
-        "Comparer des fractions",
-        "Additionner et soustraire"
+    "2. Nombres relatifs": [
+        "Les nombres relatifs",
+        "Repérage sur une droite graduée",
+        "Repérage dans un repère orthogonal du plan",
+        "Comparaison de nombres relatifs"
     ],
-    "Nombres relatifs": [
-        "Comparer les nombres",
-        "Additionner et soustraire"
+    "3. Addition, soustraction de nombres relatifs": [
+        "Simplification d'écriture",
+        "Addition de nombres relatifs",
+        "Soustraction de deux nombres relatifs",
+        "Enchaînement d'additions et de soustractions"
+    ],
+    "4. Nombres rationnels": [
+        "Comparaison de fractions",
+        "Comparaison de proportions",
+        "Addition et soustraction de fractions",
+        "Résolution de problèmes avec des fractions"
+    ],
+    "5. Puissances": [
+        "Carré et cube d'un nombre",
+        "Carrés des entiers de 0 à 12",
+        "Enchaînement de calculs avec des puissances simples",
+        "Valeur d'une expression contenant une puissance"
+    ],
+    "6. Calcul littéral": [
+        "Produire des expressions littérales",
+        "Calcul de la valeur d'une expression littérale",
+        "Reconnaître une somme, un produit",
+        "Utilisation de la distributivité simple",
+        "Test d'une égalité",
+        "Résolution d'une équation du 1er degré"
+    ],
+    "7. Représentation de l'espace": [
+        "Perspective cavalière et patrons",
+        "Unités de volume et de capacité",
+        "Volumes du pavé droit et du prisme droit",
+        "Aire du disque",
+        "Volume du cylindre de révolution"
+    ],
+    "8. Transformations, angles": [
+        "Demi-tour ou symétrie centrale",
+        "Propriétés conservées",
+        "Centre de symétrie, axe de symétrie",
+        "Symétrie centrale et figures usuelles",
+        "Nouveau vocabulaire des angles",
+        "Angles alternes-internes et angles correspondants"
+    ],
+    "9. Triangles": [
+        "Somme des angles d'un triangle",
+        "Construction de triangles",
+        "Médiatrices d'un triangle (rappels)",
+        "Médiatrices d'un triangle rectangle",
+        "Aire d'un triangle et hauteurs",
+        "Médianes d'un triangle"
+    ],
+    "10. Parallélogrammes": [
+        "Connaître le parallélogramme",
+        "Reconnaître un parallélogramme",
+        "Rectangles",
+        "Losanges",
+        "Carrés",
+        "Aire du parallélogramme",
+        "Unités de longueur et d'aire"
+    ],
+    "11. Statistiques": [
+        "Effectif, fréquence",
+        "Moyenne d'une série de données",
+        "Représentations graphiques"
+    ],
+    "12. Probabilités": [
+        "Expérience aléatoire et événement",
+        "Attribuer une probabilité à une issue",
+        "Déterminer la probabilité d'un événement"
+    ],
+    "13. Proportionnalité": [
+        "Pourcentages",
+        "Proportions",
+        "Situations relevant ou non de la proportionnalité",
+        "Linéarité et retour à l'unité",
+        "Coefficient de proportionnalité",
+        "Caractérisation graphique d'une situation de proportionnalité",
+        "Produire une formule"
+    ],
+    "14. Fonctions": [
+        "Expression d'une grandeur en fonction d'une autre",
+        "Interprétation d'un tableau de valeurs ou d'un graphique",
+        "Passage d'une formule à un tableau",
+        "Produire une formule"
     ]
 }
 
