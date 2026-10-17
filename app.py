@@ -119,8 +119,8 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("session_eleve", None)
         st.session_state.pop("exercices_actuels", None)
         st.session_state.pop("code_actuel", None)
-        st.session_state.pop("email_connexion", None)
-        st.session_state.pop("mdp_connexion", None)
+        st.session_state["email_connexion"] = ""
+        st.session_state["mdp_connexion"] = ""
         st.rerun()
 
 chapitres = {
