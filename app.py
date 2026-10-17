@@ -105,6 +105,16 @@ with st.expander("Se connecter"):
         except Exception:
             st.error("E-mail ou mot de passe incorrect.")
 
+if st.session_state.get("eleve_id"):
+    st.write("Tu es connecté à ton compte élève.")
+
+    if st.button("Se déconnecter"):
+        st.session_state.pop("eleve_id", None)
+        st.session_state.pop("session_eleve", None)
+        st.session_state.pop("exercices_actuels", None)
+        st.session_state.pop("code_actuel", None)
+        st.rerun()
+
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
