@@ -233,7 +233,7 @@ if st.button("Retrouver mes exercices"):
 
                 reponses = serie.get("reponses") or {}
 
-                 for numero, exercice in enumerate(
+                for numero, exercice in enumerate(
                      serie["exercices"], start=1
                     ):
                      cle = f"reponse_{numero}"
@@ -244,7 +244,7 @@ if st.button("Retrouver mes exercices"):
                      elif cle in st.session_state:
                           del st.session_state[cle]
 
-                 st.success("Série retrouvée !")
+                st.success("Série retrouvée !")
 
             else:
                 st.warning("Aucune série trouvée avec ce code.")
