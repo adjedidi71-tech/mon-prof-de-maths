@@ -297,7 +297,6 @@ if st.session_state.get("eleve_id"):
 
                         st.success("Série chargée !")
 
-
                         for numero, exercice in enumerate(
                             serie["exercices"], start=1
                         ):
