@@ -80,11 +80,16 @@ with st.expander("Créer mon compte"):
 
 with st.expander("Se connecter"):
     with st.form("formulaire_connexion"):
-        email_connexion = st.text_input("Ton adresse e-mail")
+        email_connexion = st.text_input(
+            "Ton adresse e-mail",
+            key="email_connexion"
+        )
+
         mdp_connexion = st.text_input(
             "Ton mot de passe",
-            type="password"
-        )
+            type="password",
+            key="mdp_connexion"
+       )
         connexion = st.form_submit_button("Se connecter")
 
     if connexion:
@@ -114,6 +119,8 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("session_eleve", None)
         st.session_state.pop("exercices_actuels", None)
         st.session_state.pop("code_actuel", None)
+        st.session_state.pop("email_connexion", None)
+        st.session_state.pop("mdp_connexion", None)
         st.rerun()
 
 chapitres = {
