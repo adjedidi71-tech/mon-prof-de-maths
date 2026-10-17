@@ -2,14 +2,16 @@ import streamlit as st
 
 from supabase import create_client
 
-@st.cache_resource
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
         st.secrets["SUPABASE_KEY"]
     )
 
-supabase = connexion_supabase()
+if "supabase_client" not in st.session_state:
+    st.session_state["supabase_client"] = connexion_supabase()
+
+supabase = st.session_state["supabase_client"]
   
 @st.cache_resource
 def connexion_supabase_privee():
