@@ -252,6 +252,7 @@ def sauvegarder_serie(exercices):
     code = generer_code_reprise()
     try:
         supabase_privee.table("series_exercices").insert({
+            "eleve_id": st.session_state.get("eleve_id"),
             "code_reprise": code,
             "exercices": exercices,
             "reponses": {},
