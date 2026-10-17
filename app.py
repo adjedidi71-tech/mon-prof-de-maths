@@ -256,6 +256,44 @@ def recuperer_exercices_eleve(eleve_id):
 
     return resultat.data or []
 
+if st.session_state.get("eleve_id"):
+    st.subheader("Mes exercices sauvegardés")
+
+    if st.button("Retrouver mes séries"):
+        try:
+            series = recuperer_exercices_eleve(
+                st.session_state["eleve_id"]
+            )
+
+            if not series:
+                st.info("Aucune série enregistrée pour ce compte.")
+            else:
+                st.success(f"{len(series)} série(s) retrouvée(s).")
+
+                for serie in series:
+                    with st.expander(
+                        f"Série n° {serie['id']}"
+                    ):
+                        for numero, exercice in enumerate(
+                            serie["exercices"], start=1
+                        ):
+                            st.write(
+                                f"**Exercice {numero} :** "
+                                f"{exercice['enonce']}"
+                            )
+
+                            reponse = (
+                                serie.get("reponses") or {}
+                            ).get(str(numero))
+
+                            if reponse is not None:
+                                st.write(
+                                    f"Ta réponse enregistrée : {reponse}"
+                                )
+
+        except Exception:
+            st.error("Impossible de récupérer tes exercices.")
+
 def generer_code_reprise():
     caracteres = string.ascii_uppercase + string.digits
     return "".join(
