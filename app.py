@@ -28,6 +28,54 @@ st.set_page_config(
 st.title("Mon Prof de Maths")
 st.write("Prépare tes exercices de mathématiques !")
 
+st.subheader("Mon compte élève")
+
+with st.expander("Créer mon compte"):
+    with st.form("formulaire_inscription"):
+        email = st.text_input("Adresse e-mail")
+        pseudo = st.text_input("Pseudonyme (facultatif)")
+        mot_de_passe = st.text_input(
+            "Mot de passe",
+            type="password"
+        )
+        confirmer_mdp = st.text_input(
+            "Confirmer le mot de passe",
+            type="password"
+        )
+        inscrire = st.form_submit_button("Créer mon compte")
+
+    if inscrire:
+        if not email.strip() or not mot_de_passe:
+            st.warning("Renseigne ton e-mail et ton mot de passe.")
+        elif mot_de_passe != confirmer_mdp:
+            st.error("Les mots de passe sont différents.")
+        elif len(mot_de_passe) < 8:
+            st.warning("Utilise au moins 8 caractères.")
+        else:
+            try:
+                client_inscription = create_client(
+                    st.secrets["SUPABASE_URL"],
+                    st.secrets["SUPABASE_KEY"]
+                )
+                client_inscription.auth.sign_up({
+                    "email": email.strip(),
+                    "password": mot_de_passe,
+                    "options": {
+                        "data": {
+                            "pseudo": pseudo.strip()
+                        }
+                    }
+                })
+                st.success(
+                    "Inscription demandée. Consulte ton e-mail "
+                    "pour confirmer ton compte."
+                )
+            except Exception:
+                st.error(
+                    "Inscription impossible. Vérifie les informations "
+                    "ou réessaie plus tard."
+                )
+
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
