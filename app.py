@@ -89,10 +89,7 @@ with st.expander("Se connecter"):
 
     if connexion:
         try:
-            client_connexion = create_client(
-                st.secrets["SUPABASE_URL"],
-                st.secrets["SUPABASE_KEY"]
-            )
+            client_connexion = supabase
             resultat = client_connexion.auth.sign_in_with_password({
                 "email": email_connexion.strip(),
                 "password": mdp_connexion
