@@ -277,7 +277,7 @@ if st.session_state.get("eleve_id"):
                         
                        if st.button(
                          "Reprendre cette série",
-                          key=f"reprendre_serie_{serie['id']}"
+                         key=f"reprendre_serie_{serie['id']}"
                       ):
                          st.session_state.exercices_actuels = serie["exercices"]
                          st.session_state.code_actuel = serie["code_reprise"]
@@ -295,7 +295,7 @@ if st.session_state.get("eleve_id"):
                              elif cle in st.session_state:
                                  del st.session_state[cle]
 
-                        st.success("Série chargée !")
+                         st.success("Série chargée !")
 
                         for numero, exercice in enumerate(
                             serie["exercices"], start=1
