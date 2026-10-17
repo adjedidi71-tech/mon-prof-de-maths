@@ -107,7 +107,9 @@ with st.expander("Se connecter"):
 if st.session_state.get("eleve_id"):
     st.write("Tu es connecté à ton compte élève.")
 
-    if st.button("Se déconnecter"):
+    if st.button("Se déconnecter"):        
+        supabase.auth.sign_out()
+        st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
         st.session_state.pop("session_eleve", None)
         st.session_state.pop("exercices_actuels", None)
