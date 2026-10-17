@@ -274,6 +274,30 @@ if st.session_state.get("eleve_id"):
                     with st.expander(
                         f"Série n° {serie['id']}"
                     ):
+                        
+                       if st.button(
+                         "Reprendre cette série",
+                          key=f"reprendre_serie_{serie['id']}"
+                      ):
+                         st.session_state.exercices_actuels = serie["exercices"]
+                         st.session_state.code_actuel = serie["code_reprise"]
+
+                         reponses = serie.get("reponses") or {}
+
+                         for numero, exercice in enumerate(
+                             serie["exercices"], start=1
+                         ):
+                             cle = f"reponse_{numero}"
+                             valeur = reponses.get(str(numero))
+
+                             if valeur is not None:
+                                st.session_state[cle] = valeur
+                             elif cle in st.session_state:
+                                 del st.session_state[cle]
+
+                        st.success("Série chargée !")
+
+
                         for numero, exercice in enumerate(
                             serie["exercices"], start=1
                         ):
