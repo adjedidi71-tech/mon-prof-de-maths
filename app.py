@@ -236,6 +236,21 @@ if st.button("Retrouver mes exercices"):
         except Exception:
             st.error("Impossible de récupérer la série.")
 
+def sauvegarder_reponse(code, numero, reponse):
+    serie = recuperer_serie(code)
+
+    if not serie:
+        return False
+
+    reponses = serie.get("reponses") or {}
+    reponses[str(numero)] = reponse
+
+    supabase_privee.table("series_exercices").update({
+        "reponses": reponses
+    }).eq("code_reprise", code).execute()
+
+    return True
+
 import random
 
 def generer_exercice(chapitre, partie, difficulte, type_exercice):
