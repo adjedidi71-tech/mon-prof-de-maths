@@ -325,28 +325,29 @@ if st.button("Générer mes exercices"):
     except Exception:
         st.error("Sauvegarde impossible.")
 
-    if st.session_state.exercices_actuels:
-        for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
-            st.subheader(f"Exercice {numero}")
-            st.write(exercice["enonce"])
+if st.session_state.exercices_actuels:
+    for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
+        st.subheader(f"Exercice {numero}")
+        st.write(exercice["enonce"])
 
-    if exercice.get("reponse_attendue") is not None:
-        reponse_eleve = st.number_input(
-            "Ta réponse :",
-            value=None,
-            step=1,
-            key=f"reponse_{numero}"
-        )
+        if exercice.get("reponse_attendue") is not None:
+            reponse_eleve = st.number_input(
+                "Ta réponse :",
+                value=None,
+                step=1,
+                key=f"reponse_{numero}"
+            )
 
-        if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
-            if reponse_eleve is None:
-                st.warning("Saisis d'abord ta réponse.")
-            elif reponse_eleve == exercice["reponse_attendue"]:
-                st.success("Bonne réponse !")
-            else:
-                st.error("Réponse incorrecte. Essaie encore.")
+            if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
+                if reponse_eleve is None:
+                    st.warning("Saisis d'abord ta réponse.")
+                elif reponse_eleve == exercice["reponse_attendue"]:
+                    st.success("Bonne réponse !")
+                else:
+                    st.error("Réponse incorrecte. Essaie encore.")
 
         with st.expander("Voir la correction"):
-             st.write(exercice["correction"])
+            st.write(exercice["correction"])
+
 
 
