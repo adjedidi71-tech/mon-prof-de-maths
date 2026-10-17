@@ -302,7 +302,11 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
         enonce = f"Calcule la valeur de {a} × x + {b} pour x = 3."
         correction = f"{a} × 3 + {b} = {3 * a + b}"
 
-    return {"enonce": enonce, "correction": correction}
+    return {
+    "enonce": enonce,
+    "correction": correction,
+    "reponse_attendue": reponse_attendue if chapitre == "1. Opérations" and partie == "Priorités opératoires" else None
+}
 
 if st.button("Générer mes exercices"):
     exercices = [
