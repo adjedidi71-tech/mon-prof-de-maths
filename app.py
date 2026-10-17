@@ -242,6 +242,20 @@ nombre = st.selectbox(
 import secrets
 import string
 
+def recuperer_exercices_eleve(eleve_id):
+    if not eleve_id:
+        return []
+
+    resultat = (
+        supabase_privee.table("series_exercices")
+        .select("id, code_reprise, exercices, reponses, progression")
+        .eq("eleve_id", eleve_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return resultat.data or []
+
 def generer_code_reprise():
     caracteres = string.ascii_uppercase + string.digits
     return "".join(
