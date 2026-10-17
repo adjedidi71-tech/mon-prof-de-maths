@@ -227,9 +227,9 @@ if st.button("Retrouver mes exercices"):
         try:
             serie = recuperer_serie(code_saisi)
             if serie:
-                    st.session_state.exercices_actuels = serie["exercices"]
-                    st.success("Série retrouvée !")
-
+                st.session_state.exercices_actuels = serie["exercices"]
+                st.session_state.code_actuel = code_saisi.strip()
+                st.success("Série retrouvée !")
 
             else:
                 st.warning("Aucune série trouvée avec ce code.")
@@ -315,6 +315,7 @@ if st.button("Générer mes exercices"):
 
     try:
         code = sauvegarder_serie(exercices)
+        st.session_state.code_actuel = code
         st.success("Exercices générés et sauvegardés !")
         st.write("Ton code de reprise :")
         st.code(code)
