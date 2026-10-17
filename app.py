@@ -252,6 +252,7 @@ if st.button("Retrouver mes exercices"):
             st.error("Impossible de récupérer la série.")
 
 def sauvegarder_reponse(code, numero, reponse):
+    
 def enregistrer_reponse_auto(numero):
     code = st.session_state.get("code_actuel")
     reponse = st.session_state.get(f"reponse_{numero}")
