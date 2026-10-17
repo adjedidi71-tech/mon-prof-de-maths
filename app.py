@@ -226,10 +226,25 @@ if st.button("Retrouver mes exercices"):
     else:
         try:
             serie = recuperer_serie(code_saisi)
-            if serie:
-                st.session_state.exercices_actuels = serie["exercices"]
-                st.session_state.code_actuel = code_saisi.strip()
-                st.success("Série retrouvée !")
+            
+                if serie:
+                    st.session_state.exercices_actuels = serie["exercices"]
+                    st.session_state.code_actuel = code_saisi.strip()
+
+                    reponses = serie.get("reponses") or {}
+
+                    for numero, exercice in enumerate(
+                        serie["exercices"], start=1
+                    ):
+                        cle = f"reponse_{numero}"
+                        valeur = reponses.get(str(numero))
+
+                        if valeur is not None:
+                            st.session_state[cle] = valeur
+                        elif cle in st.session_state:
+                            del st.session_state[cle]
+
+                    st.success("Série retrouvée !")
 
             else:
                 st.warning("Aucune série trouvée avec ce code.")
