@@ -351,6 +351,17 @@ if st.session_state.exercices_actuels:
             )
 
             if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
+                if reponse_eleve is not None:
+                    try:
+                        sauvegarder_reponse(
+                            st.session_state.code_actuel,
+                            numero,
+                            reponse_eleve
+                        )
+                        st.info("Réponse enregistrée.")
+                    except Exception:
+                        st.error("Impossible d'enregistrer la réponse.")
+
                 if reponse_eleve is None:
                     st.warning("Saisis d'abord ta réponse.")
                 elif reponse_eleve == exercice["reponse_attendue"]:
