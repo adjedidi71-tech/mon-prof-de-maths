@@ -244,24 +244,65 @@ if st.button("Retrouver mes exercices"):
 import random
 
 def generer_exercice(chapitre, partie, difficulte, type_exercice):
-    maximum = 5 * difficulte + 5
-    a = random.randint(2, maximum)
-    b = random.randint(2, maximum)
+    import random
 
-    if chapitre == "Fractions":
-        enonce = f"Calcule et simplifie : {a}/{b} + {a}/{b}"
-        correction = f"{a}/{b} + {a}/{b} = {2*a}/{b}. Simplifie si possible."
+    a = random.randint(2, 5 + difficulte * 5)
+    b = random.randint(2, 5 + difficulte * 5)
 
-    elif chapitre == "Nombres relatifs":
-        enonce = f"Calcule : (-{a}) + {b}"
-        correction = f"(-{a}) + {b} = {b-a}"
+    if chapitre == "1. Opérations":
+        if partie == "Addition, soustraction et multiplication de nombres décimaux":
+            x = round(a + random.randint(1, 9) / 10, 1)
+            y = round(b + random.randint(1, 9) / 10, 1)
+            operation = random.choice(["+", "-", "×"])
+
+            if operation == "+":
+                resultat = x + y
+            elif operation == "-":
+                resultat = x - y
+            else:
+                resultat = x * y
+
+            enonce = f"Calcule : {x} {operation} {y}"
+            correction = f"{x} {operation} {y} = {round(resultat, 2)}"
+
+        elif partie == "Division euclidienne, multiples et diviseurs":
+            diviseur = random.randint(2, 9)
+            quotient = random.randint(2, 5 + difficulte * 5)
+            reste = random.randint(0, diviseur - 1)
+            dividende = diviseur * quotient + reste
+
+            enonce = f"Effectue la division euclidienne de {dividende} par {diviseur}."
+            correction = (
+                f"{dividende} = {diviseur} × {quotient} + {reste}"
+            )
+
+        elif partie == "Division par un nombre décimal":
+            diviseur = random.randint(2, 9) / 10
+            quotient = random.randint(2, 5 + difficulte * 5)
+            dividende = round(diviseur * quotient, 2)
+
+            enonce = f"Calcule : {dividende} ÷ {diviseur}"
+            correction = f"{dividende} ÷ {diviseur} = {quotient}"
+
+        elif partie == "Priorités opératoires":
+            enonce = f"Calcule : {a} + {b} × 3"
+            correction = (
+                f"On effectue d'abord la multiplication : "
+                f"{b} × 3 = {b * 3}. "
+                f"Puis {a} + {b * 3} = {a + b * 3}."
+            )
+
+        else:
+            enonce = f"Développe : {a} × (x + {b})"
+            correction = (
+                f"{a} × (x + {b}) = {a}x + {a * b}"
+            )
 
     else:
         enonce = f"Calcule la valeur de {a} × x + {b} pour x = 3."
-        correction = f"{a} × 3 + {b} = {3*a+b}"
+        correction = f"{a} × 3 + {b} = {3 * a + b}"
 
     return {"enonce": enonce, "correction": correction}
-
 
 if st.button("Générer mes exercices"):
     exercices = [
