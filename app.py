@@ -28,6 +28,18 @@ st.set_page_config(
 )
 
 st.title("Mon Prof de Maths")
+
+from auth_persistante import tester_stockage
+
+stockage_test = tester_stockage()
+
+if st.button("Tester le stockage navigateur"):
+    stockage_test.setItem("test_maths", "OK")
+
+valeur_test = stockage_test.getItem("test_maths")
+
+st.write("Résultat du stockage :", valeur_test)
+
 st.write("Prépare tes exercices de mathématiques !")
 
 st.subheader("Mon compte élève")
