@@ -135,6 +135,7 @@ if st.session_state.get("eleve_id"):
                 supprimer_session(supabase_privee, jeton)
             except Exception as e:
                 st.error(f"Erreur suppression session : {e}")
+            st.session_state["test_deconnexion"] = "Suppression session passée"
         try:
             effacer_jeton_navigateur()
             st.success("Jeton navigateur effacé")
