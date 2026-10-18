@@ -109,11 +109,11 @@ with st.expander("Se connecter"):
                 jeton_persistant = enregistrer_session(
                     supabase_privee,
                     resultat.user.id
-            )
+                )
 
-            st.session_state["jeton_persistant"] = jeton_persistant
+                st.session_state["jeton_persistant"] = jeton_persistant
 
-            st.success("Connexion réussie !")
+                st.success("Connexion réussie !")
 
             else:
                 st.error("Connexion impossible.")
