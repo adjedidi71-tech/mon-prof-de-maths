@@ -31,6 +31,8 @@ st.title("Mon Prof de Maths")
 st.write("Prépare tes exercices de mathématiques !")
 
 st.subheader("Mon compte élève")
+if "test_deconnexion" in st.session_state:
+    st.warning("TEST élève ID : " + st.session_state["test_deconnexion"])
 if st.session_state.pop("vider_champs_connexion", False):
    st.session_state["email_connexion"] = ""
    st.session_state["mdp_connexion"] = ""
@@ -142,7 +144,7 @@ if st.session_state.get("eleve_id"):
             pass
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
-        st.warning(f"TEST élève ID après déconnexion : {st.session_state.get('eleve_id')}")
+        st.session_state["test_deconnexion"] = str(st.session_state.get("eleve_id"))
         st.session_state.pop("session_eleve", None)
         st.session_state.pop("exercices_actuels", None)
         st.session_state.pop("code_actuel", None)
