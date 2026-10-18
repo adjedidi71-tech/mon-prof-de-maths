@@ -117,8 +117,8 @@ with st.expander("Se connecter"):
 
             else:
                 st.error("Connexion impossible.")
-        except Exception:
-            st.error("E-mail ou mot de passe incorrect.")
+        except Exception as e:
+            st.error(f"Erreur technique : {type(e).__name__}")
 
 if st.session_state.get("eleve_id"):
     st.write("Tu es connecté à ton compte élève.")
