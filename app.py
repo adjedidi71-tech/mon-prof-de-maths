@@ -117,6 +117,7 @@ with st.expander("Se connecter"):
                 )
 
                 st.session_state["jeton_persistant"] = jeton_persistant
+                enregistrer_jeton_navigateur(jeton_persistant)
 
                 st.success("Connexion réussie !")
 
