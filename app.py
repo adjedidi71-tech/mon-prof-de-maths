@@ -399,15 +399,23 @@ if st.button("Tester la sauvegarde Supabase"):
         st.write("Type d'erreur :", type(e).__name__)
 
 def recuperer_serie(code):
+    eleve_id = st.session_state.get("eleve_id")
+
+    if not eleve_id:
+        return None
+
     resultat = (
         supabase_privee.table("series_exercices")
         .select("code_reprise, exercices, reponses, progression")
         .eq("code_reprise", code.strip().upper())
+        .eq("eleve_id", eleve_id)
         .limit(1)
         .execute()
     )
+
     if resultat.data:
         return resultat.data[0]
+
     return None
 
 st.subheader("Reprendre mes exercices")
