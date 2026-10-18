@@ -456,6 +456,11 @@ if st.button("Retrouver mes exercices"):
             st.error("Impossible de récupérer la série.")
 
 def sauvegarder_reponse(code, numero, reponse):
+    eleve_id = st.session_state.get("eleve_id")
+
+    if not eleve_id:
+        return False
+
     serie = recuperer_serie(code)
 
     if not serie:
@@ -464,12 +469,16 @@ def sauvegarder_reponse(code, numero, reponse):
     reponses = serie.get("reponses") or {}
     reponses[str(numero)] = reponse
 
-    supabase_privee.table("series_exercices").update({
-        "reponses": reponses
-    }).eq("code_reprise", code).execute()
+    resultat = (
+        supabase_privee.table("series_exercices")
+        .update({"reponses": reponses})
+        .eq("code_reprise", code.strip().upper())
+        .eq("eleve_id", eleve_id)
+        .execute()
+    )
 
-    return True
-
+    return bool(resultat.data)
+    
 def enregistrer_reponse_auto(numero):
     code = st.session_state.get("code_actuel")
     reponse = st.session_state.get(f"reponse_{numero}")
