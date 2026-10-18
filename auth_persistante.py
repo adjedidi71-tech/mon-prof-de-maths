@@ -1,6 +1,6 @@
 
 import streamlit as st
-
+from streamlit_local_storage import LocalStorage
 
 def session_eleve_active():
     return bool(st.session_state.get("eleve_id"))
