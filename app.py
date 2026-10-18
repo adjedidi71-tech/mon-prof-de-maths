@@ -131,7 +131,10 @@ if st.session_state.get("eleve_id"):
             effacer_jeton_navigateur()
         except Exception:
             pass
-        supabase.auth.sign_out()
+        try:
+            supabase.auth.sign_out()
+        except Exception:
+            pass
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
         st.session_state.pop("session_eleve", None)
