@@ -85,6 +85,8 @@ def supprimer_session(supabase_privee, jeton):
 def effacer_jeton_navigateur():
     stockage = obtenir_stockage()
     stockage.setItem("jeton_persistant_maths", "")
-
+def enregistrer_jeton_navigateur(jeton):
+    stockage = obtenir_stockage()
+    stockage.setItem("jeton_persistant_maths", jeton)
 
 
