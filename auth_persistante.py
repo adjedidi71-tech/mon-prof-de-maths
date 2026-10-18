@@ -71,5 +71,16 @@ def verifier_session(supabase_privee, jeton):
 
     return None
 
+def supprimer_session(supabase_privee, jeton):
+    if not jeton:
+        return
+
+    supabase_privee.table(
+        "sessions_persistantes"
+    ).delete().eq(
+        "jeton_hash",
+        empreinte_jeton(jeton)
+    ).execute()
+
 
 
