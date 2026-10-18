@@ -4,7 +4,8 @@ from auth_persistante import (
     enregistrer_session,
     supprimer_session,
     effacer_jeton_navigateur,
-    enregistrer_jeton_navigateur
+    enregistrer_jeton_navigateur,
+    lire_jeton_navigateur
 )
 if st.button("TEST lecture jeton"):
     jeton_test = lire_jeton_navigateur()
