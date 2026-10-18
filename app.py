@@ -129,6 +129,7 @@ if st.session_state.get("eleve_id"):
         st.session_state["test_deconnexion"] = "Bouton exécuté"
         st.warning("TEST : bouton de déconnexion activé")
         jeton = st.session_state.pop("jeton_persistant", None)
+        st.session_state["test_deconnexion"] = "Ligne jeton exécutée"
         if jeton:
             try:
                 supprimer_session(supabase_privee, jeton)
