@@ -132,20 +132,17 @@ if st.session_state.get("eleve_id"):
                 supprimer_session(supabase_privee, jeton)
             except Exception as e:
                 st.error(f"Erreur suppression session : {e}")
-            st.session_state["test_deconnexion"] = "Suppression session passée"
         try:
             st.session_state["test_deconnexion"] = "Effacement temporairement ignoré"
             st.success("Jeton navigateur effacé")
         except Exception as e:
             st.error(f"Erreur effacement jeton : {e}")
-        st.session_state["test_deconnexion"] = "Effacement jeton passé"
         try:
             supabase.auth.sign_out()
         except Exception:
             pass
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
-        st.session_state["test_deconnexion"] = str(st.session_state.get("eleve_id"))
         st.session_state.pop("session_eleve", None)
         st.session_state.pop("exercices_actuels", None)
         st.session_state.pop("code_actuel", None)
