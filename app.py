@@ -101,11 +101,20 @@ with st.expander("Se connecter"):
                 "email": email_connexion.strip(),
                 "password": mdp_connexion
             })
-
+            
             if resultat.user and resultat.session:
                 st.session_state["eleve_id"] = resultat.user.id
                 st.session_state["session_eleve"] = resultat.session
-                st.success("Connexion réussie !")
+
+                jeton_persistant = enregistrer_session(
+                    supabase_privee,
+                    resultat.user.id
+            )
+
+            st.session_state["jeton_persistant"] = jeton_persistant
+
+            st.success("Connexion réussie !")
+
             else:
                 st.error("Connexion impossible.")
         except Exception:
