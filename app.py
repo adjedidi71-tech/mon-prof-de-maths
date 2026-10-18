@@ -124,7 +124,7 @@ with st.expander("Se connecter"):
                 )
 
                 st.session_state["jeton_persistant"] = jeton_persistant
-                st.session_state["test_stockage"] = "Stockage navigateur ignoré"
+                enregistrer_jeton_navigateur(jeton_persistant)
 
                 st.success("Connexion réussie !")
 
