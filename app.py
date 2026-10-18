@@ -31,8 +31,6 @@ st.title("Mon Prof de Maths")
 st.write("Prépare tes exercices de mathématiques !")
 
 st.subheader("Mon compte élève")
-if "test_deconnexion" in st.session_state:
-    st.warning("TEST élève ID : " + st.session_state["test_deconnexion"])
 if st.session_state.pop("vider_champs_connexion", False):
    st.session_state["email_connexion"] = ""
    st.session_state["mdp_connexion"] = ""
