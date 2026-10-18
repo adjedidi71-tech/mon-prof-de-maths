@@ -31,11 +31,10 @@ st.title("Mon Prof de Maths")
 st.write("Prépare tes exercices de mathématiques !")
 
 st.subheader("Mon compte élève")
-
+if st.session_state.pop("vider_champs_connexion", False):
+   st.session_state["email_connexion"] = ""
+   st.session_state["mdp_connexion"] = ""
 with st.expander("Créer mon compte"):
-    if st.session_state.pop("vider_champs_connexion", False):
-       st.session_state["email_connexion"] = ""
-       st.session_state["mdp_connexion"] = ""
     with st.form("formulaire_inscription"):
         email = st.text_input("Adresse e-mail")
         pseudo = st.text_input("Pseudonyme (facultatif)")
