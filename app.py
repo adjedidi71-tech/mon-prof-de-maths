@@ -127,7 +127,10 @@ if st.session_state.get("eleve_id"):
         st.warning("TEST : bouton de déconnexion activé")
         jeton = st.session_state.pop("jeton_persistant", None)
         if jeton:
-            supprimer_session(supabase_privee, jeton)
+            try:
+                supprimer_session(supabase_privee, jeton)
+            except Exception as e:
+                st.error(f"Erreur suppression session : {e}")
         try:
             effacer_jeton_navigateur()
             st.success("Jeton navigateur effacé")
