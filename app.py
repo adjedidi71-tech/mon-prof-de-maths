@@ -1,7 +1,6 @@
 import streamlit as st
-
 from supabase import create_client
-
+from auth_persistante import enregistrer_session
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
