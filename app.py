@@ -125,6 +125,8 @@ with st.expander("Se connecter"):
 
                 st.session_state["jeton_persistant"] = jeton_persistant
                 enregistrer_jeton_navigateur(jeton_persistant)
+                st.write("TEST jeton créé :", bool(jeton_persistant))
+                st.write("TEST jeton navigateur :", bool(lire_jeton_navigateur()))
 
                 st.success("Connexion réussie !")
 
