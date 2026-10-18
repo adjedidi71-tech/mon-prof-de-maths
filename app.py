@@ -117,10 +117,7 @@ with st.expander("Se connecter"):
                 )
 
                 st.session_state["jeton_persistant"] = jeton_persistant
-                try:
-                    enregistrer_jeton_navigateur(jeton_persistant)
-                except Exception as e:
-                    st.error(f"Erreur stockage navigateur : {e}")
+                st.session_state["test_stockage"] = "Stockage navigateur ignoré"
 
                 st.success("Connexion réussie !")
 
