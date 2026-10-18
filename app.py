@@ -1,6 +1,6 @@
 import streamlit as st
 from supabase import create_client
-from auth_persistante import enregistrer_session
+from auth_persistante import enregistrer_session, supprimer_session
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
@@ -123,7 +123,10 @@ with st.expander("Se connecter"):
 if st.session_state.get("eleve_id"):
     st.write("Tu es connecté à ton compte élève.")
 
-    if st.button("Se déconnecter"):        
+    if st.button("Se déconnecter"):
+        jeton = st.session_state.pop("jeton_persistant", None)
+        if jeton:
+            supprimer_session(supabase_privee, jeton)
         supabase.auth.sign_out()
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
