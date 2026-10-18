@@ -127,6 +127,10 @@ if st.session_state.get("eleve_id"):
         jeton = st.session_state.pop("jeton_persistant", None)
         if jeton:
             supprimer_session(supabase_privee, jeton)
+        try:
+            effacer_jeton_navigateur()
+        except Exception:
+            pass
         supabase.auth.sign_out()
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
