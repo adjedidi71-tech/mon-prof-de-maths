@@ -123,7 +123,8 @@ with st.expander("Se connecter"):
 if st.session_state.get("eleve_id"):
     st.write("Tu es connecté à ton compte élève.")
 
-    if st.button("Se déconnecter"):
+    if st.button("Se déconnecter"): 
+        st.warning("TEST : bouton de déconnexion activé")
         jeton = st.session_state.pop("jeton_persistant", None)
         if jeton:
             supprimer_session(supabase_privee, jeton)
