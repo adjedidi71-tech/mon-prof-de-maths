@@ -82,5 +82,9 @@ def supprimer_session(supabase_privee, jeton):
         empreinte_jeton(jeton)
     ).execute()
 
+def effacer_jeton_navigateur():
+    stockage = obtenir_stockage()
+    stockage.deleteItem("jeton_persistant_maths")
+
 
 
