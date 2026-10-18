@@ -133,11 +133,6 @@ if st.session_state.get("eleve_id"):
             except Exception as e:
                 st.error(f"Erreur suppression session : {e}")
         try:
-            st.session_state["test_deconnexion"] = "Effacement temporairement ignoré"
-            st.success("Jeton navigateur effacé")
-        except Exception as e:
-            st.error(f"Erreur effacement jeton : {e}")
-        try:
             supabase.auth.sign_out()
         except Exception:
             pass
