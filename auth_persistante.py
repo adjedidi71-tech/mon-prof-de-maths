@@ -46,5 +46,24 @@ def enregistrer_session(supabase_privee, eleve_id):
 
     return jeton
 
+def verifier_session(supabase_privee, jeton):
+    if not jeton:
+        return None
+
+    resultat = (
+        supabase_privee
+        .table("sessions_persistantes")
+        .select("eleve_id, expire_le")
+        .eq("jeton_hash", empreinte_jeton(jeton))
+        .gt("expire_le", datetime.now(timezone.utc).isoformat())
+        .limit(1)
+        .execute()
+    )
+
+    if resultat.data:
+        return resultat.data[0]["eleve_id"]
+
+    return None
+
 
 
