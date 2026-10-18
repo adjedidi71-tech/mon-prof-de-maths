@@ -1,6 +1,6 @@
 import streamlit as st
 from supabase import create_client
-from auth_persistante import enregistrer_session, supprimer_session
+from auth_persistante import enregistrer_session, supprimer_session, effacer_jeton_navigateur
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
@@ -127,6 +127,7 @@ if st.session_state.get("eleve_id"):
         jeton = st.session_state.pop("jeton_persistant", None)
         if jeton:
             supprimer_session(supabase_privee, jeton)
+        effacer_jeton_navigateur()
         supabase.auth.sign_out()
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
