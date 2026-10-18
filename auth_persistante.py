@@ -33,5 +33,18 @@ def expiration_session():
         datetime.now(timezone.utc) + timedelta(days=30)
     ).isoformat()
 
+def enregistrer_session(supabase_privee, eleve_id):
+    jeton = creer_jeton()
+
+    supabase_privee.table(
+        "sessions_persistantes"
+    ).insert({
+        "eleve_id": eleve_id,
+        "jeton_hash": empreinte_jeton(jeton),
+        "expire_le": expiration_session()
+    }).execute()
+
+    return jeton
+
 
 
