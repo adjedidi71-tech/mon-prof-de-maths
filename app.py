@@ -129,8 +129,9 @@ if st.session_state.get("eleve_id"):
             supprimer_session(supabase_privee, jeton)
         try:
             effacer_jeton_navigateur()
-        except Exception:
-            pass
+            st.success("Jeton navigateur effacé")
+        except Exception as e:
+            st.error(f"Erreur effacement jeton : {e}")
         try:
             supabase.auth.sign_out()
         except Exception:
