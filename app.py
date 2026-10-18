@@ -142,6 +142,7 @@ if st.session_state.get("eleve_id"):
             pass
         st.session_state.pop("supabase_client", None)
         st.session_state.pop("eleve_id", None)
+        st.warning(f"TEST élève ID après déconnexion : {st.session_state.get('eleve_id')}")
         st.session_state.pop("session_eleve", None)
         st.session_state.pop("exercices_actuels", None)
         st.session_state.pop("code_actuel", None)
