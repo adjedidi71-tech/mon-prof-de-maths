@@ -33,7 +33,11 @@ if not st.session_state.get("eleve_id"):
     jeton = lire_jeton_navigateur()
 
     if isinstance(jeton, str) and jeton:
-        eleve_id = verifier_session(supabase_privee, jeton)
+        try:
+            eleve_id = verifier_session(supabase_privee, jeton)
+        except Exception as e:
+            st.error(f"Erreur de restauration : {e}")
+            st.stop()
 
         if eleve_id:
             st.session_state["eleve_id"] = eleve_id
