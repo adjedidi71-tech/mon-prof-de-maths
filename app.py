@@ -5,7 +5,8 @@ from auth_persistante import (
     supprimer_session,
     effacer_jeton_navigateur,
     enregistrer_jeton_navigateur,
-    lire_jeton_navigateur
+    lire_jeton_navigateur,
+    verifier_session
 )
 if st.button("TEST lecture jeton"):
     st.session_state["test_lecture"] = True
