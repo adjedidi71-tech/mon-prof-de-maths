@@ -50,10 +50,14 @@ if st.session_state.get("eleve_id"):
             eleve_id = verifier_session(supabase_privee, jeton)
         except Exception:
             eleve_id = None
+    else:
+        eleve_id = None
 
-        if not eleve_id or eleve_id != st.session_state["eleve_id"]:
-            st.session_state.pop("eleve_id", None)
-            st.session_state.pop("jeton_persistant", None)
+    if not eleve_id or eleve_id != st.session_state["eleve_id"]:
+        st.session_state.pop("eleve_id", None)
+        st.session_state.pop("jeton_persistant", None)
+        st.session_state.pop("session_eleve", None)
+        
 st.set_page_config(
     page_title="Mon Prof de Maths",
     page_icon="📐"
