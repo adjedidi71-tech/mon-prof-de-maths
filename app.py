@@ -551,13 +551,39 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             correction = f"{dividende} ÷ {diviseur} = {quotient}"
 
         elif partie == "Priorités opératoires":
-            enonce = f"Calcule : {a} + {b} × 3"
-            reponse_attendue = a + b * 3
-            correction = (
-                f"On effectue d'abord la multiplication : "
-                f"{b} × 3 = {b * 3}. "
-                f"Puis {a} + {b * 3} = {a + b * 3}."
-            )
+            multiplicateur = random.randint(2, 9)
+
+            if type_exercice == "Mes automatismes":
+                operation = random.choice(["+", "-"])
+
+                enonce = (
+                    f"Calcule : {a} {operation} "
+                    f"{b} × {multiplicateur}"
+                )
+
+                produit = b * multiplicateur
+
+                if operation == "+":
+                    reponse_attendue = a + produit
+                else:
+                    reponse_attendue = a - produit
+
+                correction = (
+                    f"On commence par la multiplication : "
+                    f"{b} × {multiplicateur} = {produit}. "
+                    f"Puis {a} {operation} {produit} "
+                    f"= {reponse_attendue}."
+                )
+
+            else:
+                enonce = f"Calcule : {a} + {b} × {multiplicateur}"
+                reponse_attendue = a + b * multiplicateur
+                correction = (
+                    f"On effectue d'abord la multiplication : "
+                    f"{b} × {multiplicateur} = {b * multiplicateur}. "
+                    f"Puis {a} + {b * multiplicateur} "
+                    f"= {reponse_attendue}."
+                )
 
         else:
             enonce = f"Développe : {a} × (x + {b})"
