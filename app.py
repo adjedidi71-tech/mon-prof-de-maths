@@ -34,6 +34,16 @@ def connexion_supabase_privee():
 
 supabase_privee = connexion_supabase_privee()
 
+if not st.session_state.get("eleve_id"):
+    jeton = lire_jeton_navigateur()
+
+    if isinstance(jeton, str) and jeton:
+        eleve_id = verifier_session(supabase_privee, jeton)
+
+        if eleve_id:
+            st.session_state["eleve_id"] = eleve_id
+            st.session_state["jeton_persistant"] = jeton
+
 st.set_page_config(
     page_title="Mon Prof de Maths",
     page_icon="📐"
