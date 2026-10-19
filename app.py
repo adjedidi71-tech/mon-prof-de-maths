@@ -8,12 +8,7 @@ from auth_persistante import (
     lire_jeton_navigateur,
     verifier_session
 )
-if st.button("TEST lecture jeton"):
-    st.session_state["test_lecture"] = True
 
-if st.session_state.get("test_lecture"):
-    jeton_test = lire_jeton_navigateur()
-    st.write("Jeton présent :", bool(jeton_test))
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
