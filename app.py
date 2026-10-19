@@ -656,7 +656,7 @@ if st.button("Générer mes exercices"):
         generer_exercice(chapitre, partie, difficulte, type_exercice)
         for _ in range(nombre)
     ]
-    st.session_state.exercices_actuels = exercices
+    st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
 
     if st.session_state.get("eleve_id"):
         try:
@@ -708,8 +708,11 @@ if st.session_state.exercices_actuels:
                 else:
                     st.error("Réponse incorrecte. Essaie encore.")
 
-        with st.expander("Voir la correction"):
-            st.write(exercice["correction"])
+         with st.expander(
+                "Voir la correction",
+                key=f"correction_{st.session_state.get('serie_version', 0)}_{numero}"
+            ):
+                st.write(exercice["correction"])
 
 
 
