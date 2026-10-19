@@ -574,12 +574,43 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     f"Puis {a} {operation} {produit} "
                     f"= {reponse_attendue}."
                 )
+            
+            elif type_exercice == "Je m'entraîne":
+                modele = random.choice([1, 2, 3])
+
+                if modele == 1:
+                    enonce = f"Calcule : {a} + {b} × {multiplicateur}"
+                    reponse_attendue = a + b * multiplicateur
+                    correction = (
+                        f"On commence par la multiplication : "
+                        f"{b} × {multiplicateur} = {b * multiplicateur}. "
+                        f"Puis on ajoute {a} : {reponse_attendue}."
+                    )
+
+                elif modele == 2:
+                    enonce = f"Calcule : ({a} + {b}) × {multiplicateur}"
+                    reponse_attendue = (a + b) * multiplicateur
+                    correction = (
+                        f"On calcule d'abord la parenthèse : "
+                        f"{a} + {b} = {a + b}. "
+                        f"Puis {a + b} × {multiplicateur} "
+                        f"= {reponse_attendue}."
+                    )
+
+                else:
+                    enonce = f"Calcule : {a} × {b} - {multiplicateur}"
+                    reponse_attendue = a * b - multiplicateur
+                    correction = (
+                        f"On commence par la multiplication : "
+                        f"{a} × {b} = {a * b}. "
+                        f"Puis {a * b} - {multiplicateur} "
+                        f"= {reponse_attendue}."
+                    )
 
             else:
                 enonce = f"Calcule : {a} + {b} × {multiplicateur}"
                 reponse_attendue = a + b * multiplicateur
                 correction = (
-                    f"On effectue d'abord la multiplication : "
                     f"{b} × {multiplicateur} = {b * multiplicateur}. "
                     f"Puis {a} + {b * multiplicateur} "
                     f"= {reponse_attendue}."
