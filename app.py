@@ -400,22 +400,6 @@ def sauvegarder_serie(exercices):
             f"Erreur Supabase : {type(e).__name__}"
         ) from None
 
-if st.button("Tester la sauvegarde Supabase"):
-    exercices_test = [
-        {
-            "enonce": "Calculer 3 × 4",
-            "correction": "12"
-        }
-    ]
-
-    try:
-        code = sauvegarder_serie(exercices_test)
-        st.success("Sauvegarde réussie !")
-        st.code(code)
-    except Exception as e:
-        st.error("La sauvegarde a échoué.")
-        st.write("Type d'erreur :", type(e).__name__)
-
 def recuperer_serie(code):
     eleve_id = st.session_state.get("eleve_id")
 
