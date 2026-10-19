@@ -66,7 +66,17 @@ def verifier_session(supabase_privee, jeton):
         .execute()
     )
 
+    
     if resultat.data:
+        (
+            supabase_privee
+            .table("sessions_persistantes")
+            .update({"expire_le": expiration_session()})
+            .eq("jeton_hash", empreinte_jeton(jeton))
+            .gt("expire_le", datetime.now(timezone.utc).isoformat())
+            .execute()
+        )
+
         return resultat.data[0]["eleve_id"]
 
     return None
