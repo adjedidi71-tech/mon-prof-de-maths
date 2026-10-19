@@ -608,12 +608,29 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     )
 
             else:
-                enonce = f"Calcule : {a} + {b} × {multiplicateur}"
-                reponse_attendue = a + b * multiplicateur
+                prix = random.randint(4, 12)
+                quantite = random.randint(5, 20)
+                transport = random.randint(20, 80)
+
+                enonce = (
+                    f"Une classe achète {quantite} billets "
+                    f"à {prix} € chacun. "
+                    f"Le transport coûte {transport} €.\n\n"
+                    f"1. Calcule le prix de tous les billets.\n\n"
+                    f"2. Calcule le coût total de la sortie.\n\n"
+                    f"3. Écris une expression avec des "
+                    f"parenthèses pour calculer ce coût."
+                )
+
+                reponse_attendue = None
+
                 correction = (
-                    f"{b} × {multiplicateur} = {b * multiplicateur}. "
-                    f"Puis {a} + {b * multiplicateur} "
-                    f"= {reponse_attendue}."
+                    f"1. {quantite} × {prix} = "
+                    f"{quantite * prix} €.\n\n"
+                    f"2. {quantite * prix} + {transport} = "
+                    f"{quantite * prix + transport} €.\n\n"
+                    f"3. ({quantite} × {prix}) + {transport} "
+                    f"= {quantite * prix + transport} €."
                 )
 
         else:
