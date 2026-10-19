@@ -38,7 +38,16 @@ if not st.session_state.get("eleve_id"):
         if eleve_id:
             st.session_state["eleve_id"] = eleve_id
             st.session_state["jeton_persistant"] = jeton
+            
+if st.session_state.get("eleve_id"):
+    jeton = st.session_state.get("jeton_persistant")
 
+    if jeton:
+        eleve_id = verifier_session(supabase_privee, jeton)
+
+        if not eleve_id or eleve_id != st.session_state["eleve_id"]:
+            st.session_state.pop("eleve_id", None)
+            st.session_state.pop("jeton_persistant", None)
 st.set_page_config(
     page_title="Mon Prof de Maths",
     page_icon="📐"
