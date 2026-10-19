@@ -384,6 +384,7 @@ def generer_code_reprise():
 def sauvegarder_serie(exercices):
      if not st.session_state.get("eleve_id"):
          raise ValueError("Connecte-toi pour sauvegarder tes exercices.")
+         
     code = generer_code_reprise()
     try:
         supabase_privee.table("series_exercices").insert({
