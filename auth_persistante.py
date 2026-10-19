@@ -92,3 +92,7 @@ def lire_jeton_navigateur():
     stockage = obtenir_stockage()
     return stockage.getItem("jeton_persistant_maths")
 
+def effacer_jeton_navigateur():
+    stockage = obtenir_stockage()
+    stockage.deleteItem("jeton_persistant_maths")
+
