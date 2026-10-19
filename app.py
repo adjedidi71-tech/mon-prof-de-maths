@@ -434,43 +434,43 @@ def recuperer_serie(code):
         return resultat.data[0]
 
     return None
-
-st.subheader("Reprendre mes exercices")
-
-code_saisi = st.text_input(
-    "Saisis ton code de reprise"
-)
-
-if st.button("Retrouver mes exercices"):
-    if not code_saisi.strip():
-        st.warning("Saisis d'abord ton code.")
-    else:
-        try:
-            serie = recuperer_serie(code_saisi)
-            
-            if serie:
-                st.session_state.exercices_actuels = serie["exercices"]
-                st.session_state.code_actuel = code_saisi.strip()
-
-                reponses = serie.get("reponses") or {}
-
-                for numero, exercice in enumerate(
-                     serie["exercices"], start=1
-                    ):
-                     cle = f"reponse_{numero}"
-                     valeur = reponses.get(str(numero))
-
-                     if valeur is not None:
-                        st.session_state[cle] = valeur
-                     elif cle in st.session_state:
-                          del st.session_state[cle]
-
-                st.success("Série retrouvée !")
-
-            else:
-                st.warning("Aucune série trouvée avec ce code.")
-        except Exception:
-            st.error("Impossible de récupérer la série.")
+if st.session_state.get("eleve_id"):
+    st.subheader("Reprendre mes exercices")
+    
+    code_saisi = st.text_input(
+        "Saisis ton code de reprise"
+    )
+    
+    if st.button("Retrouver mes exercices"):
+        if not code_saisi.strip():
+            st.warning("Saisis d'abord ton code.")
+        else:
+            try:
+                serie = recuperer_serie(code_saisi)
+                
+                if serie:
+                    st.session_state.exercices_actuels = serie["exercices"]
+                    st.session_state.code_actuel = code_saisi.strip()
+    
+                    reponses = serie.get("reponses") or {}
+    
+                    for numero, exercice in enumerate(
+                         serie["exercices"], start=1
+                        ):
+                         cle = f"reponse_{numero}"
+                         valeur = reponses.get(str(numero))
+    
+                         if valeur is not None:
+                            st.session_state[cle] = valeur
+                         elif cle in st.session_state:
+                              del st.session_state[cle]
+    
+                    st.success("Série retrouvée !")
+    
+                else:
+                    st.warning("Aucune série trouvée avec ce code.")
+            except Exception:
+                st.error("Impossible de récupérer la série.")
 
 def sauvegarder_reponse(code, numero, reponse):
     eleve_id = st.session_state.get("eleve_id")
