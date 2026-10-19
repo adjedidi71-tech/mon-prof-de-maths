@@ -583,14 +583,21 @@ if st.button("Générer mes exercices"):
     ]
     st.session_state.exercices_actuels = exercices
 
-    try:
-        code = sauvegarder_serie(exercices)
-        st.session_state.code_actuel = code
-        st.success("Exercices générés et sauvegardés !")
-        st.write("Ton code de reprise :")
-        st.code(code)
-    except Exception:
-        st.error("Sauvegarde impossible.")
+    if st.session_state.get("eleve_id"):
+        try:
+            code = sauvegarder_serie(exercices)
+            if code:
+                st.session_state.code_actuel = code
+                st.success("Exercices générés et sauvegardés !")
+                st.write("Ton code de reprise :")
+                st.code(code)
+            else:
+                st.error("Sauvegarde impossible.")
+        except Exception:
+            st.error("Sauvegarde impossible.")
+    else:
+        st.session_state.code_actuel = None
+        st.info("Connecte-toi pour sauvegarder tes exercices.")
 
 if st.session_state.exercices_actuels:
     for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
