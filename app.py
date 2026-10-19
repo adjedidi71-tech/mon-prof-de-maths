@@ -48,9 +48,8 @@ if st.session_state.get("eleve_id"):
     if jeton:
         try:
             eleve_id = verifier_session(supabase_privee, jeton)
-        except Exception as e:
-            st.error(f"Erreur de renouvellement : {e}")
-            st.stop()
+        except Exception:
+            eleve_id = None
 
         if not eleve_id or eleve_id != st.session_state["eleve_id"]:
             st.session_state.pop("eleve_id", None)
