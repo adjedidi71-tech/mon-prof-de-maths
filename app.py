@@ -708,8 +708,8 @@ if st.session_state.exercices_actuels:
                 else:
                     st.error("Réponse incorrecte. Essaie encore.")
 
-            with st.expander("Voir la correction"):
-                st.write(exercice["correction"])
+        with st.expander("Voir la correction"):
+            st.write(exercice["correction"])
 
 
 
