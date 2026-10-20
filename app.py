@@ -710,7 +710,7 @@ if st.session_state.exercices_actuels:
                     st.error("Réponse incorrecte. Essaie encore.")
 
         with st.expander(
-            f"Voir la correction — série {st.session_state.get('serie_version', 0)}",
+            f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
             expanded=False
         ):
             st.write(exercice["correction"])
