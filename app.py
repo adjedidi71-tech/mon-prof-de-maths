@@ -9,19 +9,7 @@ from auth_persistante import (
     lire_jeton_navigateur,
     verifier_session
 )
-if st.button("Tester Gemini"):
-    try:
-        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        reponse = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents="Combien font 7 × 8 ? Réponds en français."
-        )
-
-        st.success(reponse.text)
-
-    except Exception as e:
-        st.error(f"Erreur Gemini : {e}")
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
