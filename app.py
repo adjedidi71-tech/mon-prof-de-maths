@@ -350,6 +350,17 @@ with col2:
             3: "3 - Difficile"
         }[x]
     )
+
+debut_niveau = {
+    "Mes automatismes": 0,
+    "Je m'entraîne": 3,
+    "Je résous des problèmes": 6
+}
+
+niveau_reel = debut_niveau[type_exercice] + difficulte
+
+st.write(f"**Progression : niveau {niveau_reel} sur 9**")
+st.progress(niveau_reel / 9)
 nombre = st.selectbox(
     "Nombre d'exercices",
     [1, 2, 3, 4, 5],
