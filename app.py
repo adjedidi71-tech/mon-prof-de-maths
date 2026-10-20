@@ -810,10 +810,24 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
 if st.button("Générer mes exercices"):
-    exercices = [
-        generer_exercice(chapitre, partie, difficulte, type_exercice)
-        for _ in range(nombre)
-    ]
+    exercices = []
+    
+    for i in range(nombre):
+        if type_exercice == "Je m'entraîne" and i == 0:
+            try:
+                exercice = generer_exercice_ia(
+                    chapitre, partie, difficulte, type_exercice
+                )
+            except Exception:
+                exercice = generer_exercice(
+                    chapitre, partie, difficulte, type_exercice
+                )
+        else:
+            exercice = generer_exercice(
+                chapitre, partie, difficulte, type_exercice
+            )
+    
+        exercices.append(exercice)
     st.session_state.exercices_actuels = exercices
     st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
 
