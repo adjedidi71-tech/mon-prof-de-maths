@@ -594,38 +594,67 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"Puis la multiplication : {y} × {z + 2} = {y * (z + 2)}. "
                         f"Enfin {x} - {y * (z + 2)} = {reponse_attendue}."
                     )            
-            elif type_exercice == "Je m'entraîne":
-                modele = random.choice([1, 2, 3])
+        elif type_exercice == "Je m'entraîne":
 
-                if modele == 1:
-                    enonce = f"Calcule : {a} + {b} × {multiplicateur}"
-                    reponse_attendue = a + b * multiplicateur
-                    correction = (
-                        f"On commence par la multiplication : "
-                        f"{b} × {multiplicateur} = {b * multiplicateur}. "
-                        f"Puis on ajoute {a} : {reponse_attendue}."
-                    )
+            if difficulte == 1:
+                a = random.randint(5, 15)
+                b = random.randint(2, 9)
+                c = random.randint(2, 6)
 
-                elif modele == 2:
-                    enonce = f"Calcule : ({a} + {b}) × {multiplicateur}"
-                    reponse_attendue = (a + b) * multiplicateur
-                    correction = (
-                        f"On calcule d'abord la parenthèse : "
-                        f"{a} + {b} = {a + b}. "
-                        f"Puis {a + b} × {multiplicateur} "
-                        f"= {reponse_attendue}."
-                    )
+                enonce = f"Calcule : {a} + {b} × {c}"
+                reponse_attendue = a + b * c
 
-                else:
-                    enonce = f"Calcule : {a} × {b} - {multiplicateur}"
-                    reponse_attendue = a * b - multiplicateur
-                    correction = (
-                        f"On commence par la multiplication : "
-                        f"{a} × {b} = {a * b}. "
-                        f"Puis {a * b} - {multiplicateur} "
-                        f"= {reponse_attendue}."
-                    )
+                correction = (
+                    f"On commence par la multiplication : "
+                    f"{b} × {c} = {b * c}. "
+                    f"Puis {a} + {b * c} = {reponse_attendue}."
+                )
 
+            elif difficulte == 2:
+                a = random.randint(3, 8)
+                b = random.randint(2, 7)
+                c = random.randint(2, 5)
+                d = random.randint(2, 10)
+
+                dividende = (a + b) * c
+
+                enonce = (
+                    f"Calcule : {dividende} ÷ ({a} + {b}) + {d}"
+                )
+                reponse_attendue = c + d
+
+                correction = (
+                    f"On calcule la parenthèse : "
+                    f"{a} + {b} = {a + b}. "
+                    f"Puis {dividende} ÷ {a + b} = {c}. "
+                    f"Enfin {c} + {d} = {reponse_attendue}."
+                )
+
+            else:
+                a = random.randint(3, 7)
+                b = random.randint(4, 9)
+                c = random.randint(2, 5)
+                d = random.randint(2, 6)
+                e = random.randint(2, 5)
+
+                dividende = d * e
+                produit = a * (b + c)
+                depart = produit + random.randint(10, 30)
+
+                enonce = (
+                    f"Calcule : {depart} - {a} × ({b} + {c}) "
+                    f"+ {dividende} ÷ {d}"
+                )
+
+                reponse_attendue = depart - produit + e
+
+                correction = (
+                    f"Parenthèse : {b} + {c} = {b + c}. "
+                    f"Multiplication : {a} × {b + c} = {produit}. "
+                    f"Division : {dividende} ÷ {d} = {e}. "
+                    f"Enfin {depart} - {produit} + {e} "
+                    f"= {reponse_attendue}."
+                ) 
             else:
                 prix = random.randint(4, 12)
                 quantite = random.randint(5, 20)
