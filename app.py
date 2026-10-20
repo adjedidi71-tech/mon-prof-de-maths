@@ -733,6 +733,33 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"= {quantite * prix + transport} €.\n"
                         f"Expression : ({quantite} × {prix}) + {transport}."
                     )
+                elif difficulte == 2:
+                    prix = random.randint(5, 15)
+                    quantite = random.randint(8, 25)
+                    transport = random.randint(20, 60)
+                    budget = quantite * prix + transport + random.randint(30, 100)
+
+                    enonce = (
+                        f"Une classe dispose de {budget} € pour une sortie.\n\n"
+                        f"Elle achète {quantite} billets à {prix} € chacun.\n"
+                        f"Le transport coûte {transport} €.\n\n"
+                        f"1. Calcule le prix total des billets.\n"
+                        f"2. Calcule la dépense totale.\n"
+                        f"3. Calcule l'argent restant.\n"
+                        f"4. Écris une expression avec des parenthèses pour calculer cet argent."
+                    )
+
+                    depense = quantite * prix + transport
+                    reste = budget - depense
+
+                    reponse_attendue = None
+
+                    correction = (
+                        f"1. Billets : {quantite} × {prix} = {quantite * prix} €.\n\n"
+                        f"2. Dépense totale : {quantite * prix} + {transport} = {depense} €.\n\n"
+                        f"3. Argent restant : {budget} - {depense} = {reste} €.\n\n"
+                        f"4. Expression : {budget} - ({quantite} × {prix} + {transport}) = {reste} €."
+                    )                
     if enonce is None:
         enonce = f"Exercices à développer pour : {partie}"
         correction = "Correction non disponible."
