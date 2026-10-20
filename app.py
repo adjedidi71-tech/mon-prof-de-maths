@@ -299,7 +299,30 @@ with col1:
             "Je résous des problèmes"
         ]
     )
+couleurs_categories = {
+    "Mes automatismes": ("#E8F3FF", "#2478D4"),
+    "Je m'entraîne": ("#FFF3D9", "#D99416"),
+    "Je résous des problèmes": ("#F0E7FF", "#8956D8")
+}
 
+fond, couleur = couleurs_categories[type_exercice]
+
+st.markdown(
+    f"""
+    <div style="
+        background-color: {fond};
+        border-left: 6px solid {couleur};
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin: 12px 0;
+        font-weight: 600;
+        color: #202B45;
+    ">
+        {type_exercice}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 with col2:
         difficulte = st.selectbox(
             "Difficulté",
