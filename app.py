@@ -657,6 +657,7 @@ if st.button("Générer mes exercices"):
         generer_exercice(chapitre, partie, difficulte, type_exercice)
         for _ in range(nombre)
     ]
+    st.session_state.exercices_actuels = exercices
     st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
 
     if st.session_state.get("eleve_id"):
