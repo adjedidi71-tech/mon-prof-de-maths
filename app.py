@@ -681,11 +681,11 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 f"= {quantite * prix + transport} €."
             )
 
-        else:
-            enonce = f"Développe : {a} × (x + {b})"
-            correction = (
-                f"{a} × (x + {b}) = {a}x + {a * b}"
-            )
+    else:
+        enonce = f"Développe : {a} × (x + {b})"
+        correction = (
+            f"{a} × (x + {b}) = {a}x + {a * b}"
+        )
 
     else:
         enonce = f"Calcule la valeur de {a} × x + {b} pour x = 3."
