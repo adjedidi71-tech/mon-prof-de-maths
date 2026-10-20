@@ -1,4 +1,5 @@
 import streamlit as st
+from google import genai
 from supabase import create_client
 from auth_persistante import (
     enregistrer_session,
