@@ -516,6 +516,9 @@ import random
 
 def generer_exercice(chapitre, partie, difficulte, type_exercice):
     import random
+    enonce = None
+    correction = None
+    reponse_attendue = None
 
     a = random.randint(2, 5 + difficulte * 5)
     b = random.randint(2, 5 + difficulte * 5)
@@ -659,11 +662,13 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
     else:
         enonce = f"Calcule la valeur de {a} × x + {b} pour x = 3."
         correction = f"{a} × 3 + {b} = {3 * a + b}"
-
+    if enonce is None:
+        enonce = f"Exercices à développer pour : {partie}"
+        correction = "Correction non disponible."
     return {
-    "enonce": enonce,
-    "correction": correction,
-    "reponse_attendue": reponse_attendue if chapitre == "1. Opérations" and partie == "Priorités opératoires" else None
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": reponse_attendue if chapitre == "1. Opérations" and partie == "Priorités opératoires" else None
 }
     
 if "exercices_actuels" not in st.session_state:
