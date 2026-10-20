@@ -711,8 +711,6 @@ if st.session_state.exercices_actuels:
 
         with st.expander(
             "Voir la correction",
-            key=f"correction_{st.session_state.get('serie_version', 0)}_{numero}"
+            expanded=False
         ):
-
-
-
+            st.write(exercice["correction"])
