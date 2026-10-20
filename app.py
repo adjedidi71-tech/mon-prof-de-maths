@@ -559,27 +559,41 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             multiplicateur = random.randint(2, 9)
 
             if type_exercice == "Mes automatismes":
-                operation = random.choice(["+", "-"])
+                if difficulte == 1:
+                    x = random.randint(2, 15)
+                    y = random.randint(2, 9)
+                    z = random.randint(2, 5)
+                    enonce = f"Calcule : {x} + {y} × {z}"
+                    reponse_attendue = x + y * z
+                    correction = (
+                        f"On commence par la multiplication : "
+                        f"{y} × {z} = {y * z}. "
+                        f"Puis {x} + {y * z} = {reponse_attendue}."
+                    )
+    
+                elif difficulte == 2:
+                    x = random.randint(5, 20)
+                    y = random.randint(2, 10)
+                    z = random.randint(2, 5)
+                    enonce = f"Calcule : ({x} + {y}) × {z}"
+                    reponse_attendue = (x + y) * z
+                    correction = (
+                        f"On calcule d'abord la parenthèse : "
+                        f"{x} + {y} = {x + y}. "
+                        f"Puis {x + y} × {z} = {reponse_attendue}."
+                    )
 
-                enonce = (
-                    f"Calcule : {a} {operation} "
-                    f"{b} × {multiplicateur}"
-                )
-
-                produit = b * multiplicateur
-
-                if operation == "+":
-                    reponse_attendue = a + produit
-                else:
-                    reponse_attendue = a - produit
-
+            else:
+                x = random.randint(20, 50)
+                y = random.randint(2, 6)
+                z = random.randint(3, 9)
+                enonce = f"Calcule : {x} - {y} × ({z} + 2)"
+                reponse_attendue = x - y * (z + 2)
                 correction = (
-                    f"On commence par la multiplication : "
-                    f"{b} × {multiplicateur} = {produit}. "
-                    f"Puis {a} {operation} {produit} "
-                    f"= {reponse_attendue}."
-                )
-            
+                    f"On calcule la parenthèse : {z} + 2 = {z + 2}. "
+                    f"Puis la multiplication : {y} × {z + 2} = {y * (z + 2)}. "
+                    f"Enfin {x} - {y * (z + 2)} = {reponse_attendue}."
+                )            
             elif type_exercice == "Je m'entraîne":
                 modele = random.choice([1, 2, 3])
 
