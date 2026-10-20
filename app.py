@@ -685,7 +685,7 @@ if st.session_state.exercices_actuels:
                 "Ta réponse :",
                  value=None,
                  step=1,
-                 key=f"reponse_{numero}",
+                 key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
                  on_change=enregistrer_reponse_auto,
                  args=(numero,)
             )
