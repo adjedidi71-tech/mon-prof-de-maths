@@ -14,7 +14,7 @@ if st.button("Tester Gemini"):
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
         reponse = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents="Combien font 7 × 8 ? Réponds en français."
         )
 
