@@ -583,17 +583,17 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"Puis {x + y} × {z} = {reponse_attendue}."
                     )
 
-            else:
-                x = random.randint(20, 50)
-                y = random.randint(2, 6)
-                z = random.randint(3, 9)
-                enonce = f"Calcule : {x} - {y} × ({z} + 2)"
-                reponse_attendue = x - y * (z + 2)
-                correction = (
-                    f"On calcule la parenthèse : {z} + 2 = {z + 2}. "
-                    f"Puis la multiplication : {y} × {z + 2} = {y * (z + 2)}. "
-                    f"Enfin {x} - {y * (z + 2)} = {reponse_attendue}."
-                )            
+                else:
+                    x = random.randint(20, 50)
+                    y = random.randint(2, 6)
+                    z = random.randint(3, 9)
+                    enonce = f"Calcule : {x} - {y} × ({z} + 2)"
+                    reponse_attendue = x - y * (z + 2)
+                    correction = (
+                        f"On calcule la parenthèse : {z} + 2 = {z + 2}. "
+                        f"Puis la multiplication : {y} × {z + 2} = {y * (z + 2)}. "
+                        f"Enfin {x} - {y * (z + 2)} = {reponse_attendue}."
+                    )            
             elif type_exercice == "Je m'entraîne":
                 modele = random.choice([1, 2, 3])
 
