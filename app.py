@@ -657,12 +657,6 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 ) 
 
     else:
-        enonce = f"Développe : {a} × (x + {b})"
-        correction = (
-            f"{a} × (x + {b}) = {a}x + {a * b}"
-        )
-
-    else:
         enonce = f"Calcule la valeur de {a} × x + {b} pour x = 3."
         correction = f"{a} × 3 + {b} = {3 * a + b}"
 
