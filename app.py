@@ -301,11 +301,16 @@ with col1:
     )
 
 with col2:
-    difficulte = st.selectbox(
-        "Difficulté",
-        [1, 2, 3, 4, 5],
-        index=2
-    )
+        difficulte = st.selectbox(
+            "Difficulté",
+            [1, 2, 3],
+            index=1,
+            format_func=lambda x: {
+                1: "1 - Facile",
+                2: "2 - Moyen",
+                3: "3 - Difficile"
+            }[x]
+        )
 
 nombre = st.selectbox(
     "Nombre d'exercices",
