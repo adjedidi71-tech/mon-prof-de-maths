@@ -564,6 +564,43 @@ def enregistrer_reponse_auto(numero):
 
 import random
 
+def generer_exercice_ia(chapitre, partie, difficulte, type_exercice):
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
+    consigne = f"""
+    Tu es professeur de mathématiques en classe de 5e en France.
+
+    Chapitre : {chapitre}
+    Sous-chapitre : {partie}
+    Catégorie : {type_exercice}
+    Difficulté : {difficulte} sur 3
+
+    Crée un exercice original adapté au programme de 5e.
+
+    L'exercice doit être différent des exemples habituels.
+    Fournis un énoncé clair et une correction détaillée.
+
+    Sépare l'énoncé et la correction avec le texte exact :
+    ===CORRECTION===
+    """
+
+    reponse = client.models.generate_content(
+        model="gemini-3.8-flash",
+        contents=consigne
+    )
+
+    contenu = reponse.text
+
+    if not contenu or "===CORRECTION===" not in contenu:
+        raise ValueError("Réponse IA incomplète")
+
+    enonce, correction = contenu.split("===CORRECTION===", 1)
+
+    return {
+        "enonce": enonce.strip(),
+        "correction": correction.strip(),
+        "reponse_attendue": None
+    }
 def generer_exercice(chapitre, partie, difficulte, type_exercice):
     import random
     enonce = None
