@@ -709,29 +709,30 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     ) 
 
             else:
-                prix = random.randint(4, 12)
-                quantite = random.randint(5, 20)
-                transport = random.randint(10, 30)
-
-                enonce = (
-                    f"Une classe achète {quantite} billets "
-                    f"à {prix} € chacun. "
-                    f"Le transport coûte {transport} €.\n\n"
-                    f"1. Calcule le prix des billets.\n"
-                    f"2. Calcule le coût total de la sortie.\n"
-                    f"3. Écris une expression avec des "
-                    f"parenthèses pour calculer ce coût."
-                )
-
-                reponse_attendue = None
-
-                correction = (
-                    f"Prix des billets : {quantite} × {prix} "
-                    f"= {quantite * prix} €.\n"
-                    f"Coût total : {quantite * prix} + {transport} "
-                    f"= {quantite * prix + transport} €.\n"
-                    f"Expression : ({quantite} × {prix}) + {transport}."
-                )
+                if difficulte == 1:
+                    prix = random.randint(4, 12)
+                    quantite = random.randint(5, 20)
+                    transport = random.randint(10, 30)
+                
+                    enonce = (
+                        f"Une classe achète {quantite} billets "
+                        f"à {prix} € chacun. "
+                        f"Le transport coûte {transport} €.\n\n"
+                        f"1. Calcule le prix des billets.\n"
+                        f"2. Calcule le coût total de la sortie.\n"
+                        f"3. Écris une expression avec des "
+                        f"parenthèses pour calculer ce coût."
+                    )
+                
+                    reponse_attendue = None
+                
+                    correction = (
+                        f"Prix des billets : {quantite} × {prix} "
+                        f"= {quantite * prix} €.\n"
+                        f"Coût total : {quantite * prix} + {transport} "
+                        f"= {quantite * prix + transport} €.\n"
+                        f"Expression : ({quantite} × {prix}) + {transport}."
+                    )
     if enonce is None:
         enonce = f"Exercices à développer pour : {partie}"
         correction = "Correction non disponible."
