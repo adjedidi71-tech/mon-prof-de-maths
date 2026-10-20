@@ -652,7 +652,6 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
 if st.button("Générer mes exercices"):
-    st.write("TEST : bouton de génération activé")
     exercices = [
         generer_exercice(chapitre, partie, difficulte, type_exercice)
         for _ in range(nombre)
@@ -675,7 +674,7 @@ if st.button("Générer mes exercices"):
     else:
         st.session_state.code_actuel = None
         st.info("Connecte-toi pour sauvegarder tes exercices.")
-st.write("Nombre d'exercices en mémoire :", len(st.session_state.exercices_actuels))
+
 if st.session_state.exercices_actuels:
     for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
         st.subheader(f"Exercice {numero}")
