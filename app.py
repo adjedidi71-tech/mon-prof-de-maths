@@ -288,21 +288,32 @@ partie = st.selectbox(
     chapitres[chapitre]
 )
 
-col1, col2 = st.columns(2)
+st.write("**Type d'exercice**")
 
-with col1:
-    type_exercice = st.selectbox(
-        "Type d'exercice",
-        [
-            "Mes automatismes",
-            "Je m'entraîne",
-            "Je résous des problèmes"
-        ]
-    )
+categories = [
+    "Mes automatismes",
+    "Je m'entraîne",
+    "Je résous des problèmes"
+]
+
+type_exercice = st.radio(
+    "Choisis une catégorie",
+    categories,
+    horizontal=True,
+    label_visibility="collapsed",
+    key="categorie_exercice"
+)
+
 couleurs_categories = {
     "Mes automatismes": ("#E8F3FF", "#2478D4"),
     "Je m'entraîne": ("#FFF3D9", "#D99416"),
     "Je résous des problèmes": ("#F0E7FF", "#8956D8")
+}
+
+descriptions = {
+    "Mes automatismes": "Bases et réflexes — niveaux 1 à 3",
+    "Je m'entraîne": "Calculs élaborés — niveaux 4 à 6",
+    "Je résous des problèmes": "Raisonnement — niveaux 7 à 9"
 }
 
 fond, couleur = couleurs_categories[type_exercice]
@@ -311,18 +322,22 @@ st.markdown(
     f"""
     <div style="
         background-color: {fond};
-        border-left: 6px solid {couleur};
+        border: 2px solid {couleur};
         border-radius: 12px;
-        padding: 16px 20px;
+        padding: 18px;
         margin: 12px 0;
-        font-weight: 600;
         color: #202B45;
     ">
-        {type_exercice}
+        <strong>{type_exercice}</strong>
+        <p style="margin-bottom:0">
+            {descriptions[type_exercice]}
+        </p>
     </div>
     """,
     unsafe_allow_html=True
 )
+
+col2 = st.container()
 with col2:
         difficulte = st.selectbox(
             "Difficulté",
