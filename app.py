@@ -339,17 +339,17 @@ st.markdown(
 
 col2 = st.container()
 with col2:
-        difficulte = st.selectbox(
-            "Difficulté",
-            [1, 2, 3],
-            index=1,
-            format_func=lambda x: {
-                1: "1 - Facile",
-                2: "2 - Moyen",
-                3: "3 - Difficile"
-            }[x]
-        )
-
+    difficulte = st.radio(
+        "Difficulté",
+        [1, 2, 3],
+        index=1,
+        horizontal=True,
+        format_func=lambda x: {
+            1: "1 - Facile",
+            2: "2 - Moyen",
+            3: "3 - Difficile"
+        }[x]
+    )
 nombre = st.selectbox(
     "Nombre d'exercices",
     [1, 2, 3, 4, 5],
