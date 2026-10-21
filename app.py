@@ -795,7 +795,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             elif type_exercice == "Je m'entraîne":
     
                 if difficulte == 1:
-                    a = random.randint(20, 50)
+                    a = random.randint(80, 120)
                     b = random.randint(2, 8)
                     c = random.randint(3, 9)
                     d = random.randint(2, 6)
