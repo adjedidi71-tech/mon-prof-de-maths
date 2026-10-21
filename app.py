@@ -564,7 +564,69 @@ def enregistrer_reponse_auto(numero):
             st.session_state["erreur_sauvegarde"] = True
 
 import random
+def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1):
+    import json
 
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+    consigne = f"""
+    Tu es professeur de mathématiques en classe de 5e en France.
+
+    Chapitre : {chapitre}
+    Sous-chapitre : {partie}
+    Catégorie : {type_exercice}
+    Difficulté : {difficulte} sur 3
+
+    Génère exactement {nombre} problèmes différents.
+
+    Consignes :
+    - Respecte le programme français de 5e.
+    - Propose des situations réalistes et variées.
+    - Adapte la complexité au niveau demandé.
+    - Prévois plusieurs étapes de résolution.
+    - Vérifie les calculs et les réponses finales.
+    - Fournis une correction détaillée pour chaque problème.
+    - N'utilise pas de LaTeX.
+    - Utilise directement les symboles mathématiques et €.
+
+    Réponds uniquement avec un objet JSON valide contenant
+    une clé "exercices" dont la valeur est un tableau JSON.
+    Chaque élément doit contenir :
+    "enonce" : texte complet du problème
+    "correction" : correction détaillée
+
+    Le tableau doit contenir exactement {nombre} éléments.
+    """
+
+    reponse = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
+            {"role": "user", "content": consigne}
+        ],
+        temperature=0.7,
+        response_format={"type": "json_object"}
+    )
+
+    contenu = reponse.choices[0].message.content
+
+    if not contenu:
+        raise ValueError("Réponse Groq vide")
+
+    donnees = json.loads(contenu)
+
+    exercices = donnees["exercices"]
+
+    if not isinstance(exercices, list) or len(exercices) != nombre:
+        raise ValueError("Nombre d'exercices Groq incorrect")
+
+    return [
+        {
+            "enonce": exercice["enonce"],
+            "correction": exercice["correction"],
+            "reponse_attendue": None
+        }
+        for exercice in exercices
+    ]
 def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
     import json
     import re
