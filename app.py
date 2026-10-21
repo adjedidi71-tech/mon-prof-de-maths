@@ -590,19 +590,19 @@ def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1)
     2. Progression des difficultés :
 
     Difficulté 1 (niveau réel 7) :
-    - Propose un problème court avec 2 ou 3 questions progressives.
-    - Le problème doit demander au moins 3 opérations utiles et liées.
-    - Pour le sous-chapitre "Priorités opératoires",
-      l'élève doit construire une expression contenant
-      des parenthèses, une multiplication ou division,
-      et une addition ou soustraction.
-    - Exemple de complexité attendue :
-      250 - (12 × 8 + 45).
-    - Cet exemple illustre le niveau attendu :
-      ne le reproduis pas systématiquement.
-    - Interdis les problèmes résolus par une seule opération.
-    - Ne crée pas d'étapes artificielles pour allonger la correction.
-    - L'énoncé doit rester simple à lire pour un élève de 5e.
+    - Crée un problème court nécessitant plusieurs calculs liés.
+    - Respecte strictement les priorités opératoires.
+    - La solution doit pouvoir s'écrire sous la forme
+      d'une seule expression numérique avec des parenthèses.
+    - Cette expression doit comporter au moins
+      4 opérations utiles, dont une multiplication ou division.
+    - Propose 2 ou 3 questions progressives maximum.
+    - Les questions doivent contribuer au même raisonnement.
+    - Évite les questions indépendantes ou inutiles.
+    - Ne donne pas directement à l'élève l'ordre des calculs.
+    - Dans la correction, montre l'expression complète
+      puis explique son calcul étape par étape.
+    - Conserve un énoncé court et facile à comprendre.
 
     Difficulté 2 (niveau réel 8) :
     - Propose un problème nécessitant plusieurs décisions.
