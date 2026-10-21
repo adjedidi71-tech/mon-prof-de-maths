@@ -948,7 +948,7 @@ if st.button("Générer mes exercices"):
         ]
         st.session_state["moteur_utilise"] = "Python"
     st.session_state.exercices_actuels = exercices
-    print(f"DIAGNOSTIC MOTEUR : {st.session_state['moteur_utilise']}", flush=True)
+    st.session_state["dernier_moteur"] = st.session_state["moteur_utilise"]
     st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
 
     if st.session_state.get("eleve_id"):
