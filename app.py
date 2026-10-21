@@ -593,6 +593,8 @@ def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
     )
 
     contenu = reponse.text
+    import re
+    contenu = re.sub(r"\\text\{?euro\}?", "€", contenu)
     contenu = contenu.replace("\\texturo", "€")
 
     if not contenu or "===CORRECTION===" not in contenu:
