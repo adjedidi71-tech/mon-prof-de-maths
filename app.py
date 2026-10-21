@@ -795,19 +795,24 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             elif type_exercice == "Je m'entraîne":
     
                 if difficulte == 1:
-                    a = random.randint(5, 15)
-                    b = random.randint(2, 9)
-                    c = random.randint(2, 6)
+                    a = random.randint(20, 50)
+                    b = random.randint(2, 8)
+                    c = random.randint(3, 9)
+                    d = random.randint(2, 6)
     
-                    enonce = f"Calcule : {a} + {b} × {c}"
-                    reponse_attendue = a + b * c
+                    enonce = f"Calcule : {a} - {b} × ({c} + {d}) + {c} × {d}"
+    
+                    reponse_attendue = a - b * (c + d) + c * d
     
                     correction = (
-                        f"On commence par la multiplication : "
-                        f"{b} × {c} = {b * c}. "
-                        f"Puis {a} + {b * c} = {reponse_attendue}."
-                    )
-    
+                        f"On commence par la parenthèse : "
+                        f"{c} + {d} = {c + d}. "
+                        f"Puis les multiplications : "
+                        f"{b} × {c + d} = {b * (c + d)} et "
+                        f"{c} × {d} = {c * d}. "
+                        f"Enfin : {a} - {b * (c + d)} + {c * d} "
+                        f"= {reponse_attendue}."
+                    )    
                 elif difficulte == 2:
                     a = random.randint(3, 8)
                     b = random.randint(2, 7)
