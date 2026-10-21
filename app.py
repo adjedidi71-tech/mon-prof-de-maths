@@ -921,12 +921,20 @@ if st.button("Générer mes exercices"):
             exercices = generer_exercice_ia(
                 chapitre, partie, difficulte, type_exercice, nombre
             )
-        except Exception as e:
-            st.info("L'IA est temporairement indisponible. Des exercices alternatifs ont été générés.")
-            exercices = [
-                generer_exercice(chapitre, partie, difficulte, type_exercice)
-                for _ in range(nombre)
-            ]
+        except Exception:
+            try:
+                exercices = generer_exercice_groq(
+                    chapitre, partie, difficulte, type_exercice, nombre
+                )
+            except Exception:
+                st.info(
+                    "Les IA sont temporairement indisponibles. "
+                    "Des exercices alternatifs ont été générés."
+                )
+                exercices = [
+                    generer_exercice(chapitre, partie, difficulte, type_exercice)
+                    for _ in range(nombre)
+                ]
     else:
         exercices = [
             generer_exercice(chapitre, partie, difficulte, type_exercice)
