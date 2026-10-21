@@ -6,7 +6,7 @@ if st.button("Tester Groq"):
         client_groq = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
         reponse = client_groq.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             messages=[
                 {"role": "user", "content": "Réponds uniquement : Connexion Groq OK"}
             ]
