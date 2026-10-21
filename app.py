@@ -813,7 +813,7 @@ if st.button("Générer mes exercices"):
     exercices = []
     
     for i in range(nombre):
-        if type_exercice == "Je m'entraîne" and i == 0:
+        if type_exercice == "Je résous des problèmes":
             try:
                 exercice = generer_exercice_ia(
                     chapitre, partie, difficulte, type_exercice
