@@ -1,21 +1,6 @@
 import streamlit as st
 from google import genai
 from groq import Groq
-if st.button("Tester Groq"):
-    try:
-        client_groq = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-        reponse = client_groq.chat.completions.create(
-            model="openai/gpt-oss-20b",
-            messages=[
-                {"role": "user", "content": "Réponds uniquement : Connexion Groq OK"}
-            ]
-        )
-
-        st.success(reponse.choices[0].message.content)
-
-    except Exception as e:
-        st.error(f"Erreur Groq : {e}")
 from supabase import create_client
 from auth_persistante import (
     enregistrer_session,
