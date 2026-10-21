@@ -859,7 +859,7 @@ if st.button("Générer mes exercices"):
                 chapitre, partie, difficulte, type_exercice, nombre
             )
         except Exception as e:
-            st.warning(f"Gemini indisponible : {e}")
+            st.info("L'IA est temporairement indisponible. Des exercices alternatifs ont été générés.")
             exercices = [
                 generer_exercice(chapitre, partie, difficulte, type_exercice)
                 for _ in range(nombre)
