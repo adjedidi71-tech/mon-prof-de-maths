@@ -916,27 +916,27 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 }
 if st.query_params.get("admin") == "oui":
     with st.sidebar.expander("Administration"):
-    mot_de_passe_admin = st.text_input(
-        "Mot de passe administrateur",
-        type="password",
-        key="mdp_admin"
-    )
+        mot_de_passe_admin = st.text_input(
+            "Mot de passe administrateur",
+            type="password",
+            key="mdp_admin"
+        )
 
-    if mot_de_passe_admin:
-        import hmac
+        if mot_de_passe_admin:
+            import hmac
 
-        if hmac.compare_digest(
-            mot_de_passe_admin,
-            st.secrets["ADMIN_DIAGNOSTIC_PASSWORD"]
-        ):
-            st.success("Accès administrateur")
+            if hmac.compare_digest(
+                mot_de_passe_admin,
+                st.secrets["ADMIN_DIAGNOSTIC_PASSWORD"]
+            ):
+                st.success("Accès administrateur")
 
-            st.write(
-                "Dernier moteur utilisé :",
-                st.session_state.get("dernier_moteur", "Aucun test")
-            )
-        else:
-            st.error("Mot de passe incorrect")    
+                st.write(
+                    "Dernier moteur utilisé :",
+                    st.session_state.get("dernier_moteur", "Aucun test")
+                )
+            else:
+                st.error("Mot de passe incorrect")   
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
 if st.button("Générer mes exercices"):
