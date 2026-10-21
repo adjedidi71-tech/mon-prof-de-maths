@@ -948,7 +948,7 @@ if st.button("Générer mes exercices"):
         ]
         st.session_state["moteur_utilise"] = "Python"
     st.session_state.exercices_actuels = exercices
-    if st.query_params.get("diagnostic") == "oui":
+    if st.query_params.get("diagnostic", "") == "oui":
         st.caption(f"Diagnostic — Moteur utilisé : {st.session_state['moteur_utilise']}")
     st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
 
