@@ -839,31 +839,40 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"= {reponse_attendue}."
                     )                
                 else:
-                    a = random.randint(3, 7)
-                    b = random.randint(4, 9)
-                    c = random.randint(2, 5)
-                    d = random.randint(2, 6)
-                    e = random.randint(2, 5)
+                    a = random.randint(3, 8)
+                    b = random.randint(2, 7)
+                    c = random.randint(2, 6)
+                    d = random.randint(2, 5)
+                    e = random.randint(2, 6)
+                    f = random.randint(2, 5)
+                    g = random.randint(2, 6)
     
-                    dividende = d * e
-                    produit = a * (b + c)
-                    depart = produit + random.randint(10, 30)
+                    produit1 = a * (b + c)
+                    produit2 = d * e
+                    dividende = f * g
+    
+                    depart = produit1 + produit2 + random.randint(20, 50)
     
                     enonce = (
-                        f"Calcule : {depart} - {a} × ({b} + {c}) "
-                        f"+ {dividende} ÷ {d}"
+                        f"Calcule : {depart} - "
+                        f"[{a} × ({b} + {c}) - {dividende} ÷ {f}] "
+                        f"+ {d} × ({e} + {g})"
                     )
     
-                    reponse_attendue = depart - produit + e
+                    reponse_attendue = (
+                        depart - (produit1 - g) + d * (e + g)
+                    )
     
                     correction = (
-                        f"Parenthèse : {b} + {c} = {b + c}. "
-                        f"Multiplication : {a} × {b + c} = {produit}. "
-                        f"Division : {dividende} ÷ {d} = {e}. "
-                        f"Enfin {depart} - {produit} + {e} "
-                        f"= {reponse_attendue}."
-                    ) 
-
+                        f"Parenthèses : {b} + {c} = {b + c} "
+                        f"et {e} + {g} = {e + g}. "
+                        f"Multiplications : {a} × {b + c} = {produit1} "
+                        f"et {d} × {e + g} = {d * (e + g)}. "
+                        f"Division : {dividende} ÷ {f} = {g}. "
+                        f"Crochets : {produit1} - {g} = {produit1 - g}. "
+                        f"Enfin : {depart} - ({produit1 - g}) "
+                        f"+ {d * (e + g)} = {reponse_attendue}."
+                    )
             else:
                 if difficulte == 1:
                     prix = random.randint(4, 12)
