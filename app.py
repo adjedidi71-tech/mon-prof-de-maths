@@ -579,50 +579,57 @@ def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1)
 
     Génère exactement {nombre} problèmes différents.
 
-    Consignes :
-    - Respecte le programme français de 5e.
-    - Propose des situations réalistes et variées.
-    Progression obligatoire des difficultés :
+    Consignes pédagogiques :
+
+    1. Respect du programme :
+    - Respecte le programme français de mathématiques de 5e.
+    - Traite uniquement le chapitre et le sous-chapitre demandés.
+    - Choisis des situations concrètes, réalistes et variées.
+    - Évite les notions mathématiques hors du sujet étudié.
+
+    2. Progression des difficultés :
 
     Difficulté 1 (niveau réel 7) :
-    - Propose des problèmes concrets nécessitant au moins 4 étapes de calcul.
-    - Chaque problème doit mobiliser les priorités opératoires.
-    - L'élève doit construire une expression numérique avec des parenthèses.
-    - Combine plusieurs opérations : addition, soustraction,
-      multiplication et, si pertinent, division.
-    - Le raisonnement doit être plus exigeant qu'un simple calcul direct.
-    - Interdis les problèmes résolus par une seule multiplication
-      ou une seule division.
+    - Propose un problème demandant plusieurs calculs liés.
+    - Guide l'élève avec 2 ou 3 questions progressives.
+    - Demande un raisonnement plus élaboré qu'au niveau 6.
 
     Difficulté 2 (niveau réel 8) :
-    - Propose des problèmes nécessitant 5 à 6 étapes.
-    - Introduis plusieurs calculs intermédiaires et des données à organiser.
-    - Demande de construire une expression numérique plus complexe.
+    - Propose un problème nécessitant plusieurs décisions.
+    - L'élève doit organiser les données et choisir ses calculs.
+    - Guide moins l'élève qu'au niveau 7.
 
     Difficulté 3 (niveau réel 9) :
-    - Propose des problèmes nécessitant une véritable stratégie.
-    - Combine plusieurs calculs dépendants les uns des autres.
-    - Introduis des contraintes supplémentaires et une vérification finale.
+    - Propose un problème nécessitant une stratégie.
+    - Introduis des contraintes ou des calculs interdépendants.
+    - L'élève doit organiser et vérifier sa démarche.
 
-    Pour toutes les difficultés :
-    - Distingue rigoureusement les quantités vendues,
-      données, achetées, consommées et restantes.
-    - Ne compte jamais une quantité donnée comme vendue.
-    - Si des objets sont indivisibles (élèves, gâteaux,
-      billets, crayons), les résultats doivent être entiers.
-    - Choisis des nombres permettant des résultats réalistes.
-    - Recalcule indépendamment la réponse finale.
-    - Vérifie que chaque quantité utilisée dans la correction
-      correspond exactement à ce que demande l'énoncé.
-    - Respecte strictement le sous-chapitre demandé.
-    - Évite les exercices de niveau primaire.
-    - Garantit la cohérence des données et l'exactitude des corrections.
-    - Prévois plusieurs étapes de résolution.
-    - Vérifie les calculs et les réponses finales.
-    - Fournis une correction détaillée pour chaque problème.
-    - N'utilise pas de LaTeX.
-    - Utilise directement les symboles mathématiques et €.
+    3. Clarté et présentation :
+    - Rédige des énoncés courts avec des phrases simples.
+    - Utilise un vocabulaire compréhensible par un élève de 5e.
+    - Limite chaque problème à 3 questions maximum.
+    - Sépare les questions par des retours à la ligne.
+    - Évite les informations inutiles et les histoires compliquées.
+    - Augmente la difficulté par le raisonnement, pas par la longueur.
+    - Varie les contextes et les méthodes dans une même série.
 
+    4. Fiabilité mathématique :
+    - Utilise uniquement des données cohérentes et réalistes.
+    - Distingue clairement les quantités achetées, vendues,
+      données, utilisées et restantes.
+    - Pour les objets indivisibles, choisis des calculs
+      donnant des quantités entières.
+    - Évite les arrondis arbitraires.
+    - Vérifie chaque résultat et sa cohérence avec l'énoncé.
+    - Ne crée pas d'étapes artificielles ou inutiles.
+
+    5. Correction :
+    - Explique le raisonnement avec des mots simples.
+    - Présente chaque étape importante sur une ligne distincte.
+    - Montre les opérations et leurs résultats.
+    - Termine par une réponse finale avec son unité.
+    - Utilise les symboles mathématiques habituels, sans LaTeX.
+    
     Réponds uniquement avec un objet JSON valide contenant
     une clé "exercices" dont la valeur est un tableau JSON.
     Chaque élément doit contenir :
