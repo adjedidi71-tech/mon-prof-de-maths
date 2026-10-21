@@ -926,7 +926,8 @@ if st.button("Générer mes exercices"):
                 exercices = generer_exercice_groq(
                     chapitre, partie, difficulte, type_exercice, nombre
                 )
-            except Exception:
+            except Exception as e:
+                st.error(f"Erreur Groq : {e}")
                 st.info(
                     "Les IA sont temporairement indisponibles. "
                     "Des exercices alternatifs ont été générés."
