@@ -565,48 +565,73 @@ def enregistrer_reponse_auto(numero):
 import random
 
 def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
+    import json
+    import re
+
     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
     consigne = f"""
     Tu es professeur de mathématiques en classe de 5e en France.
-    Génère exactement {nombre} exercices différents.
-    Varie les situations, les raisonnements et les contextes.
-    Chaque exercice doit avoir sa propre correction détaillée.
 
     Chapitre : {chapitre}
     Sous-chapitre : {partie}
     Catégorie : {type_exercice}
     Difficulté : {difficulte} sur 3
 
-    Crée un exercice original adapté au programme de 5e.
+    Génère exactement {nombre} problèmes différents.
 
-    L'exercice doit être différent des exemples habituels.
-    Fournis un énoncé clair et une correction détaillée.
+    Consignes :
+    - Respecte le programme français de 5e.
+    - Adapte réellement la complexité à la difficulté demandée.
+    - Varie fortement les contextes et les raisonnements.
+    - Évite les répétitions de thèmes dans une même série.
+    - Propose des problèmes nécessitant plusieurs étapes.
+    - Fournis une correction mathématique détaillée.
+    - Utilise le symbole € directement, sans LaTeX.
+    - N'utilise pas de commandes LaTeX.
 
-    Sépare l'énoncé et la correction avec le texte exact :
-    ===CORRECTION===
+    Réponds uniquement avec un tableau JSON valide.
+    Chaque élément doit contenir :
+    "enonce" : texte complet du problème
+    "correction" : correction détaillée
+
+    Le tableau doit contenir exactement {nombre} éléments.
     """
 
     reponse = client.models.generate_content(
         model="gemini-3.8-flash",
-        contents=consigne
+        contents=consigne,
+        config={
+            "response_mime_type": "application/json"
+        }
     )
 
     contenu = reponse.text
-    import re
-    contenu = re.sub(r"\\text\{?euro\}?", "€", contenu)
-    contenu = contenu.replace("\\texturo", "€")
 
-    if not contenu or "===CORRECTION===" not in contenu:
-        raise ValueError("Réponse IA incomplète")
+    if not contenu:
+        raise ValueError("Réponse IA vide")
 
-    enonce, correction = contenu.split("===CORRECTION===", 1)
+    exercices = json.loads(contenu)
 
-    return {
-        "enonce": enonce.strip(),
-        "correction": correction.strip(),
-        "reponse_attendue": None
-    }
+    if not isinstance(exercices, list) or len(exercices) != nombre:
+        raise ValueError("Nombre d'exercices IA incorrect")
+
+    resultat = []
+
+    for exercice in exercices:
+        enonce = exercice["enonce"]
+        correction = exercice["correction"]
+
+        enonce = re.sub(r"\\text\{?euro\}?", "€", enonce)
+        correction = re.sub(r"\\text\{?euro\}?", "€", correction)
+
+        resultat.append({
+            "enonce": enonce,
+            "correction": correction,
+            "reponse_attendue": None
+        })
+
+    return resultat
 def generer_exercice(chapitre, partie, difficulte, type_exercice):
     import random
     enonce = None
