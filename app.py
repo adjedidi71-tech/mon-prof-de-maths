@@ -605,6 +605,15 @@ def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1)
     - Introduis des contraintes supplémentaires et une vérification finale.
 
     Pour toutes les difficultés :
+    - Distingue rigoureusement les quantités vendues,
+      données, achetées, consommées et restantes.
+    - Ne compte jamais une quantité donnée comme vendue.
+    - Si des objets sont indivisibles (élèves, gâteaux,
+      billets, crayons), les résultats doivent être entiers.
+    - Choisis des nombres permettant des résultats réalistes.
+    - Recalcule indépendamment la réponse finale.
+    - Vérifie que chaque quantité utilisée dans la correction
+      correspond exactement à ce que demande l'énoncé.
     - Respecte strictement le sous-chapitre demandé.
     - Évite les exercices de niveau primaire.
     - Garantit la cohérence des données et l'exactitude des corrections.
