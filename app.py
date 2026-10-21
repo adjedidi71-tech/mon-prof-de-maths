@@ -589,7 +589,19 @@ def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
     - Fournis une correction mathématique détaillée.
     - Utilise le symbole € directement, sans LaTeX.
     - N'utilise pas de commandes LaTeX.
-
+     Exigences pédagogiques :
+    - Chaque problème doit présenter une situation réaliste et cohérente.
+    - Utilise des contextes variés : sport, sciences, voyages,
+      jeux, mesures, environnement, vie quotidienne.
+    - Ne répète pas le même contexte dans une série.
+    - Niveau 1 : problème guidé avec 2 à 3 étapes simples.
+    - Niveau 2 : problème avec 3 à 4 étapes et plusieurs opérations.
+    - Niveau 3 : problème plus complexe nécessitant une stratégie.
+    - Les questions doivent être progressives.
+    - Vérifie tous les calculs avant de rédiger la correction.
+    - Présente chaque étape du calcul clairement.
+    - Vérifie que la réponse finale correspond exactement à l'énoncé.
+    - Évite les ambiguïtés et les données inutiles.
     Réponds uniquement avec un tableau JSON valide.
     Chaque élément doit contenir :
     "enonce" : texte complet du problème
