@@ -564,11 +564,14 @@ def enregistrer_reponse_auto(numero):
 
 import random
 
-def generer_exercice_ia(chapitre, partie, difficulte, type_exercice):
+def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
     consigne = f"""
     Tu es professeur de mathématiques en classe de 5e en France.
+    Génère exactement {nombre} exercices différents.
+    Varie les situations, les raisonnements et les contextes.
+    Chaque exercice doit avoir sa propre correction détaillée.
 
     Chapitre : {chapitre}
     Sous-chapitre : {partie}
