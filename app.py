@@ -817,22 +817,27 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     a = random.randint(3, 8)
                     b = random.randint(2, 7)
                     c = random.randint(2, 5)
-                    d = random.randint(2, 10)
+                    d = random.randint(2, 9)
+                    e = random.randint(2, 6)
     
                     dividende = (a + b) * c
     
                     enonce = (
-                        f"Calcule : {dividende} ÷ ({a} + {b}) + {d}"
+                        f"Calcule : {dividende} ÷ ({a} + {b}) "
+                        f"+ {d} × ({c} + {e}) - {b} × {e}"
                     )
-                    reponse_attendue = c + d
+    
+                    reponse_attendue = c + d * (c + e) - b * e
     
                     correction = (
-                        f"On calcule la parenthèse : "
-                        f"{a} + {b} = {a + b}. "
-                        f"Puis {dividende} ÷ {a + b} = {c}. "
-                        f"Enfin {c} + {d} = {reponse_attendue}."
-                    )
-    
+                        f"Parenthèses : {a} + {b} = {a + b} "
+                        f"et {c} + {e} = {c + e}. "
+                        f"Division : {dividende} ÷ {a + b} = {c}. "
+                        f"Multiplications : {d} × {c + e} = {d * (c + e)} "
+                        f"et {b} × {e} = {b * e}. "
+                        f"Enfin : {c} + {d * (c + e)} - {b * e} "
+                        f"= {reponse_attendue}."
+                    )                
                 else:
                     a = random.randint(3, 7)
                     b = random.randint(4, 9)
