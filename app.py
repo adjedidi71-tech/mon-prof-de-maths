@@ -914,7 +914,8 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
         "correction": correction,
         "reponse_attendue": reponse_attendue if chapitre == "1. Opérations" and partie == "Priorités opératoires" else None
 }
-with st.sidebar.expander("Administration"):
+if st.query_params.get("admin") == "oui":
+    with st.sidebar.expander("Administration"):
     mot_de_passe_admin = st.text_input(
         "Mot de passe administrateur",
         type="password",
