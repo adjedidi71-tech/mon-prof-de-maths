@@ -603,7 +603,9 @@ def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1)
         messages=[
             {"role": "user", "content": consigne}
         ],
-        temperature=0.7,
+        temperature=0.5,
+        max_completion_tokens=4096,
+        reasoning_effort="low",
         response_format={"type": "json_object"}
     )
 
