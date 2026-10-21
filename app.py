@@ -923,11 +923,13 @@ if st.button("Générer mes exercices"):
             exercices = generer_exercice_ia(
                 chapitre, partie, difficulte, type_exercice, nombre
             )
+            st.session_state["moteur_utilise"] = "Gemini"
         except Exception:
             try:
                 exercices = generer_exercice_groq(
                     chapitre, partie, difficulte, type_exercice, nombre
                 )
+                st.session_state["moteur_utilise"] = "Groq"
             except Exception as e:
                 st.error(f"Erreur Groq : {e}")
                 st.info(
@@ -938,6 +940,7 @@ if st.button("Générer mes exercices"):
                     generer_exercice(chapitre, partie, difficulte, type_exercice)
                     for _ in range(nombre)
                 ]
+                st.session_state["moteur_utilise"] = "Python"
     else:
         exercices = [
             generer_exercice(chapitre, partie, difficulte, type_exercice)
