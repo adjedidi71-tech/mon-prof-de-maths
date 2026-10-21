@@ -817,7 +817,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     a = random.randint(3, 8)
                     b = random.randint(2, 7)
                     c = random.randint(2, 5)
-                    d = random.randint(2, 9)
+                    d = random.randint(b + 1, b + 5)
                     e = random.randint(2, 6)
     
                     dividende = (a + b) * c
