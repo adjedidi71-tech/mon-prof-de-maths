@@ -841,25 +841,22 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
 if st.button("Générer mes exercices"):
-    exercices = []
-    
-    for i in range(nombre):
-        if type_exercice == "Je résous des problèmes":
-            try:
-                exercice = generer_exercice_ia(
-                    chapitre, partie, difficulte, type_exercice
-                )
-            except Exception as e:
-                st.warning(f"Gemini indisponible : {e}")
-                exercice = generer_exercice(
-                    chapitre, partie, difficulte, type_exercice
-                )
-        else:
-            exercice = generer_exercice(
-                chapitre, partie, difficulte, type_exercice
+    if type_exercice == "Je résous des problèmes":
+        try:
+            exercices = generer_exercice_ia(
+                chapitre, partie, difficulte, type_exercice, nombre
             )
-    
-        exercices.append(exercice)
+        except Exception as e:
+            st.warning(f"Gemini indisponible : {e}")
+            exercices = [
+                generer_exercice(chapitre, partie, difficulte, type_exercice)
+                for _ in range(nombre)
+            ]
+    else:
+        exercices = [
+            generer_exercice(chapitre, partie, difficulte, type_exercice)
+            for _ in range(nombre)
+        ]
     st.session_state.exercices_actuels = exercices
     st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
 
