@@ -582,7 +582,32 @@ def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1)
     Consignes :
     - Respecte le programme français de 5e.
     - Propose des situations réalistes et variées.
-    - Adapte la complexité au niveau demandé.
+    Progression obligatoire des difficultés :
+
+    Difficulté 1 (niveau réel 7) :
+    - Propose des problèmes concrets nécessitant au moins 4 étapes de calcul.
+    - Chaque problème doit mobiliser les priorités opératoires.
+    - L'élève doit construire une expression numérique avec des parenthèses.
+    - Combine plusieurs opérations : addition, soustraction,
+      multiplication et, si pertinent, division.
+    - Le raisonnement doit être plus exigeant qu'un simple calcul direct.
+    - Interdis les problèmes résolus par une seule multiplication
+      ou une seule division.
+
+    Difficulté 2 (niveau réel 8) :
+    - Propose des problèmes nécessitant 5 à 6 étapes.
+    - Introduis plusieurs calculs intermédiaires et des données à organiser.
+    - Demande de construire une expression numérique plus complexe.
+
+    Difficulté 3 (niveau réel 9) :
+    - Propose des problèmes nécessitant une véritable stratégie.
+    - Combine plusieurs calculs dépendants les uns des autres.
+    - Introduis des contraintes supplémentaires et une vérification finale.
+
+    Pour toutes les difficultés :
+    - Respecte strictement le sous-chapitre demandé.
+    - Évite les exercices de niveau primaire.
+    - Garantit la cohérence des données et l'exactitude des corrections.
     - Prévois plusieurs étapes de résolution.
     - Vérifie les calculs et les réponses finales.
     - Fournis une correction détaillée pour chaque problème.
