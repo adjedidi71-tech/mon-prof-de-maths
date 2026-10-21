@@ -593,6 +593,7 @@ def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
     )
 
     contenu = reponse.text
+    contenu = contenu.replace("\\texturo", "€")
 
     if not contenu or "===CORRECTION===" not in contenu:
         raise ValueError("Réponse IA incomplète")
