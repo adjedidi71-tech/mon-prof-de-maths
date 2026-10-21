@@ -818,7 +818,8 @@ if st.button("Générer mes exercices"):
                 exercice = generer_exercice_ia(
                     chapitre, partie, difficulte, type_exercice
                 )
-            except Exception:
+            except Exception as e:
+                st.warning(f"Gemini indisponible : {e}")
                 exercice = generer_exercice(
                     chapitre, partie, difficulte, type_exercice
                 )
