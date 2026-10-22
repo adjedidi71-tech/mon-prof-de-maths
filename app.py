@@ -415,7 +415,31 @@ if st.session_state.get("eleve_id"):
                          st.session_state.code_actuel = serie["code_reprise"]
 
                          reponses = serie.get("reponses") or {}
-
+                         for numero, exercice in enumerate(serie["exercices"], start=1):
+                            donnees = reponses.get(str(numero), {})
+                        
+                            if not isinstance(donnees, dict):
+                                continue
+                        
+                            if donnees.get("type") != "banque":
+                                continue
+                        
+                            champs_sauvegardes = donnees.get("champs") or {}
+                        
+                            for champ in exercice.get("champs_reponse", []):
+                                cle = (
+                                    f"banque_{st.session_state.get('serie_version', 0)}"
+                                    f"_{numero}_{champ['id']}"
+                                )
+                        
+                                valeur = champs_sauvegardes.get(champ["id"], "")
+                        
+                                if champ["type"] == "choix":
+                                    if valeur not in champ["options"]:
+                                        valeur = "Choisir..."
+                        
+                                st.session_state[cle] = valeur
+                            
                          for numero, exercice in enumerate(
                              serie["exercices"], start=1
                          ):
