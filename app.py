@@ -1074,13 +1074,6 @@ if st.session_state.exercices_actuels:
                     st.success("Bonne réponse !")
                 else:
                     st.error("Réponse incorrecte. Essaie encore.")
-        else:
-            st.text_area(
-                "Ta réponse :",
-                placeholder="Écris ici tes réponses aux questions de l'exercice.",
-                height=150,
-                key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
-            )
         elif exercice.get("champs_reponse"):
             for champ in exercice["champs_reponse"]:
                 etiquette = f"Question {champ['question']} — {champ['libelle']}"
@@ -1106,8 +1099,17 @@ if st.session_state.exercices_actuels:
                         height=90,
                         key=cle
                     )
+        else:
+            st.text_area(
+                "Ta réponse :",
+                placeholder="Écris ici tes réponses aux questions de l'exercice.",
+                height=150,
+                key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+            )
+            
         with st.expander(
             f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
             expanded=False
         ):
             st.write(exercice["correction"])
+            
