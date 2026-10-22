@@ -1099,6 +1099,39 @@ if st.session_state.exercices_actuels:
                         height=90,
                         key=cle
                     )
+            if st.button(
+                "Vérifier mes réponses",
+                key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+            ):
+                for champ in exercice["champs_reponse"]:
+                    if champ["type"] == "texte_libre":
+                        continue
+
+                    cle = (
+                        f"banque_{st.session_state.get('serie_version', 0)}"
+                        f"_{numero}_{champ['id']}"
+                    )
+                    saisie = st.session_state.get(cle, "")
+
+                    if saisie in ("", "Choisir..."):
+                        st.warning(f"{champ['libelle']} : réponse manquante.")
+                        continue
+
+                    if champ["type"] == "nombre":
+                        try:
+                            correcte = (
+                                float(str(saisie).replace(",", "."))
+                                == float(champ["attendu"])
+                            )
+                        except (ValueError, TypeError):
+                            correcte = False
+                    else:
+                        correcte = saisie == champ["attendu"]
+
+                    if correcte:
+                        st.success(f"{champ['libelle']} : bonne réponse !")
+                    else:
+                        st.error(f"{champ['libelle']} : essaie encore.")
         else:
             st.text_area(
                 "Ta réponse :",
