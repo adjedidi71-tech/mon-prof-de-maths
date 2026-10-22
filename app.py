@@ -1012,19 +1012,19 @@ if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
 if st.button("Générer mes exercices"):
         if (
-        chapitre == "1. Opérations"
-        and partie == "Priorités opératoires"
-        and type_exercice == "Je résous des problèmes"
-    ):
-        if nombre > 3:
-            st.warning(
-                "Pour le moment, choisis 1, 2 ou 3 exercices. "
-                "Nous enrichirons bientôt la bibliothèque."
-            )
-            st.stop()
+            chapitre == "1. Opérations"
+            and partie == "Priorités opératoires"
+            and type_exercice == "Je résous des problèmes"
+        ):
+            if nombre > 3:
+                st.warning(
+                    "Pour le moment, choisis 1, 2 ou 3 exercices. "
+                    "Nous enrichirons bientôt la bibliothèque."
+                )
+                st.stop()
 
-        exercices = generer_exercices_priorites(difficulte, nombre)
-        st.session_state["moteur_utilise"] = "Banque Python"
+            exercices = generer_exercices_priorites(difficulte, nombre)
+            st.session_state["moteur_utilise"] = "Banque Python"
     elif type_exercice == "Je résous des problèmes":
         try:
             exercices = generer_exercice_ia(
