@@ -427,7 +427,8 @@ if st.session_state.get("eleve_id"):
                              elif cle in st.session_state:
                                  del st.session_state[cle]
 
-                         st.success("Série chargée !")
+                         st.session_state["afficher_series"] = False
+                         st.rerun()
 
                 for numero, exercice in enumerate(
                             serie["exercices"], start=1
