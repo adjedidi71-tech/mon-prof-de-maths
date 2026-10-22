@@ -1081,7 +1081,31 @@ if st.session_state.exercices_actuels:
                 height=150,
                 key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
             )
+        elif exercice.get("champs_reponse"):
+            for champ in exercice["champs_reponse"]:
+                etiquette = f"Question {champ['question']} — {champ['libelle']}"
+                cle = f"banque_{st.session_state.get('serie_version', 0)}_{numero}_{champ['id']}"
 
+                if champ["type"] == "nombre":
+                    st.text_input(
+                        etiquette,
+                        placeholder=f"Réponse en {champ.get('unite', 'nombre')}",
+                        key=cle
+                    )
+
+                elif champ["type"] == "choix":
+                    st.selectbox(
+                        etiquette,
+                        ["Choisir..."] + champ["options"],
+                        key=cle
+                    )
+
+                elif champ["type"] == "texte_libre":
+                    st.text_area(
+                        etiquette,
+                        height=90,
+                        key=cle
+                    )
         with st.expander(
             f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
             expanded=False
