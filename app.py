@@ -390,7 +390,8 @@ def recuperer_exercices_eleve(eleve_id):
 if st.session_state.get("eleve_id"):
     st.subheader("Mes exercices sauvegardés")
 
-    if st.button("Retrouver mes séries"):
+    if st.button("Retrouver mes séries") or st.session_state.get("afficher_series", False):
+        st.session_state["afficher_series"] = True
         try:
             series = recuperer_exercices_eleve(
                 st.session_state["eleve_id"]
