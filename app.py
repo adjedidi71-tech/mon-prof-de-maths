@@ -1115,21 +1115,27 @@ if st.session_state.exercices_actuels:
                     st.text_input(
                         etiquette,
                         placeholder=f"Réponse en {champ.get('unite', 'nombre')}",
-                        key=cle
+                        key=cle,
+                        on_change=enregistrer_reponses_banque_auto,
+                        args=(numero,)
                     )
 
                 elif champ["type"] == "choix":
                     st.selectbox(
                         etiquette,
                         ["Choisir..."] + champ["options"],
-                        key=cle
+                        key=cle,
+                        on_change=enregistrer_reponses_banque_auto,
+                        args=(numero,)
                     )
 
                 elif champ["type"] == "texte_libre":
                     st.text_area(
                         etiquette,
                         height=90,
-                        key=cle
+                        key=cle,
+                        on_change=enregistrer_reponses_banque_auto,
+                        args=(numero,)
                     )
             if st.button(
                 "Vérifier mes réponses",
