@@ -1190,10 +1190,39 @@ if st.session_state.exercices_actuels:
                     else:
                         correcte = saisie == champ["attendu"]
 
-                    if correcte:
+                    if correcte and champ["type"] == "choix":
+                        calculs_corrects = True
+
+                        for autre in exercice["champs_reponse"]:
+                            if autre["type"] != "nombre":
+                                continue
+
+                            autre_cle = (
+                                f"banque_{st.session_state.get('serie_version', 0)}"
+                                f"_{numero}_{autre['id']}"
+                            )
+
+                            valeur = st.session_state.get(autre_cle, "")
+
+                            try:
+                                if float(str(valeur).replace(",", ".")) != float(autre["attendu"]):
+                                    calculs_corrects = False
+                            except (ValueError, TypeError):
+                                calculs_corrects = False
+
+                        if calculs_corrects:
+                            st.success(f"{champ['libelle']} : bonne réponse !")
+                        else:
+                            st.warning(
+                                "Bon choix, mais certains calculs sont faux "
+                                "ou incomplets. Vérifie-les."
+                            )
+
+                    elif correcte:
                         st.success(f"{champ['libelle']} : bonne réponse !")
+
                     else:
-                        st.error(f"{champ['libelle']} : essaie encore.")
+                        st.error(f"{champ['libelle']} : essaie encore.")    
         else:
             st.text_area(
                 "Ta réponse :",
