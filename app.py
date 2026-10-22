@@ -996,13 +996,7 @@ if st.button("Générer mes exercices"):
             and partie == "Priorités opératoires"
             and type_exercice == "Je résous des problèmes"
         ):
-            if nombre > 3:
-                st.warning(
-                    "Pour le moment, choisis 1, 2 ou 3 exercices. "
-                    "Nous enrichirons bientôt la bibliothèque."
-                )
-                st.stop()
-
+            
             exercices = generer_exercices_priorites(difficulte, nombre)
         elif type_exercice == "Je résous des problèmes":
                 try:
