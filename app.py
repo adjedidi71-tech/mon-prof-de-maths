@@ -1025,7 +1025,7 @@ if st.button("Générer mes exercices"):
 
             exercices = generer_exercices_priorites(difficulte, nombre)
             st.session_state["moteur_utilise"] = "Banque Python"
-    elif type_exercice == "Je résous des problèmes":
+elif type_exercice == "Je résous des problèmes":
         try:
             exercices = generer_exercice_ia(
                 chapitre, partie, difficulte, type_exercice, nombre
