@@ -1039,8 +1039,7 @@ if st.button("Générer mes exercices"):
                             chapitre, partie, difficulte, type_exercice, nombre
                         )
                         st.session_state["moteur_utilise"] = "Groq"
-                    except Exception as e:
-                        st.error(f"Erreur Groq : {e}")
+                    except Exception:
                         st.info(
                             "Les IA sont temporairement indisponibles. "
                             "Des exercices alternatifs ont été générés."
