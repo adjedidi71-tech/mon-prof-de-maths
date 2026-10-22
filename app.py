@@ -1025,35 +1025,35 @@ if st.button("Générer mes exercices"):
 
             exercices = generer_exercices_priorites(difficulte, nombre)
             st.session_state["moteur_utilise"] = "Banque Python"
-elif type_exercice == "Je résous des problèmes":
-        try:
-            exercices = generer_exercice_ia(
-                chapitre, partie, difficulte, type_exercice, nombre
-            )
-            st.session_state["moteur_utilise"] = "Gemini"
-        except Exception:
-            try:
-                exercices = generer_exercice_groq(
-                    chapitre, partie, difficulte, type_exercice, nombre
-                )
-                st.session_state["moteur_utilise"] = "Groq"
-            except Exception as e:
-                st.error(f"Erreur Groq : {e}")
-                st.info(
-                    "Les IA sont temporairement indisponibles. "
-                    "Des exercices alternatifs ont été générés."
-                )
-                exercices = [
-                    generer_exercice(chapitre, partie, difficulte, type_exercice)
-                    for _ in range(nombre)
-                ]
-                st.session_state["moteur_utilise"] = "Python"
-    else:
-        exercices = [
-            generer_exercice(chapitre, partie, difficulte, type_exercice)
-            for _ in range(nombre)
-        ]
-        st.session_state["moteur_utilise"] = "Python"
+        elif type_exercice == "Je résous des problèmes":
+                try:
+                    exercices = generer_exercice_ia(
+                        chapitre, partie, difficulte, type_exercice, nombre
+                    )
+                    st.session_state["moteur_utilise"] = "Gemini"
+                except Exception:
+                    try:
+                        exercices = generer_exercice_groq(
+                            chapitre, partie, difficulte, type_exercice, nombre
+                        )
+                        st.session_state["moteur_utilise"] = "Groq"
+                    except Exception as e:
+                        st.error(f"Erreur Groq : {e}")
+                        st.info(
+                            "Les IA sont temporairement indisponibles. "
+                            "Des exercices alternatifs ont été générés."
+                        )
+                        exercices = [
+                            generer_exercice(chapitre, partie, difficulte, type_exercice)
+                            for _ in range(nombre)
+                        ]
+                        st.session_state["moteur_utilise"] = "Python"
+        else:
+            exercices = [
+                generer_exercice(chapitre, partie, difficulte, type_exercice)
+                for _ in range(nombre)
+            ]
+            st.session_state["moteur_utilise"] = "Python"
     st.session_state.exercices_actuels = exercices
     st.session_state["dernier_moteur"] = st.session_state["moteur_utilise"]
     st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
