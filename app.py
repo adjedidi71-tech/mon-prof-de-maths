@@ -565,7 +565,39 @@ def enregistrer_reponse_auto(numero):
             sauvegarder_reponse(code, numero, reponse)
         except Exception:
             st.session_state["erreur_sauvegarde"] = True
+def enregistrer_reponses_banque_auto(numero):
+    code = st.session_state.get("code_actuel")
 
+    if not code or not st.session_state.get("eleve_id"):
+        return
+
+    exercices = st.session_state.get("exercices_actuels", [])
+
+    if numero > len(exercices):
+        return
+
+    exercice = exercices[numero - 1]
+    reponses = {}
+
+    for champ in exercice.get("champs_reponse", []):
+        cle = (
+            f"banque_{st.session_state.get('serie_version', 0)}"
+            f"_{numero}_{champ['id']}"
+        )
+
+        reponses[champ["id"]] = st.session_state.get(cle, "")
+
+    try:
+        sauvegarder_reponse(
+            code,
+            numero,
+            {
+                "type": "banque",
+                "champs": reponses
+            }
+        )
+    except Exception:
+        st.session_state["erreur_sauvegarde"] = True
 import random
 def generer_exercice_groq(chapitre, partie, difficulte, type_exercice, nombre=1):
     import json
