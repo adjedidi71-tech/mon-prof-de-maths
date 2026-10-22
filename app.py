@@ -1074,6 +1074,13 @@ if st.session_state.exercices_actuels:
                     st.success("Bonne réponse !")
                 else:
                     st.error("Réponse incorrecte. Essaie encore.")
+        else:
+            st.text_area(
+                "Ta réponse :",
+                placeholder="Écris ici tes réponses aux questions de l'exercice.",
+                height=150,
+                key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+            )
 
         with st.expander(
             f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
