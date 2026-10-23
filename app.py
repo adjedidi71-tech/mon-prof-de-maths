@@ -601,6 +601,11 @@ def enregistrer_reponse_auto(numero):
         except Exception:
             st.session_state["erreur_sauvegarde"] = True
 def enregistrer_reponses_banque_auto(numero):
+    cle_bilan = (
+    f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+    f"_{numero}"
+    )
+    st.session_state.pop(cle_bilan, None)
     code = st.session_state.get("code_actuel")
 
     if not code or not st.session_state.get("eleve_id"):
