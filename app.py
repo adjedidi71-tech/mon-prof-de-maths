@@ -1211,7 +1211,7 @@ if st.session_state.exercices_actuels:
                                 calculs_corrects = False
 
                         if calculs_corrects:
-                            st.write(f"✓ {champ['libelle']} : bonne réponse !")
+                            st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
                         else:
                             st.warning(
                                 "Bon choix, mais certains calculs sont faux "
@@ -1219,10 +1219,10 @@ if st.session_state.exercices_actuels:
                             )
 
                     elif correcte:
-                        st.write(f"✓ {champ['libelle']} : bonne réponse !")
+                        st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
 
                     else:
-                        st.write(f"✗ {champ['libelle']} : essaie encore.")    
+                        st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")    
         else:
             st.text_area(
                 "Ta réponse :",
