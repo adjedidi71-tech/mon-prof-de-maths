@@ -425,7 +425,7 @@ if st.session_state.get("eleve_id"):
                                 continue
                         
                             champs_sauvegardes = donnees.get("champs") or {}
-                             bilan = donnees.get("bilan")
+                            bilan = donnees.get("bilan")
 
                             cle_bilan = (
                                 f"bilan_banque_{st.session_state.get('serie_version', 0)}"
