@@ -1120,7 +1120,77 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"2. Dépense totale : {quantite * prix} + {transport} = {depense} €.\n\n"
                         f"3. Argent restant : {budget} - {depense} = {reste} €.\n\n"
                         f"4. Expression : {budget} - ({quantite} × {prix} + {transport}) = {reste} €."
-                    )                
+                    ) 
+    elif partie == "Distributivité simple":
+        if type_exercice == "Mes automatismes":
+
+            def afficher_nombre(valeur):
+                return f"{valeur:g}".replace(".", ",")
+
+            questions = []
+            corrections = []
+
+            nombre_questions = difficulte + 1
+
+            for i in range(1, nombre_questions + 1):
+
+                if difficulte == 1:
+                    k = random.randint(2, 5)
+                    x = random.randint(2, 9)
+                    y = random.randint(2, 9)
+                    signe = "+"
+
+                elif difficulte == 2:
+                    k = random.randint(3, 8)
+                    x = random.randint(10, 25)
+                    y = random.randint(2, 9)
+                    signe = random.choice(["+", "-"])
+
+                else:
+                    k = random.randint(4, 9)
+                    x = random.randint(80, 350) / 10
+                    y = random.randint(10, 75) / 10
+                    signe = random.choice(["+", "-"])
+
+                premier = round(k * x, 2)
+                deuxieme = round(k * y, 2)
+
+                if signe == "+":
+                    resultat = round(premier + deuxieme, 2)
+                else:
+                    resultat = round(premier - deuxieme, 2)
+
+                expression = (
+                    f"{k} × ({afficher_nombre(x)} "
+                    f"{signe} {afficher_nombre(y)})"
+                )
+
+                questions.append(f"{i}. {expression}")
+
+                corrections.append(
+                    f"{i}. {expression} = "
+                    f"{k} × {afficher_nombre(x)} "
+                    f"{signe} {k} × {afficher_nombre(y)} "
+                    f"= {afficher_nombre(premier)} "
+                    f"{signe} {afficher_nombre(deuxieme)} "
+                    f"= {afficher_nombre(resultat)}"
+                )
+
+                champs_reponse.append({
+                    "id": f"calcul_{i}",
+                    "question": i,
+                    "libelle": f"Résultat du calcul {i}",
+                    "type": "nombre",
+                    "attendu": resultat,
+                    "unite": ""
+                })
+
+            enonce = (
+                "Utilise la distributivité pour calculer :\n\n"
+                + "\n\n".join(questions)
+            )
+
+            correction = "\n\n".join(corrections)                    
     if enonce is None:
         enonce = f"Exercices à développer pour : {partie}"
         correction = "Correction non disponible."
