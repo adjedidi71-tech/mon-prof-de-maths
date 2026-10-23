@@ -1089,10 +1089,31 @@ if st.button("Générer mes exercices"):
                             for _ in range(nombre)
                         ]
         else:
-            exercices = [
-                generer_exercice(chapitre, partie, difficulte, type_exercice)
-                for _ in range(nombre)
-            ]
+            import random
+
+            if chapitre == "1. Opérations":
+                notions = chapitres[chapitre].copy()
+                random.shuffle(notions)
+
+                while len(notions) < nombre:
+                    notions += random.sample(
+                        chapitres[chapitre],
+                        min(nombre - len(notions), len(chapitres[chapitre]))
+                    )
+
+                exercices = [
+                    generer_exercice(
+                        chapitre, notions[i], difficulte, type_exercice
+                    )
+                    for i in range(nombre)
+                ]
+            else:
+                exercices = [
+                    generer_exercice(
+                        chapitre, partie, difficulte, type_exercice
+                    )
+                    for _ in range(nombre)
+                ]
         st.session_state.exercices_actuels = exercices
         st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
     
