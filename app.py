@@ -1276,6 +1276,12 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     ("carnet", "crayon"),
                     ("bloc-notes", "feutre")
                 ])
+                objet1_pluriel = {
+                    "cahier": "cahiers",
+                    "carnet": "carnets",
+                    "bloc-notes": "bloc-notes"
+                }[objet1]
+                
 
                 attendu1 = n * p1
                 attendu2 = n * (p1 + p2)
