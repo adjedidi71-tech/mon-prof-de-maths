@@ -1092,12 +1092,16 @@ if st.button("Générer mes exercices"):
             import random
 
             if chapitre == "1. Opérations":
-                notions = chapitres[chapitre].copy()
+                notions_disponibles = [
+                    notion for notion in chapitres[chapitre]
+                    if notion != "Distributivité simple"
+                ]
+                notions = notions_disponibles.copy()
                 random.shuffle(notions)
 
                 while len(notions) < nombre:
                     notions += random.sample(
-                        chapitres[chapitre],
+                        notions_disponibles,
                         min(nombre - len(notions), len(chapitres[chapitre]))
                     )
 
