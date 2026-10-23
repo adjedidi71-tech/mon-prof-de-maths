@@ -400,6 +400,35 @@ if (
 
             st.session_state.exercices_actuels = derniere_serie["exercices"]
             st.session_state.code_actuel = derniere_serie["code_reprise"]
+            reponses = derniere_serie.get("reponses") or {}
+            version = st.session_state.get("serie_version", 0)
+
+            for numero, exercice in enumerate(derniere_serie["exercices"], start=1):
+                donnees = reponses.get(str(numero))
+
+                if isinstance(donnees, dict) and donnees.get("type") == "banque":
+                    champs_sauvegardes = donnees.get("champs") or {}
+
+                    for champ in exercice.get("champs_reponse", []):
+                        if champ["id"] not in champs_sauvegardes:
+                            continue
+
+                        valeur = champs_sauvegardes[champ["id"]]
+
+                        if champ["type"] == "choix":
+                            if valeur not in champ["options"]:
+                                valeur = "Choisir..."
+
+                        cle = f"banque_{version}_{numero}_{champ['id']}"
+                        st.session_state[cle] = valeur
+
+                    bilan = donnees.get("bilan")
+
+                    if isinstance(bilan, dict):
+                        st.session_state[f"bilan_banque_{version}_{numero}"] = bilan
+
+                elif donnees is not None:
+                    st.session_state[f"reponse_{version}_{numero}"] = donnees
 
     except Exception:
         pass
