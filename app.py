@@ -840,6 +840,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
     enonce = None
     correction = None
     reponse_attendue = None
+    champs_reponse = []    
 
     a = random.randint(2, 5 + difficulte * 5)
     b = random.randint(2, 5 + difficulte * 5)
@@ -871,6 +872,24 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             correction = (
                 f"{dividende} = {diviseur} × {quotient} + {reste}"
             )
+            champs_reponse = [
+                {
+                    "id": "quotient",
+                    "question": 1,
+                    "libelle": "Quotient",
+                    "type": "nombre",
+                    "attendu": quotient,
+                    "unite": ""
+                },
+                {
+                    "id": "reste",
+                    "question": 2,
+                    "libelle": "Reste",
+                    "type": "nombre",
+                    "attendu": reste,
+                    "unite": ""
+                }
+            ]
 
         elif partie == "Division par un nombre décimal":
             diviseur = random.randint(2, 9) / 10
@@ -1059,8 +1078,9 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
     return {
         "enonce": enonce,
         "correction": correction,
-        "reponse_attendue": reponse_attendue
-}
+        "reponse_attendue": reponse_attendue,
+        "champs_reponse": champs_reponse
+    }
    
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
