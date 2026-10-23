@@ -1165,6 +1165,11 @@ if st.session_state.exercices_actuels:
                 "Vérifier mes réponses",
                 key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
             ):
+                bonnes_reponses = 0
+                total_reponses = sum(
+                    1 for champ in exercice["champs_reponse"]
+                    if champ["type"] != "texte_libre"
+                )
                 for champ in exercice["champs_reponse"]:
                     if champ["type"] == "texte_libre":
                         continue
@@ -1211,6 +1216,7 @@ if st.session_state.exercices_actuels:
                                 calculs_corrects = False
 
                         if calculs_corrects:
+                            bonnes_reponses += 1
                             st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
                         else:
                             st.markdown(
@@ -1219,10 +1225,20 @@ if st.session_state.exercices_actuels:
                             )
 
                     elif correcte:
+                        bonnes_reponses += 1
                         st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
 
                     else:
-                        st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")    
+                        st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
+                st.markdown("---")
+                texte_score = (
+                    "bonne réponse" if bonnes_reponses == 1
+                    else "bonnes réponses"
+                )
+                st.markdown(
+                    f"**Résultat : {bonnes_reponses} "
+                    f"{texte_score} sur {total_reponses}**"
+                )
         else:
             st.text_area(
                 "Ta réponse :",
