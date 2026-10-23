@@ -1190,7 +1190,135 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 + "\n\n".join(questions)
             )
 
-            correction = "\n\n".join(corrections)                    
+            correction = "\n\n".join(corrections)
+        elif type_exercice == "Je m'entraîne":
+
+            if difficulte == 1:
+                n = random.randint(5, 12)
+                p1 = random.randint(3, 8)
+                p2 = random.randint(1, 5)
+
+                objet1, objet2 = random.choice([
+                    ("cahier", "stylo"),
+                    ("carnet", "crayon"),
+                    ("bloc-notes", "feutre")
+                ])
+
+                attendu1 = n * p1
+                attendu2 = n * (p1 + p2)
+
+                enonce = (
+                    f"Un club achète {n} lots de matériel. "
+                    f"Chaque lot contient un {objet1} à {p1} € "
+                    f"et un {objet2} à {p2} €.\n\n"
+                    f"1. Combien coûtent tous les {objet1}s ?\n\n"
+                    f"2. Quel est le prix total des {n} lots ?"
+                )
+
+                correction = (
+                    f"1. {n} × {p1} = {attendu1} €.\n\n"
+                    f"2. On utilise la distributivité :\n"
+                    f"{n} × ({p1} + {p2}) "
+                    f"= {n} × {p1} + {n} × {p2}\n"
+                    f"= {attendu1} + {n * p2} "
+                    f"= {attendu2} €."
+                )
+
+                libelle1 = "Prix des premiers objets"
+                libelle2 = "Prix total des lots"
+
+            elif difficulte == 2:
+                n = random.randint(6, 15)
+                prix = random.randint(12, 25)
+                remise = random.randint(2, 8)
+
+                produit = random.choice([
+                    "jeux de cartes",
+                    "mangas d'occasion",
+                    "kits créatifs"
+                ])
+
+                attendu1 = n * prix
+                attendu2 = n * (prix - remise)
+
+                enonce = (
+                    f"Une boutique vend {n} {produit} "
+                    f"à {prix} € l'unité.\n\n"
+                    f"Une réduction de {remise} € est accordée "
+                    f"sur chaque article.\n\n"
+                    f"1. Quel est le prix total sans réduction ?\n\n"
+                    f"2. Quel est le montant à payer après réduction ?"
+                )
+
+                correction = (
+                    f"1. {n} × {prix} = {attendu1} €.\n\n"
+                    f"2. On utilise la distributivité :\n"
+                    f"{n} × ({prix} - {remise}) "
+                    f"= {n} × {prix} - {n} × {remise}\n"
+                    f"= {attendu1} - {n * remise} "
+                    f"= {attendu2} €."
+                )
+
+                libelle1 = "Prix sans réduction"
+                libelle2 = "Prix après réduction"
+
+            else:
+                na = random.randint(7, 13)
+                nb = random.randint(5, 11)
+
+                p1 = random.randint(3, 7)
+                p2 = random.randint(2, 6)
+                p3 = random.randint(4, 9)
+                p4 = random.randint(2, 7)
+
+                attendu1 = na * (p1 + p2)
+                cout_b = nb * (p3 + p4)
+                attendu2 = attendu1 + cout_b
+
+                enonce = (
+                    f"Un club prépare deux types de lots.\n\n"
+                    f"Il achète {na} lots A contenant chacun "
+                    f"un carnet à {p1} € et un crayon à {p2} €.\n\n"
+                    f"Il achète aussi {nb} lots B contenant chacun "
+                    f"un album à {p3} € et un feutre à {p4} €.\n\n"
+                    f"1. Quel est le coût total des lots A ?\n\n"
+                    f"2. Quelle est la dépense totale du club ?"
+                )
+
+                correction = (
+                    f"1. Lots A :\n"
+                    f"{na} × ({p1} + {p2}) "
+                    f"= {na * p1} + {na * p2} "
+                    f"= {attendu1} €.\n\n"
+                    f"2. Lots B :\n"
+                    f"{nb} × ({p3} + {p4}) "
+                    f"= {nb * p3} + {nb * p4} "
+                    f"= {cout_b} €.\n\n"
+                    f"Dépense totale : "
+                    f"{attendu1} + {cout_b} = {attendu2} €."
+                )
+
+                libelle1 = "Coût des lots A"
+                libelle2 = "Dépense totale"
+
+            champs_reponse = [
+                {
+                    "id": "question_1",
+                    "question": 1,
+                    "libelle": libelle1,
+                    "type": "nombre",
+                    "attendu": attendu1,
+                    "unite": "€"
+                },
+                {
+                    "id": "question_2",
+                    "question": 2,
+                    "libelle": libelle2,
+                    "type": "nombre",
+                    "attendu": attendu2,
+                    "unite": "€"
+                }
+            ]            
     if enonce is None:
         enonce = f"Exercices à développer pour : {partie}"
         correction = "Correction non disponible."
