@@ -1058,7 +1058,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
     return {
         "enonce": enonce,
         "correction": correction,
-        "reponse_attendue": reponse_attendue if chapitre == "1. Opérations" and partie == "Priorités opératoires" else None
+        "reponse_attendue": reponse_attendue
 }
    
 if "exercices_actuels" not in st.session_state:
