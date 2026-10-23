@@ -1121,7 +1121,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"3. Argent restant : {budget} - {depense} = {reste} €.\n\n"
                         f"4. Expression : {budget} - ({quantite} × {prix} + {transport}) = {reste} €."
                     ) 
-    elif partie == "Distributivité simple":
+    if partie == "Distributivité simple":
         if type_exercice == "Mes automatismes":
 
             def afficher_nombre(valeur):
