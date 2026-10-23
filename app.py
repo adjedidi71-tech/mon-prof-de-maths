@@ -1274,6 +1274,19 @@ if st.session_state.exercices_actuels:
                             }
                         }
                     )
+            cle_bilan = (
+                f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+                f"_{numero}"
+            )
+
+            bilan = st.session_state.get(cle_bilan)
+
+            if isinstance(bilan, dict):
+                st.markdown(
+                    f"**Dernier bilan enregistré : "
+                    f"{bilan['bonnes']} bonnes réponses "
+                    f"sur {bilan['total']}**"
+                )    
         else:
             st.text_area(
                 "Ta réponse :",
