@@ -911,6 +911,79 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             correction = f"{x} {operation} {y} = {round(resultat, 2)}"
             reponse_attendue = round(resultat, 2)
 
+            if type_exercice == "Je m'entraîne":
+                n = random.randint(4, 7)
+                m = random.randint(2, 4)
+
+                a = random.randint(40, 85) / 10
+                b = random.randint(15, 45) / 10
+                c = random.randint(11, 35) / 10
+                d = random.randint(10, 30) / 10
+                e = random.randint(10, 30) / 10
+
+                def fr(valeur):
+                    return f"{round(valeur, 2):g}".replace(".", ",")
+
+                somme1 = round(a + b, 2)
+                produit1 = round(n * somme1, 2)
+
+                if difficulte == 1:
+                    resultat = round(produit1 - c, 2)
+
+                    enonce = (
+                        f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
+                        f"- {fr(c)}"
+                    )
+
+                    correction = (
+                        f"Parenthèse : {fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
+                        f"Multiplication : {n} × {fr(somme1)} "
+                        f"= {fr(produit1)}.\n\n"
+                        f"Soustraction : {fr(produit1)} - {fr(c)} "
+                        f"= {fr(resultat)}."
+                    )
+
+                elif difficulte == 2:
+                    produit2 = round(m * c, 2)
+                    resultat = round(produit1 - produit2, 2)
+
+                    enonce = (
+                        f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
+                        f"- {m} × {fr(c)}"
+                    )
+
+                    correction = (
+                        f"Parenthèse : {fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
+                        f"Multiplications :\n"
+                        f"{n} × {fr(somme1)} = {fr(produit1)}.\n"
+                        f"{m} × {fr(c)} = {fr(produit2)}.\n\n"
+                        f"Soustraction : {fr(produit1)} - {fr(produit2)} "
+                        f"= {fr(resultat)}."
+                    )
+
+                else:
+                    somme2 = round(c + d, 2)
+                    produit2 = round(m * somme2, 2)
+                    resultat = round(produit1 - produit2 + e, 2)
+
+                    enonce = (
+                        f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
+                        f"- {m} × ({fr(c)} + {fr(d)}) "
+                        f"+ {fr(e)}"
+                    )
+
+                    correction = (
+                        f"Parenthèses :\n"
+                        f"{fr(a)} + {fr(b)} = {fr(somme1)}.\n"
+                        f"{fr(c)} + {fr(d)} = {fr(somme2)}.\n\n"
+                        f"Multiplications :\n"
+                        f"{n} × {fr(somme1)} = {fr(produit1)}.\n"
+                        f"{m} × {fr(somme2)} = {fr(produit2)}.\n\n"
+                        f"Calcul final : {fr(produit1)} - {fr(produit2)} "
+                        f"+ {fr(e)} = {fr(resultat)}."
+                    )
+
+                reponse_attendue = resultat
         elif partie == "Division euclidienne, multiples et diviseurs":
             diviseur = random.randint(2, 9)
             quotient = random.randint(2, 5 + difficulte * 5)
