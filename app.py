@@ -1213,9 +1213,9 @@ if st.session_state.exercices_actuels:
                         if calculs_corrects:
                             st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
                         else:
-                            st.warning(
-                                "Bon choix, mais certains calculs sont faux "
-                                "ou incomplets. Vérifie-les."
+                            st.markdown(
+                                ":orange[⚠ Bon choix, mais certains calculs sont faux "
+                                "ou incomplets. Vérifie-les.]"
                             )
 
                     elif correcte:
