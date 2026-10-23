@@ -879,6 +879,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 
             enonce = f"Calcule : {dividende} ÷ {diviseur}"
             correction = f"{dividende} ÷ {diviseur} = {quotient}"
+            reponse_attendue = quotient
 
         elif partie == "Priorités opératoires":
             multiplicateur = random.randint(2, 9)
