@@ -286,10 +286,13 @@ chapitre = st.selectbox(
     list(chapitres.keys())
 )
 
-partie = st.selectbox(
-    "Sous-chapitre",
-    chapitres[chapitre]
-)
+if chapitre == "1. Opérations":
+    partie = chapitres[chapitre][0]
+else:
+    partie = st.selectbox(
+        "Sous-chapitre",
+        chapitres[chapitre]
+    )
 
 st.write("**Type d'exercice**")
 
