@@ -1290,7 +1290,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     f"Un club achète {n} lots de matériel. "
                     f"Chaque lot contient un {objet1} à {p1} € "
                     f"et un {objet2} à {p2} €.\n\n"
-                    f"1. Combien coûtent tous les {objet1}s ?\n\n"
+                    f"1. Combien coûtent tous les {objet1_pluriel} ?\n\n"
                     f"2. Quel est le prix total des {n} lots ?"
                 )
 
