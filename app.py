@@ -386,6 +386,23 @@ def recuperer_exercices_eleve(eleve_id):
     )
 
     return resultat.data or []
+if (
+    st.session_state.get("eleve_id")
+    and "exercices_actuels" not in st.session_state
+):
+    try:
+        series_auto = recuperer_exercices_eleve(
+            st.session_state["eleve_id"]
+        )
+
+        if series_auto:
+            derniere_serie = series_auto[0]
+
+            st.session_state.exercices_actuels = derniere_serie["exercices"]
+            st.session_state.code_actuel = derniere_serie["code_reprise"]
+
+    except Exception:
+        pass
 
 if st.session_state.get("eleve_id"):
     st.subheader("Mes exercices sauvegardés")
