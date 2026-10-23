@@ -1065,7 +1065,6 @@ if "exercices_actuels" not in st.session_state:
 if st.button("Générer mes exercices"):
         if (
             chapitre == "1. Opérations"
-            and partie == "Priorités opératoires"
             and type_exercice == "Je résous des problèmes"
         ):
             
