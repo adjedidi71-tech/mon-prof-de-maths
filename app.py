@@ -859,6 +859,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 
             enonce = f"Calcule : {x} {operation} {y}"
             correction = f"{x} {operation} {y} = {round(resultat, 2)}"
+            reponse_attendue = round(resultat, 2)
 
         elif partie == "Division euclidienne, multiples et diviseurs":
             diviseur = random.randint(2, 9)
@@ -1146,7 +1147,7 @@ if st.session_state.exercices_actuels:
             reponse_eleve = st.number_input(
                 "Ta réponse :",
                  value=None,
-                 step=1,
+                 step=0.01 if isinstance(exercice.get("reponse_attendue"), float) else 1,
                  key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
                  on_change=enregistrer_reponse_auto,
                  args=(numero,)
