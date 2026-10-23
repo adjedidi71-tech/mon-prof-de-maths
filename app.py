@@ -1235,7 +1235,10 @@ if st.button("Générer mes exercices"):
             if chapitre == "1. Opérations":
                 notions_disponibles = [
                     notion for notion in chapitres[chapitre]
-                    if notion != "Distributivité simple"
+                    if (
+                        type_exercice == "Mes automatismes"
+                        or notion != "Distributivité simple"
+                    )
                 ]
                 notions = notions_disponibles.copy()
                 random.shuffle(notions)
