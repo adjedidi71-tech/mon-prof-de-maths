@@ -425,6 +425,17 @@ if st.session_state.get("eleve_id"):
                                 continue
                         
                             champs_sauvegardes = donnees.get("champs") or {}
+                             bilan = donnees.get("bilan")
+
+                            cle_bilan = (
+                                f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+                                f"_{numero}"
+                            )
+                            
+                            if isinstance(bilan, dict):
+                                st.session_state[cle_bilan] = bilan
+                            else:
+                                st.session_state.pop(cle_bilan, None)
                         
                             for champ in exercice.get("champs_reponse", []):
                                 cle = (
