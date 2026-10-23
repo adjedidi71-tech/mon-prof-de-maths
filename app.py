@@ -1239,6 +1239,30 @@ if st.session_state.exercices_actuels:
                     f"**Résultat : {bonnes_reponses} "
                     f"{texte_score} sur {total_reponses}**"
                 )
+                code = st.session_state.get("code_actuel")
+
+                if code and st.session_state.get("eleve_id"):
+                    reponses_banque = {}
+
+                    for champ in exercice["champs_reponse"]:
+                        cle = (
+                            f"banque_{st.session_state.get('serie_version', 0)}"
+                            f"_{numero}_{champ['id']}"
+                        )
+                        reponses_banque[champ["id"]] = st.session_state.get(cle, "")
+
+                    sauvegarder_reponse(
+                        code,
+                        numero,
+                        {
+                            "type": "banque",
+                            "champs": reponses_banque,
+                            "bilan": {
+                                "bonnes": bonnes_reponses,
+                                "total": total_reponses
+                            }
+                        }
+                    )
         else:
             st.text_area(
                 "Ta réponse :",
