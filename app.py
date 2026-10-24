@@ -1674,29 +1674,35 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     prix_a = p1 + p2
                     prix_b = p1
     
-                    attendu1 = n * prix_a
-                    attendu2 = n * p2
-    
+                    supplement = random.randint(2, 5)
+        
+                    attendu1 = n * (p1 + p2)
+                    attendu2 = attendu1 + supplement * p2
+        
                     enonce = (
-                        f"Un club souhaite imprimer {n} affiches. "
-                        f"Deux imprimeurs proposent leurs tarifs :\n\n"
-                        f"- Imprimeur A : {prix_a} € par affiche.\n"
-                        f"- Imprimeur B : {prix_b} € par affiche.\n\n"
-                        f"1. Combien coûteraient les affiches chez A ?\n"
-                        f"2. Quelle économie réalise le club en choisissant B ?"
+                        f"Un club achète {n} lots de matériel. "
+                        f"Chaque lot contient un {objet1} à {p1} € "
+                        f"et un {objet2} à {p2} €.\n\n"
+                        f"Le club achète également {supplement} "
+                        f"{objet2}s supplémentaires à {p2} € chacun.\n\n"
+                        f"1. Combien coûtent les {n} lots ?\n"
+                        f"2. Quel est le prix total de l'achat ?"
                     )
-    
+        
                     correction = (
-                        f"1. Chez A : {n} × ({p1} + {p2}) "
+                        f"1. Prix des lots :\n"
+                        f"{n} × ({p1} + {p2})\n"
                         f"= {n} × {p1} + {n} × {p2}\n"
-                        f"= {n * p1} + {n * p2} = {attendu1} €.\n"
-                        f"2. Chez B : {n} × {p1} = {n * p1} €.\n"
-                        f"Économie : {attendu1} - {n * p1} "
+                        f"= {n * p1} + {n * p2}\n"
+                        f"= {attendu1} €.\n\n"
+                        f"2. Prix des objets supplémentaires :\n"
+                        f"{supplement} × {p2} = {supplement * p2} €.\n"
+                        f"Prix total : {attendu1} + {supplement * p2} "
                         f"= {attendu2} €."
                     )
-    
-                    libelle1 = "Prix chez A"
-                    libelle2 = "Économie réalisée"
+        
+                    libelle1 = "Prix des lots"
+                    libelle2 = "Prix total de l'achat"
 
             elif modele == "erreur":
                 attendu1 = n * p1 + p2
