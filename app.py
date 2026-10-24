@@ -604,20 +604,16 @@ if st.session_state.get("eleve_id"):
                                 )
 
                 for serie in series:
-                    col_coche, col_contenu = st.columns([1, 12])
+                    col_coche, col_contenu = st.columns([3, 2])
 
                     with col_coche:
                         st.checkbox(
-                            f"Sélectionner la série {serie['id']}",
+                            f"Série n° {serie['id']}",
                             key=f"cocher_serie_{serie['id']}",
-                            label_visibility="collapsed",
                             on_change=synchroniser_selection
                         )
 
-                    with col_contenu, st.expander(
-                        f"Série n° {serie['id']}"
-                    ):
-                        
+                    with col_contenu, st.expander("Voir / Reprendre"):
                        if st.button(
                          "Reprendre cette série",
                          key=f"reprendre_serie_{serie['id']}"
