@@ -1640,6 +1640,91 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 
                 libelle1 = "Prix des premiers objets"
                 libelle2 = "Prix total des lots"
+                modele = random.choice([
+                    "lots", "atelier", "comparaison", "erreur"
+                ])
+    
+                if modele == "atelier":
+                    frais = random.randint(10, 30)
+    
+                    attendu1 = n * (p1 + p2)
+                    attendu2 = attendu1 + frais
+    
+                    enonce = (
+                        f"Une association organise un atelier pour {n} élèves. "
+                        f"Chaque élève reçoit un carnet à {p1} € "
+                        f"et un feutre à {p2} €. "
+                        f"La location de la salle coûte {frais} €.\n\n"
+                        f"1. Combien coûtent tous les carnets et feutres ?\n"
+                        f"2. Quel est le coût total de l'atelier ?"
+                    )
+    
+                    correction = (
+                        f"1. On utilise la distributivité :\n"
+                        f"{n} × ({p1} + {p2}) "
+                        f"= {n} × {p1} + {n} × {p2}\n"
+                        f"= {n * p1} + {n * p2} = {attendu1} €.\n"
+                        f"2. {attendu1} + {frais} = {attendu2} €."
+                    )
+    
+                    libelle1 = "Prix du matériel"
+                    libelle2 = "Coût total de l'atelier"
+    
+                elif modele == "comparaison":
+                    prix_a = p1 + p2
+                    prix_b = p1
+    
+                    attendu1 = n * prix_a
+                    attendu2 = n * p2
+    
+                    enonce = (
+                        f"Un club souhaite imprimer {n} affiches. "
+                        f"Deux imprimeurs proposent leurs tarifs :\n\n"
+                        f"- Imprimeur A : {prix_a} € par affiche.\n"
+                        f"- Imprimeur B : {prix_b} € par affiche.\n\n"
+                        f"1. Combien coûteraient les affiches chez A ?\n"
+                        f"2. Quelle économie réalise le club en choisissant B ?"
+                    )
+    
+                    correction = (
+                        f"1. Chez A : {n} × ({p1} + {p2}) "
+                        f"= {n} × {p1} + {n} × {p2}\n"
+                        f"= {n * p1} + {n * p2} = {attendu1} €.\n"
+                        f"2. Chez B : {n} × {p1} = {n * p1} €.\n"
+                        f"Économie : {attendu1} - {n * p1} "
+                        f"= {attendu2} €."
+                    )
+    
+                    libelle1 = "Prix chez A"
+                    libelle2 = "Économie réalisée"
+
+            elif modele == "erreur":
+                attendu1 = n * p1 + p2
+                attendu2 = n * (p1 + p2)
+
+                enonce = (
+                    f"Un atelier prépare {n} kits. "
+                    f"Chaque kit contient du matériel à {p1} € "
+                    f"et un accessoire à {p2} €.\n\n"
+                    f"Pour calculer le prix total, Lila écrit : "
+                    f"{n} × {p1} + {p2}.\n\n"
+                    f"1. Quel résultat trouve Lila ?\n"
+                    f"2. Quel est le prix total correct des kits ?"
+                )
+
+                correction = (
+                    f"1. Calcul de Lila : {n} × {p1} + {p2} "
+                    f"= {n * p1} + {p2} = {attendu1} €.\n"
+                    f"2. Lila a oublié de multiplier "
+                    f"le prix de l'accessoire par {n}.\n"
+                    f"Le calcul correct est :\n"
+                    f"{n} × ({p1} + {p2}) "
+                    f"= {n} × {p1} + {n} × {p2}\n"
+                    f"= {n * p1} + {n * p2} = {attendu2} €."
+                )
+
+                libelle1 = "Résultat trouvé par Lila"
+                libelle2 = "Prix total correct"
 
             elif difficulte == 2:
                 n = random.randint(6, 15)
