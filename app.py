@@ -1033,29 +1033,53 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 produit1 = round(n * somme1, 2)
 
                 if difficulte == 1:
-                    resultat = round(produit1 - c, 2)
-
-                    enonce = (
-                        f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
-                        f"- {fr(c)}"
-                    )
-
-                    correction = (
-                        f"Parenthèse : {fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
-                        f"Multiplication : {n} × {fr(somme1)} "
-                        f"= {fr(produit1)}.\n\n"
-                        f"Soustraction : {fr(produit1)} - {fr(c)} "
-                        f"= {fr(resultat)}."
-                    )
-
-                elif difficulte == 2:
-                    produit2 = round(m * c, 2)
-                    resultat = round(produit1 - produit2, 2)
-
-                    enonce = (
-                        f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
-                        f"- {m} × {fr(c)}"
-                    )
+                    variante = random.choice(["calcul", "probleme"])
+    
+                    if variante == "calcul":
+                        somme2 = round(c + d, 2)
+                        resultat = round(produit1 - somme2, 2)
+    
+                        enonce = (
+                            f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
+                            f"- ({fr(c)} + {fr(d)})"
+                        )
+    
+                        correction = (
+                            f"Première parenthèse :\n"
+                            f"{fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
+                            f"Deuxième parenthèse :\n"
+                            f"{fr(c)} + {fr(d)} = {fr(somme2)}.\n\n"
+                            f"Multiplication :\n"
+                            f"{n} × {fr(somme1)} = {fr(produit1)}.\n\n"
+                            f"Soustraction :\n"
+                            f"{fr(produit1)} - {fr(somme2)} "
+                            f"= {fr(resultat)}."
+                        )
+    
+                    else:
+                        resultat = round(produit1 - c + d, 2)
+    
+                        enonce = (
+                            f"Une association commande {n} kits. "
+                            f"Chaque kit contient deux objets "
+                            f"coûtant {fr(a)} € et {fr(b)} €.\n\n"
+                            f"Le vendeur accorde une réduction "
+                            f"de {fr(c)} € sur la commande, "
+                            f"mais les frais de livraison sont "
+                            f"de {fr(d)} €.\n\n"
+                            f"Quel est le montant total à payer ?"
+                        )
+    
+                        correction = (
+                            f"Prix d'un kit :\n"
+                            f"{fr(a)} + {fr(b)} = {fr(somme1)} €.\n\n"
+                            f"Prix des {n} kits :\n"
+                            f"{n} × {fr(somme1)} = {fr(produit1)} €.\n\n"
+                            f"On retire la réduction, puis "
+                            f"on ajoute la livraison :\n"
+                            f"{fr(produit1)} - {fr(c)} + {fr(d)} "
+                            f"= {fr(resultat)} €."
+                        )
 
                     correction = (
                         f"Parenthèse : {fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
