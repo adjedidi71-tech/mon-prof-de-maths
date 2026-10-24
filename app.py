@@ -604,7 +604,7 @@ if st.session_state.get("eleve_id"):
                                 )
 
                 for serie in series:
-                    col_coche, col_contenu = st.columns([3, 2])
+                    col_coche, col_contenu = st.columns([1, 3], gap="small")
 
                     with col_coche:
                         st.checkbox(
@@ -613,9 +613,9 @@ if st.session_state.get("eleve_id"):
                             on_change=synchroniser_selection
                         )
 
-                    with col_contenu, st.expander("Voir / Reprendre"):
+                    with col_contenu:
                        if st.button(
-                         "Reprendre cette série",
+                         "Ouvrir",
                          key=f"reprendre_serie_{serie['id']}"
                       ):
                          st.session_state.exercices_actuels = serie["exercices"]
