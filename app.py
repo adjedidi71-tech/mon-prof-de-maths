@@ -452,33 +452,44 @@ if st.session_state.get("eleve_id"):
                 st.success(f"{len(series)} série(s) retrouvée(s).")
                 ids_series = [s["id"] for s in series]
 
-                selection = st.multiselect(
-                    "Sélectionne les séries à supprimer",
-                    options=ids_series,
-                    format_func=lambda identifiant: f"Série n° {identifiant}",
-                    key="selection_series_suppression"
+                cle_tout = f"tout_selectionner_{st.session_state['eleve_id']}"
+
+                def cocher_toutes_series():
+                    etat = st.session_state[cle_tout]
+                    for identifiant in ids_series:
+                        st.session_state[f"cocher_serie_{identifiant}"] = etat
+
+                def synchroniser_selection():
+                    st.session_state[cle_tout] = all(
+                        st.session_state.get(
+                            f"cocher_serie_{identifiant}", False
+                        )
+                        for identifiant in ids_series
+                    )
+
+                st.checkbox(
+                    "Tout sélectionner",
+                    key=cle_tout,
+                    on_change=cocher_toutes_series
                 )
 
-                col_s1, col_s2 = st.columns(2)
+                selection = [
+                    identifiant
+                    for identifiant in ids_series
+                    if st.session_state.get(
+                        f"cocher_serie_{identifiant}", False
+                    )
+                ]
 
-                with col_s1:
-                    if st.button(
-                        "Supprimer la sélection",
-                        disabled=not selection
-                    ):
-                        st.session_state["suppression_en_attente"] = {
-                            "mode": "selection",
-                            "ids": list(selection),
-                            "eleve_id": st.session_state["eleve_id"]
-                        }
-
-                with col_s2:
-                    if st.button("Supprimer toutes mes séries"):
-                        st.session_state["suppression_en_attente"] = {
-                            "mode": "toutes",
-                            "ids": [],
-                            "eleve_id": st.session_state["eleve_id"]
-                        }
+                if st.button(
+                    "Supprimer les séries cochées",
+                    disabled=not selection
+                ):
+                    st.session_state["suppression_en_attente"] = {
+                        "mode": "selection",
+                        "ids": list(selection),
+                        "eleve_id": st.session_state["eleve_id"]
+                    }
 
                 demande = st.session_state.get("suppression_en_attente")
 
