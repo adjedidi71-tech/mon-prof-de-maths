@@ -1663,28 +1663,35 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 }[objet1]
                 
 
-                attendu1 = n * p1
-                attendu2 = n * (p1 + p2)
-
+                supplement = random.randint(2, 5)
+    
+                attendu1 = n * (p1 + p2)
+                attendu2 = attendu1 + supplement * p2
+    
                 enonce = (
                     f"Un club achète {n} lots de matériel. "
                     f"Chaque lot contient un {objet1} à {p1} € "
                     f"et un {objet2} à {p2} €.\n\n"
-                    f"1. Combien coûtent tous les {objet1_pluriel} ?\n\n"
-                    f"2. Quel est le prix total des {n} lots ?"
+                    f"Le club achète également {supplement} "
+                    f"{objet2}s supplémentaires à {p2} € chacun.\n\n"
+                    f"1. Combien coûtent les {n} lots ?\n"
+                    f"2. Quel est le prix total de l'achat ?"
                 )
-
+    
                 correction = (
-                    f"1. {n} × {p1} = {attendu1} €.\n\n"
-                    f"2. On utilise la distributivité :\n"
-                    f"{n} × ({p1} + {p2}) "
+                    f"1. Prix des lots :\n"
+                    f"{n} × ({p1} + {p2})\n"
                     f"= {n} × {p1} + {n} × {p2}\n"
-                    f"= {attendu1} + {n * p2} "
+                    f"= {n * p1} + {n * p2}\n"
+                    f"= {attendu1} €.\n\n"
+                    f"2. Prix des objets supplémentaires :\n"
+                    f"{supplement} × {p2} = {supplement * p2} €.\n"
+                    f"Prix total : {attendu1} + {supplement * p2} "
                     f"= {attendu2} €."
                 )
-
-                libelle1 = "Prix des premiers objets"
-                libelle2 = "Prix total des lots"
+    
+                libelle1 = "Prix des lots"
+                libelle2 = "Prix total de l'achat"
                 modele = random.choice([
                     "lots", "atelier", "comparaison", "erreur"
                 ])
