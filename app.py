@@ -668,7 +668,7 @@ if st.session_state.get("eleve_id"):
                                 st.session_state[cle] = valeur
                              elif cle in st.session_state:
                                  del st.session_state[cle]
-
+                         st.session_state["serie_ouverte_depuis_liste"] = True
                          st.session_state["afficher_series"] = False
                          st.rerun()
 
@@ -1853,6 +1853,7 @@ if st.button("Générer mes exercices"):
                     for _ in range(nombre)
                 ]
         st.session_state.exercices_actuels = exercices
+        st.session_state["serie_ouverte_depuis_liste"] = False
         st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
     
         if st.session_state.get("eleve_id"):
