@@ -1871,197 +1871,202 @@ if st.button("Générer mes exercices"):
         else:
             st.session_state.code_actuel = None
             st.info("Connecte-toi pour sauvegarder tes exercices.")
+if st.session_state.get("serie_ouverte_depuis_liste", False):
+    zone_affichage = zone_serie_ouverte
+else:
+    zone_affichage = st.container()
 
-if st.session_state.exercices_actuels:
-    for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
-        st.subheader(f"Exercice {numero}")
-        st.write(exercice["enonce"])
-
-        if exercice.get("reponse_attendue") is not None:
-            reponse_eleve = st.number_input(
-                "Ta réponse :",
-                 value=None,
-                 step=0.01 if isinstance(exercice.get("reponse_attendue"), float) else 1,
-                 key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
-                 on_change=enregistrer_reponse_auto,
-                 args=(numero,)
-            )
-
-            if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
-                if reponse_eleve is not None:
-                    try:
-                        sauvegarder_reponse(
-                            st.session_state.code_actuel,
-                            numero,
-                            reponse_eleve
-                        )
-                        st.info("Réponse enregistrée.")
-                    except Exception:
-                        st.error("Impossible d'enregistrer la réponse.")
-
-                if reponse_eleve is None:
-                    st.warning("Saisis d'abord ta réponse.")
-                elif reponse_eleve == exercice["reponse_attendue"]:
-                    st.success("Bonne réponse !")
-                else:
-                    st.error("Réponse incorrecte. Essaie encore.")
-        elif exercice.get("champs_reponse"):
-            for champ in exercice["champs_reponse"]:
-                etiquette = f"Question {champ['question']} — {champ['libelle']}"
-                cle = f"banque_{st.session_state.get('serie_version', 0)}_{numero}_{champ['id']}"
-
-                if champ["type"] == "nombre":
-                    st.text_input(
-                        etiquette,
-                        placeholder=f"Réponse en {champ.get('unite', 'nombre')}",
-                        key=cle,
-                        on_change=enregistrer_reponses_banque_auto,
-                        args=(numero,)
-                    )
-
-                elif champ["type"] == "choix":
-                    st.selectbox(
-                        etiquette,
-                        ["Choisir..."] + champ["options"],
-                        key=cle,
-                        on_change=enregistrer_reponses_banque_auto,
-                        args=(numero,)
-                    )
-
-                elif champ["type"] == "texte_libre":
-                    st.text_area(
-                        etiquette,
-                        height=90,
-                        key=cle,
-                        on_change=enregistrer_reponses_banque_auto,
-                        args=(numero,)
-                    )
-            if st.button(
-                "Vérifier mes réponses",
-                key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
-            ):
-                bonnes_reponses = 0
-                total_reponses = sum(
-                    1 for champ in exercice["champs_reponse"]
-                    if champ["type"] != "texte_libre"
+with zone_affichage:
+    if st.session_state.exercices_actuels:
+        for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
+            st.subheader(f"Exercice {numero}")
+            st.write(exercice["enonce"])
+    
+            if exercice.get("reponse_attendue") is not None:
+                reponse_eleve = st.number_input(
+                    "Ta réponse :",
+                     value=None,
+                     step=0.01 if isinstance(exercice.get("reponse_attendue"), float) else 1,
+                     key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
+                     on_change=enregistrer_reponse_auto,
+                     args=(numero,)
                 )
-                for champ in exercice["champs_reponse"]:
-                    if champ["type"] == "texte_libre":
-                        continue
-
-                    cle = (
-                        f"banque_{st.session_state.get('serie_version', 0)}"
-                        f"_{numero}_{champ['id']}"
-                    )
-                    saisie = st.session_state.get(cle, "")
-
-                    if saisie in ("", "Choisir..."):
-                        st.warning(f"{champ['libelle']} : réponse manquante.")
-                        continue
-
-                    if champ["type"] == "nombre":
+    
+                if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
+                    if reponse_eleve is not None:
                         try:
-                            correcte = (
-                                float(str(saisie).replace(",", "."))
-                                == float(champ["attendu"])
+                            sauvegarder_reponse(
+                                st.session_state.code_actuel,
+                                numero,
+                                reponse_eleve
                             )
-                        except (ValueError, TypeError):
-                            correcte = False
+                            st.info("Réponse enregistrée.")
+                        except Exception:
+                            st.error("Impossible d'enregistrer la réponse.")
+    
+                    if reponse_eleve is None:
+                        st.warning("Saisis d'abord ta réponse.")
+                    elif reponse_eleve == exercice["reponse_attendue"]:
+                        st.success("Bonne réponse !")
                     else:
-                        correcte = saisie == champ["attendu"]
-
-                    if correcte and champ["type"] == "choix":
-                        calculs_corrects = True
-
-                        for autre in exercice["champs_reponse"]:
-                            if autre["type"] != "nombre":
-                                continue
-
-                            autre_cle = (
-                                f"banque_{st.session_state.get('serie_version', 0)}"
-                                f"_{numero}_{autre['id']}"
-                            )
-
-                            valeur = st.session_state.get(autre_cle, "")
-
-                            try:
-                                if float(str(valeur).replace(",", ".")) != float(autre["attendu"]):
-                                    calculs_corrects = False
-                            except (ValueError, TypeError):
-                                calculs_corrects = False
-
-                        if calculs_corrects:
-                            bonnes_reponses += 1
-                            st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
-                        else:
-                            st.markdown(
-                                ":orange[⚠ Bon choix, mais certains calculs sont faux "
-                                "ou incomplets. Vérifie-les.]"
-                            )
-
-                    elif correcte:
-                        bonnes_reponses += 1
-                        st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
-
-                    else:
-                        st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
-                st.markdown("---")
-                texte_score = (
-                    "bonne réponse" if bonnes_reponses == 1
-                    else "bonnes réponses"
-                )
-                st.markdown(
-                    f"**Résultat : {bonnes_reponses} "
-                    f"{texte_score} sur {total_reponses}**"
-                )
-                code = st.session_state.get("code_actuel")
-
-                if code and st.session_state.get("eleve_id"):
-                    reponses_banque = {}
-
+                        st.error("Réponse incorrecte. Essaie encore.")
+            elif exercice.get("champs_reponse"):
+                for champ in exercice["champs_reponse"]:
+                    etiquette = f"Question {champ['question']} — {champ['libelle']}"
+                    cle = f"banque_{st.session_state.get('serie_version', 0)}_{numero}_{champ['id']}"
+    
+                    if champ["type"] == "nombre":
+                        st.text_input(
+                            etiquette,
+                            placeholder=f"Réponse en {champ.get('unite', 'nombre')}",
+                            key=cle,
+                            on_change=enregistrer_reponses_banque_auto,
+                            args=(numero,)
+                        )
+    
+                    elif champ["type"] == "choix":
+                        st.selectbox(
+                            etiquette,
+                            ["Choisir..."] + champ["options"],
+                            key=cle,
+                            on_change=enregistrer_reponses_banque_auto,
+                            args=(numero,)
+                        )
+    
+                    elif champ["type"] == "texte_libre":
+                        st.text_area(
+                            etiquette,
+                            height=90,
+                            key=cle,
+                            on_change=enregistrer_reponses_banque_auto,
+                            args=(numero,)
+                        )
+                if st.button(
+                    "Vérifier mes réponses",
+                    key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+                ):
+                    bonnes_reponses = 0
+                    total_reponses = sum(
+                        1 for champ in exercice["champs_reponse"]
+                        if champ["type"] != "texte_libre"
+                    )
                     for champ in exercice["champs_reponse"]:
+                        if champ["type"] == "texte_libre":
+                            continue
+    
                         cle = (
                             f"banque_{st.session_state.get('serie_version', 0)}"
                             f"_{numero}_{champ['id']}"
                         )
-                        reponses_banque[champ["id"]] = st.session_state.get(cle, "")
-
-                    sauvegarder_reponse(
-                        code,
-                        numero,
-                        {
-                            "type": "banque",
-                            "champs": reponses_banque,
-                            "bilan": {
-                                "bonnes": bonnes_reponses,
-                                "total": total_reponses
-                            }
-                        }
+                        saisie = st.session_state.get(cle, "")
+    
+                        if saisie in ("", "Choisir..."):
+                            st.warning(f"{champ['libelle']} : réponse manquante.")
+                            continue
+    
+                        if champ["type"] == "nombre":
+                            try:
+                                correcte = (
+                                    float(str(saisie).replace(",", "."))
+                                    == float(champ["attendu"])
+                                )
+                            except (ValueError, TypeError):
+                                correcte = False
+                        else:
+                            correcte = saisie == champ["attendu"]
+    
+                        if correcte and champ["type"] == "choix":
+                            calculs_corrects = True
+    
+                            for autre in exercice["champs_reponse"]:
+                                if autre["type"] != "nombre":
+                                    continue
+    
+                                autre_cle = (
+                                    f"banque_{st.session_state.get('serie_version', 0)}"
+                                    f"_{numero}_{autre['id']}"
+                                )
+    
+                                valeur = st.session_state.get(autre_cle, "")
+    
+                                try:
+                                    if float(str(valeur).replace(",", ".")) != float(autre["attendu"]):
+                                        calculs_corrects = False
+                                except (ValueError, TypeError):
+                                    calculs_corrects = False
+    
+                            if calculs_corrects:
+                                bonnes_reponses += 1
+                                st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+                            else:
+                                st.markdown(
+                                    ":orange[⚠ Bon choix, mais certains calculs sont faux "
+                                    "ou incomplets. Vérifie-les.]"
+                                )
+    
+                        elif correcte:
+                            bonnes_reponses += 1
+                            st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+    
+                        else:
+                            st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
+                    st.markdown("---")
+                    texte_score = (
+                        "bonne réponse" if bonnes_reponses == 1
+                        else "bonnes réponses"
                     )
-            cle_bilan = (
-                f"bilan_banque_{st.session_state.get('serie_version', 0)}"
-                f"_{numero}"
-            )
-
-            bilan = st.session_state.get(cle_bilan)
-
-            if isinstance(bilan, dict):
-                st.markdown(
-                    f"**Dernier bilan enregistré : "
-                    f"{bilan['bonnes']} bonnes réponses "
-                    f"sur {bilan['total']}**"
-                )    
-        else:
-            st.text_area(
-                "Ta réponse :",
-                placeholder="Écris ici tes réponses aux questions de l'exercice.",
-                height=150,
-                key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
-            )
-            
-        with st.expander(
-            f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
-            expanded=False
-        ):
-            st.write(exercice["correction"])
+                    st.markdown(
+                        f"**Résultat : {bonnes_reponses} "
+                        f"{texte_score} sur {total_reponses}**"
+                    )
+                    code = st.session_state.get("code_actuel")
+    
+                    if code and st.session_state.get("eleve_id"):
+                        reponses_banque = {}
+    
+                        for champ in exercice["champs_reponse"]:
+                            cle = (
+                                f"banque_{st.session_state.get('serie_version', 0)}"
+                                f"_{numero}_{champ['id']}"
+                            )
+                            reponses_banque[champ["id"]] = st.session_state.get(cle, "")
+    
+                        sauvegarder_reponse(
+                            code,
+                            numero,
+                            {
+                                "type": "banque",
+                                "champs": reponses_banque,
+                                "bilan": {
+                                    "bonnes": bonnes_reponses,
+                                    "total": total_reponses
+                                }
+                            }
+                        )
+                cle_bilan = (
+                    f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+                    f"_{numero}"
+                )
+    
+                bilan = st.session_state.get(cle_bilan)
+    
+                if isinstance(bilan, dict):
+                    st.markdown(
+                        f"**Dernier bilan enregistré : "
+                        f"{bilan['bonnes']} bonnes réponses "
+                        f"sur {bilan['total']}**"
+                    )    
+            else:
+                st.text_area(
+                    "Ta réponse :",
+                    placeholder="Écris ici tes réponses aux questions de l'exercice.",
+                    height=150,
+                    key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+                )
+                
+            with st.expander(
+                f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
+                expanded=False
+            ):
+                st.write(exercice["correction"])
             
