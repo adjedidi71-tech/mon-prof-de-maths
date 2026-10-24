@@ -1080,6 +1080,14 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                             f"{fr(produit1)} - {fr(c)} + {fr(d)} "
                             f"= {fr(resultat)} €."
                         )
+                elif difficulte == 2:
+                    produit2 = round(m * c, 2)
+                    resultat = round(produit1 - produit2, 2)
+    
+                    enonce = (
+                        f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
+                        f"- {m} × {fr(c)}"
+                    )
 
                     correction = (
                         f"Parenthèse : {fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
