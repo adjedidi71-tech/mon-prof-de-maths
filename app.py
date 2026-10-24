@@ -1012,6 +1012,128 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     "unite": ""
                 }
             ]
+        if type_exercice == "Je m'entraîne":
+
+            if difficulte == 1:
+                capacite = random.randint(6, 12)
+                lots = random.randint(9, 17)
+                restant = random.randint(1, capacite - 1)
+                total = capacite * lots + restant
+
+                attendu1 = lots
+                attendu2 = capacite - restant
+
+                enonce = (
+                    f"Une école possède {total} crayons. "
+                    f"Elle prépare des trousses de {capacite} crayons.\n\n"
+                    f"1. Combien de trousses complètes peut-elle préparer ?\n\n"
+                    f"2. Combien de crayons supplémentaires lui faut-il "
+                    f"pour remplir une trousse de plus ?"
+                )
+
+                correction = (
+                    f"Division euclidienne :\n"
+                    f"{total} = {capacite} × {lots} + {restant}.\n\n"
+                    f"1. L'école peut préparer {lots} trousses complètes.\n\n"
+                    f"2. Il manque {capacite} - {restant} "
+                    f"= {attendu2} crayons."
+                )
+
+                libelle1 = "Nombre de trousses complètes"
+                libelle2 = "Crayons supplémentaires nécessaires"
+
+            elif difficulte == 2:
+                capacite = random.randint(8, 15)
+                lots = random.randint(15, 25)
+                restant = random.randint(1, capacite - 1)
+                total = capacite * lots + restant
+                livraison = random.randint(capacite, capacite * 2 + 3)
+
+                nouveau_total = total + livraison
+                attendu1 = lots
+                attendu2 = nouveau_total // capacite
+                nouveau_reste = nouveau_total % capacite
+
+                enonce = (
+                    f"Un club possède {total} jetons. "
+                    f"Il prépare des lots de {capacite} jetons.\n\n"
+                    f"Le club reçoit ensuite {livraison} jetons supplémentaires.\n\n"
+                    f"1. Combien de lots complets peut-il préparer "
+                    f"avant la livraison ?\n\n"
+                    f"2. Combien de lots complets pourra-t-il préparer "
+                    f"après la livraison ?"
+                )
+
+                correction = (
+                    f"1. Avant la livraison :\n"
+                    f"{total} = {capacite} × {lots} + {restant}.\n"
+                    f"Le club prépare {lots} lots complets.\n\n"
+                    f"2. Après la livraison :\n"
+                    f"{total} + {livraison} = {nouveau_total} jetons.\n"
+                    f"{nouveau_total} = {capacite} × {attendu2} "
+                    f"+ {nouveau_reste}.\n"
+                    f"Il peut préparer {attendu2} lots complets."
+                )
+
+                libelle1 = "Lots complets avant livraison"
+                libelle2 = "Lots complets après livraison"
+
+            else:
+                petite = random.randint(8, 13)
+                grande = petite + random.randint(4, 7)
+                total = random.randint(110, 240)
+
+                q_petite, r_petite = divmod(total, petite)
+                q_grande, r_grande = divmod(total, grande)
+
+                attendu1 = q_petite + (1 if r_petite else 0)
+                nombre_grandes = q_grande + (1 if r_grande else 0)
+                attendu2 = attendu1 - nombre_grandes
+
+                enonce = (
+                    f"Une bibliothèque doit transporter {total} livres.\n\n"
+                    f"Elle peut utiliser de petites caisses contenant "
+                    f"au maximum {petite} livres ou de grandes caisses "
+                    f"contenant au maximum {grande} livres.\n\n"
+                    f"1. Combien de petites caisses faut-il au minimum "
+                    f"pour transporter tous les livres ?\n\n"
+                    f"2. Combien de caisses en moins faut-il "
+                    f"si elle utilise les grandes caisses ?"
+                )
+
+                correction = (
+                    f"1. Petites caisses :\n"
+                    f"{total} = {petite} × {q_petite} + {r_petite}.\n"
+                    f"Il faut {attendu1} petites caisses, "
+                    f"car la dernière peut être incomplète.\n\n"
+                    f"2. Grandes caisses :\n"
+                    f"{total} = {grande} × {q_grande} + {r_grande}.\n"
+                    f"Il faut {nombre_grandes} grandes caisses.\n"
+                    f"Différence : {attendu1} - {nombre_grandes} "
+                    f"= {attendu2} caisses."
+                )
+
+                libelle1 = "Nombre de petites caisses"
+                libelle2 = "Nombre de caisses économisées"
+
+            champs_reponse = [
+                {
+                    "id": "question_1",
+                    "question": 1,
+                    "libelle": libelle1,
+                    "type": "nombre",
+                    "attendu": attendu1,
+                    "unite": ""
+                },
+                {
+                    "id": "question_2",
+                    "question": 2,
+                    "libelle": libelle2,
+                    "type": "nombre",
+                    "attendu": attendu2,
+                    "unite": ""
+                }
+            ]            
 
         elif partie == "Division par un nombre décimal":
             diviseur = random.randint(2, 9) / 10
