@@ -450,6 +450,147 @@ if st.session_state.get("eleve_id"):
                 st.info("Aucune série enregistrée pour ce compte.")
             else:
                 st.success(f"{len(series)} série(s) retrouvée(s).")
+                ids_series = [s["id"] for s in series]
+
+                selection = st.multiselect(
+                    "Sélectionne les séries à supprimer",
+                    options=ids_series,
+                    format_func=lambda identifiant: f"Série n° {identifiant}",
+                    key="selection_series_suppression"
+                )
+
+                col_s1, col_s2 = st.columns(2)
+
+                with col_s1:
+                    if st.button(
+                        "Supprimer la sélection",
+                        disabled=not selection
+                    ):
+                        st.session_state["suppression_en_attente"] = {
+                            "mode": "selection",
+                            "ids": list(selection),
+                            "eleve_id": st.session_state["eleve_id"]
+                        }
+
+                with col_s2:
+                    if st.button("Supprimer toutes mes séries"):
+                        st.session_state["suppression_en_attente"] = {
+                            "mode": "toutes",
+                            "ids": [],
+                            "eleve_id": st.session_state["eleve_id"]
+                        }
+
+                demande = st.session_state.get("suppression_en_attente")
+
+                if (
+                    demande
+                    and demande["eleve_id"] == st.session_state["eleve_id"]
+                ):
+                    mode = demande["mode"]
+
+                    ids_valides = [
+                        identifiant
+                        for identifiant in demande["ids"]
+                        if identifiant in ids_series
+                    ]
+
+                    if mode == "toutes":
+                        st.warning(
+                            "Attention : toutes tes séries et leurs réponses "
+                            "seront définitivement supprimées."
+                        )
+                    elif ids_valides:
+                        st.warning(
+                            f"Attention : {len(ids_valides)} série(s) "
+                            "seront définitivement supprimée(s)."
+                        )
+
+                    if mode == "toutes" or ids_valides:
+                        col_c1, col_c2 = st.columns(2)
+
+                        with col_c1:
+                            confirmer = st.button(
+                                "Oui, supprimer définitivement",
+                                key="confirmer_suppression_series"
+                            )
+
+                        with col_c2:
+                            annuler = st.button(
+                                "Annuler",
+                                key="annuler_suppression_series"
+                            )
+
+                        if annuler:
+                            st.session_state.pop(
+                                "suppression_en_attente", None
+                            )
+                            st.rerun()
+
+                        if confirmer:
+                            try:
+                                requete = (
+                                    supabase_privee
+                                    .table("series_exercices")
+                                    .delete()
+                                    .eq(
+                                        "eleve_id",
+                                        st.session_state["eleve_id"]
+                                    )
+                                )
+
+                                if mode == "selection":
+                                    requete = requete.in_(
+                                        "id", ids_valides
+                                    )
+
+                                resultat = requete.select("id").execute()
+
+                                ids_supprimes = {
+                                    ligne["id"]
+                                    for ligne in (resultat.data or [])
+                                }
+
+                                if (
+                                    mode == "selection"
+                                    and ids_supprimes != set(ids_valides)
+                                ):
+                                    st.error(
+                                        "La suppression n'a pas été confirmée "
+                                        "pour toutes les séries. "
+                                        "Actualise la liste avant de réessayer."
+                                    )
+                                else:
+                                    codes_supprimes = {
+                                        s["code_reprise"]
+                                        for s in series
+                                        if s["id"] in ids_supprimes
+                                    }
+
+                                    if (
+                                        mode == "toutes"
+                                        or st.session_state.get("code_actuel")
+                                        in codes_supprimes
+                                    ):
+                                        st.session_state["exercices_actuels"] = []
+                                        st.session_state.pop("code_actuel", None)
+                                        st.session_state["serie_version"] = (
+                                            st.session_state.get(
+                                                "serie_version", 0
+                                            ) + 1
+                                        )
+
+                                    st.session_state.pop(
+                                        "suppression_en_attente", None
+                                    )
+                                    st.session_state["afficher_series"] = True
+                                    st.rerun()
+
+                            except Exception:
+                                st.error(
+                                    "Impossible de supprimer les séries. "
+                                    "Aucune nouvelle tentative automatique "
+                                    "ne sera effectuée."
+                                )
 
                 for serie in series:
                     with st.expander(
