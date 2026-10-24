@@ -1328,26 +1328,39 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 
                 elif difficulte == 2:
                     fabriques = random.randint(4, n1 - 2)
-                    restant = round(v1 - fabriques * d, 2)
-
+                    reserve = random.randint(1, n1 - fabriques - 1)
+                    ruban_decoration = round(reserve * d, 2)
+        
+                    restant = round(
+                        v1 - fabriques * d - ruban_decoration, 2
+                    )
+                    attendu2 = n1 - fabriques - reserve
+        
                     enonce = (
                         f"Un atelier possède {fr(v1)} m de ruban.\n\n"
                         f"Chaque bracelet nécessite {fr(d)} m de ruban.\n\n"
                         f"1. Combien de bracelets peut-il fabriquer "
                         f"au maximum ?\n\n"
                         f"2. Après avoir fabriqué {fabriques} bracelets, "
-                        f"combien de mètres de ruban reste-t-il ?"
+                        f"l'atelier utilise également {fr(ruban_decoration)} m "
+                        f"pour décorer des paquets. "
+                        f"Combien de bracelets supplémentaires "
+                        f"peut-il encore fabriquer ?"
                     )
-
+        
                     correction = (
-                        f"1. Nombre de bracelets :\n"
+                        f"1. Nombre maximal de bracelets :\n"
                         f"{fr(v1)} ÷ {fr(d)} = {n1} bracelets.\n\n"
-                        f"2. Ruban utilisé :\n"
+                        f"2. Ruban utilisé pour les bracelets :\n"
                         f"{fabriques} × {fr(d)} "
-                        f"= {fr(fabriques * d)} m.\n\n"
-                        f"Ruban restant :\n"
+                        f"= {fr(fabriques * d)} m.\n"
+                        f"Ruban restant après les décorations :\n"
                         f"{fr(v1)} - {fr(fabriques * d)} "
-                        f"= {fr(restant)} m."
+                        f"- {fr(ruban_decoration)} "
+                        f"= {fr(restant)} m.\n"
+                        f"Bracelets supplémentaires :\n"
+                        f"{fr(restant)} ÷ {fr(d)} "
+                        f"= {attendu2} bracelets."
                     )
 
                     champs_reponse = [
