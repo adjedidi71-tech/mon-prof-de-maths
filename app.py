@@ -1123,29 +1123,42 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     capacite = random.randint(6, 12)
                     lots = random.randint(9, 17)
                     restant = random.randint(1, capacite - 1)
-                    total = capacite * lots + restant
-    
+                    reserve = random.randint(10, 25)
+        
+                    disponible = capacite * lots + restant
+                    total = disponible + reserve
+        
                     attendu1 = lots
                     attendu2 = capacite - restant
-    
+        
                     enonce = (
-                        f"Une école possède {total} crayons. "
-                        f"Elle prépare des trousses de {capacite} crayons.\n\n"
-                        f"1. Combien de trousses complètes peut-elle préparer ?\n\n"
-                        f"2. Combien de crayons supplémentaires lui faut-il "
-                        f"pour remplir une trousse de plus ?"
+                        f"Une école possède {total} crayons.\n\n"
+                        f"Elle doit conserver {reserve} crayons "
+                        f"pour les activités en classe.\n"
+                        f"Avec les autres crayons, elle prépare "
+                        f"des trousses de {capacite} crayons.\n\n"
+                        f"1. Combien de trousses complètes "
+                        f"peut-elle préparer ?\n\n"
+                        f"2. Combien de crayons doit-elle acheter "
+                        f"pour remplir une trousse supplémentaire "
+                        f"sans utiliser sa réserve ?"
                     )
-    
+        
                     correction = (
+                        f"1. Crayons disponibles :\n"
+                        f"{total} - {reserve} = {disponible}.\n"
                         f"Division euclidienne :\n"
-                        f"{total} = {capacite} × {lots} + {restant}.\n\n"
-                        f"1. L'école peut préparer {lots} trousses complètes.\n\n"
-                        f"2. Il manque {capacite} - {restant} "
-                        f"= {attendu2} crayons."
+                        f"{disponible} = {capacite} × {lots} "
+                        f"+ {restant}.\n"
+                        f"L'école peut préparer {attendu1} "
+                        f"trousses complètes.\n\n"
+                        f"2. Il reste {restant} crayons.\n"
+                        f"Il faut acheter :\n"
+                        f"{capacite} - {restant} = {attendu2} crayons."
                     )
-    
+        
                     libelle1 = "Nombre de trousses complètes"
-                    libelle2 = "Crayons supplémentaires nécessaires"
+                    libelle2 = "Crayons à acheter"
     
                 elif difficulte == 2:
                     capacite = random.randint(8, 15)
