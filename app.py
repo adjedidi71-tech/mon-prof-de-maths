@@ -1756,33 +1756,33 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                     libelle1 = "Prix des lots"
                     libelle2 = "Prix total de l'achat"
 
-            elif modele == "erreur":
-                attendu1 = n * p1 + p2
-                attendu2 = n * (p1 + p2)
-
-                enonce = (
-                    f"Un atelier prépare {n} kits. "
-                    f"Chaque kit contient du matériel à {p1} € "
-                    f"et un accessoire à {p2} €.\n\n"
-                    f"Pour calculer le prix total, Lila écrit : "
-                    f"{n} × {p1} + {p2}.\n\n"
-                    f"1. Quel résultat trouve Lila ?\n"
-                    f"2. Quel est le prix total correct des kits ?"
-                )
-
-                correction = (
-                    f"1. Calcul de Lila : {n} × {p1} + {p2} "
-                    f"= {n * p1} + {p2} = {attendu1} €.\n"
-                    f"2. Lila a oublié de multiplier "
-                    f"le prix de l'accessoire par {n}.\n"
-                    f"Le calcul correct est :\n"
-                    f"{n} × ({p1} + {p2}) "
-                    f"= {n} × {p1} + {n} × {p2}\n"
-                    f"= {n * p1} + {n * p2} = {attendu2} €."
-                )
-
-                libelle1 = "Résultat trouvé par Lila"
-                libelle2 = "Prix total correct"
+                elif modele == "erreur":
+                    attendu1 = n * p1 + p2
+                    attendu2 = n * (p1 + p2)
+    
+                    enonce = (
+                        f"Un atelier prépare {n} kits. "
+                        f"Chaque kit contient du matériel à {p1} € "
+                        f"et un accessoire à {p2} €.\n\n"
+                        f"Pour calculer le prix total, Lila écrit : "
+                        f"{n} × {p1} + {p2}.\n\n"
+                        f"1. Quel résultat trouve Lila ?\n"
+                        f"2. Quel est le prix total correct des kits ?"
+                    )
+    
+                    correction = (
+                        f"1. Calcul de Lila : {n} × {p1} + {p2} "
+                        f"= {n * p1} + {p2} = {attendu1} €.\n"
+                        f"2. Lila a oublié de multiplier "
+                        f"le prix de l'accessoire par {n}.\n"
+                        f"Le calcul correct est :\n"
+                        f"{n} × ({p1} + {p2}) "
+                        f"= {n} × {p1} + {n} × {p2}\n"
+                        f"= {n * p1} + {n * p2} = {attendu2} €."
+                    )
+    
+                    libelle1 = "Résultat trouvé par Lila"
+                    libelle2 = "Prix total correct"
 
             elif difficulte == 2:
                 n = random.randint(6, 15)
