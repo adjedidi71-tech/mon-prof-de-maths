@@ -691,6 +691,7 @@ if st.session_state.get("eleve_id"):
 
         except Exception:
             st.error("Impossible de récupérer tes exercices.")
+zone_serie_ouverte = st.container()
 
 def generer_code_reprise():
     caracteres = string.ascii_uppercase + string.digits
