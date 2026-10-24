@@ -1788,36 +1788,53 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 n = random.randint(6, 15)
                 prix = random.randint(12, 25)
                 remise = random.randint(2, 8)
-
+                livraison = random.randint(5, 15)
+    
                 produit = random.choice([
                     "jeux de cartes",
                     "mangas d'occasion",
                     "kits créatifs"
                 ])
-
+    
                 attendu1 = n * prix
-                attendu2 = n * (prix - remise)
-
+                prix_remise = n * (prix - remise)
+                depense = prix_remise + livraison
+    
+                budget = depense + random.randint(20, 80)
+                attendu2 = budget - depense
+    
                 enonce = (
-                    f"Une boutique vend {n} {produit} "
-                    f"à {prix} € l'unité.\n\n"
-                    f"Une réduction de {remise} € est accordée "
-                    f"sur chaque article.\n\n"
-                    f"1. Quel est le prix total sans réduction ?\n\n"
-                    f"2. Quel est le montant à payer après réduction ?"
+                    f"Une association dispose d'un budget "
+                    f"de {budget} €.\n\n"
+                    f"Elle commande {n} {produit}.\n"
+                    f"Le prix affiché est de {prix} € par article.\n"
+                    f"Le vendeur accorde ensuite une remise "
+                    f"de {remise} € sur chaque article.\n"
+                    f"La livraison coûte {livraison} €.\n\n"
+                    f"1. Quel est le prix total des articles "
+                    f"au prix affiché, hors livraison ?\n"
+                    f"2. Combien d'argent restera-t-il "
+                    f"sur le budget après paiement ?"
                 )
-
+    
                 correction = (
-                    f"1. {n} × {prix} = {attendu1} €.\n\n"
-                    f"2. On utilise la distributivité :\n"
+                    f"1. Prix initial :\n"
+                    f"{n} × {prix} = {attendu1} €.\n\n"
+                    f"2. Réduction totale :\n"
+                    f"{n} × {remise} = {n * remise} €.\n"
+                    f"Prix après réduction :\n"
                     f"{n} × ({prix} - {remise}) "
-                    f"= {n} × {prix} - {n} × {remise}\n"
                     f"= {attendu1} - {n * remise} "
-                    f"= {attendu2} €."
+                    f"= {prix_remise} €.\n"
+                    f"Avec la livraison :\n"
+                    f"{prix_remise} + {livraison} "
+                    f"= {depense} €.\n"
+                    f"Budget restant :\n"
+                    f"{budget} - {depense} = {attendu2} €."
                 )
-
-                libelle1 = "Prix sans réduction"
-                libelle2 = "Prix après réduction"
+    
+                libelle1 = "Prix initial des articles"
+                libelle2 = "Budget restant"
 
             else:
                 na = random.randint(7, 13)
