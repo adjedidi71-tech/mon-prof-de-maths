@@ -1082,19 +1082,27 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         )
                 elif difficulte == 2:
                     produit2 = round(m * c, 2)
-                    resultat = round(produit1 - produit2, 2)
-    
+                    ajout = round(random.randint(15, 95) / 10, 1)
+        
+                    sous_total = round(produit1 - produit2, 2)
+                    resultat = round(sous_total + ajout, 2)
+        
                     enonce = (
                         f"Calcule : {n} × ({fr(a)} + {fr(b)}) "
-                        f"- {m} × {fr(c)}"
+                        f"- {m} × {fr(c)} + {fr(ajout)}"
                     )
-
+        
                     correction = (
-                        f"Parenthèse : {fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
+                        f"Parenthèse :\n"
+                        f"{fr(a)} + {fr(b)} = {fr(somme1)}.\n\n"
                         f"Multiplications :\n"
                         f"{n} × {fr(somme1)} = {fr(produit1)}.\n"
                         f"{m} × {fr(c)} = {fr(produit2)}.\n\n"
-                        f"Soustraction : {fr(produit1)} - {fr(produit2)} "
+                        f"Soustraction :\n"
+                        f"{fr(produit1)} - {fr(produit2)} "
+                        f"= {fr(sous_total)}.\n\n"
+                        f"Addition finale :\n"
+                        f"{fr(sous_total)} + {fr(ajout)} "
                         f"= {fr(resultat)}."
                     )
 
