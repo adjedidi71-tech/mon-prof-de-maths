@@ -1143,7 +1143,115 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             enonce = f"Calcule : {dividende} ÷ {diviseur}"
             correction = f"{dividende} ÷ {diviseur} = {quotient}"
             reponse_attendue = quotient
+            
+            if type_exercice == "Je m'entraîne":
+                reponse_attendue = None
 
+                d = random.choice([0.2, 0.25, 0.4, 0.5, 0.8])
+                n1 = random.randint(14, 26)
+                n2 = random.randint(6, 15)
+
+                v1 = round(n1 * d, 2)
+                v2 = round(n2 * d, 2)
+
+                def fr(valeur):
+                    return f"{round(valeur, 2):g}".replace(".", ",")
+
+                if difficulte == 1:
+                    retrait = random.randint(3, 8)
+                    resultat = n1 + n2 - retrait
+
+                    enonce = (
+                        f"Calcule : {fr(v1)} ÷ {fr(d)} "
+                        f"+ {fr(v2)} ÷ {fr(d)} - {retrait}"
+                    )
+
+                    correction = (
+                        f"Divisions :\n"
+                        f"{fr(v1)} ÷ {fr(d)} = {n1}.\n"
+                        f"{fr(v2)} ÷ {fr(d)} = {n2}.\n\n"
+                        f"Calcul final : {n1} + {n2} - {retrait} "
+                        f"= {resultat}."
+                    )
+
+                    reponse_attendue = resultat
+
+                elif difficulte == 2:
+                    fabriques = random.randint(4, n1 - 2)
+                    restant = round(v1 - fabriques * d, 2)
+
+                    enonce = (
+                        f"Un atelier possède {fr(v1)} m de ruban.\n\n"
+                        f"Chaque bracelet nécessite {fr(d)} m de ruban.\n\n"
+                        f"1. Combien de bracelets peut-il fabriquer "
+                        f"au maximum ?\n\n"
+                        f"2. Après avoir fabriqué {fabriques} bracelets, "
+                        f"combien de mètres de ruban reste-t-il ?"
+                    )
+
+                    correction = (
+                        f"1. Nombre de bracelets :\n"
+                        f"{fr(v1)} ÷ {fr(d)} = {n1} bracelets.\n\n"
+                        f"2. Ruban utilisé :\n"
+                        f"{fabriques} × {fr(d)} "
+                        f"= {fr(fabriques * d)} m.\n\n"
+                        f"Ruban restant :\n"
+                        f"{fr(v1)} - {fr(fabriques * d)} "
+                        f"= {fr(restant)} m."
+                    )
+
+                    champs_reponse = [
+                        {
+                            "id": "question_1",
+                            "question": 1,
+                            "libelle": "Nombre maximal de bracelets",
+                            "type": "nombre",
+                            "attendu": n1,
+                            "unite": "bracelets"
+                        },
+                        {
+                            "id": "question_2",
+                            "question": 2,
+                            "libelle": "Longueur de ruban restante",
+                            "type": "nombre",
+                            "attendu": restant,
+                            "unite": "m"
+                        }
+                    ]
+
+                else:
+                    d2 = random.choice(
+                        [x for x in [0.2, 0.25, 0.4, 0.5, 0.8] if x != d]
+                    )
+
+                    n3 = random.randint(5, 13)
+                    v3 = round(n3 * d2, 2)
+                    multiplicateur = random.randint(2, 5)
+                    retrait = random.randint(3, 10)
+
+                    resultat = n1 + n2 + multiplicateur * n3 - retrait
+
+                    enonce = (
+                        f"Calcule : ({fr(v1)} + {fr(v2)}) ÷ {fr(d)} "
+                        f"+ {multiplicateur} × "
+                        f"({fr(v3)} ÷ {fr(d2)}) - {retrait}"
+                    )
+
+                    correction = (
+                        f"Première parenthèse :\n"
+                        f"{fr(v1)} + {fr(v2)} = {fr(v1 + v2)}.\n\n"
+                        f"Divisions :\n"
+                        f"{fr(v1 + v2)} ÷ {fr(d)} = {n1 + n2}.\n"
+                        f"{fr(v3)} ÷ {fr(d2)} = {n3}.\n\n"
+                        f"Multiplication :\n"
+                        f"{multiplicateur} × {n3} "
+                        f"= {multiplicateur * n3}.\n\n"
+                        f"Calcul final :\n"
+                        f"{n1 + n2} + {multiplicateur * n3} "
+                        f"- {retrait} = {resultat}."
+                    )
+
+                    reponse_attendue = resultat
         elif partie == "Priorités opératoires":
             multiplicateur = random.randint(2, 9)
 
