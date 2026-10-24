@@ -1375,10 +1375,10 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         {
                             "id": "question_2",
                             "question": 2,
-                            "libelle": "Longueur de ruban restante",
+                            "libelle": "Nombre de bracelets supplémentaires",
                             "type": "nombre",
-                            "attendu": restant,
-                            "unite": "m"
+                            "attendu": attendu2,
+                            "unite": "bracelets"
                         }
                     ]
 
