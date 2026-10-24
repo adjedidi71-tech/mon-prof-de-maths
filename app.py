@@ -672,23 +672,6 @@ if st.session_state.get("eleve_id"):
                          st.session_state["afficher_series"] = False
                          st.rerun()
 
-                for numero, exercice in enumerate(
-                            serie["exercices"], start=1
-                        ):
-                            st.write(
-                                f"**Exercice {numero} :** "
-                                f"{exercice['enonce']}"
-                            )
-
-                            reponse = (
-                                serie.get("reponses") or {}
-                            ).get(str(numero))
-
-                            if reponse is not None:
-                                st.write(
-                                    f"Ta réponse enregistrée : {reponse}"
-                                )
-
         except Exception:
             st.error("Impossible de récupérer tes exercices.")
 zone_serie_ouverte = st.container()
