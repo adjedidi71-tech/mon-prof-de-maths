@@ -2091,8 +2091,6 @@ if st.button("Générer mes exercices"):
                 if code:
                     st.session_state.code_actuel = code
                     st.success("Exercices générés et sauvegardés !")
-                    st.write("Ton code de reprise :")
-                    st.code(code)
                 else:
                     st.error("Sauvegarde impossible.")
             except Exception:
