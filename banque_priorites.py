@@ -1051,6 +1051,100 @@ REPONSES_PRIORITES = {'P7-01': [{'id': 'r1',
             'libelle': 'Mon expression numérique (à comparer avec la correction)',
             'type': 'texte_libre'}]}
 
+def generer_modele_p7_sciences():
+    groupes = random.randint(6, 10)
+    eleves_par_groupe = random.choice([4, 5])
+    piles_par_eleve = 2
+
+    stock = random.randint(7, 17)
+    capacite_paquet = random.choice([10, 12])
+    prix_paquet = random.randint(7, 12)
+    frais = random.randint(10, 25)
+
+    eleves = groupes * eleves_par_groupe
+    necessaires = eleves * piles_par_eleve
+    a_acheter = necessaires - stock
+
+    quotient, reste = divmod(a_acheter, capacite_paquet)
+    paquets = quotient + (1 if reste > 0 else 0)
+
+    depense = paquets * prix_paquet + frais
+    budget = depense + random.randint(15, 45)
+    restant = budget - depense
+
+    enonce = (
+        "**L'atelier de sciences**\n\n"
+        f"Un collège organise un atelier avec {groupes} groupes "
+        f"de {eleves_par_groupe} élèves.\n\n"
+        f"Chaque élève a besoin de {piles_par_eleve} piles "
+        "pour son expérience.\n\n"
+        f"Le collège possède déjà {stock} piles.\n"
+        f"Les piles sont vendues par paquets de "
+        f"{capacite_paquet}, à {prix_paquet} € le paquet.\n\n"
+        f"Le matériel supplémentaire coûte {frais} €.\n"
+        f"Le budget total est de {budget} €.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de piles faut-il pour tous les élèves ?\n\n"
+        "2. Combien de paquets faut-il acheter au minimum ?\n\n"
+        "3. Combien restera-t-il sur le budget après "
+        "l'achat des paquets et du matériel supplémentaire ?"
+    )
+
+    correction = (
+        "**1. Nombre de piles nécessaires**\n\n"
+        f"Élèves : {groupes} × {eleves_par_groupe} "
+        f"= {eleves}.\n"
+        f"Piles : {eleves} × {piles_par_eleve} "
+        f"= {necessaires} piles.\n\n"
+        "**2. Nombre de paquets**\n\n"
+        f"Piles à acheter : {necessaires} - {stock} "
+        f"= {a_acheter}.\n"
+        f"Division : {a_acheter} ÷ {capacite_paquet}.\n"
+        f"Quotient : {quotient}, reste : {reste}.\n"
+        f"Il faut acheter {paquets} paquets.\n\n"
+        "**3. Budget restant**\n\n"
+        f"Prix des paquets : {paquets} × {prix_paquet} "
+        f"= {paquets * prix_paquet} €.\n"
+        f"Dépense totale : {paquets * prix_paquet} "
+        f"+ {frais} = {depense} €.\n"
+        f"Budget restant : {budget} - {depense} "
+        f"= {restant} €."
+    )
+
+    return {
+        "id": "P7-M01",
+        "titre": "L'atelier de sciences",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Piles nécessaires",
+                "type": "nombre",
+                "attendu": necessaires,
+                "unite": "piles"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Paquets à acheter",
+                "type": "nombre",
+                "attendu": paquets,
+                "unite": "paquets"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Budget restant",
+                "type": "nombre",
+                "attendu": restant,
+                "unite": "€"
+            }
+        ]
+    }
+
 
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
@@ -1063,8 +1157,20 @@ def generer_exercices_priorites(difficulte, nombre=1):
         raise ValueError(
             "Cette banque contient 5 exercices distincts par difficulté."
         )
-    exercices = deepcopy(random.sample(BANQUE_PRIORITES[difficulte], k=nombre))
+    
+    banque = deepcopy(BANQUE_PRIORITES[difficulte])
+
+    if difficulte == 1:
+        banque.append(generer_modele_p7_sciences())
+
+    exercices = random.sample(banque, k=nombre)
+
     for exercice in exercices:
-        exercice["champs_reponse"] = deepcopy(REPONSES_PRIORITES[exercice["id"]])
+        if "champs_reponse" not in exercice:
+            exercice["champs_reponse"] = deepcopy(
+                REPONSES_PRIORITES[exercice["id"]]
+            )
+
     return exercices
+
 
