@@ -1285,27 +1285,48 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
 
                     correction = (
                         f"1. Avec les petites caisses :\n\n"
+
                         f"Livres jeunesse :\n"
-                        f"{jeunesse} = {petite} × {q_jp} + {r_jp}\n"
+                        f"{jeunesse} ÷ {petite} :\n"
+                        f"Quotient = {q_jp}, reste = {r_jp}.\n"
+                        f"Vérification : {jeunesse} = "
+                        f"{petite} × {q_jp} + {r_jp}.\n"
                         f"Il faut {petites_jeunesse} caisses.\n\n"
+
                         f"Livres adultes :\n"
-                        f"{adultes} = {petite} × {q_ap} + {r_ap}\n"
+                        f"{adultes} ÷ {petite} :\n"
+                        f"Quotient = {q_ap}, reste = {r_ap}.\n"
+                        f"Vérification : {adultes} = "
+                        f"{petite} × {q_ap} + {r_ap}.\n"
                         f"Il faut {petites_adultes} caisses.\n\n"
+
                         f"Total : {petites_jeunesse} + "
                         f"{petites_adultes} = {attendu1} caisses.\n\n"
+
                         f"2. Avec les grandes caisses :\n\n"
+
                         f"Livres jeunesse :\n"
-                        f"{jeunesse} = {grande} × {q_jg} + {r_jg}\n"
+                        f"{jeunesse} ÷ {grande} :\n"
+                        f"Quotient = {q_jg}, reste = {r_jg}.\n"
+                        f"Vérification : {jeunesse} = "
+                        f"{grande} × {q_jg} + {r_jg}.\n"
                         f"Il faut {grandes_jeunesse} caisses.\n\n"
+
                         f"Livres adultes :\n"
-                        f"{adultes} = {grande} × {q_ag} + {r_ag}\n"
+                        f"{adultes} ÷ {grande} :\n"
+                        f"Quotient = {q_ag}, reste = {r_ag}.\n"
+                        f"Vérification : {adultes} = "
+                        f"{grande} × {q_ag} + {r_ag}.\n"
                         f"Il faut {grandes_adultes} caisses.\n\n"
+
                         f"Total : {grandes_jeunesse} + "
                         f"{grandes_adultes} = {nombre_grandes} caisses.\n\n"
+
                         f"Caisses économisées :\n"
                         f"{attendu1} - {nombre_grandes} "
                         f"= {attendu2} caisses.\n\n"
-                        f"Lorsqu'il reste des livres, "
+
+                        f"Si le reste est différent de zéro, "
                         f"une caisse supplémentaire est nécessaire."
                     )
 
