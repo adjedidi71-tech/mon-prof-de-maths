@@ -1184,18 +1184,25 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"sans utiliser sa réserve ?"
                     )
         
+                    
                     correction = (
-                        f"1. Crayons disponibles :\n"
-                        f"{total} - {reserve} = {disponible}.\n"
+                        f"1. Nombre de crayons disponibles :\n"
+                        f"{total} - {reserve} = {disponible} crayons.\n\n"
+    
                         f"Division euclidienne :\n"
-                        f"{disponible} = {capacite} × {lots} "
-                        f"+ {restant}.\n"
+                        f"{disponible} ÷ {capacite}\n"
+                        f"Quotient = {lots}, reste = {restant}.\n"
+                        f"Vérification : {disponible} = "
+                        f"{capacite} × {lots} + {restant}.\n"
                         f"L'école peut préparer {attendu1} "
                         f"trousses complètes.\n\n"
-                        f"2. Il reste {restant} crayons.\n"
-                        f"Il faut acheter :\n"
+    
+                        f"2. Crayons supplémentaires nécessaires :\n"
+                        f"Il reste {restant} crayons.\n"
+                        f"Il faut {capacite} crayons par trousse.\n"
                         f"{capacite} - {restant} = {attendu2} crayons."
                     )
+
         
                     libelle1 = "Nombre de trousses complètes"
                     libelle2 = "Crayons à acheter"
@@ -1222,16 +1229,28 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                         f"après la livraison ?"
                     )
     
+                    
                     correction = (
                         f"1. Avant la livraison :\n"
-                        f"{total} = {capacite} × {lots} + {restant}.\n"
-                        f"Le club prépare {lots} lots complets.\n\n"
+                        f"Division : {total} ÷ {capacite}\n"
+                        f"Quotient = {lots}, reste = {restant}.\n"
+                        f"Vérification : {total} = "
+                        f"{capacite} × {lots} + {restant}.\n"
+                        f"Le club peut préparer {attendu1} "
+                        f"lots complets.\n\n"
+    
                         f"2. Après la livraison :\n"
-                        f"{total} + {livraison} = {nouveau_total} jetons.\n"
-                        f"{nouveau_total} = {capacite} × {attendu2} "
-                        f"+ {nouveau_reste}.\n"
-                        f"Il peut préparer {attendu2} lots complets."
+                        f"Nombre total de jetons :\n"
+                        f"{total} + {livraison} = {nouveau_total}.\n"
+                        f"Division : {nouveau_total} ÷ {capacite}\n"
+                        f"Quotient = {attendu2}, "
+                        f"reste = {nouveau_reste}.\n"
+                        f"Vérification : {nouveau_total} = "
+                        f"{capacite} × {attendu2} + {nouveau_reste}.\n"
+                        f"Le club peut préparer {attendu2} "
+                        f"lots complets."
                     )
+
     
                     libelle1 = "Lots complets avant livraison"
                     libelle2 = "Lots complets après livraison"
