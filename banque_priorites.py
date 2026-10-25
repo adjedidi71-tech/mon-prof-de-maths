@@ -1357,6 +1357,131 @@ def generer_modele_p7_enigmes():
         ]
     }
 
+def generer_modele_p7_photos():
+    def euros(centimes):
+        return f"{centimes / 100:.2f}".replace(".", ",")
+
+    while True:
+        nb_photos = random.randint(12, 28)
+
+        frais_a = random.randint(4, 8)
+        tarif_a = random.choice([80, 90, 100, 110])
+
+        frais_b = random.randint(10, 15)
+        tarif_b = random.choice([40, 50, 60, 70])
+
+        cout_a = frais_a * 100 + nb_photos * tarif_a
+        cout_b = frais_b * 100 + nb_photos * tarif_b
+
+        if abs(cout_a - cout_b) >= 150:
+            break
+
+    gagnant = "A" if cout_a < cout_b else "B"
+    economie = abs(cout_a - cout_b)
+
+    formule_a = (
+        f"({frais_a} + {nb_photos} × {euros(tarif_a)})"
+    )
+    formule_b = (
+        f"({frais_b} + {nb_photos} × {euros(tarif_b)})"
+    )
+
+    enonce = (
+        "**L'exposition de photos**\n\n"
+        "Le club photo du collège prépare une exposition.\n\n"
+        f"Il souhaite faire imprimer {nb_photos} photos.\n\n"
+        "Deux imprimeurs proposent la même qualité :\n\n"
+        "**Offre A :**\n"
+        f"- {frais_a} € de frais fixes ;\n"
+        f"- {euros(tarif_a)} € par photo.\n\n"
+        "**Offre B :**\n"
+        f"- {frais_b} € de frais fixes ;\n"
+        f"- {euros(tarif_b)} € par photo.\n\n"
+        "**Questions**\n\n"
+        "1. Quel est le coût total avec l'offre A ?\n\n"
+        "2. Quel est le coût total avec l'offre B ?\n\n"
+        "3. Quelle offre est la moins chère ? "
+        "Combien le club économise-t-il ? "
+        "Écris une expression numérique avec des "
+        "parenthèses pour justifier la différence."
+    )
+
+    if gagnant == "A":
+        expression_ecart = f"{formule_b} − {formule_a}"
+    else:
+        expression_ecart = f"{formule_a} − {formule_b}"
+
+    correction = (
+        "**1. Coût de l'offre A**\n\n"
+        f"Frais fixes : {frais_a} €.\n\n"
+        f"Prix des photos : {nb_photos} × "
+        f"{euros(tarif_a)} = "
+        f"{euros(nb_photos * tarif_a)} €.\n\n"
+        f"Total : {formule_a} = {euros(cout_a)} €.\n\n"
+        "**2. Coût de l'offre B**\n\n"
+        f"Frais fixes : {frais_b} €.\n\n"
+        f"Prix des photos : {nb_photos} × "
+        f"{euros(tarif_b)} = "
+        f"{euros(nb_photos * tarif_b)} €.\n\n"
+        f"Total : {formule_b} = {euros(cout_b)} €.\n\n"
+        "**3. Comparaison des offres**\n\n"
+        f"Offre A : {euros(cout_a)} €.\n\n"
+        f"Offre B : {euros(cout_b)} €.\n\n"
+        f"L'offre {gagnant} est la moins chère.\n\n"
+        "**Expression numérique :**\n\n"
+        f"{expression_ecart} = {euros(economie)} €.\n\n"
+        f"**Réponse :** Le club choisit l'offre "
+        f"{gagnant} et économise {euros(economie)} €."
+    )
+
+    return {
+        "id": "P7-M04",
+        "titre": "L'exposition de photos",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Coût de l'offre A",
+                "type": "nombre",
+                "attendu": round(cout_a / 100, 2),
+                "unite": "€"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Coût de l'offre B",
+                "type": "nombre",
+                "attendu": round(cout_b / 100, 2),
+                "unite": "€"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Offre la moins chère",
+                "type": "choix",
+                "attendu": gagnant,
+                "options": ["A", "B"]
+            },
+            {
+                "id": "r4",
+                "question": 3,
+                "libelle": "Économie réalisée",
+                "type": "nombre",
+                "attendu": round(economie / 100, 2),
+                "unite": "€"
+            },
+            {
+                "id": "expression",
+                "question": 3,
+                "libelle": "Mon expression numérique (à comparer avec la correction)",
+                "type": "texte_libre"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1375,6 +1500,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
+        banque.append(generer_modele_p7_photos())
 
     exercices = random.sample(banque, k=nombre)
 
