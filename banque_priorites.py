@@ -1146,6 +1146,99 @@ def generer_modele_p7_sciences():
     }
 
 
+def generer_modele_p7_patisserie():
+    plateaux = random.randint(6, 10)
+    par_plateau = 12
+    reserves = random.randint(7, 16)
+    par_sachet = random.choice([4, 5, 6])
+    prix_sachet = random.randint(5, 8)
+    cout_ingredients = random.randint(20, 35)
+
+    total = plateaux * par_plateau
+    disponibles = total - reserves
+    sachets, reste = divmod(disponibles, par_sachet)
+    recette = sachets * prix_sachet
+    benefice = recette - cout_ingredients
+
+    enonce = (
+        "**Le stand de pâtisserie**\n\n"
+        f"Pour une fête du collège, un club prépare {plateaux} "
+        f"plateaux de {par_plateau} biscuits chacun.\n\n"
+        f"Il réserve {reserves} biscuits pour les bénévoles.\n\n"
+        f"Les autres biscuits sont vendus par sachets de "
+        f"{par_sachet}, au prix de {prix_sachet} € le sachet.\n\n"
+        "Seuls les sachets complets peuvent être vendus.\n\n"
+        f"Les ingrédients ont coûté {cout_ingredients} €.\n"
+        "Tous les sachets préparés sont vendus.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de biscuits sont disponibles pour la vente ?\n\n"
+        "2. Combien de sachets complets peut-on préparer ? "
+        "Combien de biscuits restent hors des sachets ?\n\n"
+        "3. Quel bénéfice le club réalise-t-il après "
+        "avoir payé les ingrédients ?"
+    )
+
+    correction = (
+        "**1. Biscuits disponibles**\n\n"
+        f"{plateaux} × {par_plateau} = {total} biscuits.\n\n"
+        f"{total} − {reserves} = {disponibles} biscuits.\n\n"
+        "**2. Préparation des sachets**\n\n"
+        f"Division euclidienne : {disponibles} ÷ {par_sachet}.\n\n"
+        f"Quotient = {sachets}, reste = {reste}.\n\n"
+        f"Vérification : {disponibles} = "
+        f"{par_sachet} × {sachets} + {reste}.\n\n"
+        f"On peut vendre {sachets} sachets complets.\n"
+        f"{reste} biscuits restent hors des sachets.\n\n"
+        "**3. Bénéfice du club**\n\n"
+        f"Recette : {sachets} × {prix_sachet} "
+        f"= {recette} €.\n\n"
+        f"Bénéfice : {recette} − {cout_ingredients} "
+        f"= {benefice} €.\n\n"
+        f"**Réponse :** Le bénéfice est de {benefice} €."
+    )
+
+    return {
+        "id": "P7-M02",
+        "titre": "Le stand de pâtisserie",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Biscuits disponibles",
+                "type": "nombre",
+                "attendu": disponibles,
+                "unite": "biscuits"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Sachets complets",
+                "type": "nombre",
+                "attendu": sachets,
+                "unite": "sachets"
+            },
+            {
+                "id": "r3",
+                "question": 2,
+                "libelle": "Biscuits hors des sachets",
+                "type": "nombre",
+                "attendu": reste,
+                "unite": "biscuits"
+            },
+            {
+                "id": "r4",
+                "question": 3,
+                "libelle": "Bénéfice du club",
+                "type": "nombre",
+                "attendu": benefice,
+                "unite": "€"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1161,7 +1254,8 @@ def generer_exercices_priorites(difficulte, nombre=1):
     banque = deepcopy(BANQUE_PRIORITES[difficulte])
 
     if difficulte == 1:
-        banque.append(generer_modele_p7_sciences())
+    banque.append(generer_modele_p7_sciences())
+    banque.append(generer_modele_p7_patisserie())
 
     exercices = random.sample(banque, k=nombre)
 
