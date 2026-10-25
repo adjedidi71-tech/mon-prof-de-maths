@@ -1163,7 +1163,12 @@ def generer_exercices_priorites(difficulte, nombre=1):
     if difficulte == 1:
         banque.append(generer_modele_p7_sciences())
 
-    exercices = random.sample(banque, k=nombre)
+    if difficulte == 1:
+        exercices = [banque[-1]]
+        exercices += random.sample(banque[:-1], k=nombre - 1)
+        random.shuffle(exercices)
+    else:
+        exercices = random.sample(banque, k=nombre)
 
     for exercice in exercices:
         if "champs_reponse" not in exercice:
