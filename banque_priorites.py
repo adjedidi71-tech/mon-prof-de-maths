@@ -1254,8 +1254,8 @@ def generer_exercices_priorites(difficulte, nombre=1):
     banque = deepcopy(BANQUE_PRIORITES[difficulte])
 
     if difficulte == 1:
-    banque.append(generer_modele_p7_sciences())
-    banque.append(generer_modele_p7_patisserie())
+        banque.append(generer_modele_p7_sciences())
+        banque.append(generer_modele_p7_patisserie())
 
     exercices = random.sample(banque, k=nombre)
 
