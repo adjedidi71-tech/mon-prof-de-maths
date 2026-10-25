@@ -2278,5 +2278,5 @@ with zone_affichage:
                 f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
                 expanded=False
             ):
-                st.write(exercice["correction"])
+                st.markdown(exercice["correction"].replace("\n", "  \n"))
             
