@@ -1239,6 +1239,124 @@ def generer_modele_p7_patisserie():
         ]
     }
 
+def generer_modele_p7_enigmes():
+    points_facile = 8
+    points_difficile = 15
+    penalite = 4
+
+    faciles_a = random.randint(4, 8)
+    difficiles_a = random.randint(2, 5)
+    indices_a = random.randint(1, 3)
+
+    while True:
+        faciles_b = random.randint(4, 8)
+        difficiles_b = random.randint(2, 5)
+        indices_b = random.randint(1, 3)
+
+        score_a = (
+            faciles_a * points_facile
+            + difficiles_a * points_difficile
+            - indices_a * penalite
+        )
+
+        score_b = (
+            faciles_b * points_facile
+            + difficiles_b * points_difficile
+            - indices_b * penalite
+        )
+
+        if score_a != score_b:
+            break
+
+    gagnant = "A" if score_a > score_b else "B"
+    ecart = abs(score_a - score_b)
+
+    enonce = (
+        "**Le tournoi d'énigmes**\n\n"
+        "Deux équipes participent à un tournoi "
+        "d'énigmes organisé au collège.\n\n"
+        "Le règlement prévoit :\n"
+        f"- {points_facile} points par énigme facile résolue ;\n"
+        f"- {points_difficile} points par énigme difficile résolue ;\n"
+        f"- {penalite} points retirés pour chaque indice utilisé.\n\n"
+        "**Équipe A :**\n"
+        f"- {faciles_a} énigmes faciles résolues ;\n"
+        f"- {difficiles_a} énigmes difficiles résolues ;\n"
+        f"- {indices_a} indices utilisés.\n\n"
+        "**Équipe B :**\n"
+        f"- {faciles_b} énigmes faciles résolues ;\n"
+        f"- {difficiles_b} énigmes difficiles résolues ;\n"
+        f"- {indices_b} indices utilisés.\n\n"
+        "**Questions**\n\n"
+        "1. Calcule le score final de l'équipe A.\n\n"
+        "2. Calcule le score final de l'équipe B.\n\n"
+        "3. Quelle équipe remporte le tournoi ? "
+        "Avec combien de points d'avance ?"
+    )
+
+    correction = (
+        "**1. Score de l'équipe A**\n\n"
+        f"({faciles_a} × {points_facile}) "
+        f"+ ({difficiles_a} × {points_difficile}) "
+        f"− ({indices_a} × {penalite})\n\n"
+        f"= {score_a} points.\n\n"
+        "**2. Score de l'équipe B**\n\n"
+        f"({faciles_b} × {points_facile}) "
+        f"+ ({difficiles_b} × {points_difficile}) "
+        f"− ({indices_b} × {penalite})\n\n"
+        f"= {score_b} points.\n\n"
+        "**3. Équipe gagnante**\n\n"
+        f"L'équipe A obtient {score_a} points.\n\n"
+        f"L'équipe B obtient {score_b} points.\n\n"
+        f"Écart : {max(score_a, score_b)} "
+        f"− {min(score_a, score_b)} "
+        f"= {ecart} points.\n\n"
+        f"**Réponse :** L'équipe {gagnant} gagne "
+        f"avec {ecart} points d'avance."
+    )
+
+    return {
+        "id": "P7-M03",
+        "titre": "Le tournoi d'énigmes",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Score de l'équipe A",
+                "type": "nombre",
+                "attendu": score_a,
+                "unite": "points"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Score de l'équipe B",
+                "type": "nombre",
+                "attendu": score_b,
+                "unite": "points"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Équipe gagnante",
+                "type": "choix",
+                "attendu": gagnant,
+                "options": ["A", "B"]
+            },
+            {
+                "id": "r4",
+                "question": 3,
+                "libelle": "Écart entre les deux équipes",
+                "type": "nombre",
+                "attendu": ecart,
+                "unite": "points"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1256,6 +1374,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
     if difficulte == 1:
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
+        banque.append(generer_modele_p7_enigmes())
 
     exercices = random.sample(banque, k=nombre)
 
