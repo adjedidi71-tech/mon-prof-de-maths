@@ -1857,45 +1857,68 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
                 libelle1 = "Prix initial des articles"
                 libelle2 = "Budget restant"
 
+
             else:
                 na = random.randint(7, 13)
                 nb = random.randint(5, 11)
-
+    
                 p1 = random.randint(3, 7)
                 p2 = random.randint(2, 6)
                 p3 = random.randint(4, 9)
                 p4 = random.randint(2, 7)
-
-                attendu1 = na * (p1 + p2)
+    
+                remise = random.randint(2, 4)
+                livraison = random.randint(6, 18)
+    
+                cout_a = na * (p1 + p2)
                 cout_b = nb * (p3 + p4)
-                attendu2 = attendu1 + cout_b
-
+    
+                attendu1 = cout_a + cout_b
+    
+                remise_totale = nb * remise
+                depense = attendu1 - remise_totale + livraison
+    
+                budget = depense + random.randint(30, 90)
+                attendu2 = budget - depense
+    
                 enonce = (
-                    f"Un club prépare deux types de lots.\n\n"
-                    f"Il achète {na} lots A contenant chacun "
+                    f"Un club dispose d'un budget de {budget} €.\n\n"
+                    f"Il commande {na} lots A contenant chacun "
                     f"un carnet à {p1} € et un crayon à {p2} €.\n\n"
-                    f"Il achète aussi {nb} lots B contenant chacun "
-                    f"un album à {p3} € et un feutre à {p4} €.\n\n"
-                    f"1. Quel est le coût total des lots A ?\n\n"
-                    f"2. Quelle est la dépense totale du club ?"
+                    f"Il commande également {nb} lots B contenant "
+                    f"chacun un album à {p3} € et un feutre à {p4} €.\n\n"
+                    f"Le vendeur accorde ensuite une remise de "
+                    f"{remise} € sur chaque lot B.\n"
+                    f"La livraison coûte {livraison} €.\n\n"
+                    f"1. Quel est le coût total des lots A et B "
+                    f"avant remise, hors livraison ?\n"
+                    f"2. Combien d'argent restera-t-il au club "
+                    f"après paiement ?"
                 )
-
+    
                 correction = (
-                    f"1. Lots A :\n"
+                    f"1. Coût des lots A :\n"
                     f"{na} × ({p1} + {p2}) "
-                    f"= {na * p1} + {na * p2} "
-                    f"= {attendu1} €.\n\n"
-                    f"2. Lots B :\n"
+                    f"= {na} × {p1} + {na} × {p2} "
+                    f"= {cout_a} €.\n\n"
+                    f"Coût des lots B :\n"
                     f"{nb} × ({p3} + {p4}) "
-                    f"= {nb * p3} + {nb * p4} "
+                    f"= {nb} × {p3} + {nb} × {p4} "
                     f"= {cout_b} €.\n\n"
-                    f"Dépense totale : "
-                    f"{attendu1} + {cout_b} = {attendu2} €."
+                    f"Coût total avant remise :\n"
+                    f"{cout_a} + {cout_b} = {attendu1} €.\n\n"
+                    f"2. Remise totale :\n"
+                    f"{nb} × {remise} = {remise_totale} €.\n"
+                    f"Dépense après remise et livraison :\n"
+                    f"{attendu1} - {remise_totale} "
+                    f"+ {livraison} = {depense} €.\n"
+                    f"Budget restant :\n"
+                    f"{budget} - {depense} = {attendu2} €."
                 )
-
-                libelle1 = "Coût des lots A"
-                libelle2 = "Dépense totale"
-
+    
+                libelle1 = "Coût total avant remise"
+                libelle2 = "Budget restant"
+            
             champs_reponse = [
                 {
                     "id": "question_1",
