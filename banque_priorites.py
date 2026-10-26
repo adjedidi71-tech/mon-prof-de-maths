@@ -2455,10 +2455,14 @@ def generer_modele_p8_clubs():
         benefice = recettes - depenses
         somme_a_partager = benefice - reserve
 
-        part, reste = divmod(somme_a_partager, nb_clubs)
-
-        if 35 <= part <= 100:
+        if (
+            35 <= somme_a_partager / nb_clubs <= 100
+            and (somme_a_partager * 100) % nb_clubs == 0
+        ):
             break
+
+    part = somme_a_partager / nb_clubs
+    part_affichee = f"{part:.2f}".replace(".", ",")
 
     enonce = (
         "**La fête des clubs du collège**\n\n"
