@@ -2343,7 +2343,9 @@ def generer_modele_p7_tables_dessin():
         "Le professeur prévoit :\n"
         f"- {feuilles_par_eleve} feuilles de papier "
         "pour chaque élève ;\n"
-        f"- {feuilles_essai} feuilles supplémentaires "
+        f"- {feuilles_essai} "
+        f"feuille{'s' if feuilles_essai > 1 else ''} "
+        f"supplémentaire{'s' if feuilles_essai > 1 else ''} "
         "par table pour faire des essais.\n\n"
 
         f"Le professeur dispose de {stock_initial} "
