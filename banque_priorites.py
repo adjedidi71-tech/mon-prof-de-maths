@@ -2702,8 +2702,8 @@ def generer_modele_p8_manga():
         f"Chaque panneau peut contenir "
         f"{capacite_panneau} dessins.\n\n"
 
-        f"{dessins_exposables} ÷ {capacite_panneau}\n\n"
-        f"Quotient : {panneaux_complets}\n\n"
+        f"{dessins_exposables} : {capacite_panneau}  —  "
+        f"Quotient : {panneaux_complets}  —  "
         f"Reste : {dessins_dernier}\n\n"
 
         f"Il est donc possible de remplir entièrement "
