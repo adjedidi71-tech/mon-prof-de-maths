@@ -2148,6 +2148,175 @@ def generer_modele_p7_jeu_video():
         ]
     }
 
+def generer_modele_p7_dessin():
+
+    while True:
+        feuilles_depart = random.randint(20, 55)
+        nb_paquets = random.randint(3, 6)
+        feuilles_par_paquet = random.choice([20, 25, 30])
+
+        nb_groupes = random.randint(4, 8)
+        eleves_par_groupe = random.randint(3, 5)
+        feuilles_par_eleve = random.randint(2, 4)
+
+        feuilles_abimees = random.randint(5, 13)
+
+        feuilles_achetees = nb_paquets * feuilles_par_paquet
+
+        feuilles_utilisees = (
+            nb_groupes * eleves_par_groupe * feuilles_par_eleve
+        )
+
+        feuilles_restantes = (
+            feuilles_depart
+            + feuilles_achetees
+            - feuilles_abimees
+            - feuilles_utilisees
+        )
+
+        if 20 <= feuilles_restantes <= 90:
+            break
+
+    variation = random.choice([-12, -8, 8, 12])
+    feuilles_exposition = feuilles_restantes + variation
+
+    suffisant = (
+        "Oui" if feuilles_restantes >= feuilles_exposition
+        else "Non"
+    )
+
+    difference = abs(feuilles_restantes - feuilles_exposition)
+
+    if suffisant == "Oui":
+        libelle_difference = "Feuilles restantes après l'exposition"
+        conclusion = (
+            f"Le club dispose de suffisamment de feuilles. "
+            f"Il lui en restera {difference}."
+        )
+    else:
+        libelle_difference = "Feuilles manquantes"
+        conclusion = (
+            f"Le club ne dispose pas de suffisamment de feuilles. "
+            f"Il lui en manque {difference}."
+        )
+
+    enonce = (
+        "**L'atelier de dessin**\n\n"
+        "Le club de dessin du collège prépare un atelier.\n\n"
+        f"Il possède déjà {feuilles_depart} feuilles de papier.\n\n"
+        f"Il achète {nb_paquets} paquets contenant chacun "
+        f"{feuilles_par_paquet} feuilles.\n\n"
+        f"Avant l'atelier, {feuilles_abimees} feuilles "
+        "sont abîmées et ne peuvent plus être utilisées.\n\n"
+        "Pendant l'atelier :\n"
+        f"- {nb_groupes} groupes participent ;\n"
+        f"- chaque groupe comporte {eleves_par_groupe} élèves ;\n"
+        f"- chaque élève utilise {feuilles_par_eleve} feuilles.\n\n"
+        "Après l'atelier, le club souhaite préparer "
+        "une exposition nécessitant "
+        f"{feuilles_exposition} feuilles supplémentaires.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de feuilles le club a-t-il achetées ?\n\n"
+        "2. Combien de feuilles les élèves utilisent-ils "
+        "pendant l'atelier ?\n\n"
+        "3. Combien de feuilles restent disponibles "
+        "après l'atelier ?\n\n"
+        "4. Le club possède-t-il suffisamment de feuilles "
+        "pour préparer l'exposition ? "
+        "Combien lui en restera-t-il ou combien "
+        "lui en manquera-t-il ?"
+    )
+
+    correction = (
+        "**1. Feuilles achetées**\n\n"
+        f"{nb_paquets} × {feuilles_par_paquet} "
+        f"= {feuilles_achetees} feuilles.\n\n"
+
+        "**2. Feuilles utilisées pendant l'atelier**\n\n"
+        f"Nombre d'élèves : {nb_groupes} × "
+        f"{eleves_par_groupe} "
+        f"= {nb_groupes * eleves_par_groupe}.\n\n"
+        f"Feuilles utilisées : "
+        f"{nb_groupes * eleves_par_groupe} × "
+        f"{feuilles_par_eleve} "
+        f"= {feuilles_utilisees} feuilles.\n\n"
+
+        "**3. Feuilles restantes**\n\n"
+        f"Stock initial : {feuilles_depart} feuilles.\n\n"
+        f"Feuilles achetées : {feuilles_achetees}.\n\n"
+        f"Feuilles abîmées : {feuilles_abimees}.\n\n"
+        f"Feuilles utilisées : {feuilles_utilisees}.\n\n"
+        f"{feuilles_depart} + {feuilles_achetees} "
+        f"− {feuilles_abimees} "
+        f"− {feuilles_utilisees} "
+        f"= {feuilles_restantes} feuilles.\n\n"
+
+        "**Expression complète :**\n\n"
+        f"{feuilles_depart} "
+        f"+ ({nb_paquets} × {feuilles_par_paquet}) "
+        f"− {feuilles_abimees} "
+        f"− ({nb_groupes} × {eleves_par_groupe} "
+        f"× {feuilles_par_eleve}) "
+        f"= {feuilles_restantes}.\n\n"
+
+        "**4. Préparation de l'exposition**\n\n"
+        f"Feuilles disponibles : {feuilles_restantes}.\n\n"
+        f"Feuilles nécessaires : {feuilles_exposition}.\n\n"
+        f"Différence : {difference} feuilles.\n\n"
+        f"**Stock suffisant : {suffisant}.**\n\n"
+        f"{conclusion}"
+    )
+
+    return {
+        "id": "P7-M10",
+        "titre": "L'atelier de dessin",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Feuilles achetées",
+                "type": "nombre",
+                "attendu": feuilles_achetees,
+                "unite": "feuilles"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Feuilles utilisées",
+                "type": "nombre",
+                "attendu": feuilles_utilisees,
+                "unite": "feuilles"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Feuilles restantes après l'atelier",
+                "type": "nombre",
+                "attendu": feuilles_restantes,
+                "unite": "feuilles"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Stock suffisant pour l'exposition ?",
+                "type": "choix",
+                "attendu": suffisant,
+                "options": ["Oui", "Non"]
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": libelle_difference,
+                "type": "nombre",
+                "attendu": difference,
+                "unite": "feuilles"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -2165,7 +2334,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque = [
             exercice for exercice in banque
             if exercice["id"] not in [
-                "P7-01", "P7-02", "P7-03", "P7-04"
+                "P7-01", "P7-02", "P7-03", "P7-04", "P7-05"
             ]
         ]
 
@@ -2173,6 +2342,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p7_cartes())
         banque.append(generer_modele_p7_badminton())
         banque.append(generer_modele_p7_jeu_video())
+        banque.append(generer_modele_p7_dessin())
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
