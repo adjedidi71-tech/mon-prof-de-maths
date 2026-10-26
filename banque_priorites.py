@@ -2485,19 +2485,18 @@ def generer_modele_p8_clubs():
         "dans une caisse commune.\n\n"
 
         "Ils veulent ensuite partager équitablement "
-        "tout l'argent restant entre les clubs, "
-        "en distribuant uniquement des euros entiers.\n\n"
+        "tout l'argent restant entre les clubs. "
+        "Chaque club peut recevoir des euros "
+        "et des centimes.\n\n"
 
         "**Questions**\n\n"
         "1. Quel est le montant total des recettes ?\n\n"
         "2. Quel est le montant total des dépenses ?\n\n"
         "3. Quelle somme reste-t-il à partager "
-        "après les dépenses et la mise en réserve ?\n\n"
-        "4. Combien chaque club reçoit-il ? "
-        "Combien d'euros restent non distribués "
-        "après le partage ? "
-        "Écris une expression numérique pour "
-        "justifier la somme à partager."
+        "après les dépenses et la mise en réserve ? "
+        "Écris une seule expression numérique "
+        "avec des parenthèses.\n\n"
+        "4. Quelle somme reçoit chaque club ?"
     )
 
     correction = (
@@ -2532,13 +2531,13 @@ def generer_modele_p8_clubs():
         "**4. Partage entre les clubs**\n\n"
         f"Il faut partager {somme_a_partager} € "
         f"entre {nb_clubs} clubs.\n\n"
-        f"{somme_a_partager} = "
-        f"{nb_clubs} × {part} + {reste}.\n\n"
-        f"Chaque club reçoit **{part} €**.\n\n"
-        f"Il reste **{reste} €** non distribués.\n\n"
-        f"La caisse commune contient donc finalement "
-        f"{reserve} + {reste} = "
-        f"**{reserve + reste} €**."
+        f"{somme_a_partager} ÷ {nb_clubs} "
+        f"= {part_affichee} €.\n\n"
+        f"**Chaque club reçoit {part_affichee} €.**\n\n"
+        "La somme est entièrement distribuée.\n\n"
+        f"La caisse commune conserve la réserve "
+        f"initiale de {reserve} €."
+    )
     )
 
     return {
