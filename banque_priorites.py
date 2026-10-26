@@ -2490,8 +2490,8 @@ def generer_modele_p8_clubs():
         "3. Quelle somme reste-t-il à partager "
         "après les dépenses et la mise en réserve ?\n\n"
         "4. Combien chaque club reçoit-il ? "
-        "Combien d'euros restent-ils dans la "
-        "caisse commune après le partage ? "
+        "Combien d'euros restent non distribués "
+        "après le partage ? "
         "Écris une expression numérique pour "
         "justifier la somme à partager."
     )
