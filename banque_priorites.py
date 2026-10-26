@@ -1850,7 +1850,22 @@ def generer_modele_p7_cartes():
             }
         ]
     }
+    if difficulte == 1:
+        banque = [
+            exercice for exercice in banque
+            if exercice["id"] not in [
+                "P7-01", "P7-02", "P7-03"
+            ]
+        ]
 
+        banque.append(generer_modele_p7_fete())
+        banque.append(generer_modele_p7_cartes())
+        banque.append(generer_modele_p7_badminton())
+        banque.append(generer_modele_p7_sciences())
+        banque.append(generer_modele_p7_patisserie())
+        banque.append(generer_modele_p7_enigmes())
+        banque.append(generer_modele_p7_photos())
+        banque.append(generer_modele_p7_velo())
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1868,11 +1883,14 @@ def generer_exercices_priorites(difficulte, nombre=1):
     if difficulte == 1:
         banque = [
             exercice for exercice in banque
-            if exercice["id"] not in ["P7-01", "P7-02"]
+            if exercice["id"] not in [
+                "P7-01", "P7-02", "P7-03"
+            ]
         ]
 
         banque.append(generer_modele_p7_fete())
         banque.append(generer_modele_p7_cartes())
+        banque.append(generer_modele_p7_badminton())
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
