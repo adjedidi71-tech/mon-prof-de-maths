@@ -2317,6 +2317,115 @@ def generer_modele_p7_dessin():
         ]
     }
 
+def generer_modele_p7_tables_dessin():
+
+    nb_tables = random.randint(3, 6)
+    eleves_par_table = random.randint(4, 7)
+    feuilles_par_eleve = random.randint(2, 4)
+    feuilles_essai = random.randint(1, 3)
+
+    feuilles_par_table = (
+        eleves_par_table * feuilles_par_eleve
+        + feuilles_essai
+    )
+
+    feuilles_necessaires = nb_tables * feuilles_par_table
+
+    feuilles_restantes = random.randint(12, 40)
+    stock_initial = feuilles_necessaires + feuilles_restantes
+
+    enonce = (
+        "**Les tables de dessin**\n\n"
+        "Le collège organise un atelier de dessin "
+        f"avec {nb_tables} tables de "
+        f"{eleves_par_table} élèves chacune.\n\n"
+
+        "Le professeur prévoit :\n"
+        f"- {feuilles_par_eleve} feuilles de papier "
+        "pour chaque élève ;\n"
+        f"- {feuilles_essai} feuilles supplémentaires "
+        "par table pour faire des essais.\n\n"
+
+        f"Le professeur dispose de {stock_initial} "
+        "feuilles au départ.\n\n"
+
+        "**Questions**\n\n"
+        f"1. Combien de feuilles faut-il pour une table "
+        f"de {eleves_par_table} élèves, en comptant "
+        "les feuilles d'essai ?\n\n"
+
+        f"2. Combien de feuilles faut-il pour "
+        f"les {nb_tables} tables ?\n\n"
+
+        "3. Combien de feuilles restera-t-il "
+        "au professeur ? Écris une seule expression "
+        "numérique avec des parenthèses."
+    )
+
+    correction = (
+        "**1. Feuilles nécessaires pour une table**\n\n"
+        f"{eleves_par_table} × {feuilles_par_eleve} "
+        f"+ {feuilles_essai} "
+        f"= {feuilles_par_table} feuilles.\n\n"
+
+        "**2. Feuilles nécessaires pour toutes les tables**\n\n"
+        f"{nb_tables} × {feuilles_par_table} "
+        f"= {feuilles_necessaires} feuilles.\n\n"
+
+        "**3. Feuilles restantes**\n\n"
+        f"{stock_initial} − {feuilles_necessaires} "
+        f"= {feuilles_restantes} feuilles.\n\n"
+
+        "**Expression complète avec parenthèses :**\n\n"
+        f"{stock_initial} − {nb_tables} × "
+        f"({eleves_par_table} × {feuilles_par_eleve} "
+        f"+ {feuilles_essai}) "
+        f"= {feuilles_restantes}.\n\n"
+
+        f"**Réponse :** Il restera "
+        f"{feuilles_restantes} feuilles au professeur."
+    )
+
+    return {
+        "id": "P7-M11",
+        "titre": "Les tables de dessin",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Feuilles nécessaires par table",
+                "type": "nombre",
+                "attendu": feuilles_par_table,
+                "unite": "feuilles"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Feuilles nécessaires au total",
+                "type": "nombre",
+                "attendu": feuilles_necessaires,
+                "unite": "feuilles"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Feuilles restantes",
+                "type": "nombre",
+                "attendu": feuilles_restantes,
+                "unite": "feuilles"
+            },
+            {
+                "id": "expression",
+                "question": 3,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -2343,6 +2452,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p7_badminton())
         banque.append(generer_modele_p7_jeu_video())
         banque.append(generer_modele_p7_dessin())
+        banque.append(generer_modele_p7_tables_dessin())
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
