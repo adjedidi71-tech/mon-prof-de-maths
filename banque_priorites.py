@@ -2588,6 +2588,199 @@ def generer_modele_p8_clubs():
     }
 
 
+def generer_modele_p8_manga():
+
+    while True:
+        nb_dessinateurs = random.randint(5, 8)
+        dessins_par_eleve = random.randint(8, 13)
+
+        anciens_dessins = random.randint(7, 20)
+        dessins_ecartes = random.randint(4, 11)
+        dessins_reserves = random.randint(3, 8)
+
+        capacite_panneau = random.randint(9, 12)
+
+        nouveaux_dessins = (
+            nb_dessinateurs * dessins_par_eleve
+        )
+
+        total_dessins = (
+            anciens_dessins + nouveaux_dessins
+        )
+
+        dessins_exposables = (
+            total_dessins
+            - dessins_ecartes
+            - dessins_reserves
+        )
+
+        panneaux_complets, dessins_dernier = divmod(
+            dessins_exposables,
+            capacite_panneau
+        )
+
+        if (
+            3 <= panneaux_complets <= 10
+            and 2 <= dessins_dernier <= capacite_panneau - 2
+        ):
+            break
+
+    panneaux_total = panneaux_complets + 1
+
+    enonce = (
+        "**Le club manga**\n\n"
+        "Le club manga du collège prépare une exposition "
+        "de dessins réalisés par les élèves.\n\n"
+
+        f"{nb_dessinateurs} élèves participent à la préparation. "
+        f"Chacun réalise {dessins_par_eleve} dessins.\n\n"
+
+        f"Le club possède également {anciens_dessins} dessins "
+        "réalisés lors d'un précédent atelier.\n\n"
+
+        "Avant l'exposition :\n"
+        f"- {dessins_ecartes} dessins sont écartés "
+        "car ils sont abîmés ;\n"
+        f"- {dessins_reserves} dessins sont réservés "
+        "pour illustrer le journal du collège.\n\n"
+
+        "Les autres dessins seront exposés.\n\n"
+
+        "Le club utilise des panneaux pouvant accueillir "
+        f"chacun **au maximum {capacite_panneau} dessins**.\n\n"
+
+        "Les organisateurs remplissent d'abord autant "
+        "de panneaux que possible, puis placent les "
+        "dessins restants sur un dernier panneau.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de nouveaux dessins les élèves "
+        "ont-ils réalisés ?\n\n"
+
+        "2. Combien de dessins peuvent être exposés "
+        "après les retraits ? "
+        "Écris une seule expression numérique "
+        "avec des parenthèses.\n\n"
+
+        "3. Combien de panneaux peuvent être "
+        "entièrement remplis ?\n\n"
+
+        "4. Combien de dessins seront placés sur "
+        "le dernier panneau ? "
+        "Combien de panneaux faut-il au total ?"
+    )
+
+    correction = (
+        "**1. Nouveaux dessins réalisés**\n\n"
+
+        f"{nb_dessinateurs} × {dessins_par_eleve} "
+        f"= {nouveaux_dessins} dessins.\n\n"
+
+        "**2. Dessins pouvant être exposés**\n\n"
+
+        f"Le club possède au total : "
+        f"{anciens_dessins} + {nouveaux_dessins} "
+        f"= {total_dessins} dessins.\n\n"
+
+        f"Il retire {dessins_ecartes} dessins abîmés "
+        f"et réserve {dessins_reserves} dessins.\n\n"
+
+        f"{total_dessins} - {dessins_ecartes} "
+        f"- {dessins_reserves} "
+        f"= {dessins_exposables} dessins.\n\n"
+
+        "**Expression complète :**\n\n"
+
+        f"({anciens_dessins} + "
+        f"{nb_dessinateurs} × {dessins_par_eleve}) "
+        f"- ({dessins_ecartes} + {dessins_reserves}) "
+        f"= {dessins_exposables}.\n\n"
+
+        "**3. Panneaux entièrement remplis**\n\n"
+
+        f"Chaque panneau peut contenir "
+        f"{capacite_panneau} dessins.\n\n"
+
+        f"Division euclidienne :\n\n"
+
+        f"{dessins_exposables} = "
+        f"{capacite_panneau} × {panneaux_complets} "
+        f"+ {dessins_dernier}.\n\n"
+
+        f"Il est donc possible de remplir entièrement "
+        f"**{panneaux_complets} panneaux**.\n\n"
+
+        "**4. Dernier panneau et nombre total**\n\n"
+
+        f"Il reste {dessins_dernier} dessins "
+        "à placer sur un dernier panneau.\n\n"
+
+        f"Nombre total de panneaux : "
+        f"{panneaux_complets} + 1 "
+        f"= {panneaux_total}.\n\n"
+
+        f"**Réponse :** Il faut {panneaux_total} "
+        f"panneaux au total, dont un dernier contenant "
+        f"{dessins_dernier} dessins."
+    )
+
+    return {
+        "id": "P8-M02",
+        "titre": "Le club manga",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Nouveaux dessins réalisés",
+                "type": "nombre",
+                "attendu": nouveaux_dessins,
+                "unite": "dessins"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Dessins pouvant être exposés",
+                "type": "nombre",
+                "attendu": dessins_exposables,
+                "unite": "dessins"
+            },
+            {
+                "id": "expression",
+                "question": 2,
+                "libelle": "Mon expression numérique avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Panneaux entièrement remplis",
+                "type": "nombre",
+                "attendu": panneaux_complets,
+                "unite": "panneaux"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Dessins sur le dernier panneau",
+                "type": "nombre",
+                "attendu": dessins_dernier,
+                "unite": "dessins"
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Nombre total de panneaux",
+                "type": "nombre",
+                "attendu": panneaux_total,
+                "unite": "panneaux"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -2620,14 +2813,15 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p7_enigmes())
         banque.append(generer_modele_p7_photos())
         banque.append(generer_modele_p7_velo())
-        
+
     if difficulte == 2:
         banque = [
             exercice for exercice in banque
-            if exercice["id"] != "P8-01"
+            if exercice["id"] not in ["P8-01", "P8-02"]
         ]
 
         banque.append(generer_modele_p8_clubs())
+        banque.append(generer_modele_p8_manga())
     
     exercices = random.sample(banque, k=nombre)
 
