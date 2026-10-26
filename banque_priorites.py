@@ -1738,12 +1738,12 @@ def generer_modele_p7_cartes():
 
     cartes_achetees = paquets * cartes_paquet
 
-    doublons = random.randint(8, min(20, cartes_achetees - 5))
+    doublons = random.choice([8, 10, 12, 14, 16, 18, 20])
 
     nouvelles_cartes = cartes_achetees - doublons
 
     cartes_echangees = doublons // 2
-    doublons_restants = doublons % 2
+    doublons_restants = 0
 
     total_collection = (
         cartes_depart
@@ -1752,7 +1752,7 @@ def generer_modele_p7_cartes():
     )
 
     enonce = (
-        "**Une collection de cartes**\n\n"
+        "**Une collection de cartes — VERSION TEST 2**\n\n"
         f"Un collégien possède déjà {cartes_depart} "
         "cartes différentes dans son album.\n\n"
         f"Il achète {paquets} paquets contenant chacun "
