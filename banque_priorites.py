@@ -1598,6 +1598,138 @@ def generer_modele_p7_velo():
         ]
     }
 
+def generer_modele_p7_fete():
+    caisse = random.randint(160, 240)
+
+    eleves = random.randint(14, 22)
+    parents = random.randint(8, 14)
+
+    prix_eleve = random.randint(5, 8)
+    prix_parent = random.randint(9, 12)
+
+    salle = random.randint(70, 110)
+    decoration = random.randint(20, 45)
+    prix_badge = random.randint(1, 3)
+
+    reserve_minimale = random.randint(130, 230)
+
+    participants = eleves + parents
+
+    recettes = eleves * prix_eleve + parents * prix_parent
+
+    cout_badges = participants * prix_badge
+    depenses = salle + decoration + cout_badges
+
+    restant = caisse + recettes - depenses
+
+    objectif_atteint = (
+        "Oui" if restant >= reserve_minimale else "Non"
+    )
+
+    enonce = (
+        "**La fête du collège**\n\n"
+        f"Le club de théâtre possède déjà {caisse} € "
+        "dans sa caisse.\n\n"
+        "Pour organiser une fête, il vend :\n"
+        f"- {eleves} billets élèves à {prix_eleve} € chacun ;\n"
+        f"- {parents} billets parents à {prix_parent} € chacun.\n\n"
+        "Pour cette fête, le club doit payer :\n"
+        f"- {salle} € pour la salle ;\n"
+        f"- {decoration} € pour les décorations ;\n"
+        f"- {prix_badge} € par participant pour un badge.\n\n"
+        "Chaque personne ayant acheté un billet "
+        "reçoit un badge.\n\n"
+        "Le club souhaite conserver au moins "
+        f"{reserve_minimale} € pour un prochain projet.\n\n"
+        "**Questions**\n\n"
+        "1. Quel est le montant total des recettes ?\n\n"
+        "2. Quel est le montant total des dépenses ?\n\n"
+        "3. Combien reste-t-il dans la caisse ? "
+        "Le club peut-il conserver la somme souhaitée ? "
+        "Justifie par une expression numérique."
+    )
+
+    correction = (
+        "**1. Recettes de la fête**\n\n"
+        f"Billets élèves : {eleves} × {prix_eleve} "
+        f"= {eleves * prix_eleve} €.\n\n"
+        f"Billets parents : {parents} × {prix_parent} "
+        f"= {parents * prix_parent} €.\n\n"
+        f"Recettes totales : {recettes} €.\n\n"
+
+        "**2. Dépenses de la fête**\n\n"
+        f"Participants : {eleves} + {parents} "
+        f"= {participants}.\n\n"
+        f"Badges : {participants} × {prix_badge} "
+        f"= {cout_badges} €.\n\n"
+        f"Dépenses totales : {salle} + {decoration} "
+        f"+ {cout_badges} = {depenses} €.\n\n"
+
+        "**3. Argent restant**\n\n"
+        f"{caisse} + {recettes} - {depenses} "
+        f"= {restant} €.\n\n"
+
+        "**Expression complète :**\n\n"
+        f"{caisse} + ({eleves} × {prix_eleve} + "
+        f"{parents} × {prix_parent}) "
+        f"- ({salle} + {decoration} + "
+        f"({eleves} + {parents}) × {prix_badge}) "
+        f"= {restant} €.\n\n"
+
+        f"Le club souhaite conserver au moins "
+        f"{reserve_minimale} €.\n\n"
+        f"Il lui reste {restant} €.\n\n"
+        f"**Objectif atteint : {objectif_atteint}.**"
+    )
+
+    return {
+        "id": "P7-M06",
+        "titre": "La fête du collège",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Recettes totales",
+                "type": "nombre",
+                "attendu": recettes,
+                "unite": "€"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Dépenses totales",
+                "type": "nombre",
+                "attendu": depenses,
+                "unite": "€"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Argent restant",
+                "type": "nombre",
+                "attendu": restant,
+                "unite": "€"
+            },
+            {
+                "id": "choix",
+                "question": 3,
+                "libelle": "Le club atteint-il son objectif ?",
+                "type": "choix",
+                "attendu": objectif_atteint,
+                "options": ["Oui", "Non"]
+            },
+            {
+                "id": "expression",
+                "question": 3,
+                "libelle": "Mon expression et ma justification",
+                "type": "texte_libre"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1613,6 +1745,12 @@ def generer_exercices_priorites(difficulte, nombre=1):
     banque = deepcopy(BANQUE_PRIORITES[difficulte])
 
     if difficulte == 1:
+        banque = [
+            exercice for exercice in banque
+            if exercice["id"] != "P7-01"
+        ]
+
+        banque.append(generer_modele_p7_fete())
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
