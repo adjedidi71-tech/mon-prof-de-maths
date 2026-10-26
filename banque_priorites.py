@@ -2538,8 +2538,6 @@ def generer_modele_p8_clubs():
         f"La caisse commune conserve la réserve "
         f"initiale de {reserve} €."
     )
-    )
-
 
     return {
         "id": "P8-M01",
