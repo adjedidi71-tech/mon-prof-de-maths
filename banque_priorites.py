@@ -1752,7 +1752,7 @@ def generer_modele_p7_cartes():
     )
 
     enonce = (
-        "**Une collection de cartes — VERSION TEST 2**\n\n"
+        "**Une collection de cartes**\n\n"
         f"Un collégien possède déjà {cartes_depart} "
         "cartes différentes dans son album.\n\n"
         f"Il achète {paquets} paquets contenant chacun "
