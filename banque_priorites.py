@@ -1482,6 +1482,122 @@ def generer_modele_p7_photos():
         ]
     }
 
+def generer_modele_p7_velo():
+
+    def km(valeur):
+        return f"{valeur / 10:.1f}".replace(".", ",")
+
+    # Distances exprimées en dixièmes de kilomètre
+    trajet = random.randint(32, 68)
+    boucle = random.randint(18, 36)
+    nb_boucles = random.randint(2, 4)
+    petit_tour = random.randint(12, 23)
+
+    aller_retour = 2 * trajet
+    distance_initiale = aller_retour + nb_boucles * boucle
+
+    manque = random.randint(
+        petit_tour + 2,
+        petit_tour * 3 + 8
+    )
+
+    objectif = distance_initiale + manque
+
+    tours = (manque + petit_tour - 1) // petit_tour
+
+    enonce = (
+        "**Le rallye à vélo**\n\n"
+        "Trois amis organisent une sortie à vélo.\n\n"
+        f"Ils parcourent {km(trajet)} km pour rejoindre "
+        "un parc, puis empruntent le même trajet pour rentrer.\n\n"
+        f"Dans le parc, ils effectuent {nb_boucles} boucles "
+        f"de {km(boucle)} km chacune.\n\n"
+        f"Leur objectif est de parcourir au moins "
+        f"{km(objectif)} km au total.\n\n"
+        "Pour compléter leur parcours, ils peuvent effectuer "
+        f"des petits tours supplémentaires de {km(petit_tour)} km "
+        "chacun, près de chez eux.\n\n"
+        "**Questions**\n\n"
+        "1. Quelle distance représente l'aller-retour "
+        "jusqu'au parc ?\n\n"
+        "2. Quelle distance totale ont-ils parcourue "
+        "après les boucles dans le parc ?\n\n"
+        "3. Quelle distance leur manque-t-il pour atteindre "
+        "leur objectif ? Combien de petits tours complets "
+        "doivent-ils effectuer au minimum pour atteindre "
+        "ou dépasser cet objectif ?"
+    )
+
+    correction = (
+        "**1. Distance aller-retour**\n\n"
+        f"2 × {km(trajet)} = {km(aller_retour)} km.\n\n"
+
+        "**2. Distance totale parcourue**\n\n"
+        f"Distance des boucles : {nb_boucles} × "
+        f"{km(boucle)} = {km(nb_boucles * boucle)} km.\n\n"
+        f"Distance totale : {km(aller_retour)} + "
+        f"{km(nb_boucles * boucle)} "
+        f"= {km(distance_initiale)} km.\n\n"
+        "**Expression complète :**\n\n"
+        f"2 × {km(trajet)} + {nb_boucles} × "
+        f"{km(boucle)} = {km(distance_initiale)} km.\n\n"
+
+        "**3. Distance manquante et petits tours**\n\n"
+        f"{km(objectif)} − {km(distance_initiale)} "
+        f"= {km(manque)} km.\n\n"
+        f"Chaque petit tour mesure {km(petit_tour)} km.\n\n"
+        f"Avec {tours - 1} tour(s), ils parcourent "
+        f"{km((tours - 1) * petit_tour)} km : "
+        "ce n'est pas suffisant.\n\n"
+        f"Avec {tours} tours, ils parcourent "
+        f"{km(tours * petit_tour)} km : "
+        "l'objectif est atteint ou dépassé.\n\n"
+        f"**Réponse :** Ils doivent effectuer au minimum "
+        f"{tours} petits tours complets."
+    )
+
+    return {
+        "id": "P7-M05",
+        "titre": "Le rallye à vélo",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Distance aller-retour",
+                "type": "nombre",
+                "attendu": aller_retour / 10,
+                "unite": "km"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Distance totale parcourue",
+                "type": "nombre",
+                "attendu": distance_initiale / 10,
+                "unite": "km"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Distance manquante",
+                "type": "nombre",
+                "attendu": manque / 10,
+                "unite": "km"
+            },
+            {
+                "id": "r4",
+                "question": 3,
+                "libelle": "Nombre minimal de petits tours",
+                "type": "nombre",
+                "attendu": tours,
+                "unite": "tours"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1501,6 +1617,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
         banque.append(generer_modele_p7_photos())
+        banque.append(generer_modele_p7_velo())
 
     exercices = random.sample(banque, k=nombre)
 
