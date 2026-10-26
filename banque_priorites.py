@@ -1995,6 +1995,159 @@ def generer_modele_p7_badminton():
         ]
     }
 
+def generer_modele_p7_jeu_video():
+
+    univers = random.choice([
+        "le royaume des cristaux",
+        "l'île des robots",
+        "le labyrinthe des dragons"
+    ])
+
+    pieces_depart = random.randint(80, 135)
+    niveaux = random.randint(3, 5)
+    pieces_par_niveau = random.randint(17, 29)
+    bonus = random.randint(10, 24)
+
+    potions = random.randint(2, 3)
+    prix_potion = random.randint(15, 25)
+    pieces_perdues = random.randint(8, 23)
+
+    gains = niveaux * pieces_par_niveau + bonus
+    cout_potions = potions * prix_potion
+    depenses_et_pertes = cout_potions + pieces_perdues
+
+    solde = pieces_depart + gains - depenses_et_pertes
+
+    variation_prix = random.choice([
+        -30, -20, -10, 10, 20, 30
+    ])
+    prix_equipement = solde + variation_prix
+
+    achat_possible = "Oui" if solde >= prix_equipement else "Non"
+    difference = abs(solde - prix_equipement)
+
+    if achat_possible == "Oui":
+        libelle_difference = "Pièces restantes après l'achat"
+        conclusion = (
+            f"Le joueur peut acheter l'équipement. "
+            f"Il lui restera {difference} pièces."
+        )
+    else:
+        libelle_difference = "Pièces manquantes"
+        conclusion = (
+            f"Le joueur ne peut pas acheter l'équipement. "
+            f"Il lui manque {difference} pièces."
+        )
+
+    enonce = (
+        "**Une aventure en jeu vidéo**\n\n"
+        f"Dans le jeu vidéo « {univers} », "
+        "un joueur possède au départ "
+        f"{pieces_depart} pièces d'or.\n\n"
+        f"Il termine {niveaux} niveaux et gagne "
+        f"{pieces_par_niveau} pièces à chaque niveau.\n\n"
+        f"Il reçoit également un bonus unique de "
+        f"{bonus} pièces.\n\n"
+        "Pendant son aventure :\n"
+        f"- il achète {potions} potions à "
+        f"{prix_potion} pièces chacune ;\n"
+        f"- il perd {pieces_perdues} pièces "
+        "dans un piège.\n\n"
+        "À la fin, il découvre un équipement spécial "
+        f"vendu {prix_equipement} pièces.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de pièces gagne-t-il au total, "
+        "bonus compris ?\n\n"
+        "2. Combien de pièces dépense-t-il ou "
+        "perd-il pendant son aventure ?\n\n"
+        "3. Combien de pièces lui reste-t-il "
+        "avant l'achat de l'équipement spécial ?\n\n"
+        "4. Peut-il acheter cet équipement ? "
+        "Combien de pièces lui restera-t-il "
+        "ou combien lui en manquera-t-il ?"
+    )
+
+    correction = (
+        "**1. Pièces gagnées**\n\n"
+        f"{niveaux} × {pieces_par_niveau} + {bonus} "
+        f"= {gains} pièces.\n\n"
+
+        "**2. Dépenses et pertes**\n\n"
+        f"Potions : {potions} × {prix_potion} "
+        f"= {cout_potions} pièces.\n\n"
+        f"Total dépensé ou perdu : "
+        f"{cout_potions} + {pieces_perdues} "
+        f"= {depenses_et_pertes} pièces.\n\n"
+
+        "**3. Pièces restantes**\n\n"
+        f"{pieces_depart} + {gains} "
+        f"− {depenses_et_pertes} "
+        f"= {solde} pièces.\n\n"
+        "**Expression complète :**\n\n"
+        f"{pieces_depart} + "
+        f"({niveaux} × {pieces_par_niveau} + {bonus}) "
+        f"− ({potions} × {prix_potion} "
+        f"+ {pieces_perdues}) "
+        f"= {solde}.\n\n"
+
+        "**4. Achat de l'équipement**\n\n"
+        f"Pièces disponibles : {solde}.\n\n"
+        f"Prix de l'équipement : {prix_equipement}.\n\n"
+        f"Différence : {difference} pièces.\n\n"
+        f"**Achat possible : {achat_possible}.**\n\n"
+        f"{conclusion}"
+    )
+
+    return {
+        "id": "P7-M09",
+        "titre": "Une aventure en jeu vidéo",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Total des pièces gagnées",
+                "type": "nombre",
+                "attendu": gains,
+                "unite": "pièces"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Pièces dépensées ou perdues",
+                "type": "nombre",
+                "attendu": depenses_et_pertes,
+                "unite": "pièces"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Pièces restantes avant l'achat",
+                "type": "nombre",
+                "attendu": solde,
+                "unite": "pièces"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Achat possible ?",
+                "type": "choix",
+                "attendu": achat_possible,
+                "options": ["Oui", "Non"]
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": libelle_difference,
+                "type": "nombre",
+                "attendu": difference,
+                "unite": "pièces"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -2008,18 +2161,18 @@ def generer_exercices_priorites(difficulte, nombre=1):
         )
     
     banque = deepcopy(BANQUE_PRIORITES[difficulte])
-
     if difficulte == 1:
         banque = [
             exercice for exercice in banque
             if exercice["id"] not in [
-                "P7-01", "P7-02", "P7-03"
+                "P7-01", "P7-02", "P7-03", "P7-04"
             ]
         ]
 
         banque.append(generer_modele_p7_fete())
         banque.append(generer_modele_p7_cartes())
         banque.append(generer_modele_p7_badminton())
+        banque.append(generer_modele_p7_jeu_video())
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
