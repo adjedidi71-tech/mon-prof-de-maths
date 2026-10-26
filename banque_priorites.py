@@ -1730,6 +1730,125 @@ def generer_modele_p7_fete():
         ]
     }
 
+def generer_modele_p7_cartes():
+
+    cartes_depart = random.randint(65, 110)
+    paquets = random.randint(5, 9)
+    cartes_paquet = random.choice([6, 8])
+
+    cartes_achetees = paquets * cartes_paquet
+
+    doublons = random.randint(8, min(20, cartes_achetees - 5))
+
+    nouvelles_cartes = cartes_achetees - doublons
+
+    cartes_echangees = doublons // 2
+    doublons_restants = doublons % 2
+
+    total_collection = (
+        cartes_depart
+        + nouvelles_cartes
+        + cartes_echangees
+    )
+
+    enonce = (
+        "**Une collection de cartes**\n\n"
+        f"Un collégien possède déjà {cartes_depart} "
+        "cartes différentes dans son album.\n\n"
+        f"Il achète {paquets} paquets contenant chacun "
+        f"{cartes_paquet} cartes.\n\n"
+        f"Parmi les cartes achetées, {doublons} sont "
+        "des doublons. Toutes les autres sont nouvelles "
+        "pour sa collection.\n\n"
+        "Il échange ensuite ses doublons avec un ami : "
+        "pour **2 doublons donnés**, il reçoit "
+        "**1 carte différente** qu'il ne possède pas encore.\n\n"
+        "Son ami dispose de suffisamment de cartes "
+        "pour réaliser tous les échanges possibles.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de cartes achète-t-il au total ?\n\n"
+        "2. Combien de nouvelles cartes conserve-t-il "
+        "avant les échanges ?\n\n"
+        "3. Combien de nouvelles cartes obtient-il "
+        "grâce aux échanges ?\n\n"
+        "4. Combien de cartes différentes possède-t-il "
+        "finalement dans son album ?"
+    )
+
+    correction = (
+        "**1. Nombre de cartes achetées**\n\n"
+        f"{paquets} × {cartes_paquet} "
+        f"= {cartes_achetees} cartes.\n\n"
+
+        "**2. Nouvelles cartes avant les échanges**\n\n"
+        f"{cartes_achetees} − {doublons} "
+        f"= {nouvelles_cartes} cartes.\n\n"
+
+        "**3. Cartes obtenues par échange**\n\n"
+        f"Il possède {doublons} doublons.\n\n"
+        f"En les regroupant par 2, il peut réaliser "
+        f"{cartes_echangees} échanges.\n\n"
+        f"Il obtient donc {cartes_echangees} "
+        "nouvelles cartes.\n\n"
+        f"Doublons non échangés : {doublons_restants}.\n\n"
+
+        "**4. Collection finale**\n\n"
+        f"{cartes_depart} + {nouvelles_cartes} "
+        f"+ {cartes_echangees} "
+        f"= {total_collection} cartes.\n\n"
+
+        "**Expression complète :**\n\n"
+        f"{cartes_depart} + "
+        f"({paquets} × {cartes_paquet} − {doublons}) "
+        f"+ {cartes_echangees} "
+        f"= {total_collection}.\n\n"
+
+        f"**Réponse :** Il possède finalement "
+        f"{total_collection} cartes différentes."
+    )
+
+    return {
+        "id": "P7-M07",
+        "titre": "Une collection de cartes",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Cartes achetées",
+                "type": "nombre",
+                "attendu": cartes_achetees,
+                "unite": "cartes"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Nouvelles cartes avant échanges",
+                "type": "nombre",
+                "attendu": nouvelles_cartes,
+                "unite": "cartes"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Cartes obtenues par échange",
+                "type": "nombre",
+                "attendu": cartes_echangees,
+                "unite": "cartes"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Cartes différentes dans l'album",
+                "type": "nombre",
+                "attendu": total_collection,
+                "unite": "cartes"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -1747,10 +1866,11 @@ def generer_exercices_priorites(difficulte, nombre=1):
     if difficulte == 1:
         banque = [
             exercice for exercice in banque
-            if exercice["id"] != "P7-01"
+            if exercice["id"] not in ["P7-01", "P7-02"]
         ]
 
         banque.append(generer_modele_p7_fete())
+        banque.append(generer_modele_p7_cartes())
         banque.append(generer_modele_p7_sciences())
         banque.append(generer_modele_p7_patisserie())
         banque.append(generer_modele_p7_enigmes())
