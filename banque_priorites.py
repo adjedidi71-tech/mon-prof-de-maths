@@ -2428,6 +2428,171 @@ def generer_modele_p7_tables_dessin():
         ]
     }
 
+def generer_modele_p8_clubs():
+
+    while True:
+        nb_clubs = random.randint(3, 5)
+
+        billets = random.randint(36, 54)
+        prix_billet = random.randint(5, 8)
+
+        gateaux = random.randint(20, 35)
+        prix_gateau = random.randint(3, 5)
+
+        location = random.randint(75, 130)
+        lots_materiel = random.randint(5, 8)
+        prix_lot = random.randint(9, 16)
+
+        reserve = random.randint(20, 65)
+
+        recettes_billets = billets * prix_billet
+        recettes_gateaux = gateaux * prix_gateau
+        recettes = recettes_billets + recettes_gateaux
+
+        depenses_materiel = lots_materiel * prix_lot
+        depenses = location + depenses_materiel
+
+        benefice = recettes - depenses
+        somme_a_partager = benefice - reserve
+
+        part, reste = divmod(somme_a_partager, nb_clubs)
+
+        if 35 <= part <= 100:
+            break
+
+    enonce = (
+        "**La fête des clubs du collège**\n\n"
+        f"Les {nb_clubs} clubs du collège organisent "
+        "ensemble une fête pour financer leurs activités.\n\n"
+
+        "Pendant la fête, ils vendent :\n"
+        f"- {billets} billets d'entrée à "
+        f"{prix_billet} € chacun ;\n"
+        f"- {gateaux} parts de gâteau à "
+        f"{prix_gateau} € chacune.\n\n"
+
+        "Pour organiser la fête, ils paient :\n"
+        f"- {location} € pour la location du matériel ;\n"
+        f"- {lots_materiel} lots de fournitures "
+        f"à {prix_lot} € chacun.\n\n"
+
+        f"Après avoir payé toutes les dépenses, "
+        f"les clubs décident de conserver {reserve} € "
+        "dans une caisse commune.\n\n"
+
+        "Ils veulent ensuite partager équitablement "
+        "tout l'argent restant entre les clubs, "
+        "en distribuant uniquement des euros entiers.\n\n"
+
+        "**Questions**\n\n"
+        "1. Quel est le montant total des recettes ?\n\n"
+        "2. Quel est le montant total des dépenses ?\n\n"
+        "3. Quelle somme reste-t-il à partager "
+        "après les dépenses et la mise en réserve ?\n\n"
+        "4. Combien chaque club reçoit-il ? "
+        "Combien d'euros restent-ils dans la "
+        "caisse commune après le partage ? "
+        "Écris une expression numérique pour "
+        "justifier la somme à partager."
+    )
+
+    correction = (
+        "**1. Recettes totales**\n\n"
+        f"Billets : {billets} × {prix_billet} "
+        f"= {recettes_billets} €.\n\n"
+        f"Gâteaux : {gateaux} × {prix_gateau} "
+        f"= {recettes_gateaux} €.\n\n"
+        f"Total : {recettes_billets} + "
+        f"{recettes_gateaux} = {recettes} €.\n\n"
+
+        "**2. Dépenses totales**\n\n"
+        f"Fournitures : {lots_materiel} × "
+        f"{prix_lot} = {depenses_materiel} €.\n\n"
+        f"Total : {location} + "
+        f"{depenses_materiel} = {depenses} €.\n\n"
+
+        "**3. Somme à partager**\n\n"
+        f"Bénéfice après dépenses : "
+        f"{recettes} − {depenses} = {benefice} €.\n\n"
+        f"Après la mise en réserve : "
+        f"{benefice} − {reserve} "
+        f"= {somme_a_partager} €.\n\n"
+
+        "**Expression complète :**\n\n"
+        f"({billets} × {prix_billet} + "
+        f"{gateaux} × {prix_gateau}) "
+        f"− ({location} + "
+        f"{lots_materiel} × {prix_lot}) "
+        f"− {reserve} = {somme_a_partager}.\n\n"
+
+        "**4. Partage entre les clubs**\n\n"
+        f"Il faut partager {somme_a_partager} € "
+        f"entre {nb_clubs} clubs.\n\n"
+        f"{somme_a_partager} = "
+        f"{nb_clubs} × {part} + {reste}.\n\n"
+        f"Chaque club reçoit **{part} €**.\n\n"
+        f"Il reste **{reste} €** non distribués.\n\n"
+        f"La caisse commune contient donc finalement "
+        f"{reserve} + {reste} = "
+        f"**{reserve + reste} €**."
+    )
+
+    return {
+        "id": "P8-M01",
+        "titre": "La fête des clubs du collège",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Recettes totales",
+                "type": "nombre",
+                "attendu": recettes,
+                "unite": "€"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Dépenses totales",
+                "type": "nombre",
+                "attendu": depenses,
+                "unite": "€"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Somme à partager",
+                "type": "nombre",
+                "attendu": somme_a_partager,
+                "unite": "€"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Somme reçue par chaque club",
+                "type": "nombre",
+                "attendu": part,
+                "unite": "€"
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Euros non distribués",
+                "type": "nombre",
+                "attendu": reste,
+                "unite": "€"
+            },
+            {
+                "id": "expression",
+                "question": 4,
+                "libelle": "Mon expression numérique",
+                "type": "texte_libre"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -2460,7 +2625,15 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p7_enigmes())
         banque.append(generer_modele_p7_photos())
         banque.append(generer_modele_p7_velo())
+        
+    if difficulte == 2:
+        banque = [
+            exercice for exercice in banque
+            if exercice["id"] != "P8-01"
+        ]
 
+        banque.append(generer_modele_p8_clubs())
+    
     exercices = random.sample(banque, k=nombre)
 
     for exercice in exercices:
