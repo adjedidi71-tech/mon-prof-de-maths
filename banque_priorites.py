@@ -2540,6 +2540,7 @@ def generer_modele_p8_clubs():
     )
     )
 
+
     return {
         "id": "P8-M01",
         "titre": "La fête des clubs du collège",
@@ -2572,29 +2573,22 @@ def generer_modele_p8_clubs():
                 "unite": "€"
             },
             {
+                "id": "expression",
+                "question": 3,
+                "libelle": "Mon expression numérique avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
                 "id": "r4",
                 "question": 4,
                 "libelle": "Somme reçue par chaque club",
                 "type": "nombre",
                 "attendu": part,
                 "unite": "€"
-            },
-            {
-                "id": "r5",
-                "question": 4,
-                "libelle": "Euros non distribués",
-                "type": "nombre",
-                "attendu": reste,
-                "unite": "€"
-            },
-            {
-                "id": "expression",
-                "question": 4,
-                "libelle": "Mon expression numérique",
-                "type": "texte_libre"
             }
         ]
     }
+
 
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
