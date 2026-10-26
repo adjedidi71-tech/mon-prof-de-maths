@@ -1850,22 +1850,151 @@ def generer_modele_p7_cartes():
             }
         ]
     }
-    if difficulte == 1:
-        banque = [
-            exercice for exercice in banque
-            if exercice["id"] not in [
-                "P7-01", "P7-02", "P7-03"
-            ]
-        ]
 
-        banque.append(generer_modele_p7_fete())
-        banque.append(generer_modele_p7_cartes())
-        banque.append(generer_modele_p7_badminton())
-        banque.append(generer_modele_p7_sciences())
-        banque.append(generer_modele_p7_patisserie())
-        banque.append(generer_modele_p7_enigmes())
-        banque.append(generer_modele_p7_photos())
-        banque.append(generer_modele_p7_velo())
+def generer_modele_p7_badminton():
+
+    while True:
+        stock_initial = random.randint(9, 21)
+        nb_boites = random.randint(4, 7)
+        volants_par_boite = 12
+        volants_abimes = random.randint(6, 18)
+
+        nb_matchs = random.randint(6, 10)
+        volants_par_match = random.randint(7, 11)
+
+        volants_achetes = nb_boites * volants_par_boite
+
+        volants_utilisables = (
+            stock_initial + volants_achetes - volants_abimes
+        )
+
+        volants_necessaires = nb_matchs * volants_par_match
+
+        ecart = abs(volants_utilisables - volants_necessaires)
+
+        if ecart >= 3:
+            break
+
+    suffisant = (
+        "Oui" if volants_utilisables >= volants_necessaires
+        else "Non"
+    )
+
+    if suffisant == "Oui":
+        conclusion = (
+            f"Il restera {ecart} volants utilisables "
+            "après le tournoi."
+        )
+        libelle_ecart = "Nombre de volants restants"
+    else:
+        conclusion = (
+            f"Il manque {ecart} volants pour organiser "
+            "tous les matchs prévus."
+        )
+        libelle_ecart = "Nombre de volants manquants"
+
+    enonce = (
+        "**Le tournoi de badminton**\n\n"
+        "Le collège organise un tournoi de badminton.\n\n"
+        f"Le club possède déjà {stock_initial} volants.\n\n"
+        f"Il achète {nb_boites} boîtes de "
+        f"{volants_par_boite} volants chacune.\n\n"
+        f"Lors de la vérification du matériel, "
+        f"{volants_abimes} volants sont déclarés "
+        "abîmés et ne peuvent pas être utilisés.\n\n"
+        "Le tournoi comporte :\n"
+        f"- {nb_matchs} matchs ;\n"
+        f"- une prévision de {volants_par_match} "
+        "volants utilisés par match.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de volants le club a-t-il achetés ?\n\n"
+        "2. Combien de volants utilisables possède-t-il "
+        "après avoir retiré les volants abîmés ?\n\n"
+        "3. Combien de volants faut-il prévoir "
+        "pour tous les matchs ?\n\n"
+        "4. Le club dispose-t-il de suffisamment "
+        "de volants ? Combien en restera-t-il "
+        "ou combien en manquera-t-il ?"
+    )
+
+    correction = (
+        "**1. Volants achetés**\n\n"
+        f"{nb_boites} × {volants_par_boite} "
+        f"= {volants_achetes} volants.\n\n"
+
+        "**2. Volants utilisables**\n\n"
+        f"{stock_initial} + {volants_achetes} "
+        f"− {volants_abimes} "
+        f"= {volants_utilisables} volants.\n\n"
+
+        "**3. Volants nécessaires**\n\n"
+        f"{nb_matchs} × {volants_par_match} "
+        f"= {volants_necessaires} volants.\n\n"
+
+        "**4. Vérification des quantités**\n\n"
+        f"Volants disponibles : {volants_utilisables}.\n\n"
+        f"Volants nécessaires : {volants_necessaires}.\n\n"
+        f"Différence : {ecart} volants.\n\n"
+        f"**Le stock est-il suffisant ? {suffisant}.**\n\n"
+        f"{conclusion}\n\n"
+
+        "**Expression complète du stock disponible :**\n\n"
+        f"{stock_initial} + "
+        f"{nb_boites} × {volants_par_boite} "
+        f"− {volants_abimes} "
+        f"= {volants_utilisables}."
+    )
+
+    return {
+        "id": "P7-M08",
+        "titre": "Le tournoi de badminton",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Volants achetés",
+                "type": "nombre",
+                "attendu": volants_achetes,
+                "unite": "volants"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Volants utilisables",
+                "type": "nombre",
+                "attendu": volants_utilisables,
+                "unite": "volants"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Volants nécessaires",
+                "type": "nombre",
+                "attendu": volants_necessaires,
+                "unite": "volants"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Le stock est-il suffisant ?",
+                "type": "choix",
+                "attendu": suffisant,
+                "options": ["Oui", "Non"]
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": libelle_ecart,
+                "type": "nombre",
+                "attendu": ecart,
+                "unite": "volants"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
