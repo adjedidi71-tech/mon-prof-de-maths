@@ -2702,11 +2702,9 @@ def generer_modele_p8_manga():
         f"Chaque panneau peut contenir "
         f"{capacite_panneau} dessins.\n\n"
 
-        f"Division euclidienne :\n\n"
-
-        f"{dessins_exposables} = "
-        f"{capacite_panneau} × {panneaux_complets} "
-        f"+ {dessins_dernier}.\n\n"
+        f"{dessins_exposables} ÷ {capacite_panneau}\n\n"
+        f"Quotient : {panneaux_complets}\n\n"
+        f"Reste : {dessins_dernier}\n\n"
 
         f"Il est donc possible de remplir entièrement "
         f"**{panneaux_complets} panneaux**.\n\n"
