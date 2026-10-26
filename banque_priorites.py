@@ -2543,7 +2543,7 @@ def generer_modele_p8_clubs():
 
     return {
         "id": "P8-M01",
-        "titre": "La fête des clubs du collège - TEST V2",
+        "titre": "La fête des clubs du collège — TEST V2",
         "enonce": enonce,
         "correction": correction,
         "reponse_attendue": None,
