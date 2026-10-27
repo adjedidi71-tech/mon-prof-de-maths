@@ -3227,6 +3227,246 @@ def generer_modele_p8_robotique():
         ]
     }
 
+def generer_modele_p8_jeu_piste():
+
+    def euros(centimes):
+        return f"{centimes / 100:.2f}".replace(".", ",")
+
+    nb_equipes = random.randint(4, 7)
+    nb_postes = random.randint(3, 5)
+
+    prix_enveloppe = random.choice([50, 75, 100])
+    prix_pochette = random.choice([300, 350, 400, 450])
+    signalisation = random.randint(6, 12) * 100
+
+    prix_souvenir = random.choice([200, 250, 300, 350])
+    reserve = random.randint(4, 7) * 100
+
+    # Dépenses obligatoires
+    nb_enveloppes = nb_equipes * nb_postes
+    cout_enveloppes = nb_enveloppes * prix_enveloppe
+    cout_pochettes = nb_equipes * prix_pochette
+
+    depenses = (
+        cout_enveloppes
+        + cout_pochettes
+        + signalisation
+    )
+
+    # Souvenirs facultatifs
+    cout_souvenirs = nb_equipes * prix_souvenir
+    somme_necessaire = cout_souvenirs + reserve
+
+    # Génère les deux situations : budget suffisant
+    # ou insuffisant pour les souvenirs et la réserve.
+    variation = random.choice([
+        -500, -300, -200, 200, 300, 500
+    ])
+
+    argent_disponible = somme_necessaire + variation
+    budget = depenses + argent_disponible
+
+    achat_possible = (
+        "Oui" if variation > 0 else "Non"
+    )
+
+    difference = abs(variation)
+
+    if achat_possible == "Oui":
+        libelle_difference = "Excédent au-delà de la réserve"
+
+        conclusion = (
+            f"Le collège peut acheter les souvenirs "
+            f"et conserver au moins {euros(reserve)} €.\n\n"
+            f"Après l'achat des souvenirs, il lui reste "
+            f"{euros(argent_disponible - cout_souvenirs)} €.\n\n"
+            f"Il conserve donc {euros(difference)} € "
+            "de plus que la réserve minimale."
+        )
+    else:
+        libelle_difference = (
+            "Montant manquant pour conserver la réserve"
+        )
+
+        conclusion = (
+            f"Le collège ne peut pas acheter les souvenirs "
+            f"tout en conservant {euros(reserve)} € "
+            "de réserve.\n\n"
+            f"Il lui manque {euros(difference)} € "
+            "pour réaliser les deux objectifs.\n\n"
+            "S'il renonce aux souvenirs, il conserve "
+            f"{euros(argent_disponible)} €."
+        )
+
+    enonce = (
+        "**Le jeu de piste du collège**\n\n"
+        "Le collège organise un jeu de piste pour ses élèves.\n\n"
+
+        f"{nb_equipes} équipes participent à l'activité.\n\n"
+
+        f"Le parcours comporte {nb_postes} postes.\n\n"
+
+        "Pour préparer le jeu :\n"
+        "- chaque équipe reçoit une enveloppe d'indices "
+        "à chaque poste ;\n"
+        f"- chaque enveloppe coûte {euros(prix_enveloppe)} € ;\n"
+        "- chaque équipe reçoit également une pochette "
+        f"de matériel à {euros(prix_pochette)} € ;\n"
+        f"- la signalisation du parcours coûte "
+        f"{euros(signalisation)} €.\n\n"
+
+        f"Le collège dispose d'un budget total de "
+        f"**{euros(budget)} €**.\n\n"
+
+        "Après les achats obligatoires, il aimerait "
+        "offrir un souvenir supplémentaire à chaque équipe.\n\n"
+
+        f"Chaque souvenir coûte {euros(prix_souvenir)} €.\n\n"
+
+        "Cependant, le collège souhaite conserver "
+        f"au moins **{euros(reserve)} €** de réserve.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien d'enveloppes d'indices faut-il "
+        "préparer au total ?\n\n"
+
+        "2. Quel est le coût total des achats "
+        "obligatoires ? Écris une seule expression "
+        "numérique avec des parenthèses.\n\n"
+
+        "3. Combien d'argent reste-t-il après "
+        "les achats obligatoires ?\n\n"
+
+        "4. Combien coûteraient tous les souvenirs "
+        "supplémentaires ?\n\n"
+
+        "5. Le collège peut-il acheter ces souvenirs "
+        "tout en conservant la réserve minimale ? "
+        "De combien dépasse-t-il la somme nécessaire "
+        "ou combien lui manque-t-il ?"
+    )
+
+    correction = (
+        "**1. Nombre d'enveloppes**\n\n"
+
+        f"{nb_equipes} × {nb_postes} "
+        f"= {nb_enveloppes} enveloppes.\n\n"
+
+        "**2. Coût des achats obligatoires**\n\n"
+
+        f"Enveloppes : {nb_enveloppes} × "
+        f"{euros(prix_enveloppe)} "
+        f"= {euros(cout_enveloppes)} €.\n\n"
+
+        f"Pochettes : {nb_equipes} × "
+        f"{euros(prix_pochette)} "
+        f"= {euros(cout_pochettes)} €.\n\n"
+
+        f"Signalisation : {euros(signalisation)} €.\n\n"
+
+        "**Expression complète :**\n\n"
+
+        f"({nb_equipes} × {nb_postes} × "
+        f"{euros(prix_enveloppe)} + "
+        f"{nb_equipes} × {euros(prix_pochette)}) "
+        f"+ {euros(signalisation)} "
+        f"= {euros(depenses)} €.\n\n"
+
+        "**3. Argent restant après les achats**\n\n"
+
+        f"{euros(budget)} − {euros(depenses)} "
+        f"= {euros(argent_disponible)} €.\n\n"
+
+        "**4. Coût des souvenirs supplémentaires**\n\n"
+
+        f"{nb_equipes} × {euros(prix_souvenir)} "
+        f"= {euros(cout_souvenirs)} €.\n\n"
+
+        "**5. Vérification du budget et de la réserve**\n\n"
+
+        f"Souvenirs : {euros(cout_souvenirs)} €.\n\n"
+
+        f"Réserve minimale : {euros(reserve)} €.\n\n"
+
+        f"Somme nécessaire : "
+        f"{euros(cout_souvenirs)} + {euros(reserve)} "
+        f"= {euros(somme_necessaire)} €.\n\n"
+
+        f"Argent disponible : "
+        f"{euros(argent_disponible)} €.\n\n"
+
+        f"Différence : {euros(difference)} €.\n\n"
+
+        f"**Achat possible : {achat_possible}.**\n\n"
+
+        f"{conclusion}"
+    )
+
+    return {
+        "id": "P8-M05",
+        "titre": "Le jeu de piste du collège",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Nombre d'enveloppes",
+                "type": "nombre",
+                "attendu": nb_enveloppes,
+                "unite": "enveloppes"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Dépenses obligatoires",
+                "type": "nombre",
+                "attendu": depenses / 100,
+                "unite": "€"
+            },
+            {
+                "id": "expression",
+                "question": 2,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Argent disponible après les achats",
+                "type": "nombre",
+                "attendu": argent_disponible / 100,
+                "unite": "€"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Coût total des souvenirs",
+                "type": "nombre",
+                "attendu": cout_souvenirs / 100,
+                "unite": "€"
+            },
+            {
+                "id": "r5",
+                "question": 5,
+                "libelle": "Achat possible avec la réserve ?",
+                "type": "choix",
+                "attendu": achat_possible,
+                "options": ["Oui", "Non"]
+            },
+            {
+                "id": "r6",
+                "question": 5,
+                "libelle": libelle_difference,
+                "type": "nombre",
+                "attendu": difference / 100,
+                "unite": "€"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -3264,14 +3504,15 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque = [
             exercice for exercice in banque
             if exercice["id"] not in [
-                "P8-01", "P8-02", "P8-03", "P8-04"
+                "P8-01", "P8-02", "P8-03", "P8-04", "P8-05"
             ]
         ]
 
         banque.append(generer_modele_p8_clubs())
         banque.append(generer_modele_p8_manga())
         banque.append(generer_modele_p8_jeu_video())
-        banque.append(generer_modele_p8_robotique())  
+        banque.append(generer_modele_p8_robotique())
+        banque.append(generer_modele_p8_jeu_piste()) 
     
     exercices = random.sample(banque, k=nombre)
 
