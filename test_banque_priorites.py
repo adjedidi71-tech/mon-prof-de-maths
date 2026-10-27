@@ -123,7 +123,11 @@ class TestsBanque(unittest.TestCase):
                 livraison = nombre_dans_enonce(r"frais de livraison sont de (\d+) €", enonce)
                 budget = nombre_dans_enonce(r"budget de \*\*(\d+) €\*\*", enonce)
                 total = prix_tous - reduction + livraison
-                attendus = {c["id"]: c["attendu"] for c in exercice["champs_reponse"]}
+                attendus = {
+                    c["id"]: c["attendu"]
+                    for c in exercice["champs_reponse"]
+                    if c["type"] != "texte_libre"
+                }
                 self.assertLessEqual(reduction, prix_tous)
                 self.assertGreaterEqual(total, 0)
                 self.assertEqual(attendus["r1"], prix_kit)
