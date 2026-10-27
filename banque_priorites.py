@@ -3454,7 +3454,8 @@ def generer_modele_p8_jeu_piste():
                 "libelle": "Achat possible avec la réserve ?",
                 "type": "choix",
                 "attendu": achat_possible,
-                "options": ["Oui", "Non"]
+                "options": ["Oui", "Non"],
+                "dependances": ["r3", "r4"]
             },
             {
                 "id": "r6",
