@@ -2208,7 +2208,12 @@ with zone_affichage:
                             for autre in exercice["champs_reponse"]:
                                 if autre["type"] != "nombre":
                                     continue
-    
+                                if (
+                                    exercice.get("id") == "P8-M03"
+                                    and autre["id"] not in ("r2", "r3")
+                                ):
+                                    continue
+                
                                 autre_cle = (
                                     f"banque_{st.session_state.get('serie_version', 0)}"
                                     f"_{numero}_{autre['id']}"
