@@ -3658,10 +3658,6 @@ def generer_modele_p8_kits(seed=None):
                 "options": ["Oui", "Non"],
                 "dependances": ["r3"]
             },
-                "type": "choix",
-                "attendu": achat_possible,
-                "options": ["Oui", "Non"]
-            },
             {
                 "id": "r5",
                 "question": 4,
