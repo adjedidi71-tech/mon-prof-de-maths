@@ -3467,6 +3467,206 @@ def generer_modele_p8_jeu_piste():
         ]
     }
 
+def generer_modele_p8_kits(seed=None):
+
+    # Graine permettant de reproduire un exercice
+    if seed is None:
+        seed = random.randrange(1, 10**9)
+
+    rng = random.Random(seed)
+
+    # Différentes combinaisons de matériel
+    articles = [
+        (("carnet", "carnets"), ("stylo", "stylos")),
+        (("cahier", "cahiers"), ("crayon", "crayons")),
+        (("bloc-notes", "blocs-notes"), ("feutre", "feutres")),
+        (("carte", "cartes"), ("badge", "badges"))
+    ]
+
+    (nom_a, nom_b) = rng.choice(articles)
+
+    nb_equipes = rng.randint(4, 8)
+
+    quantite_a = rng.randint(2, 4)
+    prix_a = rng.randint(3, 7)
+
+    quantite_b = rng.randint(2, 5)
+    prix_b = rng.randint(1, 4)
+
+    reduction = rng.choice([5, 10, 15, 20])
+    livraison = rng.choice([4, 6, 8, 10, 12])
+
+    # Calculs
+    cout_a = quantite_a * prix_a
+    cout_b = quantite_b * prix_b
+
+    prix_kit = cout_a + cout_b
+    prix_kits = nb_equipes * prix_kit
+
+    # La réduction ne doit jamais dépasser
+    # le prix de tous les kits
+    reduction = min(reduction, prix_kits)
+
+    total = prix_kits - reduction + livraison
+
+    # Budget parfois suffisant, parfois insuffisant
+    variation = rng.choice([-15, -10, -5, 5, 10, 15])
+    budget = total + variation
+
+    difference = abs(variation)
+
+    achat_possible = "Oui" if variation > 0 else "Non"
+
+    # Accord singulier/pluriel
+    article_a = nom_a[0] if quantite_a == 1 else nom_a[1]
+    article_b = nom_b[0] if quantite_b == 1 else nom_b[1]
+
+    if achat_possible == "Oui":
+        conclusion = (
+            f"Le budget est suffisant. "
+            f"Il restera {difference} €."
+        )
+    else:
+        conclusion = (
+            f"Le budget est insuffisant. "
+            f"Il manque {difference} €."
+        )
+
+    enonce = (
+        "**Les kits du jeu de piste**\n\n"
+        "Le collège prépare un jeu de piste.\n\n"
+
+        f"Il y a {nb_equipes} équipes participantes.\n\n"
+
+        "Chaque équipe doit recevoir un kit comprenant :\n"
+
+        f"- {quantite_a} {article_a} à "
+        f"{prix_a} € l'unité ;\n"
+
+        f"- {quantite_b} {article_b} à "
+        f"{prix_b} € l'unité.\n\n"
+
+        f"Le magasin accorde une réduction de "
+        f"{reduction} € sur la commande totale.\n\n"
+
+        f"Les frais de livraison sont de {livraison} €.\n\n"
+
+        f"Le collège dispose d'un budget de "
+        f"**{budget} €**.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien coûte le matériel nécessaire "
+        "pour une seule équipe ?\n\n"
+
+        "2. Combien coûtent tous les kits "
+        "avant la réduction et la livraison ?\n\n"
+
+        "3. Quel est le montant total à payer "
+        "après la réduction et les frais de livraison ? "
+        "Écris une seule expression numérique "
+        "avec des parenthèses.\n\n"
+
+        "4. Le budget du collège est-il suffisant ? "
+        "Quel est l'écart entre le budget "
+        "et le montant à payer ?"
+    )
+
+    correction = (
+        "**1. Prix du matériel pour une équipe**\n\n"
+
+        f"{quantite_a} × {prix_a} + "
+        f"{quantite_b} × {prix_b} "
+        f"= {prix_kit} €.\n\n"
+
+        "**2. Prix de tous les kits**\n\n"
+
+        f"{nb_equipes} × {prix_kit} "
+        f"= {prix_kits} €.\n\n"
+
+        "**3. Montant à payer**\n\n"
+
+        f"{prix_kits} − {reduction} + "
+        f"{livraison} = {total} €.\n\n"
+
+        "**Expression complète :**\n\n"
+
+        f"{nb_equipes} × "
+        f"({quantite_a} × {prix_a} + "
+        f"{quantite_b} × {prix_b}) "
+        f"− {reduction} + {livraison} "
+        f"= {total} €.\n\n"
+
+        "**4. Vérification du budget**\n\n"
+
+        f"Budget disponible : {budget} €.\n\n"
+
+        f"Montant à payer : {total} €.\n\n"
+
+        f"Écart : {difference} €.\n\n"
+
+        f"**Budget suffisant : {achat_possible}.**\n\n"
+
+        f"{conclusion}"
+    )
+
+    return {
+        "id": "P8-M06",
+        "titre": "Les kits du jeu de piste",
+        "seed": seed,
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Prix d'un kit",
+                "type": "nombre",
+                "attendu": prix_kit,
+                "unite": "€"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Prix de tous les kits",
+                "type": "nombre",
+                "attendu": prix_kits,
+                "unite": "€"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Montant total à payer",
+                "type": "nombre",
+                "attendu": total,
+                "unite": "€"
+            },
+            {
+                "id": "expression",
+                "question": 3,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Budget suffisant ?",
+                "type": "choix",
+                "attendu": achat_possible,
+                "options": ["Oui", "Non"]
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Écart entre budget et montant à payer",
+                "type": "nombre",
+                "attendu": difference,
+                "unite": "€"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -3512,7 +3712,8 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p8_manga())
         banque.append(generer_modele_p8_jeu_video())
         banque.append(generer_modele_p8_robotique())
-        banque.append(generer_modele_p8_jeu_piste()) 
+        banque.append(generer_modele_p8_jeu_piste())
+        banque.append(generer_modele_p8_kits())
     
     exercices = random.sample(banque, k=nombre)
 
