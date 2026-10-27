@@ -3649,9 +3649,15 @@ def generer_modele_p8_kits(seed=None):
                 "type": "texte_libre"
             },
             {
+                            {
                 "id": "r4",
                 "question": 4,
                 "libelle": "Budget suffisant ?",
+                "type": "choix",
+                "attendu": achat_possible,
+                "options": ["Oui", "Non"],
+                "dependances": ["r3"]
+            },
                 "type": "choix",
                 "attendu": achat_possible,
                 "options": ["Oui", "Non"]
