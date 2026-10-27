@@ -2205,33 +2205,34 @@ with zone_affichage:
     
                         if correcte and champ["type"] == "choix":
                             calculs_corrects = True
-    
+                            dependances = champ.get("dependances", [])
+
                             for autre in exercice["champs_reponse"]:
+                                if autre["id"] not in dependances:
+                                    continue
+        
                                 if autre["type"] != "nombre":
                                     continue
-                                if (
-                                    exercice.get("id") == "P8-M03"
-                                    and autre["id"] not in ("r2", "r3")
-                                ):
-                                    continue
-                                if (
-                                    exercice.get("id") == "P8-M05"
-                                    and autre["id"] not in ("r3", "r4")
-                                ):
-                                    continue
-                
+        
                                 autre_cle = (
                                     f"banque_{st.session_state.get('serie_version', 0)}"
                                     f"_{numero}_{autre['id']}"
                                 )
-    
+        
                                 valeur = st.session_state.get(autre_cle, "")
-    
+        
                                 try:
-                                    if float(str(valeur).replace(",", ".")) != float(autre["attendu"]):
+                                    valeur_saisie = float(
+                                        str(valeur).replace(",", ".")
+                                    )
+                                    valeur_attendue = float(autre["attendu"])
+        
+                                    if abs(valeur_saisie - valeur_attendue) > 1e-6:
                                         calculs_corrects = False
+        
                                 except (ValueError, TypeError):
                                     calculs_corrects = False
+
     
                             if calculs_corrects:
                                 bonnes_reponses += 1
