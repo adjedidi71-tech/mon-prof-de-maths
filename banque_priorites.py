@@ -2991,6 +2991,238 @@ def generer_modele_p8_jeu_video():
         ]
     }
 
+def generer_modele_p8_robotique():
+
+    while True:
+        nb_equipes = random.randint(4, 6)
+        robots_par_equipe = random.randint(2, 3)
+        batteries_par_robot = random.randint(2, 3)
+        batteries_reserve = random.randint(1, 2)
+
+        stock_initial = random.randint(10, 23)
+        boites_achetees = random.randint(1, 3)
+        batteries_par_boite = random.choice([8, 10])
+        batteries_abimees = random.randint(2, 5)
+        prix_boite = random.randint(9, 16)
+
+        batteries_robots = (
+            nb_equipes * robots_par_equipe
+            * batteries_par_robot
+        )
+
+        batteries_secours = (
+            nb_equipes * batteries_reserve
+        )
+
+        besoin_total = batteries_robots + batteries_secours
+
+        batteries_achetees = (
+            boites_achetees * batteries_par_boite
+        )
+
+        stock_utilisable = (
+            stock_initial + batteries_achetees
+            - batteries_abimees
+        )
+
+        manque = besoin_total - stock_utilisable
+
+        boites_supplementaires = (
+            manque + batteries_par_boite - 1
+        ) // batteries_par_boite
+
+        reste = (
+            stock_utilisable
+            + boites_supplementaires * batteries_par_boite
+            - besoin_total
+        )
+
+        cout = boites_supplementaires * prix_boite
+
+        if (
+            3 <= manque <= 22
+            and 1 <= boites_supplementaires <= 3
+        ):
+            break
+
+    besoin_equipe = (
+        robots_par_equipe * batteries_par_robot
+        + batteries_reserve
+    )
+
+    enonce = (
+        "**Le club de robotique**\n\n"
+        "Le collège organise une compétition de robots.\n\n"
+
+        f"{nb_equipes} équipes participent.\n\n"
+        f"Chaque équipe possède {robots_par_equipe} robots.\n\n"
+        f"Chaque robot a besoin de {batteries_par_robot} batteries "
+        "pour fonctionner.\n\n"
+
+        f"De plus, chaque équipe doit disposer de "
+        f"{batteries_reserve} batteries de réserve.\n\n"
+
+        "Le club possède déjà :\n"
+        f"- {stock_initial} batteries en stock ;\n"
+        f"- {boites_achetees} boîtes de "
+        f"{batteries_par_boite} batteries chacune, "
+        "achetées récemment.\n\n"
+
+        f"Lors de la vérification de ce stock, "
+        f"{batteries_abimees} batteries sont déclarées "
+        "inutilisables.\n\n"
+
+        "Pour compléter le stock, le club peut acheter "
+        f"de nouvelles boîtes de {batteries_par_boite} "
+        f"batteries, au prix de {prix_boite} € chacune.\n\n"
+
+        "Toutes les batteries des nouvelles boîtes "
+        "sont utilisables.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de batteries faut-il au total "
+        "pour équiper tous les robots et prévoir "
+        "les batteries de réserve ? "
+        "Écris une expression numérique avec "
+        "des parenthèses.\n\n"
+
+        "2. Combien de batteries utilisables "
+        "le club possède-t-il actuellement ?\n\n"
+
+        "3. Combien de batteries lui manque-t-il "
+        "pour préparer la compétition ?\n\n"
+
+        "4. Quel est le nombre minimal de boîtes "
+        "supplémentaires à acheter ? "
+        "Combien cet achat coûtera-t-il ? "
+        "Combien de batteries restera-t-il "
+        "après avoir équipé les équipes et "
+        "prévu les batteries de réserve ?"
+    )
+
+    correction = (
+        "**1. Batteries nécessaires**\n\n"
+
+        f"Pour une équipe : "
+        f"{robots_par_equipe} × {batteries_par_robot} "
+        f"+ {batteries_reserve} "
+        f"= {besoin_equipe} batteries.\n\n"
+
+        "**Expression complète :**\n\n"
+
+        f"{nb_equipes} × "
+        f"({robots_par_equipe} × {batteries_par_robot} "
+        f"+ {batteries_reserve}) "
+        f"= {besoin_total} batteries.\n\n"
+
+        "**2. Batteries utilisables**\n\n"
+
+        f"Batteries achetées : {boites_achetees} × "
+        f"{batteries_par_boite} "
+        f"= {batteries_achetees}.\n\n"
+
+        f"Stock utilisable : {stock_initial} "
+        f"+ {batteries_achetees} "
+        f"− {batteries_abimees} "
+        f"= {stock_utilisable} batteries.\n\n"
+
+        "**3. Batteries manquantes**\n\n"
+
+        f"{besoin_total} − {stock_utilisable} "
+        f"= {manque} batteries.\n\n"
+
+        "**4. Boîtes supplémentaires**\n\n"
+
+        f"Chaque boîte contient {batteries_par_boite} "
+        "batteries.\n\n"
+
+        f"{manque} : {batteries_par_boite} — "
+        f"Quotient : {manque // batteries_par_boite} — "
+        f"Reste : {manque % batteries_par_boite}\n\n"
+
+        f"Il faut donc acheter au minimum "
+        f"**{boites_supplementaires} boîte(s)**.\n\n"
+
+        f"Coût : {boites_supplementaires} × "
+        f"{prix_boite} = {cout} €.\n\n"
+
+        "Batteries restantes après répartition :\n\n"
+
+        f"{stock_utilisable} + "
+        f"{boites_supplementaires} × "
+        f"{batteries_par_boite} "
+        f"− {besoin_total} = {reste} batteries.\n\n"
+
+        f"**Réponse :** Le club achète "
+        f"{boites_supplementaires} boîte(s) pour "
+        f"{cout} €. Il lui restera {reste} batteries."
+    )
+
+    return {
+        "id": "P8-M04",
+        "titre": "Le club de robotique",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Batteries nécessaires au total",
+                "type": "nombre",
+                "attendu": besoin_total,
+                "unite": "batteries"
+            },
+            {
+                "id": "expression",
+                "question": 1,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Batteries utilisables",
+                "type": "nombre",
+                "attendu": stock_utilisable,
+                "unite": "batteries"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Batteries manquantes",
+                "type": "nombre",
+                "attendu": manque,
+                "unite": "batteries"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Boîtes supplémentaires nécessaires",
+                "type": "nombre",
+                "attendu": boites_supplementaires,
+                "unite": "boîtes"
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Coût des boîtes supplémentaires",
+                "type": "nombre",
+                "attendu": cout,
+                "unite": "€"
+            },
+            {
+                "id": "r6",
+                "question": 4,
+                "libelle": "Batteries restantes",
+                "type": "nombre",
+                "attendu": reste,
+                "unite": "batteries"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -3028,13 +3260,14 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque = [
             exercice for exercice in banque
             if exercice["id"] not in [
-                "P8-01", "P8-02", "P8-03"
+                "P8-01", "P8-02", "P8-03", "P8-04"
             ]
         ]
 
         banque.append(generer_modele_p8_clubs())
         banque.append(generer_modele_p8_manga())
         banque.append(generer_modele_p8_jeu_video())
+        banque.append(generer_modele_p8_robotique())  
     
     exercices = random.sample(banque, k=nombre)
 
