@@ -2035,6 +2035,7 @@ if st.button("Générer mes exercices"):
         ):
             
             exercices = generer_exercices_priorites(difficulte, nombre)
+            st.write("TEST IDENTIFIANTS :", [e["id"] for e in exercices])
         elif type_exercice == "Je résous des problèmes":
                 try:
                     exercices = generer_exercice_ia(
