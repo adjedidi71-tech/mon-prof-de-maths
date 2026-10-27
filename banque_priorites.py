@@ -3064,9 +3064,10 @@ def generer_modele_p8_robotique():
 
         "Le club possède déjà :\n"
         f"- {stock_initial} batteries en stock ;\n"
-        f"- {boites_achetees} boîtes de "
-        f"{batteries_par_boite} batteries chacune, "
-        "achetées récemment.\n\n"
+        f"- {boites_achetees} "
+        f"boîte{'s' if boites_achetees > 1 else ''} de "
+        f"{batteries_par_boite} batteries, "
+        f"achetée{'s' if boites_achetees > 1 else ''} récemment.\n\n"
 
         f"Lors de la vérification de ce stock, "
         f"{batteries_abimees} batteries sont déclarées "
@@ -3142,7 +3143,8 @@ def generer_modele_p8_robotique():
         f"Reste : {manque % batteries_par_boite}\n\n"
 
         f"Il faut donc acheter au minimum "
-        f"**{boites_supplementaires} boîte(s)**.\n\n"
+        f"**{boites_supplementaires} "
+        f"boîte{'s' if boites_supplementaires > 1 else ''}**.\n\n"
 
         f"Coût : {boites_supplementaires} × "
         f"{prix_boite} = {cout} €.\n\n"
@@ -3155,8 +3157,10 @@ def generer_modele_p8_robotique():
         f"− {besoin_total} = {reste} batteries.\n\n"
 
         f"**Réponse :** Le club achète "
-        f"{boites_supplementaires} boîte(s) pour "
-        f"{cout} €. Il lui restera {reste} batteries."
+        f"{boites_supplementaires} "
+        f"boîte{'s' if boites_supplementaires > 1 else ''} "
+        f"pour {cout} €. Il lui restera {reste} "
+        f"batterie{'s' if reste > 1 else ''}."
     )
 
     return {
