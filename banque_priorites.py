@@ -2779,6 +2779,218 @@ def generer_modele_p8_manga():
         ]
     }
 
+def generer_modele_p8_jeu_video():
+
+    while True:
+        pieces_depart = random.randint(90, 150)
+
+        missions = random.randint(3, 5)
+        gain_mission = random.randint(18, 28)
+        bonus = random.randint(12, 30)
+
+        potions = random.randint(2, 4)
+        prix_potion = random.randint(10, 17)
+
+        cles_a = random.randint(2, 4)
+        prix_cle = random.randint(12, 20)
+        coffres_a = random.randint(3, 5)
+        gain_coffre_a = random.randint(20, 34)
+
+        entree_b = random.randint(30, 60)
+        coffres_b = random.randint(2, 4)
+        gain_coffre_b = random.randint(24, 40)
+
+        gains_missions = missions * gain_mission + bonus
+        cout_potions = potions * prix_potion
+
+        solde_commun = (
+            pieces_depart + gains_missions - cout_potions
+        )
+
+        cout_a = cles_a * prix_cle
+        gains_a = coffres_a * gain_coffre_a
+        solde_a = solde_commun - cout_a + gains_a
+
+        cout_b = entree_b
+        gains_b = coffres_b * gain_coffre_b
+        solde_b = solde_commun - cout_b + gains_b
+
+        difference = abs(solde_a - solde_b)
+
+        if (
+            solde_commun >= cout_a
+            and solde_commun >= cout_b
+            and solde_a > 0
+            and solde_b > 0
+            and difference >= 8
+        ):
+            break
+
+    meilleur = "A" if solde_a > solde_b else "B"
+
+    enonce = (
+        "**Une aventure en jeu vidéo**\n\n"
+        "Un joueur participe à un jeu d'aventure "
+        "dans lequel il doit gérer ses pièces d'or.\n\n"
+
+        f"Au départ, il possède {pieces_depart} pièces.\n\n"
+
+        f"Il termine {missions} missions et gagne "
+        f"{gain_mission} pièces par mission.\n\n"
+
+        f"Il reçoit également un bonus unique de "
+        f"{bonus} pièces.\n\n"
+
+        f"Avant de poursuivre son aventure, il achète "
+        f"{potions} potions à {prix_potion} pièces chacune.\n\n"
+
+        "Il doit maintenant choisir entre deux chemins. "
+        "Il ne peut en emprunter qu'un seul.\n\n"
+
+        "**Chemin A — La forêt des coffres**\n\n"
+        f"- Acheter {cles_a} clés à "
+        f"{prix_cle} pièces chacune ;\n"
+        f"- ouvrir {coffres_a} coffres contenant chacun "
+        f"{gain_coffre_a} pièces.\n\n"
+
+        "**Chemin B — La grotte secrète**\n\n"
+        f"- Payer {entree_b} pièces pour entrer ;\n"
+        f"- ouvrir {coffres_b} coffres contenant chacun "
+        f"{gain_coffre_b} pièces.\n\n"
+
+        "Dans les deux chemins, le joueur récupère "
+        "toutes les pièces annoncées dans les coffres.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de pièces possède-t-il après "
+        "les missions, le bonus et l'achat des potions ? "
+        "Écris une expression numérique avec "
+        "des parenthèses.\n\n"
+
+        "2. Combien de pièces posséderait-il "
+        "à la fin du chemin A ?\n\n"
+
+        "3. Combien de pièces posséderait-il "
+        "à la fin du chemin B ?\n\n"
+
+        "4. Quel chemin doit-il choisir pour avoir "
+        "le plus de pièces ? "
+        "Combien de pièces supplémentaires "
+        "ce chemin lui permet-il d'obtenir "
+        "par rapport à l'autre ?"
+    )
+
+    correction = (
+        "**1. Solde après les missions et les potions**\n\n"
+
+        f"Gains des missions : {missions} × {gain_mission} "
+        f"= {missions * gain_mission} pièces.\n\n"
+
+        f"Avec le bonus : {missions * gain_mission} "
+        f"+ {bonus} = {gains_missions} pièces.\n\n"
+
+        f"Coût des potions : {potions} × {prix_potion} "
+        f"= {cout_potions} pièces.\n\n"
+
+        "**Expression complète :**\n\n"
+
+        f"{pieces_depart} + "
+        f"({missions} × {gain_mission} + {bonus}) "
+        f"− ({potions} × {prix_potion}) "
+        f"= {solde_commun} pièces.\n\n"
+
+        "**2. Solde avec le chemin A**\n\n"
+
+        f"Prix des clés : {cles_a} × {prix_cle} "
+        f"= {cout_a} pièces.\n\n"
+
+        f"Gains des coffres : {coffres_a} × "
+        f"{gain_coffre_a} = {gains_a} pièces.\n\n"
+
+        f"{solde_commun} − {cout_a} + {gains_a} "
+        f"= {solde_a} pièces.\n\n"
+
+        "**3. Solde avec le chemin B**\n\n"
+
+        f"Prix d'entrée : {cout_b} pièces.\n\n"
+
+        f"Gains des coffres : {coffres_b} × "
+        f"{gain_coffre_b} = {gains_b} pièces.\n\n"
+
+        f"{solde_commun} − {cout_b} + {gains_b} "
+        f"= {solde_b} pièces.\n\n"
+
+        "**4. Comparaison des deux chemins**\n\n"
+
+        f"Chemin A : {solde_a} pièces.\n\n"
+
+        f"Chemin B : {solde_b} pièces.\n\n"
+
+        f"Différence : {abs(solde_a - solde_b)} pièces.\n\n"
+
+        f"**Le chemin {meilleur} est le plus avantageux.**\n\n"
+
+        f"Il permet de terminer l'aventure avec "
+        f"{difference} pièces de plus que l'autre chemin."
+    )
+
+    return {
+        "id": "P8-M03",
+        "titre": "Une aventure en jeu vidéo",
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Pièces après missions et potions",
+                "type": "nombre",
+                "attendu": solde_commun,
+                "unite": "pièces"
+            },
+            {
+                "id": "expression",
+                "question": 1,
+                "libelle": "Mon expression numérique avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Solde final du chemin A",
+                "type": "nombre",
+                "attendu": solde_a,
+                "unite": "pièces"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Solde final du chemin B",
+                "type": "nombre",
+                "attendu": solde_b,
+                "unite": "pièces"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Chemin le plus avantageux",
+                "type": "choix",
+                "attendu": meilleur,
+                "options": ["A", "B"]
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Différence entre les deux chemins",
+                "type": "nombre",
+                "attendu": difference,
+                "unite": "pièces"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -2815,11 +3027,14 @@ def generer_exercices_priorites(difficulte, nombre=1):
     if difficulte == 2:
         banque = [
             exercice for exercice in banque
-            if exercice["id"] not in ["P8-01", "P8-02"]
+            if exercice["id"] not in [
+                "P8-01", "P8-02", "P8-03"
+            ]
         ]
 
         banque.append(generer_modele_p8_clubs())
         banque.append(generer_modele_p8_manga())
+        banque.append(generer_modele_p8_jeu_video())
     
     exercices = random.sample(banque, k=nombre)
 
