@@ -2978,7 +2978,8 @@ def generer_modele_p8_jeu_video():
                 "libelle": "Chemin le plus avantageux",
                 "type": "choix",
                 "attendu": meilleur,
-                "options": ["A", "B"]
+                "options": ["A", "B"],
+                "dependances": ["r2", "r3"]
             },
             {
                 "id": "r5",
