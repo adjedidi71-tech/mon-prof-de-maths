@@ -2214,6 +2214,11 @@ with zone_affichage:
                                     and autre["id"] not in ("r2", "r3")
                                 ):
                                     continue
+                                if (
+                                    exercice.get("id") == "P8-M05"
+                                    and autre["id"] not in ("r3", "r4")
+                                ):
+                                    continue
                 
                                 autre_cle = (
                                     f"banque_{st.session_state.get('serie_version', 0)}"
