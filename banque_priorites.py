@@ -3649,7 +3649,6 @@ def generer_modele_p8_kits(seed=None):
                 "type": "texte_libre"
             },
             {
-                            {
                 "id": "r4",
                 "question": 4,
                 "libelle": "Budget suffisant ?",
