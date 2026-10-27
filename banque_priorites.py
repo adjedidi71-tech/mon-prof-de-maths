@@ -3285,9 +3285,9 @@ def generer_modele_p8_jeu_piste():
         )
     else:
         libelle_difference = (
-            "Montant manquant pour conserver la réserve"
+            "Montant manquant pour acheter les souvenirs "
+            "et conserver la réserve"
         )
-
         conclusion = (
             f"Le collège ne peut pas acheter les souvenirs "
             f"tout en conservant {euros(reserve)} € "
