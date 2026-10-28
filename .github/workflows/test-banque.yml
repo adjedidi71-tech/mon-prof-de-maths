@@ -16,4 +16,4 @@ jobs:
       - name: Vérifier la syntaxe Python
         run: python -m py_compile app.py banque_priorites.py test_banque_priorites.py
       - name: Tester les banques d'exercices
-        run: python -m unittest -v test_banque_priorites.py
+        run: python -m unittest discover -p "test_*.py" -v
