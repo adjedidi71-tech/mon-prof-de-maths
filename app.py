@@ -2035,10 +2035,6 @@ if st.button("Générer mes exercices"):
         ):
             
             exercices = generer_exercices_priorites(difficulte, nombre)
-            st.write(
-                "TEST NIVEAU 9 :",
-                [(e.get("id"), e.get("seed")) for e in exercices]
-            )
                     
         elif type_exercice == "Je résous des problèmes":
                 try:
