@@ -3883,6 +3883,449 @@ def generer_modele_p8_eau(seed=None):
         ]
     }
 
+def generer_modele_p8_parcours(seed=None):
+    """Distances, durées de marche et comparaison à un objectif."""
+    if seed is None:
+        seed = random.randrange(1, 10**9)
+    rng = random.Random(seed)
+
+    lieu = rng.choice([
+        "le parc naturel", "la forêt communale",
+        "le sentier botanique", "les environs du collège"
+    ])
+    nb_tours = rng.choice([2, 3])
+    longueur_a_demi_km = rng.randint(2, 5)
+    longueur_b_demi_km = rng.randint(1, 4)
+    minutes_par_km = 12
+    pause_minutes = rng.choice([6, 8, 10, 12])
+
+    distance_un_tour = (
+        longueur_a_demi_km + longueur_b_demi_km
+    ) / 2
+    distance_totale = nb_tours * distance_un_tour
+    temps_marche = round(distance_totale * minutes_par_km)
+    nb_pauses = nb_tours - 1
+    temps_pause = nb_pauses * pause_minutes
+    duree_totale = temps_marche + temps_pause
+
+    variation = rng.choice([-18, -12, -6, 6, 12, 18])
+    temps_maximal = duree_totale + variation
+    objectif_atteint = (
+        "Oui" if duree_totale <= temps_maximal else "Non"
+    )
+    ecart = abs(duree_totale - temps_maximal)
+
+    def km(valeur):
+        return f"{valeur:.1f}".replace(".", ",")
+
+    if objectif_atteint == "Oui":
+        libelle_ecart = "Minutes d'avance sur la limite"
+        conclusion = (
+            f"Le groupe respecte la limite et termine "
+            f"avec {ecart} minutes d'avance."
+        )
+    else:
+        libelle_ecart = "Minutes de dépassement"
+        conclusion = (
+            f"Le groupe dépasse la limite de {ecart} minutes."
+        )
+
+    enonce = (
+        "**Le parcours nature du collège**\n\n"
+        f"Une classe participe à une randonnée dans {lieu}.\n\n"
+        "Chaque tour du parcours comprend deux parties :\n"
+        f"- un premier chemin de {km(longueur_a_demi_km / 2)} km ;\n"
+        f"- un second chemin de {km(longueur_b_demi_km / 2)} km.\n\n"
+        f"Les élèves effectuent **{nb_tours} tours complets**.\n\n"
+        f"Ils marchent à une allure régulière de {minutes_par_km} minutes "
+        "par kilomètre.\n\n"
+        f"Entre deux tours, ils font une pause de {pause_minutes} minutes. "
+        "Ils ne font pas de pause après le dernier tour.\n\n"
+        f"Le groupe souhaite terminer le parcours en **{temps_maximal} "
+        "minutes au maximum**, pauses comprises.\n\n"
+        "**Questions**\n\n"
+        "1. Quelle est la distance d'un tour complet, en kilomètres ?\n\n"
+        "2. Quelle distance parcourent-ils pendant tous les tours ?\n\n"
+        "3. Combien de minutes passent-ils à marcher ?\n\n"
+        "4. Quelle est la durée totale, pauses comprises ? "
+        "Écris une seule expression numérique avec des parenthèses.\n\n"
+        "5. Respectent-ils le temps maximal prévu ? "
+        "De combien de minutes sont-ils en avance ou en retard ?"
+    )
+
+    correction = (
+        "**1. Distance d'un tour**\n\n"
+        f"{km(longueur_a_demi_km / 2)} + {km(longueur_b_demi_km / 2)} "
+        f"= {km(distance_un_tour)} km.\n\n"
+        "**2. Distance totale parcourue**\n\n"
+        f"{nb_tours} × {km(distance_un_tour)} "
+        f"= {km(distance_totale)} km.\n\n"
+        "**3. Temps de marche**\n\n"
+        f"{km(distance_totale)} × {minutes_par_km} "
+        f"= {temps_marche} minutes.\n\n"
+        "**4. Durée totale avec les pauses**\n\n"
+        f"Nombre de pauses : {nb_tours} − 1 = {nb_pauses}.\n\n"
+        f"Durée des pauses : {nb_pauses} × {pause_minutes} "
+        f"= {temps_pause} minutes.\n\n"
+        f"Durée totale : {temps_marche} + {temps_pause} "
+        f"= {duree_totale} minutes.\n\n"
+        "**Expression complète :**\n\n"
+        f"{nb_tours} × ({km(longueur_a_demi_km / 2)} + "
+        f"{km(longueur_b_demi_km / 2)}) × {minutes_par_km} "
+        f"+ ({nb_tours} − 1) × {pause_minutes} "
+        f"= {duree_totale}.\n\n"
+        "**5. Comparaison avec la durée maximale**\n\n"
+        f"Durée totale : {duree_totale} minutes.\n\n"
+        f"Limite : {temps_maximal} minutes.\n\n"
+        f"Écart : {ecart} minutes.\n\n"
+        f"**Objectif atteint : {objectif_atteint}.**\n\n"
+        f"{conclusion}"
+    )
+
+    return {
+        "id": "P8-M08",
+        "titre": "Le parcours nature du collège",
+        "seed": seed,
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Distance d'un tour",
+                "type": "nombre",
+                "attendu": distance_un_tour,
+                "unite": "km"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Distance totale",
+                "type": "nombre",
+                "attendu": distance_totale,
+                "unite": "km"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Durée de marche",
+                "type": "nombre",
+                "attendu": temps_marche,
+                "unite": "minutes"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Durée totale avec les pauses",
+                "type": "nombre",
+                "attendu": duree_totale,
+                "unite": "minutes"
+            },
+            {
+                "id": "expression",
+                "question": 4,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r5",
+                "question": 5,
+                "libelle": "Temps maximal respecté ?",
+                "type": "choix",
+                "attendu": objectif_atteint,
+                "options": ["Oui", "Non"],
+                "dependances": ["r4"]
+            },
+            {
+                "id": "r6",
+                "question": 5,
+                "libelle": libelle_ecart,
+                "type": "nombre",
+                "attendu": ecart,
+                "unite": "minutes"
+            }
+        ]
+    }
+
+def generer_modele_p8_boissons(seed=None):
+    """Mélanges en cL, conversion en L et division avec reste."""
+    if seed is None:
+        seed = random.randrange(1, 10**9)
+    rng = random.Random(seed)
+
+    parfums = rng.choice([
+        ("jus de pomme", "jus d'orange"),
+        ("jus d'ananas", "jus de mangue"),
+        ("jus de raisin", "jus de poire")
+    ])
+
+    while True:
+        nombre_preparations = rng.randint(4, 7)
+        quantite_a = rng.randrange(45, 76, 5)
+        quantite_b = rng.randrange(25, 56, 5)
+        quantite_eau = rng.randrange(20, 46, 5)
+        capacite_bouteille = rng.choice([50, 75])
+
+        volume_preparation = (
+            quantite_a + quantite_b + quantite_eau
+        )
+        volume_total = nombre_preparations * volume_preparation
+
+        bouteilles_pleines, reste_cl = divmod(
+            volume_total, capacite_bouteille
+        )
+
+        if (
+            5 <= bouteilles_pleines <= 22
+            and 1 <= reste_cl < capacite_bouteille
+        ):
+            break
+
+    bouteilles_necessaires = bouteilles_pleines + 1
+
+    def litres(centilitres):
+        return f"{centilitres / 100:.2f}".replace(".", ",")
+
+    enonce = (
+        "**L'atelier de boissons du collège**\n\n"
+        "Pour une journée sportive, les élèves préparent une boisson "
+        "sans alcool à base de fruits et d'eau.\n\n"
+        "Pour **une préparation**, ils mélangent :\n"
+        f"- {quantite_a} cL de {parfums[0]} ;\n"
+        f"- {quantite_b} cL de {parfums[1]} ;\n"
+        f"- {quantite_eau} cL d'eau.\n\n"
+        f"Ils réalisent **{nombre_preparations} préparations identiques**.\n\n"
+        f"Ils disposent de bouteilles de {capacite_bouteille} cL chacune. "
+        "Ils remplissent d'abord le plus grand nombre possible de bouteilles "
+        "complètes, puis mettent le reste dans une dernière bouteille.\n\n"
+        "**Questions**\n\n"
+        "1. Quel volume de boisson obtiennent-ils avec une seule "
+        "préparation, en cL ?\n\n"
+        "2. Quel volume total de boisson préparent-ils, en litres ? "
+        "Écris une seule expression numérique avec des parenthèses.\n\n"
+        "3. Combien de bouteilles peuvent-ils remplir complètement ?\n\n"
+        "4. Combien de cL versent-ils dans la dernière bouteille ? "
+        "Combien de bouteilles utilisent-ils au total ?"
+    )
+
+    correction = (
+        "**1. Volume d'une préparation**\n\n"
+        f"{quantite_a} + {quantite_b} + {quantite_eau} "
+        f"= {volume_preparation} cL.\n\n"
+        "**2. Volume total produit**\n\n"
+        f"{nombre_preparations} × {volume_preparation} "
+        f"= {volume_total} cL.\n\n"
+        f"Conversion : {volume_total} cL "
+        f"= {litres(volume_total)} L.\n\n"
+        "**Expression complète :**\n\n"
+        f"{nombre_preparations} × ({quantite_a} + {quantite_b} + "
+        f"{quantite_eau}) ÷ 100 = {litres(volume_total)} L.\n\n"
+        "**3. Bouteilles entièrement remplies**\n\n"
+        f"{volume_total} : {capacite_bouteille} — "
+        f"Quotient : {bouteilles_pleines} — "
+        f"Reste : {reste_cl}\n\n"
+        f"Il est possible de remplir **{bouteilles_pleines} bouteilles** "
+        "entièrement.\n\n"
+        "**4. Dernière bouteille et total**\n\n"
+        f"Il reste {reste_cl} cL, versés dans une dernière bouteille.\n\n"
+        f"Nombre total : {bouteilles_pleines} + 1 "
+        f"= **{bouteilles_necessaires} bouteilles**."
+    )
+
+    return {
+        "id": "P8-M09",
+        "titre": "L'atelier de boissons du collège",
+        "seed": seed,
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Volume d'une préparation",
+                "type": "nombre",
+                "attendu": volume_preparation,
+                "unite": "cL"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Volume total",
+                "type": "nombre",
+                "attendu": volume_total / 100,
+                "unite": "L"
+            },
+            {
+                "id": "expression",
+                "question": 2,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Bouteilles entièrement remplies",
+                "type": "nombre",
+                "attendu": bouteilles_pleines,
+                "unite": "bouteilles"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Volume de la dernière bouteille",
+                "type": "nombre",
+                "attendu": reste_cl,
+                "unite": "cL"
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Nombre total de bouteilles",
+                "type": "nombre",
+                "attendu": bouteilles_necessaires,
+                "unite": "bouteilles"
+            }
+        ]
+    }
+
+def generer_modele_p8_transport(seed=None):
+    """Distance d'un aller-retour et comparaison de deux tarifs."""
+    if seed is None:
+        seed = random.randrange(1, 10**9)
+    rng = random.Random(seed)
+
+    evenement = rng.choice([
+        "le spectacle de théâtre",
+        "le festival des sciences",
+        "la journée des associations",
+        "l'exposition du collège"
+    ])
+
+    while True:
+        distance_aller = rng.randint(3, 11)
+        distance_detour = rng.randint(1, 4)
+        distance_totale = 2 * distance_aller + distance_detour
+
+        fixe_a = rng.randint(25, 45)
+        prix_km_a = rng.randint(2, 3)
+        fixe_b = rng.randint(5, 16)
+        prix_km_b = rng.randint(4, 5)
+
+        cout_a = fixe_a + distance_totale * prix_km_a
+        cout_b = fixe_b + distance_totale * prix_km_b
+        difference = abs(cout_a - cout_b)
+
+        if 3 <= difference <= 60:
+            break
+
+    meilleur = "A" if cout_a < cout_b else "B"
+
+    enonce = (
+        "**Le transport du matériel**\n\n"
+        f"Le collège doit transporter du matériel pour {evenement}.\n\n"
+        f"Le lieu de l'événement se trouve à {distance_aller} km du collège. "
+        "Le véhicule fait l'aller-retour par le même trajet, "
+        f"mais il doit effectuer un détour supplémentaire de "
+        f"{distance_detour} km pour récupérer des accessoires.\n\n"
+        "Deux entreprises proposent de louer un véhicule. "
+        "Les tarifs comprennent tout le transport.\n\n"
+        "**Entreprise A**\n\n"
+        f"- Frais fixes : {fixe_a} € ;\n"
+        f"- Prix par kilomètre parcouru : {prix_km_a} €.\n\n"
+        "**Entreprise B**\n\n"
+        f"- Frais fixes : {fixe_b} € ;\n"
+        f"- Prix par kilomètre parcouru : {prix_km_b} €.\n\n"
+        "**Questions**\n\n"
+        "1. Quelle est la distance totale parcourue par le véhicule, "
+        "en kilomètres ?\n\n"
+        "2. Quel est le coût total avec l'entreprise A ? "
+        "Écris une expression numérique avec des parenthèses.\n\n"
+        "3. Quel est le coût total avec l'entreprise B ?\n\n"
+        "4. Quelle entreprise est la moins chère ? "
+        "Combien d'euros le collège économise-t-il en la choisissant ?"
+    )
+
+    correction = (
+        "**1. Distance parcourue**\n\n"
+        f"2 × {distance_aller} + {distance_detour} "
+        f"= {distance_totale} km.\n\n"
+        "**2. Coût avec l'entreprise A**\n\n"
+        f"{fixe_a} + {distance_totale} × {prix_km_a} "
+        f"= {cout_a} €.\n\n"
+        "**Expression complète :**\n\n"
+        f"{fixe_a} + (2 × {distance_aller} + {distance_detour}) "
+        f"× {prix_km_a} = {cout_a} €.\n\n"
+        "**3. Coût avec l'entreprise B**\n\n"
+        f"{fixe_b} + {distance_totale} × {prix_km_b} "
+        f"= {cout_b} €.\n\n"
+        "**4. Comparaison des tarifs**\n\n"
+        f"Entreprise A : {cout_a} €.\n\n"
+        f"Entreprise B : {cout_b} €.\n\n"
+        f"Différence : {difference} €.\n\n"
+        f"**L'entreprise {meilleur} est la moins chère.** "
+        f"Elle permet d'économiser {difference} €."
+    )
+
+    return {
+        "id": "P8-M10",
+        "titre": "Le transport du matériel",
+        "seed": seed,
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Distance totale",
+                "type": "nombre",
+                "attendu": distance_totale,
+                "unite": "km"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Coût de l'entreprise A",
+                "type": "nombre",
+                "attendu": cout_a,
+                "unite": "€"
+            },
+            {
+                "id": "expression",
+                "question": 2,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Coût de l'entreprise B",
+                "type": "nombre",
+                "attendu": cout_b,
+                "unite": "€"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Entreprise la moins chère",
+                "type": "choix",
+                "attendu": meilleur,
+                "options": ["A", "B"],
+                "dependances": ["r2", "r3"]
+            },
+            {
+                "id": "r5",
+                "question": 4,
+                "libelle": "Économie réalisée",
+                "type": "nombre",
+                "attendu": difference,
+                "unite": "€"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -3931,6 +4374,9 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p8_jeu_piste())
         banque.append(generer_modele_p8_kits())
         banque.append(generer_modele_p8_eau())
+        banque.append(generer_modele_p8_parcours())
+        banque.append(generer_modele_p8_boissons())
+        banque.append(generer_modele_p8_transport())
     
     exercices = random.sample(banque, k=nombre)
 
