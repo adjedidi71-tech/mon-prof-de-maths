@@ -4821,7 +4821,10 @@ def generer_modele_p9_cristaux(seed=None):
 
         "**4. Cristaux réellement restants**\n\n"
         f"{disponibles} − {maximum} × {prix_equipement} "
-        f"= {reste} cristaux (réserve comprise).\n\n"
+        f"= {reste} cristaux.\n\n"
+        f"Ce total comprend les {reserve} cristaux de réserve "
+        f"et les {(disponibles - reserve) % prix_equipement} "
+        "cristaux non utilisés pour fabriquer les équipements.\n\n"
 
         "**5. Équipement des aventuriers**\n\n"
         f"Équipements possibles : {maximum} ; aventuriers : "
