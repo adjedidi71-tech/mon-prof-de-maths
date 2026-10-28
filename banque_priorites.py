@@ -4881,8 +4881,11 @@ def generer_modele_p9_bibliotheque(seed=None):
     enonce = (
         "**La bibliothèque de mangas du collège**\n\n"
 
-        "La bibliothèque reçoit de nouveaux mangas et en prête "
-        "à plusieurs classes.\n\n"
+        "La bibliothèque possède déjà une collection de mangas "
+        "rangés sur ses étagères, mais on ne connaît pas "
+        "leur nombre initial.\n\n"
+        "Au cours de la semaine, plusieurs mouvements "
+        "de mangas ont lieu.\n\n"
 
         f"Elle reçoit **{colis} colis** de **{mangas_par_colis} mangas** "
         f"chacun, puis **{dons} mangas** offerts par des familles.\n\n"
@@ -4893,8 +4896,10 @@ def generer_modele_p9_bibliotheque(seed=None):
         f"**{prets_par_classe} mangas**. Ces livres prêtés ne sont "
         "plus dans la bibliothèque pour le moment.\n\n"
 
-        f"Après tous ces mouvements, il reste **{fin} mangas** "
-        "sur les étagères.\n\n"
+        f"À la fin de la semaine, le bibliothécaire compte "
+        f"**{fin} mangas sur les étagères** de la bibliothèque.\n\n"
+        "Les mangas empruntés par les classes ne sont pas "
+        "compris dans ce nombre.\n\n"
 
         "**Questions**\n\n"
 
@@ -4902,9 +4907,9 @@ def generer_modele_p9_bibliotheque(seed=None):
 
         "2. Combien de mangas ont été prêtés aux classes au total ?\n\n"
 
-        "3. De combien le nombre de mangas présents sur les étagères "
-        "a-t-il varié, en tenant compte de toutes les opérations ? "
-        "Le nombre recherché peut être positif ou négatif.\n\n"
+        "3. Le nombre de mangas sur les étagères a-t-il "
+        "augmenté ou diminué au cours de la semaine ? "
+        "De combien ?\n\n"
 
         "4. Combien de mangas la bibliothèque possédait-elle "
         "**avant tous ces mouvements** ? Écris une seule expression "
