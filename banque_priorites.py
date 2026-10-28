@@ -4976,6 +4976,434 @@ def generer_modele_p9_bibliotheque(seed=None):
         seed, enonce, correction, champs
     )
 
+def generer_modele_p9_spectacle(seed=None):
+    """Recettes, dépenses, bénéfice et objectif d'un spectacle."""
+    rng, seed = _p9_rng(seed)
+    while True:
+        rangees = rng.randint(8, 12)
+        places_par_rangee = rng.randint(13, 18)
+        reservees = rng.randint(8, 20)
+        billets_eleves = rng.randint(45, 90)
+        billets_adultes = rng.randint(15, 35)
+        tarif_eleve = rng.randint(4, 6)
+        tarif_adulte = rng.randint(8, 11)
+        technique = rng.randint(120, 230)
+        programme = rng.choice([1, 2])
+        places_disponibles = rangees * places_par_rangee - reservees
+        billets_vendus = billets_eleves + billets_adultes
+        recettes = billets_eleves * tarif_eleve + billets_adultes * tarif_adulte
+        depenses = technique + billets_vendus * programme
+        benefice = recettes - depenses
+        if billets_vendus <= places_disponibles and 80 <= benefice <= 700:
+            break
+
+    objectif = benefice + rng.choice([-35, -20, 20, 35])
+    atteint = "Oui" if benefice >= objectif else "Non"
+    ecart = abs(benefice - objectif)
+
+    enonce = (
+        "**Le spectacle solidaire du collège**\n\n"
+        f"La salle possède {rangees} rangées de {places_par_rangee} places. "
+        f"{reservees} places sont réservées et ne peuvent pas être vendues.\n\n"
+        f"Le collège vend {billets_eleves} billets élèves à {tarif_eleve} € "
+        f"et {billets_adultes} billets adultes à {tarif_adulte} €.\n\n"
+        f"La technique coûte {technique} €. Un programme imprimé est remis "
+        f"à chaque spectateur payant, pour {programme} € par programme.\n\n"
+        f"Le collège souhaite dégager un bénéfice d'au moins {objectif} €.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de places peuvent être vendues au maximum ?\n\n"
+        "2. Combien de billets ont effectivement été vendus ?\n\n"
+        "3. Quel est le montant total des recettes ?\n\n"
+        "4. Quelles sont les dépenses totales, programmes compris ?\n\n"
+        "5. Quel bénéfice reste-t-il ? Écris une expression numérique "
+        "avec des parenthèses.\n\n"
+        "6. L'objectif de bénéfice est-il atteint ? De combien d'euros "
+        "est-il dépassé ou combien manque-t-il ?"
+    )
+    correction = (
+        "**1. Places vendables**\n\n"
+        f"{rangees} × {places_par_rangee} − {reservees} = {places_disponibles}.\n\n"
+        "**2. Billets vendus**\n\n"
+        f"{billets_eleves} + {billets_adultes} = {billets_vendus}.\n\n"
+        "**3. Recettes**\n\n"
+        f"{billets_eleves} × {tarif_eleve} + {billets_adultes} × "
+        f"{tarif_adulte} = {recettes} €.\n\n"
+        "**4. Dépenses**\n\n"
+        f"{technique} + {billets_vendus} × {programme} = {depenses} €.\n\n"
+        "**5. Bénéfice**\n\n"
+        f"{recettes} − {depenses} = {benefice} €.\n\n"
+        "**Expression complète :**\n\n"
+        f"({billets_eleves} × {tarif_eleve} + {billets_adultes} × "
+        f"{tarif_adulte}) − ({technique} + "
+        f"({billets_eleves} + {billets_adultes}) × {programme}) "
+        f"= {benefice} €.\n\n"
+        "**6. Objectif**\n\n"
+        f"Bénéfice : {benefice} € ; objectif : {objectif} €. "
+        f"**Objectif atteint : {atteint}.** Écart : {ecart} €."
+    )
+    champs = [
+        _p9_nombre("r1", 1, "Places vendables", places_disponibles, "places"),
+        _p9_nombre("r2", 2, "Billets vendus", billets_vendus, "billets"),
+        _p9_nombre("r3", 3, "Recettes", recettes, "€"),
+        _p9_nombre("r4", 4, "Dépenses", depenses, "€"),
+        _p9_nombre("r5", 5, "Bénéfice", benefice, "€"),
+        _p9_expression(5),
+        _p9_choix("r6", 6, "Objectif atteint ?", atteint, ["r5"]),
+        _p9_nombre("r7", 6, "Écart avec l'objectif", ecart, "€"),
+    ]
+    return _p9_exercice(
+        "P9-M06", "Le spectacle solidaire du collège",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_recyclage(seed=None):
+    """Mélange de masses, retrait et division euclidienne."""
+    rng, seed = _p9_rng(seed)
+    while True:
+        sacs = rng.randint(6, 10)
+        grammes_sac = rng.choice([1200, 1500, 1800, 2000])
+        cartons = rng.randint(3, 7)
+        grammes_carton = rng.choice([600, 800, 1000, 1200])
+        grammes_refuses = rng.choice([400, 600, 800, 1000, 1200])
+        capacite = rng.choice([2000, 2500, 3000])
+        masse_brute = sacs * grammes_sac + cartons * grammes_carton
+        masse_valide = masse_brute - grammes_refuses
+        pleins, reste = divmod(masse_valide, capacite)
+        if 4 <= pleins <= 13 and 0 < reste < capacite:
+            break
+    total_contenants = pleins + 1
+
+    def kg(grammes):
+        return f"{grammes / 1000:.2f}".replace(".", ",")
+
+    enonce = (
+        "**La collecte pour le recyclage**\n\n"
+        "Plusieurs classes rassemblent des matériaux à recycler.\n\n"
+        f"Elles ont préparé {sacs} sacs de {kg(grammes_sac)} kg chacun "
+        f"et {cartons} cartons de {kg(grammes_carton)} kg chacun.\n\n"
+        f"Lors du tri, {kg(grammes_refuses)} kg de matériaux sont écartés.\n\n"
+        f"Les matériaux conservés sont répartis dans des conteneurs "
+        f"pouvant chacun recevoir au maximum {kg(capacite)} kg. "
+        "On remplit entièrement autant de conteneurs que possible, "
+        "puis on met le reste dans un dernier.\n\n"
+        "**Questions**\n\n"
+        "1. Quelle masse totale a été collectée, avant le tri, en kg ?\n\n"
+        "2. Quelle masse reste-t-il après le tri, en kg ? Écris une "
+        "expression numérique avec des parenthèses.\n\n"
+        "3. Combien de conteneurs peut-on remplir entièrement ?\n\n"
+        "4. Quelle masse place-t-on dans le dernier conteneur, "
+        "et combien de conteneurs utilise-t-on au total ?"
+    )
+    correction = (
+        "**1. Masse collectée**\n\n"
+        f"{sacs} × {kg(grammes_sac)} + {cartons} × "
+        f"{kg(grammes_carton)} = {kg(masse_brute)} kg.\n\n"
+        "**2. Après le tri**\n\n"
+        f"{kg(masse_brute)} − {kg(grammes_refuses)} "
+        f"= {kg(masse_valide)} kg.\n\n"
+        "**Expression complète :**\n\n"
+        f"({sacs} × {kg(grammes_sac)} + {cartons} × "
+        f"{kg(grammes_carton)}) − {kg(grammes_refuses)} "
+        f"= {kg(masse_valide)} kg.\n\n"
+        "**3. Conteneurs remplis entièrement**\n\n"
+        f"{masse_valide} : {capacite} (en grammes) — "
+        f"Quotient : {pleins} — Reste : {reste}.\n\n"
+        f"On remplit entièrement {pleins} conteneurs.\n\n"
+        "**4. Dernier conteneur**\n\n"
+        f"On place {kg(reste)} kg dans le dernier conteneur. "
+        f"Nombre total : {pleins} + 1 = {total_contenants}."
+    )
+    champs = [
+        _p9_nombre("r1", 1, "Masse avant le tri", masse_brute / 1000, "kg"),
+        _p9_nombre("r2", 2, "Masse après le tri", masse_valide / 1000, "kg"),
+        _p9_expression(2),
+        _p9_nombre(
+            "r3", 3, "Conteneurs entièrement remplis",
+            pleins, "conteneurs"
+        ),
+        _p9_nombre(
+            "r4", 4, "Masse dans le dernier conteneur",
+            reste / 1000, "kg"
+        ),
+        _p9_nombre(
+            "r5", 4, "Conteneurs utilisés au total",
+            total_contenants, "conteneurs"
+        ),
+    ]
+    return _p9_exercice(
+        "P9-M07", "La collecte pour le recyclage",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_salles(seed=None):
+    """Comparer deux salles selon les places ET le budget."""
+    rng, seed = _p9_rng(seed)
+    while True:
+        classes = rng.choice([2, 3])
+        eleves_classe = rng.randint(18, 25)
+        adultes = rng.randint(2, 5)
+        personnes = classes * eleves_classe + adultes
+        rangees_a = rng.randint(5, 10)
+        sieges_a = rng.randint(7, 11)
+        rangees_b = rng.randint(5, 10)
+        sieges_b = rng.randint(7, 11)
+        places_a = rangees_a * sieges_a
+        places_b = rangees_b * sieges_b
+        forfait_a = rng.randint(55, 155)
+        forfait_b = rng.randint(55, 155)
+        tarif_a = rng.randint(3, 7)
+        tarif_b = rng.randint(3, 7)
+        cout_a = forfait_a + personnes * tarif_a
+        cout_b = forfait_b + personnes * tarif_b
+        budget = rng.randint(225, 495)
+        possible_a = places_a >= personnes and cout_a <= budget
+        possible_b = places_b >= personnes and cout_b <= budget
+        if possible_a != possible_b:
+            break
+    choix = "A" if possible_a else "B"
+
+    enonce = (
+        "**La projection de cinéma du collège**\n\n"
+        f"{classes} classes de {eleves_classe} élèves participent à "
+        f"une projection, accompagnées de {adultes} adultes.\n\n"
+        "Chaque personne doit avoir une place assise. "
+        f"Le collège dispose d'un budget maximal de {budget} €.\n\n"
+        "Deux salles sont proposées :\n\n"
+        "**Salle A**\n\n"
+        f"- {rangees_a} rangées de {sieges_a} places ;\n"
+        f"- forfait de réservation : {forfait_a} € ;\n"
+        f"- {tarif_a} € par participant.\n\n"
+        "**Salle B**\n\n"
+        f"- {rangees_b} rangées de {sieges_b} places ;\n"
+        f"- forfait de réservation : {forfait_b} € ;\n"
+        f"- {tarif_b} € par participant.\n\n"
+        "Le collège doit choisir une salle qui respecte **à la fois** "
+        "le nombre de places et le budget.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de personnes participent à la projection ?\n\n"
+        "2. Combien de places sont proposées dans chaque salle ?\n\n"
+        "3. Quel est le coût total de chaque salle ? "
+        "Écris une expression numérique pour le coût de A.\n\n"
+        "4. Quelle salle peut être choisie en respectant "
+        "les deux contraintes ? Justifie ton choix."
+    )
+    correction = (
+        "**1. Participants**\n\n"
+        f"{classes} × {eleves_classe} + {adultes} = {personnes}.\n\n"
+        "**2. Places**\n\n"
+        f"A : {rangees_a} × {sieges_a} = {places_a} places.\n\n"
+        f"B : {rangees_b} × {sieges_b} = {places_b} places.\n\n"
+        "**3. Coûts**\n\n"
+        f"A : {forfait_a} + {personnes} × {tarif_a} = {cout_a} €.\n\n"
+        f"B : {forfait_b} + {personnes} × {tarif_b} = {cout_b} €.\n\n"
+        "**4. Vérification des deux conditions**\n\n"
+        f"A : places {'suffisantes' if places_a >= personnes else 'insuffisantes'}, "
+        f"budget {'respecté' if cout_a <= budget else 'dépassé'}.\n\n"
+        f"B : places {'suffisantes' if places_b >= personnes else 'insuffisantes'}, "
+        f"budget {'respecté' if cout_b <= budget else 'dépassé'}.\n\n"
+        f"**Choix : salle {choix}.** Elle seule respecte les deux conditions."
+    )
+    champs = [
+        _p9_nombre("r1", 1, "Participants", personnes, "personnes"),
+        _p9_nombre("r2", 2, "Places de la salle A", places_a, "places"),
+        _p9_nombre("r3", 2, "Places de la salle B", places_b, "places"),
+        _p9_nombre("r4", 3, "Coût total de la salle A", cout_a, "€"),
+        _p9_nombre("r5", 3, "Coût total de la salle B", cout_b, "€"),
+        _p9_expression(3),
+        _p9_choix(
+            "r6", 4, "Salle respectant les deux contraintes",
+            choix, ["r1", "r2", "r3", "r4", "r5"]
+        ),
+        {
+            "id": "justification",
+            "question": 4,
+            "libelle": "Ma justification (places et budget)",
+            "type": "texte_libre"
+        },
+    ]
+    return _p9_exercice(
+        "P9-M08", "La projection de cinéma du collège",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_drones(seed=None):
+    """Deux ressources limitantes et un objectif de fabrication."""
+    rng, seed = _p9_rng(seed)
+    while True:
+        chassis = rng.randint(6, 12)
+        sachets_helices = rng.randint(4, 8)
+        helices_par_sachet = rng.choice([6, 8, 10])
+        helices_abimees = rng.choice([0, 2, 4])
+        boites_batteries = rng.randint(3, 7)
+        batteries_par_boite = rng.choice([3, 4, 5])
+        batteries_hs = rng.randint(0, 3)
+        helices = sachets_helices * helices_par_sachet - helices_abimees
+        batteries = boites_batteries * batteries_par_boite - batteries_hs
+        max_drones = min(chassis, helices // 4, batteries // 2)
+        if 3 <= max_drones <= 10:
+            break
+    objectif = max(1, max_drones + rng.choice([-2, -1, 1, 2]))
+    atteint = "Oui" if max_drones >= objectif else "Non"
+    ecart = abs(max_drones - objectif)
+    helices_restantes = helices - 4 * max_drones
+    batteries_restantes = batteries - 2 * max_drones
+
+    enonce = (
+        "**L'atelier de mini-drones**\n\n"
+        "Le club de technologie veut fabriquer des mini-drones. "
+        "Chaque drone nécessite un châssis, 4 hélices et 2 batteries.\n\n"
+        f"Le club possède {chassis} châssis. Il reçoit {sachets_helices} "
+        f"sachets de {helices_par_sachet} hélices, mais "
+        f"{helices_abimees} hélices sont inutilisables.\n\n"
+        f"Il reçoit aussi {boites_batteries} boîtes de "
+        f"{batteries_par_boite} batteries, dont {batteries_hs} "
+        "batteries défectueuses au total.\n\n"
+        f"L'objectif est de fabriquer **{objectif} drones complets**.\n\n"
+        "**Questions**\n\n"
+        "1. Combien d'hélices utilisables reste-t-il ?\n\n"
+        "2. Combien de batteries utilisables reste-t-il ?\n\n"
+        "3. Combien de drones complets le club peut-il fabriquer au maximum ? "
+        "Vérifie séparément les châssis, les hélices et les batteries.\n\n"
+        "4. Combien d'hélices et de batteries resteront après avoir "
+        "fabriqué ce nombre maximal de drones ?\n\n"
+        "5. L'objectif de fabrication est-il atteint ? "
+        "De combien de drones le maximum dépasse-t-il l'objectif, "
+        "ou combien de drones manquent-ils pour l'atteindre ?"
+    )
+    correction = (
+        "**1. Hélices utilisables**\n\n"
+        f"{sachets_helices} × {helices_par_sachet} − {helices_abimees} "
+        f"= {helices}.\n\n"
+        "**2. Batteries utilisables**\n\n"
+        f"{boites_batteries} × {batteries_par_boite} − {batteries_hs} "
+        f"= {batteries}.\n\n"
+        "**3. Drones complets au maximum**\n\n"
+        f"Châssis : {chassis} drones possibles.\n\n"
+        f"Hélices : {helices} : 4 — Quotient : {helices // 4} — "
+        f"Reste : {helices % 4}.\n\n"
+        f"Batteries : {batteries} : 2 — Quotient : {batteries // 2} — "
+        f"Reste : {batteries % 2}.\n\n"
+        f"Le plus petit des trois nombres est **{max_drones}**.\n\n"
+        "**4. Matériel restant**\n\n"
+        f"Hélices : {helices} − 4 × {max_drones} = {helices_restantes}.\n\n"
+        f"Batteries : {batteries} − 2 × {max_drones} = "
+        f"{batteries_restantes}.\n\n"
+        "**5. Objectif**\n\n"
+        f"Maximum : {max_drones} ; objectif : {objectif}. "
+        f"**Objectif atteint : {atteint}.** Écart : {ecart} drone(s)."
+    )
+    ecart_libelle = (
+        "Drones au-delà de l'objectif"
+        if atteint == "Oui"
+        else "Drones manquants pour l'objectif"
+    )
+    champs = [
+        _p9_nombre("r1", 1, "Hélices utilisables", helices, "hélices"),
+        _p9_nombre("r2", 2, "Batteries utilisables", batteries, "batteries"),
+        _p9_nombre("r3", 3, "Drones complets possibles", max_drones, "drones"),
+        _p9_nombre("r4", 4, "Hélices restantes", helices_restantes, "hélices"),
+        _p9_nombre("r5", 4, "Batteries restantes", batteries_restantes, "batteries"),
+        _p9_choix("r6", 5, "Objectif atteint ?", atteint, ["r3"]),
+        _p9_nombre("r7", 5, ecart_libelle, ecart, "drones"),
+    ]
+    return _p9_exercice(
+        "P9-M09", "L'atelier de mini-drones",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_mosaique(seed=None):
+    """Besoin en carreaux, boîtes et comparaison des offres."""
+    rng, seed = _p9_rng(seed)
+    while True:
+        lignes = rng.randint(10, 18)
+        colonnes = rng.randint(9, 16)
+        reserve = rng.randint(8, 23)
+        besoin = lignes * colonnes + reserve
+        paquet_a = rng.choice([10, 12, 15])
+        paquet_b = rng.choice([16, 18, 20])
+        prix_a = rng.randint(8, 14)
+        prix_b = rng.randint(13, 22)
+        boites_a = (besoin + paquet_a - 1) // paquet_a
+        boites_b = (besoin + paquet_b - 1) // paquet_b
+        cout_a = boites_a * prix_a
+        cout_b = boites_b * prix_b
+        ecart = abs(cout_a - cout_b)
+        if 5 <= ecart <= 120:
+            break
+    choix = "A" if cout_a < cout_b else "B"
+    surplus = (
+        boites_a * paquet_a - besoin
+        if choix == "A"
+        else boites_b * paquet_b - besoin
+    )
+
+    enonce = (
+        "**La mosaïque du collège**\n\n"
+        f"Les élèves fabriquent une mosaïque de {lignes} rangées "
+        f"et {colonnes} colonnes de carreaux.\n\n"
+        f"Ils prévoient également {reserve} carreaux supplémentaires "
+        "en cas de casse.\n\n"
+        "Deux magasins proposent des boîtes vendues uniquement entières :\n\n"
+        "**Offre A**\n\n"
+        f"- {paquet_a} carreaux par boîte ;\n"
+        f"- {prix_a} € par boîte.\n\n"
+        "**Offre B**\n\n"
+        f"- {paquet_b} carreaux par boîte ;\n"
+        f"- {prix_b} € par boîte.\n\n"
+        "Le collège souhaite acheter assez de carreaux en dépensant "
+        "le moins possible.\n\n"
+        "**Questions**\n\n"
+        "1. De combien de carreaux a-t-on besoin, réserve comprise ?\n\n"
+        "2. Quel nombre minimal de boîtes faut-il acheter avec "
+        "l'offre A et avec l'offre B ?\n\n"
+        "3. Quel est le coût total pour chaque offre ? Écris "
+        "une expression numérique pour le coût de A.\n\n"
+        "4. Quelle offre est la moins chère et de combien ?\n\n"
+        "5. Combien de carreaux non utilisés restera-t-il après "
+        "l'achat avec l'offre retenue, réserve comprise dans le besoin ?"
+    )
+    correction = (
+        "**1. Besoin total en carreaux**\n\n"
+        f"{lignes} × {colonnes} + {reserve} = {besoin}.\n\n"
+        "**2. Nombre de boîtes à acheter**\n\n"
+        f"Offre A : {besoin} : {paquet_a} — Quotient : "
+        f"{besoin // paquet_a} — Reste : {besoin % paquet_a}. "
+        f"Il faut {boites_a} boîtes.\n\n"
+        f"Offre B : {besoin} : {paquet_b} — Quotient : "
+        f"{besoin // paquet_b} — Reste : {besoin % paquet_b}. "
+        f"Il faut {boites_b} boîtes.\n\n"
+        "**3. Coûts des deux offres**\n\n"
+        f"A : {boites_a} × {prix_a} = {cout_a} €.\n\n"
+        f"B : {boites_b} × {prix_b} = {cout_b} €.\n\n"
+        "**4. Comparaison**\n\n"
+        f"Différence : {max(cout_a, cout_b)} − {min(cout_a, cout_b)} "
+        f"= {ecart} €. **L'offre {choix} est la moins chère.**\n\n"
+        "**5. Carreaux supplémentaires non utilisés**\n\n"
+        f"Avec l'offre {choix}, il restera {surplus} carreau(x) "
+        "au-delà du besoin calculé, réserve comprise."
+    )
+    champs = [
+        _p9_nombre("r1", 1, "Carreaux nécessaires", besoin, "carreaux"),
+        _p9_nombre("r2", 2, "Boîtes nécessaires avec A", boites_a, "boîtes"),
+        _p9_nombre("r3", 2, "Boîtes nécessaires avec B", boites_b, "boîtes"),
+        _p9_nombre("r4", 3, "Coût total de A", cout_a, "€"),
+        _p9_nombre("r5", 3, "Coût total de B", cout_b, "€"),
+        _p9_expression(3),
+        _p9_choix(
+            "r6", 4, "Offre la moins chère",
+            choix, ["r4", "r5"]
+        ),
+        _p9_nombre("r7", 4, "Économie réalisée", ecart, "€"),
+        _p9_nombre(
+            "r8", 5, "Carreaux supplémentaires non utilisés",
+            surplus, "carreaux"
+        ),
+    ]
+    return _p9_exercice(
+        "P9-M10", "La mosaïque du collège",
+        seed, enonce, correction, champs
+    )
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -5041,6 +5469,11 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p9_festival())
         banque.append(generer_modele_p9_cristaux())
         banque.append(generer_modele_p9_bibliotheque())
+        banque.append(generer_modele_p9_spectacle())
+        banque.append(generer_modele_p9_recyclage())
+        banque.append(generer_modele_p9_salles())
+        banque.append(generer_modele_p9_drones())
+        banque.append(generer_modele_p9_mosaique())
     
     exercices = random.sample(banque, k=nombre)
 
