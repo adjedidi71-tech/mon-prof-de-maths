@@ -3670,6 +3670,219 @@ def generer_modele_p8_kits(seed=None):
         ]
     }
 
+def generer_modele_p8_eau(seed=None):
+
+    if seed is None:
+        seed = random.randrange(1, 10**9)
+
+    rng = random.Random(seed)
+
+    def litres(centilitres):
+        return f"{centilitres / 100:.2f}".replace(".", ",")
+
+    # Variation du contexte
+    lieu = rng.choice([
+        "le gymnase",
+        "les vestiaires",
+        "l'atelier de sciences",
+        "le bâtiment principal"
+    ])
+
+    # Données aléatoires
+    nb_robinets = rng.randint(4, 8)
+    minutes_par_jour = rng.randint(6, 12)
+    nb_jours = rng.choice([4, 5])
+
+    # Débits exprimés en centilitres par minute
+    debit_avant = rng.choice([100, 110, 120, 130, 140, 150])
+    debit_apres = rng.choice([40, 50, 60, 70, 80])
+
+    # Calculs effectués avec des nombres entiers
+    minutes_totales = (
+        nb_robinets * minutes_par_jour * nb_jours
+    )
+
+    consommation_avant = minutes_totales * debit_avant
+    consommation_apres = minutes_totales * debit_apres
+
+    economie = consommation_avant - consommation_apres
+
+    # Objectif parfois atteint, parfois non
+    variation = rng.choice([-1000, -500, 500, 1000])
+    objectif = economie + variation
+
+    objectif_atteint = "Oui" if economie >= objectif else "Non"
+    ecart = abs(economie - objectif)
+
+    if objectif_atteint == "Oui":
+        libelle_ecart = "Dépassement de l'objectif"
+        conclusion = (
+            f"L'objectif est atteint. "
+            f"Le collège économise {litres(ecart)} L "
+            "de plus que l'objectif."
+        )
+    else:
+        libelle_ecart = "Manque pour atteindre l'objectif"
+        conclusion = (
+            f"L'objectif n'est pas atteint. "
+            f"Il manque {litres(ecart)} L d'économies "
+            "pour atteindre l'objectif."
+        )
+
+    enonce = (
+        "**Le défi des économies d'eau**\n\n"
+
+        "Le collège organise une semaine de sensibilisation "
+        "aux économies d'eau.\n\n"
+
+        f"Dans {lieu}, {nb_robinets} robinets sont utilisés "
+        f"chacun {minutes_par_jour} minutes par jour "
+        f"pendant {nb_jours} jours.\n\n"
+
+        "Avant l'installation de nouveaux équipements, "
+        "chaque robinet laisse couler "
+        f"{litres(debit_avant)} litre d'eau par minute.\n\n"
+
+        "Après l'installation d'économiseurs d'eau, "
+        "chaque robinet laisse couler seulement "
+        f"{litres(debit_apres)} litre par minute.\n\n"
+
+        "La durée d'utilisation des robinets "
+        "reste identique.\n\n"
+
+        "Le collège souhaite économiser au moins "
+        f"**{litres(objectif)} litres d'eau** "
+        "sur cette période.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Quelle est la durée totale d'utilisation "
+        "de tous les robinets pendant cette période, "
+        "en minutes ?\n\n"
+
+        "2. Quelle quantité d'eau aurait été consommée "
+        "avec les anciens équipements, en litres ?\n\n"
+
+        "3. Quelle quantité d'eau est consommée "
+        "avec les nouveaux équipements, en litres ?\n\n"
+
+        "4. Quelle quantité d'eau est économisée ? "
+        "Écris une seule expression numérique "
+        "avec des parenthèses.\n\n"
+
+        "5. Le collège a-t-il atteint son objectif ? "
+        "De combien le dépasse-t-il ou "
+        "combien lui manque-t-il ?"
+    )
+
+    correction = (
+        "**1. Durée totale d'utilisation**\n\n"
+
+        f"{nb_robinets} × {minutes_par_jour} × "
+        f"{nb_jours} = {minutes_totales} minutes.\n\n"
+
+        "**2. Consommation avant les économies**\n\n"
+
+        f"{minutes_totales} × {litres(debit_avant)} "
+        f"= {litres(consommation_avant)} L.\n\n"
+
+        "**3. Consommation après les économies**\n\n"
+
+        f"{minutes_totales} × {litres(debit_apres)} "
+        f"= {litres(consommation_apres)} L.\n\n"
+
+        "**4. Quantité d'eau économisée**\n\n"
+
+        f"{litres(consommation_avant)} − "
+        f"{litres(consommation_apres)} "
+        f"= {litres(economie)} L.\n\n"
+
+        "**Expression complète :**\n\n"
+
+        f"{nb_robinets} × {minutes_par_jour} × "
+        f"{nb_jours} × "
+        f"({litres(debit_avant)} − {litres(debit_apres)}) "
+        f"= {litres(economie)} L.\n\n"
+
+        "**5. Vérification de l'objectif**\n\n"
+
+        f"Économies réalisées : {litres(economie)} L.\n\n"
+
+        f"Objectif : {litres(objectif)} L.\n\n"
+
+        f"Écart : {litres(ecart)} L.\n\n"
+
+        f"**Objectif atteint : {objectif_atteint}.**\n\n"
+
+        f"{conclusion}"
+    )
+
+    return {
+        "id": "P8-M07",
+        "titre": "Le défi des économies d'eau",
+        "seed": seed,
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": [
+            {
+                "id": "r1",
+                "question": 1,
+                "libelle": "Durée totale d'utilisation",
+                "type": "nombre",
+                "attendu": minutes_totales,
+                "unite": "minutes"
+            },
+            {
+                "id": "r2",
+                "question": 2,
+                "libelle": "Consommation avec les anciens équipements",
+                "type": "nombre",
+                "attendu": consommation_avant / 100,
+                "unite": "L"
+            },
+            {
+                "id": "r3",
+                "question": 3,
+                "libelle": "Consommation avec les nouveaux équipements",
+                "type": "nombre",
+                "attendu": consommation_apres / 100,
+                "unite": "L"
+            },
+            {
+                "id": "r4",
+                "question": 4,
+                "libelle": "Quantité d'eau économisée",
+                "type": "nombre",
+                "attendu": economie / 100,
+                "unite": "L"
+            },
+            {
+                "id": "expression",
+                "question": 4,
+                "libelle": "Mon expression avec parenthèses",
+                "type": "texte_libre"
+            },
+            {
+                "id": "r5",
+                "question": 5,
+                "libelle": "Objectif atteint ?",
+                "type": "choix",
+                "attendu": objectif_atteint,
+                "options": ["Oui", "Non"],
+                "dependances": ["r4"]
+            },
+            {
+                "id": "r6",
+                "question": 5,
+                "libelle": libelle_ecart,
+                "type": "nombre",
+                "attendu": ecart / 100,
+                "unite": "L"
+            }
+        ]
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -3717,6 +3930,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p8_robotique())
         banque.append(generer_modele_p8_jeu_piste())
         banque.append(generer_modele_p8_kits())
+        banque.append(generer_modele_p8_eau())
     
     exercices = random.sample(banque, k=nombre)
 
