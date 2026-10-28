@@ -5281,8 +5281,11 @@ def generer_modele_p9_drones(seed=None):
         f"Châssis : {chassis} drones possibles.\n\n"
         f"Hélices : {helices} : 4 — Quotient : {helices // 4} — "
         f"Reste : {helices % 4}.\n\n"
+        f"Donc **{helices // 4} drones possibles** avec les hélices.\n\n"
+        
         f"Batteries : {batteries} : 2 — Quotient : {batteries // 2} — "
         f"Reste : {batteries % 2}.\n\n"
+        f"Donc **{batteries // 2} drones possibles** avec les batteries.\n\n"
         f"Le plus petit des trois nombres est **{max_drones}**.\n\n"
         "**4. Matériel restant**\n\n"
         f"Hélices : {helices} − 4 × {max_drones} = {helices_restantes}.\n\n"
