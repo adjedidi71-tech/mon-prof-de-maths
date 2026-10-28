@@ -4326,6 +4326,648 @@ def generer_modele_p8_transport(seed=None):
         ]
     }
 
+def _p9_rng(seed):
+    if seed is None:
+        seed = random.randrange(1, 10**9)
+    return random.Random(seed), seed
+
+
+def _p9_nombre(identifiant, numero, libelle, valeur, unite):
+    return {
+        "id": identifiant,
+        "question": numero,
+        "libelle": libelle,
+        "type": "nombre",
+        "attendu": valeur,
+        "unite": unite
+    }
+
+
+def _p9_choix(identifiant, numero, libelle, valeur, dependances):
+    return {
+        "id": identifiant,
+        "question": numero,
+        "libelle": libelle,
+        "type": "choix",
+        "attendu": valeur,
+        "options": (
+            ["A", "B"] if valeur in ("A", "B")
+            else ["Oui", "Non"]
+        ),
+        "dependances": dependances
+    }
+
+
+def _p9_expression(numero):
+    return {
+        "id": "expression",
+        "question": numero,
+        "libelle": "Mon expression avec parenthèses",
+        "type": "texte_libre"
+    }
+
+
+def _p9_exercice(identifiant, titre, seed, enonce, correction, champs):
+    return {
+        "id": identifiant,
+        "titre": titre,
+        "seed": seed,
+        "enonce": enonce,
+        "correction": correction,
+        "reponse_attendue": None,
+        "champs_reponse": champs
+    }
+
+def generer_modele_p9_potager(seed=None):
+    rng, seed = _p9_rng(seed)
+
+    while True:
+        parcelles = rng.randint(3, 6)
+        plants_a = rng.randint(6, 10)
+        plants_b = rng.randint(7, 12)
+        prix_a = rng.randint(2, 5)
+        prix_b = rng.randint(2, 5)
+        materiel_a = rng.randint(35, 85)
+        materiel_b = rng.randint(35, 85)
+
+        quantite_a = parcelles * plants_a
+        quantite_b = parcelles * plants_b
+        cout_a = quantite_a * prix_a + materiel_a
+        cout_b = quantite_b * prix_b + materiel_b
+
+        ecart = abs(cout_a - cout_b)
+
+        if 10 <= ecart <= 125:
+            break
+
+    budget = max(cout_a, cout_b) + rng.randint(20, 70)
+    meilleur = "A" if cout_a < cout_b else "B"
+    reste_budget = budget - min(cout_a, cout_b)
+
+    enonce = (
+        "**Le potager du collège**\n\n"
+        f"Le collège prépare **{parcelles} parcelles identiques** "
+        "et hésite entre deux projets de plantation.\n\n"
+
+        "**Projet A**\n\n"
+        f"- {plants_a} plants par parcelle, à {prix_a} € le plant ;\n"
+        f"- {materiel_a} € de matériel complémentaire.\n\n"
+
+        "**Projet B**\n\n"
+        f"- {plants_b} plants par parcelle, à {prix_b} € le plant ;\n"
+        f"- {materiel_b} € de matériel complémentaire.\n\n"
+
+        f"Le budget disponible est de **{budget} €**. Les deux projets "
+        "permettent d'aménager toutes les parcelles.\n\n"
+
+        "Le collège choisira **le projet le moins coûteux**.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de plants faut-il pour chacun des projets ?\n\n"
+
+        "2. Quel est le coût total du projet A ? Écris une expression "
+        "numérique avec des parenthèses.\n\n"
+
+        "3. Quel est le coût total du projet B ?\n\n"
+
+        "4. Quel projet est le moins coûteux ? Combien d'euros "
+        "économise-t-on par rapport à l'autre projet ?\n\n"
+
+        "5. Combien d'euros reste-t-il du budget après avoir "
+        "choisi ce projet ?"
+    )
+
+    correction = (
+        "**1. Nombre de plants**\n\n"
+        f"A : {parcelles} × {plants_a} = {quantite_a} plants.\n\n"
+        f"B : {parcelles} × {plants_b} = {quantite_b} plants.\n\n"
+
+        "**2. Coût total du projet A**\n\n"
+        f"({parcelles} × {plants_a} × {prix_a}) + {materiel_a} "
+        f"= {cout_a} €.\n\n"
+
+        "**3. Coût total du projet B**\n\n"
+        f"({parcelles} × {plants_b} × {prix_b}) + {materiel_b} "
+        f"= {cout_b} €.\n\n"
+
+        "**4. Comparaison des projets**\n\n"
+        f"A : {cout_a} € ; B : {cout_b} €.\n\n"
+        f"Différence : {max(cout_a, cout_b)} − {min(cout_a, cout_b)} "
+        f"= {ecart} €.\n\n"
+        f"**Le projet {meilleur} est le moins coûteux.**\n\n"
+
+        "**5. Budget restant**\n\n"
+        f"{budget} − {min(cout_a, cout_b)} = {reste_budget} €."
+    )
+
+    champs = [
+        _p9_nombre("r1", 1, "Plants pour le projet A", quantite_a, "plants"),
+        _p9_nombre("r2", 1, "Plants pour le projet B", quantite_b, "plants"),
+        _p9_nombre("r3", 2, "Coût du projet A", cout_a, "€"),
+        _p9_expression(2),
+        _p9_nombre("r4", 3, "Coût du projet B", cout_b, "€"),
+        _p9_choix(
+            "r5", 4, "Projet le moins coûteux",
+            meilleur, ["r3", "r4"]
+        ),
+        _p9_nombre("r6", 4, "Économie réalisée", ecart, "€"),
+        _p9_nombre("r7", 5, "Budget restant", reste_budget, "€")
+    ]
+
+    return _p9_exercice(
+        "P9-M01", "Le potager du collège",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_tournoi(seed=None):
+    rng, seed = _p9_rng(seed)
+
+    while True:
+        joueurs = rng.randint(24, 42)
+        entree = rng.randint(5, 8)
+        sponsor = rng.randint(35, 75)
+        prix = rng.randint(45, 85)
+
+        location_a = rng.randint(30, 75)
+        location_b = rng.randint(60, 110)
+        fournitures_a = rng.randint(1, 3)
+        fournitures_b = rng.randint(1, 3)
+
+        recettes = joueurs * entree + sponsor
+        depenses_a = prix + location_a + joueurs * fournitures_a
+        depenses_b = prix + location_b + joueurs * fournitures_b
+
+        benefice_a = recettes - depenses_a
+        benefice_b = recettes - depenses_b
+        ecart = abs(benefice_a - benefice_b)
+
+        if min(benefice_a, benefice_b) >= 20 and 8 <= ecart <= 95:
+            break
+
+    meilleur = "A" if benefice_a > benefice_b else "B"
+
+    enonce = (
+        "**Le tournoi de jeux vidéo**\n\n"
+        "Le collège organise un tournoi pour financer un projet.\n\n"
+
+        f"**{joueurs} joueurs** participent et versent chacun "
+        f"**{entree} €** d'inscription. Un partenaire offre "
+        f"**{sponsor} €** au club.\n\n"
+
+        f"Les récompenses coûtent **{prix} €**, quelle que soit "
+        "l'organisation choisie.\n\n"
+
+        "**Organisation A**\n\n"
+        f"- Location : {location_a} € ;\n"
+        f"- Fournitures : {fournitures_a} € par joueur.\n\n"
+
+        "**Organisation B**\n\n"
+        f"- Location : {location_b} € ;\n"
+        f"- Fournitures : {fournitures_b} € par joueur.\n\n"
+
+        "Le club veut choisir l'organisation qui laisse "
+        "**le bénéfice le plus élevé**.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Quelles sont les recettes totales du tournoi ?\n\n"
+
+        "2. Quelles sont les dépenses totales de chaque organisation, "
+        "récompenses comprises ?\n\n"
+
+        "3. Quel bénéfice reste-t-il avec l'organisation A et avec "
+        "l'organisation B ? Écris une expression numérique avec "
+        "des parenthèses pour le bénéfice de A.\n\n"
+
+        "4. Quelle organisation donne le plus grand bénéfice ? "
+        "De combien d'euros est-il supérieur à l'autre ?"
+    )
+
+    correction = (
+        "**1. Recettes**\n\n"
+        f"{joueurs} × {entree} + {sponsor} = {recettes} €.\n\n"
+
+        "**2. Dépenses des organisations**\n\n"
+        f"A : {prix} + {location_a} + {joueurs} × {fournitures_a} "
+        f"= {depenses_a} €.\n\n"
+        f"B : {prix} + {location_b} + {joueurs} × {fournitures_b} "
+        f"= {depenses_b} €.\n\n"
+
+        "**3. Bénéfices**\n\n"
+        f"A : {recettes} − {depenses_a} = {benefice_a} €.\n\n"
+        f"B : {recettes} − {depenses_b} = {benefice_b} €.\n\n"
+
+        "**Expression complète pour A :**\n\n"
+        f"({joueurs} × {entree} + {sponsor}) − "
+        f"({prix} + {location_a} + {joueurs} × {fournitures_a}) "
+        f"= {benefice_a} €.\n\n"
+
+        "**4. Meilleure organisation**\n\n"
+        f"Écart : {max(benefice_a, benefice_b)} − "
+        f"{min(benefice_a, benefice_b)} = {ecart} €.\n\n"
+        f"**L'organisation {meilleur} est la plus avantageuse.**"
+    )
+
+    champs = [
+        _p9_nombre("r1", 1, "Recettes totales", recettes, "€"),
+        _p9_nombre("r2", 2, "Dépenses de A", depenses_a, "€"),
+        _p9_nombre("r3", 2, "Dépenses de B", depenses_b, "€"),
+        _p9_nombre("r4", 3, "Bénéfice de A", benefice_a, "€"),
+        _p9_nombre("r5", 3, "Bénéfice de B", benefice_b, "€"),
+        _p9_expression(3),
+        _p9_choix(
+            "r6", 4, "Organisation la plus avantageuse",
+            meilleur, ["r4", "r5"]
+        ),
+        _p9_nombre("r7", 4, "Écart entre les bénéfices", ecart, "€")
+    ]
+
+    return _p9_exercice(
+        "P9-M02", "Le tournoi de jeux vidéo",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_festival(seed=None):
+    rng, seed = _p9_rng(seed)
+
+    while True:
+        eleves = rng.randint(22, 34)
+        adultes = rng.randint(2, 4)
+        personnes = eleves + adultes
+
+        km_aller = rng.randint(12, 30)
+        km_total = km_aller * 2
+
+        billets = rng.randint(4, 7)
+        repas = rng.randint(5, 8)
+
+        fixe_a = rng.randint(160, 240)
+        prix_km_a = rng.randint(2, 4)
+        fixe_b = rng.randint(80, 150)
+        prix_personne_b = rng.randint(7, 11)
+
+        frais_communs = personnes * (billets + repas)
+        bus_a = fixe_a + km_total * prix_km_a
+        bus_b = fixe_b + personnes * prix_personne_b
+
+        cout_a = bus_a + frais_communs
+        cout_b = bus_b + frais_communs
+        ecart = abs(cout_a - cout_b)
+
+        if 12 <= ecart <= 170:
+            break
+
+    meilleur = "A" if cout_a < cout_b else "B"
+
+    enonce = (
+        "**Une sortie au festival du manga**\n\n"
+
+        f"Une classe de **{eleves} élèves**, accompagnée de "
+        f"**{adultes} adultes**, se rend à un festival du manga "
+        f"situé à **{km_aller} km** du collège.\n\n"
+
+        "Le car effectue l'aller-retour par le même trajet.\n\n"
+
+        f"Chaque personne paie {billets} € d'entrée au festival "
+        f"et {repas} € pour le repas.\n\n"
+
+        "Deux compagnies proposent le transport :\n\n"
+
+        "**Transport A**\n\n"
+        f"- Frais fixes : {fixe_a} € ;\n"
+        f"- {prix_km_a} € par kilomètre parcouru.\n\n"
+
+        "**Transport B**\n\n"
+        f"- Frais fixes : {fixe_b} € ;\n"
+        f"- {prix_personne_b} € par personne transportée "
+        "pour l'ensemble de l'aller-retour.\n\n"
+
+        "On choisira la formule donnant le **coût global le plus bas**, "
+        "transport, entrées et repas compris.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de personnes participent à la sortie ?\n\n"
+
+        "2. Quelle distance le car parcourt-il au total ?\n\n"
+
+        "3. Quel est le coût commun des entrées et des repas ?\n\n"
+
+        "4. Quel est le coût global avec A, puis avec B ? "
+        "Écris une expression numérique avec des parenthèses pour A.\n\n"
+
+        "5. Quelle formule est la moins chère ? "
+        "Combien d'euros permet-elle d'économiser ?"
+    )
+
+    correction = (
+        "**1. Nombre de participants**\n\n"
+        f"{eleves} + {adultes} = {personnes} personnes.\n\n"
+
+        "**2. Distance aller-retour**\n\n"
+        f"2 × {km_aller} = {km_total} km.\n\n"
+
+        "**3. Entrées et repas**\n\n"
+        f"{personnes} × ({billets} + {repas}) = {frais_communs} €.\n\n"
+
+        "**4. Coûts globaux**\n\n"
+        f"Transport A : {fixe_a} + {km_total} × {prix_km_a} "
+        f"= {bus_a} €.\n\n"
+
+        f"Transport B : {fixe_b} + {personnes} × {prix_personne_b} "
+        f"= {bus_b} €.\n\n"
+
+        f"A, entrées et repas compris : {bus_a} + {frais_communs} "
+        f"= {cout_a} €.\n\n"
+
+        f"B, entrées et repas compris : {bus_b} + {frais_communs} "
+        f"= {cout_b} €.\n\n"
+
+        "**Expression complète pour A :**\n\n"
+        f"({fixe_a} + 2 × {km_aller} × {prix_km_a}) + "
+        f"({eleves} + {adultes}) × ({billets} + {repas}) "
+        f"= {cout_a} €.\n\n"
+
+        "**5. Comparaison**\n\n"
+        f"Écart : {max(cout_a, cout_b)} − {min(cout_a, cout_b)} "
+        f"= {ecart} €.\n\n"
+
+        f"**La formule {meilleur} est la moins chère.**"
+    )
+
+    champs = [
+        _p9_nombre("r1", 1, "Nombre de participants", personnes, "personnes"),
+        _p9_nombre("r2", 2, "Distance aller-retour", km_total, "km"),
+        _p9_nombre("r3", 3, "Entrées et repas", frais_communs, "€"),
+        _p9_nombre("r4", 4, "Coût global avec A", cout_a, "€"),
+        _p9_nombre("r5", 4, "Coût global avec B", cout_b, "€"),
+        _p9_expression(4),
+        _p9_choix(
+            "r6", 5, "Formule la moins chère",
+            meilleur, ["r4", "r5"]
+        ),
+        _p9_nombre("r7", 5, "Économie réalisée", ecart, "€")
+    ]
+
+    return _p9_exercice(
+        "P9-M03", "Une sortie au festival du manga",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_cristaux(seed=None):
+    rng, seed = _p9_rng(seed)
+
+    while True:
+        stock = rng.randint(40, 85)
+        missions = rng.randint(3, 6)
+        gain_mission = rng.randint(9, 17)
+        bonus = rng.randint(8, 20)
+        perte = rng.randint(5, 14)
+        prix_equipement = rng.randint(15, 25)
+        reserve = rng.randint(10, 20)
+
+        gains = missions * gain_mission + bonus
+        disponibles = stock + gains - perte
+
+        maximum = (disponibles - reserve) // prix_equipement
+        reste = disponibles - maximum * prix_equipement
+
+        if 3 <= maximum <= 9 and reserve <= reste < reserve + prix_equipement:
+            break
+
+    aventuriers = max(1, maximum + rng.choice([-2, -1, 1, 2]))
+    possible = "Oui" if maximum >= aventuriers else "Non"
+    ecart = abs(maximum - aventuriers)
+
+    libelle = (
+        "Équipements supplémentaires possibles"
+        if possible == "Oui"
+        else "Équipements manquants"
+    )
+
+    if possible == "Oui":
+        conclusion = (
+            f"Les {aventuriers} aventuriers peuvent être équipés. "
+            f"En achetant seulement les équipements nécessaires "
+            f"à l'équipe, le joueur pourrait en acheter {ecart} "
+            "de plus tout en conservant la réserve."
+        )
+    else:
+        conclusion = (
+            f"Le joueur ne peut équiper que {maximum} aventurier(s). "
+            f"Il manque {ecart} équipement(s) pour tous les équiper."
+        )
+
+    enonce = (
+        "**Les cristaux du jeu vidéo**\n\n"
+
+        f"Un joueur possède **{stock} cristaux** au départ.\n\n"
+
+        f"Il termine **{missions} missions** qui rapportent chacune "
+        f"**{gain_mission} cristaux**, puis reçoit un bonus unique "
+        f"de **{bonus} cristaux**.\n\n"
+
+        f"Un piège lui fait perdre {perte} cristaux.\n\n"
+
+        f"Un équipement coûte **{prix_equipement} cristaux**. "
+        f"Le joueur veut conserver au moins **{reserve} cristaux** "
+        "après ses achats.\n\n"
+
+        f"Son équipe comprend **{aventuriers} aventuriers**, "
+        "et chacun doit recevoir un équipement.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de cristaux gagne-t-il pendant les missions, "
+        "bonus compris ?\n\n"
+
+        "2. Combien de cristaux possède-t-il après le piège, "
+        "avant d'acheter les équipements ? Écris une seule "
+        "expression numérique avec des parenthèses.\n\n"
+
+        "3. Combien d'équipements au maximum peut-il acheter "
+        "en conservant la réserve minimale ?\n\n"
+
+        "4. Combien de cristaux lui restera-t-il après "
+        "l'achat de ce nombre maximal d'équipements ?\n\n"
+
+        "5. Peut-il équiper tous les aventuriers ? "
+        "S'il peut équiper tout le monde, combien d'équipements "
+        "supplémentaires pourrait-il acheter ? Sinon, combien "
+        "d'équipements lui manque-t-il ?"
+    )
+
+    correction = (
+        "**1. Cristaux gagnés**\n\n"
+        f"{missions} × {gain_mission} + {bonus} = {gains}.\n\n"
+
+        "**2. Cristaux disponibles**\n\n"
+        f"{stock} + {gains} − {perte} = {disponibles}.\n\n"
+
+        "**Expression complète :**\n\n"
+        f"{stock} + ({missions} × {gain_mission} + {bonus}) "
+        f"− {perte} = {disponibles}.\n\n"
+
+        "**3. Nombre maximal d'équipements**\n\n"
+        f"Cristaux pouvant être dépensés : {disponibles} − "
+        f"{reserve} = {disponibles - reserve}.\n\n"
+
+        f"{disponibles - reserve} : {prix_equipement} — "
+        f"Quotient : {maximum} — "
+        f"Reste : {(disponibles - reserve) % prix_equipement}\n\n"
+
+        f"Il peut acheter **{maximum} équipements** au maximum.\n\n"
+
+        "**4. Cristaux réellement restants**\n\n"
+        f"{disponibles} − {maximum} × {prix_equipement} "
+        f"= {reste} cristaux (réserve comprise).\n\n"
+
+        "**5. Équipement des aventuriers**\n\n"
+        f"Équipements possibles : {maximum} ; aventuriers : "
+        f"{aventuriers}.\n\n"
+
+        f"**Équipe entièrement équipée : {possible}.**\n\n"
+
+        f"Écart : {ecart} équipement(s).\n\n"
+        f"{conclusion}"
+    )
+
+    champs = [
+        _p9_nombre("r1", 1, "Cristaux gagnés", gains, "cristaux"),
+        _p9_nombre(
+            "r2", 2, "Cristaux disponibles avant achat",
+            disponibles, "cristaux"
+        ),
+        _p9_expression(2),
+        _p9_nombre(
+            "r3", 3, "Équipements achetables au maximum",
+            maximum, "équipements"
+        ),
+        _p9_nombre(
+            "r4", 4, "Cristaux restants après achats",
+            reste, "cristaux"
+        ),
+        _p9_choix(
+            "r5", 5, "Tous les aventuriers équipés ?",
+            possible, ["r3"]
+        ),
+        _p9_nombre("r6", 5, libelle, ecart, "équipements")
+    ]
+
+    return _p9_exercice(
+        "P9-M04", "Les cristaux du jeu vidéo",
+        seed, enonce, correction, champs
+    )
+
+def generer_modele_p9_bibliotheque(seed=None):
+    rng, seed = _p9_rng(seed)
+
+    stock_initial = rng.randint(55, 95)
+    colis = rng.randint(3, 6)
+    mangas_par_colis = rng.randint(6, 10)
+    dons = rng.randint(7, 18)
+    abimes = rng.randint(4, 12)
+    classes = rng.randint(3, 5)
+    prets_par_classe = rng.randint(5, 9)
+
+    livres_recus = colis * mangas_par_colis
+    livres_pretes = classes * prets_par_classe
+
+    variation = livres_recus + dons - abimes - livres_pretes
+    fin = stock_initial + variation
+    apres_retour = fin + livres_pretes
+
+    enonce = (
+        "**La bibliothèque de mangas du collège**\n\n"
+
+        "La bibliothèque reçoit de nouveaux mangas et en prête "
+        "à plusieurs classes.\n\n"
+
+        f"Elle reçoit **{colis} colis** de **{mangas_par_colis} mangas** "
+        f"chacun, puis **{dons} mangas** offerts par des familles.\n\n"
+
+        f"Elle retire **{abimes} mangas abîmés** de sa collection.\n\n"
+
+        f"Ensuite, **{classes} classes** empruntent chacune "
+        f"**{prets_par_classe} mangas**. Ces livres prêtés ne sont "
+        "plus dans la bibliothèque pour le moment.\n\n"
+
+        f"Après tous ces mouvements, il reste **{fin} mangas** "
+        "sur les étagères.\n\n"
+
+        "**Questions**\n\n"
+
+        "1. Combien de mangas contiennent les colis reçus ?\n\n"
+
+        "2. Combien de mangas ont été prêtés aux classes au total ?\n\n"
+
+        "3. De combien le nombre de mangas présents sur les étagères "
+        "a-t-il varié, en tenant compte de toutes les opérations ? "
+        "Le nombre recherché peut être positif ou négatif.\n\n"
+
+        "4. Combien de mangas la bibliothèque possédait-elle "
+        "**avant tous ces mouvements** ? Écris une seule expression "
+        "numérique avec des parenthèses.\n\n"
+
+        "5. Combien de mangas se trouveront sur les étagères "
+        "lorsque toutes les classes auront rapporté leurs emprunts "
+        "(sans autre changement) ?"
+    )
+
+    correction = (
+        "**1. Mangas reçus en colis**\n\n"
+        f"{colis} × {mangas_par_colis} = {livres_recus} mangas.\n\n"
+
+        "**2. Mangas prêtés**\n\n"
+        f"{classes} × {prets_par_classe} = {livres_pretes} mangas.\n\n"
+
+        "**3. Variation du stock**\n\n"
+        f"{livres_recus} + {dons} − {abimes} − {livres_pretes} "
+        f"= {variation:+d} mangas.\n\n"
+
+        "**4. Retrouver le stock initial**\n\n"
+        f"Stock initial = stock final − variation = {fin} − "
+        f"({variation:+d}) = {stock_initial}.\n\n"
+
+        "**Expression complète :**\n\n"
+        f"{fin} − ({colis} × {mangas_par_colis} + {dons} "
+        f"− {abimes} − {classes} × {prets_par_classe}) "
+        f"= {stock_initial} mangas.\n\n"
+
+        "**5. Après le retour des emprunts**\n\n"
+        f"{fin} + {livres_pretes} = {apres_retour} mangas."
+    )
+
+    champs = [
+        _p9_nombre(
+            "r1", 1, "Mangas reçus en colis",
+            livres_recus, "mangas"
+        ),
+        _p9_nombre(
+            "r2", 2, "Mangas prêtés",
+            livres_pretes, "mangas"
+        ),
+        _p9_nombre(
+            "r3", 3, "Variation du stock",
+            variation, "mangas"
+        ),
+        _p9_nombre(
+            "r4", 4, "Stock initial de mangas",
+            stock_initial, "mangas"
+        ),
+        _p9_expression(4),
+        _p9_nombre(
+            "r5", 5, "Mangas après le retour des prêts",
+            apres_retour, "mangas"
+        )
+    ]
+
+    return _p9_exercice(
+        "P9-M05", "La bibliothèque de mangas",
+        seed, enonce, correction, champs
+    )
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
@@ -4366,7 +5008,6 @@ def generer_exercices_priorites(difficulte, nombre=1):
                 "P8-01", "P8-02", "P8-03", "P8-04", "P8-05"
             ]
         ]
-
         banque.append(generer_modele_p8_clubs())
         banque.append(generer_modele_p8_manga())
         banque.append(generer_modele_p8_jeu_video())
@@ -4377,6 +5018,21 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p8_parcours())
         banque.append(generer_modele_p8_boissons())
         banque.append(generer_modele_p8_transport())
+        
+
+    if difficulte == 3:
+        banque = [
+            exercice for exercice in banque
+            if exercice["id"] not in [
+                "P9-01", "P9-02", "P9-03", "P9-04", "P9-05"
+            ]
+        ]
+
+        banque.append(generer_modele_p9_potager())
+        banque.append(generer_modele_p9_tournoi())
+        banque.append(generer_modele_p9_festival())
+        banque.append(generer_modele_p9_cristaux())
+        banque.append(generer_modele_p9_bibliotheque())
     
     exercices = random.sample(banque, k=nombre)
 
