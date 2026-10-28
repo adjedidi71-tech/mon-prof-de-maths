@@ -104,7 +104,7 @@ class TestCalculsP8M07M10(unittest.TestCase):
                 distance_tour = partie_a + partie_b
                 distance = distance_tour * tours
                 marche = distance * minutes_km
-                total = marche + (tours - 1) * pause
+                total = int(marche + (tours - 1) * pause)
                 choix = "Oui" if total <= limite else "Non"
                 situations.add(choix)
                 self.verifier(ex, "P8-M08", {
