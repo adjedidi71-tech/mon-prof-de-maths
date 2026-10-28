@@ -5379,8 +5379,13 @@ def generer_modele_p9_mosaique(seed=None):
         f"Différence : {max(cout_a, cout_b)} − {min(cout_a, cout_b)} "
         f"= {ecart} €. **L'offre {choix} est la moins chère.**\n\n"
         "**5. Carreaux supplémentaires non utilisés**\n\n"
-        f"Avec l'offre {choix}, il restera {surplus} carreau(x) "
-        "au-delà du besoin calculé, réserve comprise."
+        f"Quantité achetée avec l'offre {choix} : "
+        f"{boites_a if choix == 'A' else boites_b} × "
+        f"{paquet_a if choix == 'A' else paquet_b}.\n\n"
+        f"Carreaux non utilisés : "
+        f"{boites_a if choix == 'A' else boites_b} × "
+        f"{paquet_a if choix == 'A' else paquet_b} − "
+        f"{besoin} = **{surplus} carreau(x)**."
     )
     champs = [
         _p9_nombre("r1", 1, "Carreaux nécessaires", besoin, "carreaux"),
