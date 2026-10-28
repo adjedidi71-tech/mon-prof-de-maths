@@ -4930,7 +4930,7 @@ def generer_modele_p9_bibliotheque(seed=None):
         "**2. Mangas prêtés**\n\n"
         f"{classes} × {prets_par_classe} = {livres_pretes} mangas.\n\n"
 
-        "**3. Variation du stock**\n\n"
+        "**3. Variation des mangas sur les étagères**\n\n"
         f"{livres_recus} + {dons} − {abimes} − {livres_pretes} "
         f"= {variation:+d} mangas.\n\n"
 
@@ -4957,7 +4957,7 @@ def generer_modele_p9_bibliotheque(seed=None):
             livres_pretes, "mangas"
         ),
         _p9_nombre(
-            "r3", 3, "Variation du stock",
+            "r3", 3, "Variation des mangas sur les étagères",
             variation, "mangas"
         ),
         _p9_nombre(
