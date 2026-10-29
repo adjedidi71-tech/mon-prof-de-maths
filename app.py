@@ -2192,8 +2192,24 @@ else:
 with zone_affichage:
     if st.session_state.exercices_actuels:
         for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
-            st.subheader(f"Exercice {numero}")
-            st.write(exercice["enonce"])
+            st.subheader(f"Exercice {numero}")           
+            est_distributivite = (
+                exercice["enonce"].startswith(
+                    "Utilise la distributivité pour calculer :"
+                )
+                and bool(exercice.get("champs_reponse"))
+                and all(
+                    c["id"].startswith("calcul_")
+                    for c in exercice["champs_reponse"]
+                )
+            )
+
+            if est_distributivite:
+                lignes_calcul = exercice["enonce"].split("\n\n")[1:]
+                st.write("Utilise la distributivité pour calculer :")
+            else:
+                st.write(exercice["enonce"])
+
     
             if exercice.get("reponse_attendue") is not None:  
                 col_texte, col_saisie, _ = st.columns(
@@ -2261,9 +2277,30 @@ with zone_affichage:
                         f"banque_{st.session_state.get('serie_version', 0)}"
                         f"_{numero}_{champ['id']}"
                     )
-
+                    
                     if champ["type"] == "nombre":
-                        if division_euclidienne:
+                        if est_distributivite:
+                            col_calcul, col_reponse, _ = st.columns(
+                                [2.1, 1.2, 3.7],
+                                gap="small",
+                                vertical_alignment="center"
+                            )
+
+                            with col_calcul:
+                                st.write(lignes_calcul[index])
+
+                            with col_reponse:
+                                st.text_input(
+                                    etiquette,
+                                    label_visibility="collapsed",
+                                    placeholder="Réponse",
+                                    key=cle,
+                                    on_change=enregistrer_reponses_banque_auto,
+                                    args=(numero,)
+                                )
+
+                        elif division_euclidienne:
+
                             with colonnes_division[index]:
                                 st.text_input(
                                     champ["libelle"],
