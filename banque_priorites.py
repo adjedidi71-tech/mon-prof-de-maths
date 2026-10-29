@@ -2988,7 +2988,7 @@ def generer_modele_p8_jeu_video():
                 "type": "nombre",
                 "attendu": difference,
                 "unite": "pièces"
-            })
+            }
         ]
     }
 
