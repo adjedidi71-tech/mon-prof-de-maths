@@ -5177,6 +5177,29 @@ def generer_modele_p9_recyclage(seed=None):
         if 4 <= pleins <= 13 and 0 < reste < capacite:
             break
     total_contenants = pleins + 1
+    
+    # Deux offres de location de conteneurs
+    capacite_b = rng.choice([
+        c for c in [2000, 2500, 3000, 3500, 4000]
+        if c != capacite
+    ])
+
+    prix_a = rng.randint(6, 13)
+    total_b = (masse_valide + capacite_b - 1) // capacite_b
+
+    cout_a = total_contenants * prix_a
+
+    # Empêcher une égalité entre les coûts
+    prix_b = rng.choice([
+        p for p in range(7, 19)
+        if total_b * p != cout_a
+    ])
+
+    cout_b = total_b * prix_b
+
+    meilleure_offre = "A" if cout_a < cout_b else "B"
+    economie = abs(cout_a - cout_b)
+
 
     def kg(grammes):
         return f"{grammes / 1000:.2f}".replace(".", ",")
