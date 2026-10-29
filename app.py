@@ -1443,7 +1443,29 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             enonce = f"Calcule : {dividende} ÷ {diviseur}"
             correction = f"{dividende} ÷ {diviseur} = {quotient}"
             reponse_attendue = quotient
-            
+            if type_exercice == "Mes automatismes" and difficulte == 3:
+                autre_nombre = random.randint(2, min(8, quotient))
+                signe = random.choice(["+", "-"])
+
+                if signe == "+":
+                    resultat = quotient + autre_nombre
+                else:
+                    resultat = quotient - autre_nombre
+
+                enonce = (
+                    f"Calcule : {dividende} ÷ {diviseur} "
+                    f"{signe} {autre_nombre}"
+                )
+
+                correction = (
+                    f"On effectue d'abord la division :\n\n"
+                    f"{dividende} ÷ {diviseur} = {quotient}.\n\n"
+                    f"Puis : {quotient} {signe} {autre_nombre} "
+                    f"= {resultat}."
+                )
+
+                reponse_attendue = resultat
+
             if type_exercice == "Je m'entraîne":
                 reponse_attendue = None
 
