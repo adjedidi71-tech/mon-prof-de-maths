@@ -5519,7 +5519,23 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p9_salles())
         banque.append(generer_modele_p9_drones())
         banque.append(generer_modele_p9_mosaique())
-    exercices = random.sample(banque, k=nombre)
+        
+    
+    if difficulte == 3:
+        tournoi = next(
+            e for e in banque if e["id"] == "P9-M02"
+        )
+        autres = [
+            e for e in banque if e["id"] != "P9-M02"
+        ]
+        exercices = [tournoi] + random.sample(
+            autres, k=nombre - 1
+        )
+        random.shuffle(exercices)
+    else:
+        exercices = random.sample(banque, k=nombre)
+
+    
     for exercice in exercices:
         if "champs_reponse" not in exercice:
             exercice["champs_reponse"] = deepcopy(
