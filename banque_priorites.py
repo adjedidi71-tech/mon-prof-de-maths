@@ -5058,8 +5058,6 @@ def generer_modele_p9_spectacle(seed=None):
         "Oui" if places_libres >= billets_supp else "Non"
     )
 
-    )
-
     enonce = (
         "**Le spectacle solidaire du collège**\n\n"
         f"La salle possède {rangees} rangées de {places_par_rangee} places. "
