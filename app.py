@@ -2357,7 +2357,7 @@ with zone_affichage:
                         f"**Dernier bilan enregistré : "
                         f"{bilan['bonnes']} bonnes réponses "
                         f"sur {bilan['total']}**"
-                    ))    
+                    )    
             else:
                 st.text_area(
                     "Ta réponse :",
