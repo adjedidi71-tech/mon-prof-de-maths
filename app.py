@@ -986,7 +986,7 @@ def generer_exercice_ia(chapitre, partie, difficulte, type_exercice, nombre=1):
             "enonce": enonce,
             "correction": correction,
             "reponse_attendue": None
-        })
+        }
 
     return resultat
 def generer_exercice(chapitre, partie, difficulte, type_exercice):
