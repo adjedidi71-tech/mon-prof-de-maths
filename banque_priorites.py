@@ -5520,7 +5520,7 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p9_drones())
         banque.append(generer_modele_p9_mosaique())
             
-     exercices = random.sample(banque, k=nombre)
+    exercices = random.sample(banque, k=nombre)
 
     for exercice in exercices:
         if "champs_reponse" not in exercice:
