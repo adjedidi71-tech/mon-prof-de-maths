@@ -1016,6 +1016,46 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             correction = f"{x} {operation} {y} = {round(resultat, 2)}"
             reponse_attendue = round(resultat, 2)
 
+            if type_exercice == "Mes automatismes" and difficulte == 3:
+                k = random.randint(2, 5)
+
+                def fr3(valeur):
+                    return f"{valeur:g}".replace(".", ",")
+
+                if random.choice([True, False]):
+                    produit = round(y * k, 2)
+                    resultat = round(x + produit, 2)
+
+                    enonce = (
+                        f"Calcule : {fr3(x)} + {fr3(y)} × {k}"
+                    )
+
+                    correction = (
+                        f"On effectue d'abord la multiplication :\n"
+                        f"{fr3(y)} × {k} = {fr3(produit)}.\n\n"
+                        f"Puis l'addition :\n"
+                        f"{fr3(x)} + {fr3(produit)} "
+                        f"= {fr3(resultat)}."
+                    )
+
+                else:
+                    somme = round(x + y, 2)
+                    resultat = round(somme * k, 2)
+
+                    enonce = (
+                        f"Calcule : ({fr3(x)} + {fr3(y)}) × {k}"
+                    )
+
+                    correction = (
+                        f"On calcule d'abord la parenthèse :\n"
+                        f"{fr3(x)} + {fr3(y)} = {fr3(somme)}.\n\n"
+                        f"Puis la multiplication :\n"
+                        f"{fr3(somme)} × {k} "
+                        f"= {fr3(resultat)}."
+                    )
+
+                reponse_attendue = resultat
+
             if type_exercice == "Je m'entraîne":
                 n = random.randint(4, 7)
                 m = random.randint(2, 4)
