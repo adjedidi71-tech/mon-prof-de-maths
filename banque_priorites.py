@@ -5095,7 +5095,30 @@ def generer_modele_p9_spectacle(seed=None):
         f"= {benefice} €.\n\n"
         "**6. Objectif**\n\n"
         f"Bénéfice : {benefice} € ; objectif : {objectif} €. "
-        f"**Objectif atteint : {atteint}.** Écart : {ecart} €."
+        f"**Objectif atteint : {atteint}.** Écart : {ecart} €.\n\n"
+
+        "**7. Vente de billets supplémentaires**\n\n"
+
+        f"Chaque billet élève rapporte {tarif_eleve} €, "
+        f"mais le programme coûte {programme} €.\n\n"
+
+        f"Bénéfice supplémentaire par billet : "
+        f"{tarif_eleve} − {programme} = "
+        f"{gain_par_billet} €.\n\n"
+
+        f"Division : {hausse_visee} : {gain_par_billet} — "
+        f"Quotient : {quotient} — Reste : {reste_division}.\n\n"
+
+        f"Il faut donc vendre au minimum "
+        f"**{billets_supp} billets élèves supplémentaires**.\n\n"
+
+        f"Places encore libres : "
+        f"{places_disponibles} − {billets_vendus} "
+        f"= {places_libres} places.\n\n"
+
+        f"**Suffisamment de places disponibles : "
+        f"{places_suffisantes}.**"
+
     )
     champs = [
         _p9_nombre("r1", 1, "Places vendables", places_disponibles, "places"),
