@@ -1417,6 +1417,29 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             quotient = random.randint(2, 5 + difficulte * 5)
             dividende = round(diviseur * quotient, 2)
 
+            if type_exercice == "Mes automatismes" and difficulte == 3:
+                autre_nombre = random.randint(2, 8)
+                signe = random.choice(["+", "-"])
+
+                if signe == "+":
+                    resultat = quotient + autre_nombre
+                else:
+                    resultat = quotient - autre_nombre
+
+                enonce = (
+                    f"Calcule : {dividende} ÷ {diviseur} "
+                    f"{signe} {autre_nombre}"
+                )
+
+                correction = (
+                    f"On effectue d'abord la division :\n"
+                    f"{dividende} ÷ {diviseur} = {quotient}.\n\n"
+                    f"Puis : {quotient} {signe} {autre_nombre} "
+                    f"= {resultat}."
+                )
+
+                reponse_attendue = resultat
+
             enonce = f"Calcule : {dividende} ÷ {diviseur}"
             correction = f"{dividende} ÷ {diviseur} = {quotient}"
             reponse_attendue = quotient
