@@ -5027,12 +5027,27 @@ def generer_modele_p9_spectacle(seed=None):
     objectif = benefice + rng.choice([-35, -20, 20, 35])
     atteint = "Oui" if benefice >= objectif else "Non"
     ecart = abs(benefice - objectif)
-    hausse_visee = rng.choice([12, 18, 24, 30])
+    
+    if benefice < objectif:
+        montant_a_financer = objectif - benefice
+        situation_q7 = (
+            f"Le collège n'a pas atteint son objectif initial "
+            f"de {objectif} €. Il envisage de vendre des billets "
+            "élèves supplémentaires pour l'atteindre."
+        )
+    else:
+        montant_a_financer = rng.choice([12, 18, 24, 30])
+        situation_q7 = (
+            f"Le collège a déjà atteint son objectif de {objectif} €. "
+            f"Il souhaite maintenant augmenter encore son bénéfice "
+            f"d'au moins {montant_a_financer} € grâce à la vente "
+            "de billets élèves supplémentaires."
+        )
 
     gain_par_billet = tarif_eleve - programme
 
     quotient, reste_division = divmod(
-        hausse_visee, gain_par_billet
+        montant_a_financer, gain_par_billet
     )
 
     billets_supp = quotient + (1 if reste_division > 0 else 0)
@@ -5041,6 +5056,8 @@ def generer_modele_p9_spectacle(seed=None):
 
     places_suffisantes = (
         "Oui" if places_libres >= billets_supp else "Non"
+    )
+
     )
 
     enonce = (
