@@ -5027,6 +5027,21 @@ def generer_modele_p9_spectacle(seed=None):
     objectif = benefice + rng.choice([-35, -20, 20, 35])
     atteint = "Oui" if benefice >= objectif else "Non"
     ecart = abs(benefice - objectif)
+    hausse_visee = rng.choice([12, 18, 24, 30])
+
+    gain_par_billet = tarif_eleve - programme
+
+    quotient, reste_division = divmod(
+        hausse_visee, gain_par_billet
+    )
+
+    billets_supp = quotient + (1 if reste_division > 0 else 0)
+
+    places_libres = places_disponibles - billets_vendus
+
+    places_suffisantes = (
+        "Oui" if places_libres >= billets_supp else "Non"
+    )
 
     enonce = (
         "**Le spectacle solidaire du collège**\n\n"
