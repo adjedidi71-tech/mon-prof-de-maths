@@ -4396,7 +4396,7 @@ def generer_modele_p9_potager(seed=None):
 
         ecart = abs(cout_a - cout_b)
 
-        if 10 <= ecart <= 125:
+        if 10 <= ecart <= 125 and plants_a != plants_b:
             break
 
     budget = max(cout_a, cout_b) + rng.randint(20, 70)
