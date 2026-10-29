@@ -141,13 +141,13 @@ class TestsCalculsNiveau9(unittest.TestCase):
             )
             location_a, par_joueur_a = nombres(
                 t,
-                r"\*\*Organisation A\*\*.*?"
+                r"\*\*Organisateur A — Proposition\*\*.*?"
                 r"Location : (\d+) € ;.*?"
                 r"Fournitures : (\d+) € par joueur"
             )
             location_b, par_joueur_b = nombres(
                 t,
-                r"\*\*Organisation B\*\*.*?"
+                r"\*\*Organisateur B — Proposition\*\*.*?"
                 r"Location : (\d+) € ;.*?"
                 r"Fournitures : (\d+) € par joueur"
             )
