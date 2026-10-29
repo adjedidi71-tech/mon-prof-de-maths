@@ -5129,6 +5129,14 @@ def generer_modele_p9_spectacle(seed=None):
         _p9_expression(5),
         _p9_choix("r6", 6, "Objectif atteint ?", atteint, ["r5"]),
         _p9_nombre("r7", 6, "Écart avec l'objectif", ecart, "€"),
+        _p9_nombre(
+            "r8", 7, "Billets supplémentaires nécessaires",
+            billets_supp, "billets"
+        ),
+        _p9_choix(
+            "r9", 7, "Suffisamment de places disponibles ?",
+            places_suffisantes, ["r1", "r2", "r8"]
+        ),
     ]
     return _p9_exercice(
         "P9-M06", "Le spectacle solidaire du collège",
