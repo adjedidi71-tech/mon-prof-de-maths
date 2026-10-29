@@ -1294,105 +1294,74 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
     
                     libelle1 = "Lots complets avant livraison"
                     libelle2 = "Lots complets après livraison"
-    
-                else:    
+           
+                else:
                     petite = random.randint(8, 13)
                     grande = petite + random.randint(4, 7)
 
-                    jeunesse = random.randint(60, 120)
-                    adultes = random.randint(50, 100)
-                    total = jeunesse + adultes
+                    livres_initiaux = random.randint(70, 110)
+                    livres_recus = random.randint(15, 35)
+                    total = livres_initiaux + livres_recus
 
-                    q_jp, r_jp = divmod(jeunesse, petite)
-                    q_ap, r_ap = divmod(adultes, petite)
+                    q_p, r_p = divmod(total, petite)
+                    q_g, r_g = divmod(total, grande)
 
-                    q_jg, r_jg = divmod(jeunesse, grande)
-                    q_ag, r_ag = divmod(adultes, grande)
-
-                    petites_jeunesse = q_jp + (1 if r_jp else 0)
-                    petites_adultes = q_ap + (1 if r_ap else 0)
-
-                    grandes_jeunesse = q_jg + (1 if r_jg else 0)
-                    grandes_adultes = q_ag + (1 if r_ag else 0)
-
-                    attendu1 = petites_jeunesse + petites_adultes
-
-                    nombre_grandes = (
-                        grandes_jeunesse + grandes_adultes
-                    )
-
+                    attendu1 = q_p + (1 if r_p > 0 else 0)
+                    nombre_grandes = q_g + (1 if r_g > 0 else 0)
                     attendu2 = attendu1 - nombre_grandes
 
                     enonce = (
-                        f"Une bibliothèque doit transporter "
-                        f"{total} livres :\n"
-                        f"- {jeunesse} livres jeunesse.\n"
-                        f"- {adultes} livres adultes.\n\n"
-                        f"Elle dispose de petites caisses "
-                        f"contenant au maximum {petite} livres "
-                        f"et de grandes caisses contenant "
-                        f"au maximum {grande} livres.\n\n"
-                        f"Les livres jeunesse et adultes "
-                        f"ne doivent pas être mélangés "
-                        f"dans une même caisse.\n\n"
-                        f"1. Combien de petites caisses "
-                        f"faut-il au minimum ?\n\n"
+                        f"Une bibliothèque possède {livres_initiaux} livres "
+                        f"et reçoit {livres_recus} nouveaux livres.\n\n"
+
+                        f"Elle doit transporter tous ses livres.\n\n"
+
+                        f"Elle peut utiliser :\n"
+                        f"- des petites caisses de {petite} livres maximum ;\n"
+                        f"- des grandes caisses de {grande} livres maximum.\n\n"
+
+                        f"La bibliothèque souhaite utiliser le moins "
+                        f"de caisses possible.\n\n"
+
+                        f"1. Combien de petites caisses faut-il "
+                        f"au minimum pour transporter tous les livres ?\n\n"
+
                         f"2. Combien de caisses économise-t-elle "
-                        f"en utilisant uniquement "
-                        f"les grandes caisses ?"
+                        f"en utilisant uniquement les grandes caisses ?"
                     )
 
                     correction = (
-                        f"1. Avec les petites caisses :\n\n"
+                        f"**1. Nombre de petites caisses**\n\n"
 
-                        f"Livres jeunesse :\n"
-                        f"{jeunesse} ÷ {petite} :\n"
-                        f"Quotient = {q_jp}, reste = {r_jp}.\n"
-                        f"Vérification : {jeunesse} = "
-                        f"{petite} × {q_jp} + {r_jp}.\n"
-                        f"Il faut {petites_jeunesse} caisses.\n\n"
+                        f"Nombre total de livres :\n"
+                        f"{livres_initiaux} + {livres_recus} "
+                        f"= {total} livres.\n\n"
 
-                        f"Livres adultes :\n"
-                        f"{adultes} ÷ {petite} :\n"
-                        f"Quotient = {q_ap}, reste = {r_ap}.\n"
-                        f"Vérification : {adultes} = "
-                        f"{petite} × {q_ap} + {r_ap}.\n"
-                        f"Il faut {petites_adultes} caisses.\n\n"
+                        f"Division : {total} ÷ {petite}\n"
+                        f"Quotient : {q_p}, reste : {r_p}.\n\n"
 
-                        f"Total : {petites_jeunesse} + "
-                        f"{petites_adultes} = {attendu1} caisses.\n\n"
+                        f"Il faut donc {attendu1} petites caisses.\n\n"
 
-                        f"2. Avec les grandes caisses :\n\n"
+                        f"**2. Nombre de grandes caisses**\n\n"
 
-                        f"Livres jeunesse :\n"
-                        f"{jeunesse} ÷ {grande} :\n"
-                        f"Quotient = {q_jg}, reste = {r_jg}.\n"
-                        f"Vérification : {jeunesse} = "
-                        f"{grande} × {q_jg} + {r_jg}.\n"
-                        f"Il faut {grandes_jeunesse} caisses.\n\n"
+                        f"Division : {total} ÷ {grande}\n"
+                        f"Quotient : {q_g}, reste : {r_g}.\n\n"
 
-                        f"Livres adultes :\n"
-                        f"{adultes} ÷ {grande} :\n"
-                        f"Quotient = {q_ag}, reste = {r_ag}.\n"
-                        f"Vérification : {adultes} = "
-                        f"{grande} × {q_ag} + {r_ag}.\n"
-                        f"Il faut {grandes_adultes} caisses.\n\n"
+                        f"Il faut {nombre_grandes} grandes caisses.\n\n"
 
-                        f"Total : {grandes_jeunesse} + "
-                        f"{grandes_adultes} = {nombre_grandes} caisses.\n\n"
+                        f"**Comparaison**\n\n"
 
-                        f"Caisses économisées :\n"
-                        f"{attendu1} - {nombre_grandes} "
-                        f"= {attendu2} caisses.\n\n"
+                        f"{attendu1} − {nombre_grandes} "
+                        f"= {attendu2} caisses économisées.\n\n"
 
-                        f"Si le reste est différent de zéro, "
+                        f"Lorsqu'une division laisse un reste, "
                         f"une caisse supplémentaire est nécessaire."
                     )
 
                     libelle1 = "Nombre de petites caisses"
                     libelle2 = "Nombre de caisses économisées"
-
-    
+ 
+                    
                 champs_reponse = [
                     {
                         "id": "question_1",
