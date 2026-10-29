@@ -5324,7 +5324,7 @@ def generer_modele_p9_recyclage(seed=None):
     return _p9_exercice(
         "P9-M07", "La collecte pour le recyclage",
         seed, enonce, correction, champs
-    ))
+    )
 
 def generer_modele_p9_salles(seed=None):
     """Comparer deux salles selon les places ET le budget."""
