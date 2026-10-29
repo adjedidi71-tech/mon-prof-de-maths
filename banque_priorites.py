@@ -5120,8 +5120,9 @@ def generer_modele_p9_spectacle(seed=None):
         f"Bénéfice supplémentaire par billet : "
         f"{tarif_eleve} − {programme} = "
         f"{gain_par_billet} €.\n\n"
-
-        f"Division : {hausse_visee} : {gain_par_billet} — "
+        f"Montant à obtenir grâce aux nouveaux billets : "
+        f"{montant_a_financer} €.\n\n"
+        f"Division : {montant_a_financer} : {gain_par_billet} — "
         f"Quotient : {quotient} — Reste : {reste_division}.\n\n"
 
         f"Il faut donc vendre au minimum "
