@@ -379,7 +379,19 @@ class TestsCalculsNiveau9(unittest.TestCase):
             depenses = technique + billets * programme
             benefice = recettes - depenses
             atteint = "Oui" if benefice >= objectif else "Non"
+            hausse = nombres(
+                t, r"augmenter son bénéfice d.au moins (\d+) €"
+            )
+            gain_net = tarif_e - programme
+            billets_necessaires = (
+                hausse + gain_net - 1
+            ) // gain_net
+            places_libres = vendables - billets
 
+            places_ok = (
+                "Oui" if places_libres >= billets_necessaires
+                else "Non"
+            )
             decisions.add(atteint)
             self.assertLessEqual(billets, vendables)
 
