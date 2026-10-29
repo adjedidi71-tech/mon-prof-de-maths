@@ -59,12 +59,18 @@ class TestsCalculsNiveau9(unittest.TestCase):
 
             if champ["type"] == "choix":
                 self.assertIn(champ["attendu"], champ["options"])
+                regle = (
+                    dependances.get(champ["id"], [])
+                    if isinstance(dependances, dict)
+                    else (dependances or [])
+                )
+
                 self.assertEqual(
                     champ.get("dependances", []),
-                    dependances,
+                    regle,
                     f"Dependances incorrectes : {identifiant}"
                 )
-                for autre in dependances:
+                for autre in regle:
                     self.assertIn(autre, par_id)
                     self.assertEqual(par_id[autre]["type"], "nombre")
 
