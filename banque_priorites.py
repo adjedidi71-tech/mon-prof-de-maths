@@ -5295,7 +5295,17 @@ def generer_modele_p9_recyclage(seed=None):
 
 
     )
-    champs = [        
+    champs = [ 
+        
+        _p9_nombre(
+            "r1", 1, "Masse totale avant le tri",
+            masse_brute / 1000, "kg"
+        ),
+        _p9_nombre(
+            "r2", 2, "Masse après le tri",
+            masse_valide / 1000, "kg"
+        ),
+        _p9_expression(2),
         _p9_nombre(
             "r5", 3, "Conteneurs nécessaires avec l'offre A",
             total_contenants, "conteneurs"
