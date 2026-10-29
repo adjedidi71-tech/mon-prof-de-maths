@@ -4510,8 +4510,12 @@ def generer_modele_p9_tournoi(seed=None):
     manque_objectif = objectif - min(benefice_a, benefice_b)
 
     enonce = (
-        "**Le tournoi de jeux vidéo**\n\n"
-        "Le collège organise un tournoi pour financer un projet.\n\n"
+        "**Le tournoi de jeux vidéo**\n\n"   
+        "Le collège souhaite organiser un tournoi de jeux vidéo "
+        "pour financer un projet.\n\n"
+        "Il envisage de confier l'organisation à l'un de deux "
+        "prestataires. Chacun propose un tarif comprenant "
+        "la location de la salle et les fournitures.\n\n"
 
         f"**{joueurs} joueurs** participent et versent chacun "
         f"**{entree} €** d'inscription. Un partenaire offre "
@@ -4520,11 +4524,11 @@ def generer_modele_p9_tournoi(seed=None):
         f"Les récompenses coûtent **{prix} €**, quelle que soit "
         "l'organisation choisie.\n\n"
 
-        "**Organisation A**\n\n"
+        "**Organisateur A — Proposition**\n\n"
         f"- Location : {location_a} € ;\n"
         f"- Fournitures : {fournitures_a} € par joueur.\n\n"
 
-        "**Organisation B**\n\n"
+        "**Organisateur B — Proposition**\n\n"
         f"- Location : {location_b} € ;\n"
         f"- Fournitures : {fournitures_b} € par joueur.\n\n"
 
