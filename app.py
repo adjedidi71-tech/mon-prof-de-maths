@@ -2195,16 +2195,28 @@ with zone_affichage:
             st.subheader(f"Exercice {numero}")
             st.write(exercice["enonce"])
     
-            if exercice.get("reponse_attendue") is not None:
-                reponse_eleve = st.number_input(
-                    "Ta réponse :",
-                     value=None,
-                     step=0.01 if isinstance(exercice.get("reponse_attendue"), float) else 1,
-                     key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
-                     on_change=enregistrer_reponse_auto,
-                     args=(numero,)
+            if exercice.get("reponse_attendue") is not None:  
+                col_texte, col_saisie, _ = st.columns(
+                    [1.3, 1.2, 4.5],
+                    gap="small",
+                    vertical_alignment="center"
                 )
-    
+
+                with col_texte:
+                    st.write("Ta réponse :")
+
+                with col_saisie:
+                    reponse_eleve = st.number_input(
+                        "Ta réponse :",
+                        label_visibility="collapsed",
+                        value=None,
+                        step=0.01 if isinstance(
+                            exercice.get("reponse_attendue"), float
+                        ) else 1,
+                        key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
+                        on_change=enregistrer_reponse_auto,
+                        args=(numero,)
+                    )    
                 if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
                     if reponse_eleve is not None:
                         try:
@@ -2223,29 +2235,83 @@ with zone_affichage:
                         st.success("Bonne réponse !")
                     else:
                         st.error("Réponse incorrecte. Essaie encore.")
-            elif exercice.get("champs_reponse"):
-                for champ in exercice["champs_reponse"]:
-                    etiquette = f"Question {champ['question']} — {champ['libelle']}"
-                    cle = f"banque_{st.session_state.get('serie_version', 0)}_{numero}_{champ['id']}"
-    
+            elif exercice.get("champs_reponse"):        
+                champs = exercice["champs_reponse"]
+                division_euclidienne = (
+                    len(champs) == 2
+                    and all(c["type"] == "nombre" for c in champs)
+                    and {
+                        c["libelle"].strip().lower()
+                        for c in champs
+                    } == {"quotient", "reste"}
+                )
+
+                if division_euclidienne:
+                    colonnes_division = st.columns(
+                        [1.2, 1.2, 4.6],
+                        gap="small"
+                    )
+
+                for index, champ in enumerate(champs):
+                    etiquette = (
+                        f"Question {champ['question']} — "
+                        f"{champ['libelle']}"
+                    )
+                    cle = (
+                        f"banque_{st.session_state.get('serie_version', 0)}"
+                        f"_{numero}_{champ['id']}"
+                    )
+
                     if champ["type"] == "nombre":
-                        st.text_input(
-                            etiquette,
-                            placeholder=f"Réponse en {champ.get('unite', 'nombre')}",
-                            key=cle,
-                            on_change=enregistrer_reponses_banque_auto,
-                            args=(numero,)
-                        )
-    
+                        if division_euclidienne:
+                            with colonnes_division[index]:
+                                st.text_input(
+                                    champ["libelle"],
+                                    placeholder="Réponse",
+                                    key=cle,
+                                    on_change=enregistrer_reponses_banque_auto,
+                                    args=(numero,)
+                                )
+                        else:
+                            col_texte, col_saisie, _ = st.columns(
+                                [2.4, 1.2, 3.4],
+                                gap="small",
+                                vertical_alignment="center"
+                            )
+
+                            with col_texte:
+                                st.write(etiquette)
+
+                            with col_saisie:
+                                st.text_input(
+                                    etiquette,
+                                    label_visibility="collapsed",
+                                    placeholder="Réponse",
+                                    key=cle,
+                                    on_change=enregistrer_reponses_banque_auto,
+                                    args=(numero,)
+                                )
+
                     elif champ["type"] == "choix":
-                        st.selectbox(
-                            etiquette,
-                            ["Choisir..."] + champ["options"],
-                            key=cle,
-                            on_change=enregistrer_reponses_banque_auto,
-                            args=(numero,)
+                        col_texte, col_saisie, _ = st.columns(
+                            [2.4, 1.2, 3.4],
+                            gap="small",
+                            vertical_alignment="center"
                         )
-    
+
+                        with col_texte:
+                            st.write(etiquette)
+
+                        with col_saisie:
+                            st.selectbox(
+                                etiquette,
+                                ["Choisir..."] + champ["options"],
+                                label_visibility="collapsed",
+                                key=cle,
+                                on_change=enregistrer_reponses_banque_auto,
+                                args=(numero,)
+                            )
+
                     elif champ["type"] == "texte_libre":
                         st.text_area(
                             etiquette,
@@ -2254,6 +2320,7 @@ with zone_affichage:
                             on_change=enregistrer_reponses_banque_auto,
                             args=(numero,)
                         )
+
                 if st.button(
                     "Vérifier mes réponses",
                     key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
