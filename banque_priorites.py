@@ -4548,12 +4548,13 @@ def generer_modele_p9_tournoi(seed=None):
 
         "4. Quelle organisation donne le plus grand bénéfice ? "
         "De combien d'euros est-il supérieur à l'autre ?\n\n"
+        
+        f"5. Le collège souhaite obtenir un bénéfice d'au moins "
+        f"{objectif} €. Si le collège retenait malgré tout "
+        "l'organisateur le moins rentable, de combien faudrait-il "
+        "augmenter les recettes du tournoi, sans modifier les "
+        "dépenses, pour atteindre cet objectif ?"
 
-        f"5. Le club souhaite maintenant obtenir un bénéfice "
-        f"d'au moins {objectif} €. "
-        "L'organisation la moins rentable atteint-elle cet objectif ? "
-        "Si ce n'est pas le cas, de combien faut-il augmenter "
-        "ses recettes, sans modifier ses dépenses, pour l'atteindre ?"
     )
 
     correction = (
