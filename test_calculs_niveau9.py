@@ -491,18 +491,12 @@ class TestsCalculsNiveau9(unittest.TestCase):
             cout_b = nombre_b * prix_b
             choix = "A" if cout_a < cout_b else "B"
             economie = abs(cout_a - cout_b)
-
             self.assertNotEqual(cout_a, cout_b)
-
-
             self.assertGreater(reste, 0)
-            self.assertLess(reste, contenance)
-
+            self.assertLess(reste, contenance)            
             self.verifier(e, "P9-M07", seed, {
                 "r1": brut / 1000,
                 "r2": valide / 1000,
-                "r3": pleins,
-                "r4": reste / 1000,
                 "r5": pleins + 1,
                 "r6": nombre_b,
                 "r7": cout_a,
@@ -512,9 +506,6 @@ class TestsCalculsNiveau9(unittest.TestCase):
             }, {
                 "r9": ["r7", "r8"]
             })
-
-            })
-
             self.assertIn(
                 f"Quotient : {pleins}", e["correction"]
             )
