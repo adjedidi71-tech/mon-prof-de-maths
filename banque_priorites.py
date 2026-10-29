@@ -3728,7 +3728,6 @@ def generer_modele_p8_eau(seed=None):
             f"Il manque {litres(ecart)} L d'économies "
             "pour atteindre l'objectif."
         )
-    )
     enonce = (
         "**Le défi des économies d'eau**\n\n"
 
