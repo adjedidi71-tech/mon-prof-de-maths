@@ -5685,8 +5685,34 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p9_drones())
         banque.append(generer_modele_p9_mosaique())
             
-    exercices = random.sample(banque, k=nombre)
+    
+    if difficulte == 3:
+        for seed_test in range(1, 501):
+            exercice_b = generer_modele_p9_recyclage(seed=seed_test)
 
+            choix = next(
+                champ["attendu"]
+                for champ in exercice_b["champs_reponse"]
+                if champ["id"] == "r9"
+            )
+
+            if choix == "B":
+                break
+        else:
+            raise ValueError("Aucun exercice avec l'offre B trouvé.")
+
+        autres = [
+            e for e in banque
+            if e["id"] != "P9-M07"
+        ]
+
+        exercices = [exercice_b] + random.sample(
+            autres, k=nombre - 1
+        )
+        random.shuffle(exercices)
+
+    else:
+        exercices = random.sample(banque, k=nombre)
     for exercice in exercices:
         if "champs_reponse" not in exercice:
             exercice["champs_reponse"] = deepcopy(
