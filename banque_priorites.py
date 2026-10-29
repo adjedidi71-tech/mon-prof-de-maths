@@ -5079,19 +5079,17 @@ def generer_modele_p9_spectacle(seed=None):
         "5. Quel bénéfice reste-t-il ? Écris une expression numérique "
         "avec des parenthèses.\n\n"
         "6. L'objectif de bénéfice est-il atteint ? De combien d'euros "
-        "est-il dépassé ou combien manque-t-il ?\n\n"
+        "est-il dépassé ou combien manque-t-il ?\n\n" 
+        f"{situation_q7}\n\n"
 
-        f"Le collège souhaite augmenter son bénéfice d'au moins "
-        f"{hausse_visee} € par rapport au bénéfice calculé "
-        "à la question 5.\n\n"
+        "Chaque nouveau spectateur reçoit également un programme "
+        "imprimé, au même coût qu'auparavant.\n\n"
 
-        "Pour cela, il envisage de vendre uniquement des billets élèves "
-        "supplémentaires. Chaque nouveau spectateur reçoit également "
-        "un programme imprimé, au même coût qu'auparavant.\n\n"
+        "7. Combien de billets élèves supplémentaires faut-il "
+        "vendre au minimum pour atteindre le nouveau but du collège ? "
+        "La salle dispose-t-elle de suffisamment de places "
+        "pour accueillir ces nouveaux spectateurs ?"
 
-        "7. Combien de billets élèves supplémentaires faut-il vendre "
-        "au minimum ? Reste-t-il suffisamment de places disponibles "
-        "dans la salle pour accueillir ces nouveaux spectateurs ?"
     )
     correction = (
         "**1. Places vendables**\n\n"
