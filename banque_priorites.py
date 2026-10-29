@@ -5057,7 +5057,11 @@ def generer_modele_p9_spectacle(seed=None):
     places_suffisantes = (
         "Oui" if places_libres >= billets_supp else "Non"
     )
-
+    but_q7 = (
+        "atteindre l'objectif initial du collège"
+        if benefice < objectif
+        else "obtenir l'augmentation supplémentaire de bénéfice souhaitée"
+    )
     enonce = (
         "**Le spectacle solidaire du collège**\n\n"
         f"La salle possède {rangees} rangées de {places_par_rangee} places. "
@@ -5084,7 +5088,7 @@ def generer_modele_p9_spectacle(seed=None):
         "imprimé, au même coût qu'auparavant.\n\n"
 
         "7. Combien de billets élèves supplémentaires faut-il "
-        "vendre au minimum pour atteindre le nouveau but du collège ? "
+        f"vendre au minimum pour {but_q7} ? "
         "La salle dispose-t-elle de suffisamment de places "
         "pour accueillir ces nouveaux spectateurs ?"
 
