@@ -5235,17 +5235,13 @@ def generer_modele_p9_recyclage(seed=None):
         "1. Quelle masse totale a été collectée, avant le tri, en kg ?\n\n"
         "2. Quelle masse reste-t-il après le tri, en kg ? Écris une "
         "expression numérique avec des parenthèses.\n\n"
-        
-        "3. Avec l'offre A, combien de conteneurs peut-on remplir "
-        "entièrement ?\n\n"
+        "3. Combien de conteneurs faut-il louer avec "
+        "l'offre A et avec l'offre B ?\n\n"
+        "4. Calcule le coût total de location de chacune "
+        "des deux offres.\n\n"
+        "5. Quelle offre est la moins chère ? Combien le "
+        "collège économise-t-il en la choisissant ?"
 
-        "4. Toujours avec l'offre A, quelle masse place-t-on dans "
-        "le dernier conteneur et combien de conteneurs "
-        "utilise-t-on au total ?\n\n"
-
-        "5. Combien de conteneurs faut-il louer avec l'offre B ? "
-        "Calcule le coût total de chaque offre. "
-        "Quelle offre est la moins chère et de combien ?"
 
     )
     correction = (
@@ -5259,68 +5255,61 @@ def generer_modele_p9_recyclage(seed=None):
         f"({sacs} × {kg(grammes_sac)} + {cartons} × "
         f"{kg(grammes_carton)}) − {kg(grammes_refuses)} "
         f"= {kg(masse_valide)} kg.\n\n"
-        "**3. Conteneurs remplis entièrement**\n\n"
-        f"Conversion des masses en grammes :\n\n"
-        f"{kg(masse_valide)} kg = {masse_valide} g.\n\n"
-        f"{kg(capacite)} kg = {capacite} g.\n\n"
         
+        "**3. Nombre de conteneurs nécessaires**\n\n"
+
+        f"Masse après le tri : {kg(masse_valide)} kg "
+        f"= {masse_valide} g.\n\n"
+
+        f"Offre A : {kg(capacite)} kg = {capacite} g.\n\n"
+
         f"{masse_valide} : {capacite} — "
         f"Quotient : {pleins} — Reste : {reste} g.\n\n"
 
-        f"On remplit entièrement {pleins} conteneurs.\n\n"
-        "**4. Dernier conteneur**\n\n"
-        f"On place {kg(reste)} kg dans le dernier conteneur. "
-        
-        f"Nombre total avec l'offre A : "
-        f"{pleins} + 1 = {total_contenants}.\n\n"
+        f"Il faut donc **{total_contenants} conteneurs** "
+        f"avec l'offre A.\n\n"
 
-        "**5. Comparaison des deux offres**\n\n"
+        f"Offre B : {kg(capacite_b)} kg = {capacite_b} g.\n\n"
 
-        f"Offre B : {masse_valide} : {capacite_b} "
-        f"— Quotient : {masse_valide // capacite_b} "
-        f"— Reste : {masse_valide % capacite_b} g.\n\n"
+        f"{masse_valide} : {capacite_b} — "
+        f"Quotient : {masse_valide // capacite_b} — "
+        f"Reste : {masse_valide % capacite_b} g.\n\n"
 
-        f"Il faut louer {total_b} conteneurs avec l'offre B.\n\n"
+        f"Il faut donc **{total_b} conteneurs** "
+        f"avec l'offre B.\n\n"
 
-        f"Coût de l'offre A : {total_contenants} × {prix_a} "
+        "**4. Coût total de chaque offre**\n\n"
+
+        f"Offre A : {total_contenants} × {prix_a} "
         f"= {cout_a} €.\n\n"
 
-        f"Coût de l'offre B : {total_b} × {prix_b} "
+        f"Offre B : {total_b} × {prix_b} "
         f"= {cout_b} €.\n\n"
+
+        "**5. Comparaison des offres**\n\n"
 
         f"Économie réalisée : {max(cout_a, cout_b)} − "
         f"{min(cout_a, cout_b)} = {economie} €.\n\n"
 
         f"**L'offre {meilleure_offre} est la moins chère.**"
 
+
     )
-    champs = [
-        _p9_nombre("r1", 1, "Masse avant le tri", masse_brute / 1000, "kg"),
-        _p9_nombre("r2", 2, "Masse après le tri", masse_valide / 1000, "kg"),
-        _p9_expression(2),
+    champs = [        
         _p9_nombre(
-            "r3", 3, "Conteneurs entièrement remplis",
-            pleins, "conteneurs"
-        ),
-        _p9_nombre(
-            "r4", 4, "Masse dans le dernier conteneur",
-            reste / 1000, "kg"
-        ),
-        _p9_nombre(
-            "r5", 4, "Conteneurs utilisés au total",
+            "r5", 3, "Conteneurs nécessaires avec l'offre A",
             total_contenants, "conteneurs"
         ),
-        
         _p9_nombre(
-            "r6", 5, "Conteneurs nécessaires avec l'offre B",
+            "r6", 3, "Conteneurs nécessaires avec l'offre B",
             total_b, "conteneurs"
         ),
         _p9_nombre(
-            "r7", 5, "Coût total de l'offre A",
+            "r7", 4, "Coût total de l'offre A",
             cout_a, "€"
         ),
         _p9_nombre(
-            "r8", 5, "Coût total de l'offre B",
+            "r8", 4, "Coût total de l'offre B",
             cout_b, "€"
         ),
         _p9_choix(
@@ -5331,12 +5320,11 @@ def generer_modele_p9_recyclage(seed=None):
             "r10", 5, "Économie réalisée",
             economie, "€"
         ),
-
     ]
     return _p9_exercice(
         "P9-M07", "La collecte pour le recyclage",
         seed, enonce, correction, champs
-    )
+    ))
 
 def generer_modele_p9_salles(seed=None):
     """Comparer deux salles selon les places ET le budget."""
