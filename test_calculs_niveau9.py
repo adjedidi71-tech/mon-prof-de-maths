@@ -461,6 +461,39 @@ class TestsCalculsNiveau9(unittest.TestCase):
             contenance = en_grammes(capacite.group(1))
 
             pleins, reste = divmod(valide, contenance)
+            
+            offres = re.findall(
+                r"\*\*Offre ([AB])\*\*.*?"
+                r"au maximum ([\d,]+) kg.*?"
+                r"Location : (\d+) € par conteneur",
+                t,
+                re.DOTALL
+            )
+
+            self.assertEqual(len(offres), 2)
+
+            _, capacite_a_kg, prix_a_txt = offres[0]
+            _, capacite_b_kg, prix_b_txt = offres[1]
+
+            self.assertEqual(
+                en_grammes(capacite_a_kg), contenance
+            )
+
+            capacite_b_g = en_grammes(capacite_b_kg)
+            prix_a = int(prix_a_txt)
+            prix_b = int(prix_b_txt)
+
+            nombre_b = (
+                valide + capacite_b_g - 1
+            ) // capacite_b_g
+
+            cout_a = (pleins + 1) * prix_a
+            cout_b = nombre_b * prix_b
+            choix = "A" if cout_a < cout_b else "B"
+            economie = abs(cout_a - cout_b)
+
+            self.assertNotEqual(cout_a, cout_b)
+
 
             self.assertGreater(reste, 0)
             self.assertLess(reste, contenance)
@@ -470,7 +503,16 @@ class TestsCalculsNiveau9(unittest.TestCase):
                 "r2": valide / 1000,
                 "r3": pleins,
                 "r4": reste / 1000,
-                "r5": pleins + 1
+                "r5": pleins + 1,
+                "r6": nombre_b,
+                "r7": cout_a,
+                "r8": cout_b,
+                "r9": choix,
+                "r10": economie
+            }, {
+                "r9": ["r7", "r8"]
+            })
+
             })
 
             self.assertIn(
