@@ -4506,6 +4506,8 @@ def generer_modele_p9_tournoi(seed=None):
             break
 
     meilleur = "A" if benefice_a > benefice_b else "B"
+    objectif = min(benefice_a, benefice_b) + ecart // 2
+    manque_objectif = objectif - min(benefice_a, benefice_b)
 
     enonce = (
         "**Le tournoi de jeux vidéo**\n\n"
