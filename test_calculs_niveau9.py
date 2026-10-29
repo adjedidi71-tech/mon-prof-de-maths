@@ -393,8 +393,7 @@ class TestsCalculsNiveau9(unittest.TestCase):
                 else "Non"
             )
             decisions.add(atteint)
-            self.assertLessEqual(billets, vendables)
-
+            self.assertLessEqual(billets, vendables)            
             self.verifier(e, "P9-M06", seed, {
                 "r1": vendables,
                 "r2": billets,
@@ -402,9 +401,14 @@ class TestsCalculsNiveau9(unittest.TestCase):
                 "r4": depenses,
                 "r5": benefice,
                 "r6": atteint,
-                "r7": abs(benefice - objectif)
-            }, ["r5"])
-
+                "r7": abs(benefice - objectif),
+                "r8": billets_necessaires,
+                "r9": places_ok
+            }, {
+                "r6": ["r5"],
+                "r9": ["r1", "r2", "r8"]
+            })
+            
             self.assertIn(
                 f"= {benefice} €", e["correction"]
             )
