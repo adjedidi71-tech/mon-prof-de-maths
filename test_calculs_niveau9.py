@@ -379,13 +379,21 @@ class TestsCalculsNiveau9(unittest.TestCase):
             depenses = technique + billets * programme
             benefice = recettes - depenses
             atteint = "Oui" if benefice >= objectif else "Non"
-            hausse = nombres(
-                t, r"augmenter son bénéfice d.au moins (\d+) €"
-            )
+            if benefice < objectif:
+                montant_a_financer = objectif - benefice
+            else:
+                montant_a_financer = nombres(
+                    t,
+                    r"augmenter encore son bénéfice "
+                    r"d.au moins (\d+) €"
+                )
+
             gain_net = tarif_e - programme
+
             billets_necessaires = (
-                hausse + gain_net - 1
+                montant_a_financer + gain_net - 1
             ) // gain_net
+
             places_libres = vendables - billets
 
             places_ok = (
