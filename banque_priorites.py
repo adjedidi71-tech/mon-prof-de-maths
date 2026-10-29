@@ -4543,7 +4543,13 @@ def generer_modele_p9_tournoi(seed=None):
         "des parenthèses pour le bénéfice de A.\n\n"
 
         "4. Quelle organisation donne le plus grand bénéfice ? "
-        "De combien d'euros est-il supérieur à l'autre ?"
+        "De combien d'euros est-il supérieur à l'autre ?\n\n"
+
+        f"5. Le club souhaite maintenant obtenir un bénéfice "
+        f"d'au moins {objectif} €. "
+        "L'organisation la moins rentable atteint-elle cet objectif ? "
+        "Si ce n'est pas le cas, de combien faut-il augmenter "
+        "ses recettes, sans modifier ses dépenses, pour l'atteindre ?"
     )
 
     correction = (
@@ -4568,7 +4574,17 @@ def generer_modele_p9_tournoi(seed=None):
         "**4. Meilleure organisation**\n\n"
         f"Écart : {max(benefice_a, benefice_b)} − "
         f"{min(benefice_a, benefice_b)} = {ecart} €.\n\n"
-        f"**L'organisation {meilleur} est la plus avantageuse.**"
+        f"**L'organisation {meilleur} est la plus avantageuse.**\n\n"
+
+        "**5. Vérification de l'objectif**\n\n"
+        f"Bénéfice minimal souhaité : {objectif} €.\n\n"
+        f"Bénéfice de l'organisation la moins rentable : "
+        f"{min(benefice_a, benefice_b)} €.\n\n"
+        f"Montant manquant : {objectif} − "
+        f"{min(benefice_a, benefice_b)} "
+        f"= **{manque_objectif} €**.\n\n"
+        "Cette organisation doit donc augmenter ses recettes "
+        f"de {manque_objectif} € pour atteindre l'objectif."
     )
 
     champs = [
@@ -4582,7 +4598,11 @@ def generer_modele_p9_tournoi(seed=None):
             "r6", 4, "Organisation la plus avantageuse",
             meilleur, ["r4", "r5"]
         ),
-        _p9_nombre("r7", 4, "Écart entre les bénéfices", ecart, "€")
+        _p9_nombre("r7", 4, "Écart entre les bénéfices", ecart, "€"),
+        _p9_nombre(
+            "r8", 5, "Recettes supplémentaires nécessaires",
+            manque_objectif, "€"
+        )
     ]
 
     return _p9_exercice(
