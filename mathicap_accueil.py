@@ -268,36 +268,36 @@ def afficher_interface_mathicap() -> str:
             unsafe_allow_html=True,
         )
     
-            st.markdown(
-            """
-            <style>
-            @media (max-width: 640px) {
-                .st-key-mathicap_ligne_classes
-                [data-testid="stHorizontalBlock"] {
-                    flex-direction: row !important;
-                    flex-wrap: nowrap !important;
-                    gap: 6px !important;
-                }
-    
-                .st-key-mathicap_ligne_classes
-                [data-testid="stColumn"] {
-                    min-width: 0 !important;
-                    width: 25% !important;
-                    flex: 1 1 0% !important;
-                }
-    
-                .st-key-mathicap_ligne_classes button {
-                    min-height: 48px !important;
-                    padding: 6px 4px !important;
-                }
+        st.markdown(
+        """
+        <style>
+        @media (max-width: 640px) {
+            .st-key-mathicap_ligne_classes
+            [data-testid="stHorizontalBlock"] {
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 6px !important;
             }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-    
-        with st.container(key="mathicap_ligne_classes"):
-            colonnes_classes = st.columns(4, gap="small")
+
+            .st-key-mathicap_ligne_classes
+            [data-testid="stColumn"] {
+                min-width: 0 !important;
+                width: 25% !important;
+                flex: 1 1 0% !important;
+            }
+
+            .st-key-mathicap_ligne_classes button {
+                min-height: 48px !important;
+                padding: 6px 4px !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.container(key="mathicap_ligne_classes"):
+        colonnes_classes = st.columns(4, gap="small")
 
         for colonne, nom in zip(colonnes_classes, couleurs):
             with colonne:
