@@ -79,7 +79,7 @@ st.subheader("Mon compte élève")
 if st.session_state.pop("vider_champs_connexion", False):
    st.session_state["email_connexion"] = ""
    st.session_state["mdp_connexion"] = ""
-with st.expander("Créer mon compte"):
+with st.expander("Créer mon compte", width=600):
     with st.form("formulaire_inscription"):
         email = st.text_input("Adresse e-mail")
         pseudo = st.text_input("Pseudonyme (facultatif)")
@@ -125,7 +125,7 @@ with st.expander("Créer mon compte"):
                     "ou réessaie plus tard."
                 )
 
-with st.expander("Se connecter"):
+with st.expander("Se connecter", width=600):
     with st.form("formulaire_connexion"):
         email_connexion = st.text_input(
             "Ton adresse e-mail",
