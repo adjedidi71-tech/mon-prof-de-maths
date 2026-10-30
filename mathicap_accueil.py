@@ -22,7 +22,7 @@ PAGES = (
     "Mon Prof IA",
     "Mes séries",
     "Mon espace",
-)
+))
 
 LOGO = Path(__file__).with_name("mathicap_logo.png")
 
