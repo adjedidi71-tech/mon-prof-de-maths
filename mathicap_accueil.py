@@ -218,15 +218,19 @@ def afficher_interface_mathicap() -> str:
         st.divider()
         st.caption("MathiCap Collège · Programme en développement")
 
+    
     ancienne_page = st.session_state.get("_mathicap_page_precedente")
+
     if ancienne_page != page:
         if page == "Exercices":
             st.session_state["afficher_series"] = False
         elif page == "Mes séries":
             st.session_state["afficher_series"] = True
+
         st.session_state["_mathicap_page_precedente"] = page
 
-        st.markdown("**Ma classe**")
+    # Bandeau des classes
+    st.markdown("**Ma classe**")
 
     couleurs = {
         "6e": ("#DCEBFF", "#1458B8", "#2678EF"),
@@ -240,6 +244,7 @@ def afficher_interface_mathicap() -> str:
 
     classe_active = st.session_state["mathicap_classe"]
 
+    # Construire les styles une seule fois
     regles_css = []
 
     for nom, (fond, texte, accent) in couleurs.items():
@@ -263,14 +268,9 @@ def afficher_interface_mathicap() -> str:
             """
         )
 
-        st.markdown(
-            "<style>" + "\n".join(regles_css) + "</style>",
-            unsafe_allow_html=True,
-        )
-    
-        st.markdown(
+    # Adaptation mobile : quatre boutons sur une ligne
+    regles_css.append(
         """
-        <style>
         @media (max-width: 640px) {
             .st-key-mathicap_ligne_classes
             [data-testid="stHorizontalBlock"] {
@@ -291,29 +291,12 @@ def afficher_interface_mathicap() -> str:
                 padding: 6px 4px !important;
             }
         }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    # Rapprocher les classes de l'en-tête
-    st.markdown(
         """
-        <style>
-        @media (min-width: 641px) {
-            .st-key-mathicap_ligne_classes {
-                margin-top: -7rem !important;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .st-key-mathicap_ligne_classes {
-                margin-top: -8rem !important;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
     )
+
+    # Injecter le CSS une seule fois, sans bloc visible
+    st.html("<style>" + "\n".join(regles_css) + "</style>")
+
     with st.container(key="mathicap_ligne_classes"):
         colonnes_classes = st.columns(4, gap="small")
 
@@ -328,6 +311,7 @@ def afficher_interface_mathicap() -> str:
                 )
 
     classe = st.session_state["mathicap_classe"]
+
     if classe != "5e":
         st.title(f"MathiCap Collège — {classe}")
         st.info(
