@@ -6,10 +6,7 @@ def tester_stockage():
     return stockage
 
 def obtenir_stockage():
-    if "stockage_navigateur" not in st.session_state:
-        st.session_state["stockage_navigateur"] = LocalStorage()
-
-    return st.session_state["stockage_navigateur"]
+    return LocalStorage()
 
 def session_eleve_active():
     return bool(st.session_state.get("eleve_id"))
