@@ -210,7 +210,7 @@ def afficher_interface_mathicap() -> str:
 
     with st.sidebar:
         if LOGO.is_file():
-            st.image(str(LOGO), use_container_width=True)
+            st.image(str(LOGO), width=120)
         else:
             st.title("MathiCap Collège")
         st.divider()
