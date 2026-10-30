@@ -63,10 +63,11 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("session_eleve", None)
         
 st.set_page_config(
-    page_title="Mon Prof de Maths",
-    page_icon="📐"
+    page_title="MathiCap Collège",
+    page_icon="📐",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
-
 st.title("MathiCap Collège")
 
 st.write("Prépare tes exercices de mathématiques !")
