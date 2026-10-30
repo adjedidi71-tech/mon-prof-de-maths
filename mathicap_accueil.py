@@ -295,7 +295,25 @@ def afficher_interface_mathicap() -> str:
         """,
         unsafe_allow_html=True,
     )
+    # Rapprocher les classes de l'en-tête
+    st.markdown(
+        """
+        <style>
+        @media (min-width: 641px) {
+            .st-key-mathicap_ligne_classes {
+                margin-top: -7rem !important;
+            }
+        }
 
+        @media (max-width: 640px) {
+            .st-key-mathicap_ligne_classes {
+                margin-top: -8rem !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     with st.container(key="mathicap_ligne_classes"):
         colonnes_classes = st.columns(4, gap="small")
 
