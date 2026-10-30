@@ -182,6 +182,15 @@ def _styles() -> None:
                 font-size: 0.82rem;
             }
         }
+        /* Logo principal adapté au smartphone */
+        @media (max-width: 640px) {
+            .st-key-mathicap_logo_principal [data-testid="stImage"],
+            .st-key-mathicap_logo_principal img {
+                width: 120px !important;
+                max-width: 120px !important;
+                height: auto !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
