@@ -89,15 +89,15 @@ col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
 with col_logo:
     logo_principal = Path(__file__).with_name("mathicap_logo.png")
     with st.container(key="mathicap_logo_principal"):
-    st.image(str(logo_principal), width=260)
-    st.markdown(
-    """
-    <div class="mathicap-slogan">
-        Comprendre <span>•</span> S’entraîner <span>•</span> Réussir
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        st.image(str(logo_principal), width=260)
+        st.markdown(
+        """
+        <div class="mathicap-slogan">
+            Comprendre <span>•</span> S’entraîner <span>•</span> Réussir
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 with col_profil:
     if est_connecte:
