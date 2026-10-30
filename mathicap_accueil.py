@@ -226,13 +226,61 @@ def afficher_interface_mathicap() -> str:
             st.session_state["afficher_series"] = True
         st.session_state["_mathicap_page_precedente"] = page
 
-    classe = st.segmented_control(
-        "Ma classe",
-        CLASSES,
-        key="mathicap_classe",
-        selection_mode="single",
+        st.markdown("**Ma classe**")
+
+    couleurs = {
+        "6e": ("#DCEBFF", "#1458B8", "#2678EF"),
+        "5e": ("#DDF6E8", "#116A42", "#21A46A"),
+        "4e": ("#FFF0D8", "#985300", "#F0981B"),
+        "3e": ("#EFE2FF", "#6733A8", "#8752D6"),
+    }
+
+    def choisir_classe(nouvelle_classe):
+        st.session_state["mathicap_classe"] = nouvelle_classe
+
+    classe_active = st.session_state["mathicap_classe"]
+
+    regles_css = []
+
+    for nom, (fond, texte, accent) in couleurs.items():
+        selectionnee = nom == classe_active
+
+        fond_bouton = accent if selectionnee else fond
+        texte_bouton = "#FFFFFF" if selectionnee else texte
+        epaisseur = "3px" if selectionnee else "1px"
+
+        regles_css.append(
+            f"""
+            .st-key-mathicap_bouton_{nom} button {{
+                background-color: {fond_bouton} !important;
+                color: {texte_bouton} !important;
+                border: {epaisseur} solid {accent} !important;
+                border-radius: 10px !important;
+                min-height: 56px !important;
+                font-weight: 700 !important;
+                font-size: 1.05rem !important;
+            }}
+            """
+        )
+
+    st.markdown(
+        "<style>" + "\n".join(regles_css) + "</style>",
+        unsafe_allow_html=True,
     )
 
+    colonnes_classes = st.columns(4, gap="small")
+
+    for colonne, nom in zip(colonnes_classes, couleurs):
+        with colonne:
+            st.button(
+                nom,
+                key=f"mathicap_bouton_{nom}",
+                width="stretch",
+                on_click=choisir_classe,
+                args=(nom,),
+            )
+
+    classe = st.session_state["mathicap_classe"]
     if classe != "5e":
         st.title(f"MathiCap Collège — {classe}")
         st.info(
