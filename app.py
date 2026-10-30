@@ -94,20 +94,30 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# En-tête : grand logo à gauche, profil compact à droite.
-col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
-with col_logo:
+# En-tête : g    import base64
     logo_principal = Path(__file__).with_name("mathicap_logo.png")
-    with st.container(key="mathicap_logo_principal"):
-        st.image(str(logo_principal), width=260)
-        st.markdown(
-        """
-        <div class="mathicap-slogan">
-            Comprendre <span>•</span> S’entraîner <span>•</span> Réussir
+    logo_base64 = base64.b64encode(
+        logo_principal.read_bytes()
+    ).decode("ascii")
+
+    st.markdown(
+        f"""
+        <div class="mathicap-marque">
+            <img
+                src="data:image/png;base64,{logo_base64}"
+                alt="MathiCap Collège"
+            >
+            <div class="mathicap-slogan">
+                Comprendre <span>•</span>
+                S'entraîner <span>•</span>
+                Réussir
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
-    )
+    )rand logo à gauche, profil compact à droite.
+col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
+
 
 with col_profil:
     if est_connecte:
