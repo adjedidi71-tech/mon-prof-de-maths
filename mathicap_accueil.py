@@ -181,6 +181,7 @@ def _styles() -> None:
             .st-key-mathicap_cartes button p {
                 font-size: 0.82rem;
             }
+        }
         /* Logo et slogan rapprochés sur smartphone */
         @media (max-width: 640px) {
 
@@ -202,7 +203,6 @@ def _styles() -> None:
                 font-size: 0.82rem;
                 margin: 0 0 6px !important;
             }
-        }
         }
         
         </style>
