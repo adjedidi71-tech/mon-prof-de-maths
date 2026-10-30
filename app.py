@@ -85,7 +85,7 @@ if st.session_state.pop("vider_champs_connexion", False):
 est_connecte = bool(st.session_state.get("eleve_id"))
 
 # En-tête : grand logo à gauche, profil compact à droite.
-col_logo, col_profil = st.columns([3, 2], vertical_alignment="top")
+col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
 with col_logo:
     logo_principal = Path(__file__).with_name("mathicap_logo.png")
     st.image(str(logo_principal), width=260)
