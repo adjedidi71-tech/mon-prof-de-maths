@@ -191,6 +191,20 @@ def _styles() -> None:
                 height: auto !important;
             }
         }
+        /* En-tête compact sur smartphone */
+        @media (max-width: 640px) {
+
+            .st-key-mathicap_logo_principal {
+                margin-top: -12px !important;
+                margin-bottom: -20px !important;
+            }
+
+            .mathicap-slogan {
+                font-size: 0.82rem;
+                margin-top: 0 !important;
+                margin-bottom: 4px !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
