@@ -197,7 +197,29 @@ def _styles() -> None:
                 margin: 0 0 6px !important;
             }
         }
-        
+            .mathicap-marque {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .mathicap-marque img {
+            display: block;
+            width: 260px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .mathicap-marque .mathicap-slogan {
+            margin: 0 !important;
+        }
+
+        @media (max-width: 640px) {
+            .mathicap-marque img {
+                width: 120px;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
