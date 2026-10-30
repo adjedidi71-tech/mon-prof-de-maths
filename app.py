@@ -115,10 +115,8 @@ st.markdown("""
         </div>
         """,
         unsafe_allow_html=True,
-    )rand logo à gauche, profil compact à droite.
+    )
 col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
-
-
 with col_profil:
     if est_connecte:
         st.markdown("**👤 Compte élève connecté**")
