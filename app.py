@@ -75,100 +75,109 @@ st.image(str(logo), width=260)
 
 st.write("Prépare tes exercices de mathématiques !")
 
+# Bloc « Mon compte élève » : remplace uniquement l'ancien bloc
+# st.subheader("Mon compte élève") ... avant « chapitres = { ».
 st.subheader("Mon compte élève")
+
 if st.session_state.pop("vider_champs_connexion", False):
-   st.session_state["email_connexion"] = ""
-   st.session_state["mdp_connexion"] = ""
-with st.expander("Créer mon compte", width=600):
-    with st.form("formulaire_inscription"):
-        email = st.text_input("Adresse e-mail")
-        pseudo = st.text_input("Pseudonyme (facultatif)")
-        mot_de_passe = st.text_input(
-            "Mot de passe",
-            type="password"
-        )
-        confirmer_mdp = st.text_input(
-            "Confirmer le mot de passe",
-            type="password"
-        )
-        inscrire = st.form_submit_button("Créer mon compte")
+    st.session_state["email_connexion"] = ""
+    st.session_state["mdp_connexion"] = ""
 
-    if inscrire:
-        if not email.strip() or not mot_de_passe:
-            st.warning("Renseigne ton e-mail et ton mot de passe.")
-        elif mot_de_passe != confirmer_mdp:
-            st.error("Les mots de passe sont différents.")
-        elif len(mot_de_passe) < 8:
-            st.warning("Utilise au moins 8 caractères.")
-        else:
+if not st.session_state.get("eleve_id"):
+    zone_compte, _ = st.columns([7, 4])
+    with zone_compte:
+        with st.container(border=True):
+            with st.form("formulaire_connexion"):
+                col_email, col_mdp, col_action = st.columns([3, 3, 2], vertical_alignment="bottom")
+                with col_email:
+                    email_connexion = st.text_input(
+                        "Adresse e-mail",
+                        placeholder="Adresse e-mail",
+                        label_visibility="collapsed",
+                        key="email_connexion",
+                    )
+                with col_mdp:
+                    mdp_connexion = st.text_input(
+                        "Mot de passe",
+                        placeholder="Mot de passe",
+                        type="password",
+                        label_visibility="collapsed",
+                        key="mdp_connexion",
+                    )
+                with col_action:
+                    connexion = st.form_submit_button(
+                        "Se connecter", use_container_width=True
+                    )
+
+            with st.popover("Créer un compte"):
+                with st.form("formulaire_inscription"):
+                    email = st.text_input("Adresse e-mail")
+                    pseudo = st.text_input("Pseudonyme (facultatif)")
+                    mot_de_passe = st.text_input(
+                        "Mot de passe", type="password"
+                    )
+                    confirmer_mdp = st.text_input(
+                        "Confirmer le mot de passe", type="password"
+                    )
+                    inscrire = st.form_submit_button("Créer mon compte")
+
+                if inscrire:
+                    if not email.strip() or not mot_de_passe:
+                        st.warning("Renseigne ton e-mail et ton mot de passe.")
+                    elif mot_de_passe != confirmer_mdp:
+                        st.error("Les mots de passe sont différents.")
+                    elif len(mot_de_passe) < 8:
+                        st.warning("Utilise au moins 8 caractères.")
+                    else:
+                        try:
+                            client_inscription = create_client(
+                                st.secrets["SUPABASE_URL"],
+                                st.secrets["SUPABASE_KEY"],
+                            )
+                            client_inscription.auth.sign_up({
+                                "email": email.strip(),
+                                "password": mot_de_passe,
+                                "options": {"data": {"pseudo": pseudo.strip()}},
+                            })
+                            st.success(
+                                "Inscription demandée. Consulte ton e-mail "
+                                "pour confirmer ton compte."
+                            )
+                        except Exception:
+                            st.error(
+                                "Inscription impossible. Vérifie les informations "
+                                "ou réessaie plus tard."
+                            )
+
+        if connexion:
             try:
-                client_inscription = create_client(
-                    st.secrets["SUPABASE_URL"],
-                    st.secrets["SUPABASE_KEY"]
-                )
-                client_inscription.auth.sign_up({
-                    "email": email.strip(),
-                    "password": mot_de_passe,
-                    "options": {
-                        "data": {
-                            "pseudo": pseudo.strip()
-                        }
-                    }
+                client_connexion = supabase
+                resultat = client_connexion.auth.sign_in_with_password({
+                    "email": email_connexion.strip(),
+                    "password": mdp_connexion,
                 })
-                st.success(
-                    "Inscription demandée. Consulte ton e-mail "
-                    "pour confirmer ton compte."
-                )
+                if resultat.user and resultat.session:
+                    st.session_state["eleve_id"] = resultat.user.id
+                    st.session_state["session_eleve"] = resultat.session
+                    jeton_persistant = enregistrer_session(
+                        supabase_privee, resultat.user.id
+                    )
+                    st.session_state["jeton_persistant"] = jeton_persistant
+                    enregistrer_jeton_navigateur(jeton_persistant)
+                    st.success("Connexion réussie !")
+                else:
+                    st.error("Connexion impossible.")
             except Exception:
-                st.error(
-                    "Inscription impossible. Vérifie les informations "
-                    "ou réessaie plus tard."
-                )
-
-with st.expander("Se connecter", width=600):
-    with st.form("formulaire_connexion"):
-        email_connexion = st.text_input(
-            "Ton adresse e-mail",
-            key="email_connexion"
-        )
-
-        mdp_connexion = st.text_input(
-            "Ton mot de passe",
-            type="password",
-            key="mdp_connexion"
-       )
-        connexion = st.form_submit_button("Se connecter")
-
-    if connexion:
-        try:
-            client_connexion = supabase
-            resultat = client_connexion.auth.sign_in_with_password({
-                "email": email_connexion.strip(),
-                "password": mdp_connexion
-            })
-            
-            if resultat.user and resultat.session:
-                st.session_state["eleve_id"] = resultat.user.id
-                st.session_state["session_eleve"] = resultat.session
-
-                jeton_persistant = enregistrer_session(
-                    supabase_privee,
-                    resultat.user.id
-                )
-
-                st.session_state["jeton_persistant"] = jeton_persistant
-                enregistrer_jeton_navigateur(jeton_persistant)
-                st.success("Connexion réussie !")
-
-            else:
-                st.error("Connexion impossible.")
-        except Exception:
-            st.error("Une erreur est survenue lors de la connexion.")
+                st.error("Une erreur est survenue lors de la connexion.")
 
 if st.session_state.get("eleve_id"):
-    st.write("Tu es connecté à ton compte élève.")
+    col_statut, col_sortie, _ = st.columns([3, 2, 5], vertical_alignment="center")
+    with col_statut:
+        st.write("Tu es connecté à ton compte élève.")
+    with col_sortie:
+        deconnexion = st.button("Se déconnecter")
 
-    if st.button("Se déconnecter"):
+    if deconnexion:
         jeton = st.session_state.pop("jeton_persistant", None)
         if jeton:
             try:
@@ -186,6 +195,7 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("code_actuel", None)
         st.session_state["vider_champs_connexion"] = True
         st.rerun()
+
 # Nouvelle interface MathiCap Collège
 afficher_interface_mathicap()
 chapitres = {
