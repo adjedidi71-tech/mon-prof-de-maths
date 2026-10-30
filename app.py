@@ -67,7 +67,7 @@ st.set_page_config(
     page_icon="📐"
 )
 
-st.title("Mon Prof de Maths")
+st.title("MathiCap Collège")
 
 st.write("Prépare tes exercices de mathématiques !")
 
@@ -182,7 +182,8 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("code_actuel", None)
         st.session_state["vider_champs_connexion"] = True
         st.rerun()
-
+# Nouvelle interface MathiCap Collège
+afficher_interface_mathicap()
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
