@@ -69,26 +69,65 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 from pathlib import Path
+# EN-TÊTE MATHICAP + COMPTE ÉLÈVE
+# Remplacer l'ancien affichage du grand logo ET tout l'ancien bloc
+# « Mon compte élève » par ce code.
+# Ne pas modifier les 2 lignes « afficher_interface_mathicap() »
+# ni « chapitres = { » plus bas.
 
-logo = Path(__file__).with_name("mathicap_logo.png")
-st.image(str(logo), width=260)
+from pathlib import Path
 
-st.write("Prépare tes exercices de mathématiques !")
-
-# Bloc « Mon compte élève » : remplace uniquement l'ancien bloc
-# st.subheader("Mon compte élève") ... avant « chapitres = { ».
-st.subheader("Mon compte élève")
-
+# Réinitialiser les champs AVANT leur éventuelle création.
 if st.session_state.pop("vider_champs_connexion", False):
     st.session_state["email_connexion"] = ""
     st.session_state["mdp_connexion"] = ""
 
-if not st.session_state.get("eleve_id"):
-    zone_compte, _ = st.columns([7, 4])
+est_connecte = bool(st.session_state.get("eleve_id"))
+
+# En-tête : grand logo à gauche, profil compact à droite.
+col_logo, col_profil = st.columns([3, 2], vertical_alignment="top")
+with col_logo:
+    logo_principal = Path(__file__).with_name("mathicap_logo.png")
+    st.image(str(logo_principal), width=260)
+    st.caption("Prépare tes exercices de mathématiques !")
+
+with col_profil:
+    if est_connecte:
+        st.markdown("**👤 Compte élève connecté**")
+        if st.button("Se déconnecter", key="mathicap_deconnexion_entete"):
+            jeton = st.session_state.pop("jeton_persistant", None)
+            if jeton:
+                try:
+                    supprimer_session(supabase_privee, jeton)
+                except Exception:
+                    # Ne pas exposer les détails techniques à l'élève.
+                    pass
+            try:
+                supabase.auth.sign_out()
+            except Exception:
+                pass
+            for cle in (
+                "supabase_client",
+                "eleve_id",
+                "session_eleve",
+                "exercices_actuels",
+                "code_actuel",
+                "jeton_persistant",
+            ):
+                st.session_state.pop(cle, None)
+            st.session_state["vider_champs_connexion"] = True
+            st.rerun()
+
+# Avant connexion seulement : formulaire compact, sous l'en-tête.
+if not est_connecte:
+    zone_compte, _ = st.columns([7, 3])
     with zone_compte:
+        st.markdown("**Mon compte élève**")
         with st.container(border=True):
             with st.form("formulaire_connexion"):
-                col_email, col_mdp, col_action = st.columns([3, 3, 2], vertical_alignment="bottom")
+                col_email, col_mdp, col_action = st.columns(
+                    [3, 3, 2], vertical_alignment="bottom"
+                )
                 with col_email:
                     email_connexion = st.text_input(
                         "Adresse e-mail",
@@ -150,52 +189,29 @@ if not st.session_state.get("eleve_id"):
                             )
 
         if connexion:
-            try:
-                client_connexion = supabase
-                resultat = client_connexion.auth.sign_in_with_password({
-                    "email": email_connexion.strip(),
-                    "password": mdp_connexion,
-                })
-                if resultat.user and resultat.session:
-                    st.session_state["eleve_id"] = resultat.user.id
-                    st.session_state["session_eleve"] = resultat.session
-                    jeton_persistant = enregistrer_session(
-                        supabase_privee, resultat.user.id
-                    )
-                    st.session_state["jeton_persistant"] = jeton_persistant
-                    enregistrer_jeton_navigateur(jeton_persistant)
-                    st.success("Connexion réussie !")
-                    st.rerun()
-                else:
-                    st.error("Connexion impossible.")
-            except Exception:
-                st.error("Une erreur est survenue lors de la connexion.")
+            if not email_connexion.strip() or not mdp_connexion:
+                st.warning("Renseigne ton e-mail et ton mot de passe.")
+            else:
+                try:
+                    resultat = supabase.auth.sign_in_with_password({
+                        "email": email_connexion.strip(),
+                        "password": mdp_connexion,
+                    })
+                    if resultat.user and resultat.session:
+                        st.session_state["eleve_id"] = resultat.user.id
+                        st.session_state["session_eleve"] = resultat.session
+                        jeton_persistant = enregistrer_session(
+                            supabase_privee, resultat.user.id
+                        )
+                        st.session_state["jeton_persistant"] = jeton_persistant
+                        enregistrer_jeton_navigateur(jeton_persistant)
+                        st.session_state["vider_champs_connexion"] = True
+                        st.rerun()  # Cache immédiatement les champs après connexion.
+                    else:
+                        st.error("Connexion impossible.")
+                except Exception:
+                    st.error("Une erreur est survenue lors de la connexion.")
 
-if st.session_state.get("eleve_id"):
-    col_statut, col_sortie, _ = st.columns([3, 2, 5], vertical_alignment="center")
-    with col_statut:
-        st.write("Tu es connecté à ton compte élève.")
-    with col_sortie:
-        deconnexion = st.button("Se déconnecter")
-
-    if deconnexion:
-        jeton = st.session_state.pop("jeton_persistant", None)
-        if jeton:
-            try:
-                supprimer_session(supabase_privee, jeton)
-            except Exception as e:
-                st.error(f"Erreur suppression session : {e}")
-        try:
-            supabase.auth.sign_out()
-        except Exception:
-            pass
-        st.session_state.pop("supabase_client", None)
-        st.session_state.pop("eleve_id", None)
-        st.session_state.pop("session_eleve", None)
-        st.session_state.pop("exercices_actuels", None)
-        st.session_state.pop("code_actuel", None)
-        st.session_state["vider_champs_connexion"] = True
-        st.rerun()
 
 # Nouvelle interface MathiCap Collège
 afficher_interface_mathicap()
