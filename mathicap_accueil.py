@@ -93,11 +93,57 @@ def _styles() -> None:
                 margin: 10px 0 2px 0;
             }
         }
+        /* Grille des six activités */
+        .st-key-mathicap_cartes [data-testid="stHorizontalBlock"] {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+        }
+
+        .st-key-mathicap_cartes [data-testid="stColumn"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            flex: initial !important;
+        }
+
+        .mathicap-card-icon {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+        }
+
+        .mathicap-card-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            line-height: 1.25;
+            min-height: 2.4em;
+        }
+
+        .mathicap-card-desc {
+            font-size: 0.82rem;
+            color: #64748b;
+            line-height: 1.35;
+            min-height: 2.7em;
+            margin: 7px 0;
+        }
+
+        @media (max-width: 640px) {
+            .st-key-mathicap_cartes [data-testid="stHorizontalBlock"] {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+
+            .mathicap-card-title {
+                font-size: 0.85rem;
+            }
+
+            .mathicap-card-desc {
+                font-size: 0.75rem;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
-
 
 def _accueil() -> None:
     st.markdown(
