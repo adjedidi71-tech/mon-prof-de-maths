@@ -88,6 +88,7 @@ est_connecte = bool(st.session_state.get("eleve_id"))
 col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
 with col_logo:
     logo_principal = Path(__file__).with_name("mathicap_logo.png")
+    with st.container(key="mathicap_logo_principal"):
     st.image(str(logo_principal), width=260)
     st.markdown(
     """
