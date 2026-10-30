@@ -140,6 +140,48 @@ def _styles() -> None:
                 font-size: 0.75rem;
             }
         }
+        /* Chaque carte est un bouton entier */
+        .st-key-mathicap_cartes button {
+            width: 100%;
+            min-height: 155px;
+            padding: 16px;
+            border: 1px solid #dbe3ef;
+            border-radius: 14px;
+            background: #ffffff;
+            color: #092c63;
+            text-align: left;
+            align-items: flex-start;
+            justify-content: flex-start;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .st-key-mathicap_cartes button p {
+            white-space: pre-line;
+            line-height: 1.5;
+            font-size: 0.92rem;
+        }
+
+        .st-key-mathicap_cartes button:hover {
+            background: #edf5ff;
+            border-color: #3182ed;
+        }
+
+        .st-key-mathicap_cartes button:focus-visible {
+            outline: 3px solid #3182ed;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 640px) {
+            .st-key-mathicap_cartes button {
+                min-height: 165px;
+                padding: 12px;
+            }
+
+            .st-key-mathicap_cartes button p {
+                font-size: 0.82rem;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
