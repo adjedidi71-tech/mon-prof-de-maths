@@ -127,35 +127,38 @@ with col_logo:
     )
 
 with col_profil:
-    if est_connecte:
-        st.markdown(
-            '<div class="mathicap-statut">● Connecté</div>',
-            unsafe_allow_html=True,
-        )
-        if st.button("Déconnexion", key="mathicap_deconnexion_entete"):
-            jeton = st.session_state.pop("jeton_persistant", None)
-            if jeton:
-                try:
-                    supprimer_session(supabase_privee, jeton)
-                except Exception:
-                    # Ne pas exposer les détails techniques à l'élève.
-                    pass
-            try:
-                supabase.auth.sign_out()
-            except Exception:
-                pass
-            for cle in (
-                "supabase_client",
-                "eleve_id",
-                "session_eleve",
-                "exercices_actuels",
-                "code_actuel",
-                "jeton_persistant",
-            ):
-                st.session_state.pop(cle, None)
-            st.session_state["vider_champs_connexion"] = True
-            st.rerun()
+    with st.container(key="mathicap_zone_profil"):
+        if est_connecte:
+            st.markdown(
+                '<div class="mathicap-connecte">● Connecté</div>',
+                unsafe_allow_html=True
+            )
 
+            if st.button("Déconnexion", key="mathicap_deconnexion_entete"):
+                jeton = st.session_state.pop("jeton_persistant", None)
+                if jeton:
+                    try:
+                        supprimer_session(supabase_privee, jeton)
+                    except Exception:
+                        pass
+
+                try:
+                    supabase.auth.sign_out()
+                except Exception:
+                    pass
+
+                for cle in (
+                    "supabase_client",
+                    "eleve_id",
+                    "session_eleve",
+                    "exercices_actuels",
+                    "code_actuel",
+                    "jeton_persistant",
+                ):
+                    st.session_state.pop(cle, None)
+
+                st.session_state["vider_champs_connexion"] = True
+                st.rerun()
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
 if not est_connecte:
     zone_compte, _ = st.columns([7, 3])
