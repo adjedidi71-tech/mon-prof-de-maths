@@ -211,6 +211,7 @@ def _accueil() -> None:
     )
     
     # Six cartes : 3 par ligne sur PC, 2 sur smartphone
+        # Six cartes entièrement cliquables
     with st.container(key="mathicap_cartes"):
         colonnes = st.columns(6, gap="small")
 
@@ -218,23 +219,17 @@ def _accueil() -> None:
             colonnes, activites
         ):
             with colonne:
-                with st.container(border=True):
-                    st.markdown(
-                        f'<div class="mathicap-card-icon">{icone}</div>'
-                        f'<div class="mathicap-card-title">{titre}</div>'
-                        f'<div class="mathicap-card-desc">{description}</div>',
-                        unsafe_allow_html=True,
-                    )
+                st.button(
+                    f"{icone}  **{titre}**  \n{description}",
+                    key=f"mathicap_activite_{page}",
+                    width="stretch",
+                    wrap=True,
+                    on_click=_aller_vers,
+                    args=(page,),
+                )
 
-                    st.button(
-                        "Ouvrir →",
-                        key=f"mathicap_activite_{page}",
-                        use_container_width=True,
-                        on_click=_aller_vers,
-                        args=(page,),
-                    )
-
-
+    # Mes progrès : conserver cette partie
+    with st.container(border=True):
     with st.container(border=True):
         st.markdown("**📊 Mes progrès**")
         st.caption(
