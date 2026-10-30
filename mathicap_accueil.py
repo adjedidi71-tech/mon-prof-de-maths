@@ -68,6 +68,31 @@ def _styles() -> None:
             color: #48627f;
             font-size: 0.92rem;
         }
+                .mathicap-slogan {
+            font-size: 1.28rem;
+            font-weight: 700;
+            line-height: 1.35;
+            margin: 12px 0 4px 0;
+            background: linear-gradient(90deg, #0b3d91 0%, #1f7ae0 55%, #f3a11a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.3px;
+        }
+
+        .mathicap-slogan span {
+            -webkit-text-fill-color: initial;
+            color: #f3a11a;
+            font-weight: 800;
+            padding: 0 4px;
+        }
+
+        @media (max-width: 640px) {
+            .mathicap-slogan {
+                font-size: 1.08rem;
+                margin: 10px 0 2px 0;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
