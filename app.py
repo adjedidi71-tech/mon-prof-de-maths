@@ -119,9 +119,7 @@ with col_logo:
                 alt="MathiCap Collège"
             >
             <div class="mathicap-slogan">
-                Comprendre <span>•</span>
-                S'entraîner <span>•</span>
-                Réussir
+                J'apprends <span>•</span> Je réussis
             </div>
         </div>
         """,
