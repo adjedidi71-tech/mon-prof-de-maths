@@ -165,6 +165,7 @@ if not st.session_state.get("eleve_id"):
                     st.session_state["jeton_persistant"] = jeton_persistant
                     enregistrer_jeton_navigateur(jeton_persistant)
                     st.success("Connexion réussie !")
+                    st.rerun()
                 else:
                     st.error("Connexion impossible.")
             except Exception:
