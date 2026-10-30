@@ -84,6 +84,16 @@ if st.session_state.pop("vider_champs_connexion", False):
 
 est_connecte = bool(st.session_state.get("eleve_id"))
 
+st.markdown("""
+<style>
+@media (max-width: 767px) {
+    .st-key-mathicap_logo_principal [data-testid="stVerticalBlock"] {
+        gap: 0.1rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # En-tête : grand logo à gauche, profil compact à droite.
 col_logo, col_profil = st.columns([3, 1], vertical_alignment="top")
 with col_logo:
