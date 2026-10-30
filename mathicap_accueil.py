@@ -225,7 +225,7 @@ def _styles() -> None:
 
             /* Réduire l'espace blanc en haut de page */
             .stMainBlockContainer {
-                padding-top: 2rem !important;
+                padding-top: 3.5rem !important;
             }
 
             /* Séparer le slogan du compte élève */
