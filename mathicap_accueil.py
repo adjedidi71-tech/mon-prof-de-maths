@@ -233,6 +233,58 @@ def _styles() -> None:
                 padding-bottom: 14px !important;
             }
         }
+        /* Statut de connexion compact */
+        .mathicap-statut {
+            color: #16834A;
+            font-weight: 700;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            margin-bottom: 8px;
+        }
+
+        /* Positionner le profil à droite */
+        div[data-testid="stColumn"]:has(.mathicap-statut) {
+            text-align: right;
+        }
+
+        div[data-testid="stColumn"]:has(.mathicap-statut)
+        div[data-testid="stButton"] {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 640px) {
+
+            /* Garder le logo et le compte côte à côte */
+            div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+            > div[data-testid="stColumn"]:first-child {
+                flex: 0 0 62% !important;
+                width: 62% !important;
+                min-width: 0 !important;
+            }
+
+            div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+            > div[data-testid="stColumn"]:last-child {
+                flex: 0 0 33% !important;
+                width: 33% !important;
+                min-width: 0 !important;
+            }
+
+            .mathicap-statut {
+                font-size: 0.78rem;
+            }
+
+            div[data-testid="stColumn"]:has(.mathicap-statut)
+            button {
+                font-size: 0.72rem !important;
+                padding: 6px 8px !important;
+            }
+
+            .mathicap-marque .mathicap-slogan {
+                font-size: 0.82rem;
+                white-space: nowrap;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
