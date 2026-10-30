@@ -97,7 +97,9 @@ st.markdown("""
 # En-tête : logo à gauche, profil à droite
 col_logo, col_profil = st.columns(
     [3, 1],
-    vertical_alignment="top"
+    vertical_alignment="top",
+    gap="small",
+    wrap=False,
 )
 
 with col_logo:
