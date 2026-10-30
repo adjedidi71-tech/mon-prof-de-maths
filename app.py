@@ -3,6 +3,7 @@ from google import genai
 from groq import Groq
 from banque_priorites import generer_exercices_priorites
 from supabase import create_client
+from mathicap_accueil import afficher_interface_mathicap
 from auth_persistante import (
     enregistrer_session,
     supprimer_session,
