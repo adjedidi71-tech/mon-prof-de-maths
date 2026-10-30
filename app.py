@@ -128,8 +128,11 @@ with col_logo:
 
 with col_profil:
     if est_connecte:
-        st.markdown("**👤 Compte élève connecté**")
-        if st.button("Se déconnecter", key="mathicap_deconnexion_entete"):
+        st.markdown(
+            '<div class="mathicap-statut">● Connecté</div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Déconnexion", key="mathicap_deconnexion_entete"):
             jeton = st.session_state.pop("jeton_persistant", None)
             if jeton:
                 try:
