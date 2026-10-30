@@ -89,7 +89,7 @@ def _styles() -> None:
 
         @media (max-width: 640px) {
             .mathicap-slogan {
-                font-size: 1.08rem;
+                font-size: 0.82rem;
                 margin: 10px 0 2px 0;
             }
         }
