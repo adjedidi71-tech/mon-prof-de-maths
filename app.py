@@ -68,7 +68,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-st.title("MathiCap Collège")
+from pathlib import Path
+
+logo = Path(__file__).with_name("mathicap_logo.png")
+st.image(str(logo), width=260)
 
 st.write("Prépare tes exercices de mathématiques !")
 
