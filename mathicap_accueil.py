@@ -185,13 +185,6 @@ def _styles() -> None:
         /* Logo et slogan rapprochés sur smartphone */
         @media (max-width: 640px) {
 
-            .st-key-mathicap_logo_principal {
-                height: 56px !important;
-                max-height: 56px !important;
-                min-height: 0 !important;
-                overflow: hidden !important;
-            }
-
             .st-key-mathicap_logo_principal [data-testid="stImage"],
             .st-key-mathicap_logo_principal img {
                 width: 120px !important;
