@@ -220,6 +220,19 @@ def _styles() -> None:
                 width: 120px;
             }
         }
+        /* Espacement de l'accueil sur smartphone */
+        @media (max-width: 640px) {
+
+            /* Réduire l'espace blanc en haut de page */
+            .stMainBlockContainer {
+                padding-top: 2rem !important;
+            }
+
+            /* Séparer le slogan du compte élève */
+            .mathicap-marque {
+                padding-bottom: 14px !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
