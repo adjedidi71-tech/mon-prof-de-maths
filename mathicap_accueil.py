@@ -271,7 +271,7 @@ def _accueil() -> None:
                 )
 
     # Mes progrès : conserver cette partie
-    with st.container(border=True):
+
     with st.container(border=True):
         st.markdown("**📊 Mes progrès**")
         st.caption(
