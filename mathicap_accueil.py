@@ -209,15 +209,23 @@ def _accueil() -> None:
         ("📄", "Fiches de révision", "Retenir l'essentiel du chapitre.", "Fiches de révision"),
         ("💡", "Mon Prof IA", "Obtenir une explication ou un indice.", "Mon Prof IA"),
     )
-    for start in (0, 3):
-        colonnes = st.columns(3)
-        for i, colonne in enumerate(colonnes):
-            icone, titre, description, page = activites[start + i]
+    
+    # Six cartes : 3 par ligne sur PC, 2 sur smartphone
+    with st.container(key="mathicap_cartes"):
+        colonnes = st.columns(6, gap="small")
+
+        for colonne, (icone, titre, description, page) in zip(
+            colonnes, activites
+        ):
             with colonne:
                 with st.container(border=True):
-                    st.markdown(f"### {icone}")
-                    st.markdown(f"**{titre}**")
-                    st.caption(description)
+                    st.markdown(
+                        f'<div class="mathicap-card-icon">{icone}</div>'
+                        f'<div class="mathicap-card-title">{titre}</div>'
+                        f'<div class="mathicap-card-desc">{description}</div>',
+                        unsafe_allow_html=True,
+                    )
+
                     st.button(
                         "Ouvrir →",
                         key=f"mathicap_activite_{page}",
@@ -225,6 +233,7 @@ def _accueil() -> None:
                         on_click=_aller_vers,
                         args=(page,),
                     )
+
 
     with st.container(border=True):
         st.markdown("**📊 Mes progrès**")
