@@ -91,6 +91,28 @@ st.markdown("""
         gap: 0.1rem !important;
     }
 }
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_profil [data-testid="stVerticalBlock"] {
+        align-items: flex-end !important;
+        width: 100% !important;
+    }
+
+    .mathicap-connecte {
+        width: 100% !important;
+        text-align: right !important;
+        color: #1f8f47 !important;
+        font-weight: 700 !important;
+        margin: 0 0 8px 0 !important;
+    }
+
+    .st-key-mathicap_zone_profil button {
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        width: auto !important;
+        min-width: 160px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
