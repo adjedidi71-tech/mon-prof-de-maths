@@ -410,7 +410,8 @@ with col_profil:
                 '<div class="mathicap-connecte">● Connecté</div>',
                 unsafe_allow_html=True
             )
-
+            if st.button("Mon profil", key="mathicap_ouvrir_profil"):
+                st.session_state["mathicap_vue"] = "profil"
             if st.button("Déconnexion", key="mathicap_deconnexion_entete"):
                 jeton = st.session_state.pop("jeton_persistant", None)
                 if jeton:
@@ -442,6 +443,13 @@ with col_profil:
                 '● Déconnecté</div>',
                 unsafe_allow_html=True,
             )
+if est_connecte and st.session_state.get("mathicap_vue") == "profil":
+    st.subheader("Mon profil")
+    st.write("Bienvenue dans ton espace personnel MathiCap.")
+
+    if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
+        st.session_state["mathicap_vue"] = "accueil"
+        st.rerun()
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
 if not est_connecte:
     zone_compte, _ = st.columns([7, 3])
