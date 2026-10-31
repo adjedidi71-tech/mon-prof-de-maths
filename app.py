@@ -451,11 +451,24 @@ with col_profil:
             + _svg
             + '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/>'
             '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>'
-            '<span class="mathicap-avatar" aria-hidden="true">'
-            + _avatar_html
-            + '</span></div>',
+            '<span class="mathicap-avatar" aria-hidden="true"></span></div>',
             unsafe_allow_html=True,
         )
+        if _avatar_uri:
+            st.markdown(
+                f"""
+                <style>
+                .st-key-mathicap_zone_profil
+                .st-key-mathicap_avatar_clic button {{
+                    background-image: url("{_avatar_uri}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
         if st.button(
             "Ouvrir mon profil",
             key="mathicap_avatar_clic",
