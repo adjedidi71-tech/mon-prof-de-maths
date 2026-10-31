@@ -221,6 +221,8 @@ st.markdown("""
     justify-content: flex-end;
     gap: var(--mc-ico-gap);
     width: 100%;
+    padding-right: calc(var(--mc-avatar) + var(--mc-ico-gap));
+    box-sizing: border-box;
 }
 
 .st-key-mathicap_zone_profil .mathicap-icone {
@@ -463,7 +465,7 @@ with col_profil:
             + _svg
             + '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/>'
             '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>'
-            '<span class="mathicap-avatar" aria-hidden="true"></span></div>',
+            '</div>',
             unsafe_allow_html=True,
         )
         if _avatar_uri:
