@@ -137,7 +137,7 @@ col_logo, col_profil = st.columns(
     [3, 1],
     vertical_alignment="top",
     gap="small",
-    wrap=False,
+    wrap=True,
 )
 
 with col_logo:
