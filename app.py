@@ -436,6 +436,12 @@ with col_profil:
 
                 st.session_state["vider_champs_connexion"] = True
                 st.rerun()
+        else:
+            st.markdown(
+                '<div class="mathicap-connecte mathicap-deconnecte">'
+                '● Déconnecté</div>',
+                unsafe_allow_html=True,
+            )
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
 if not est_connecte:
     zone_compte, _ = st.columns([7, 3])
