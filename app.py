@@ -393,12 +393,12 @@ st.markdown("""
     .st-key-mathicap_zone_profil
     .st-key-mathicap_avatar_clic
     [data-testid="stButton"] button {
-        width: 38px !important;
-        min-width: 38px !important;
-        max-width: 38px !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        max-height: 38px !important;
+        width: var(--mc-avatar) !important;
+        min-width: var(--mc-avatar) !important;
+        max-width: var(--mc-avatar) !important;
+        height: var(--mc-avatar) !important;
+        min-height: var(--mc-avatar) !important;
+        max-height: var(--mc-avatar) !important;
         aspect-ratio: 1 / 1 !important;
         border-radius: 50% !important;
         box-sizing: border-box !important;
