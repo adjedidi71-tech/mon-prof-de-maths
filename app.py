@@ -120,6 +120,8 @@ st.markdown("""
     font-size: 0 !important;
     color: transparent !important;
     cursor: pointer !important;
+    outline: 2px dashed red !important;
+    outline-offset: -2px !important;
 }
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic button:focus-visible {
