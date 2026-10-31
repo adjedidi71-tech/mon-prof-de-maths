@@ -11,7 +11,7 @@ from auth_persistante import (
     enregistrer_jeton_navigateur,
     lire_jeton_navigateur,
     verifier_session
-)
+))
 
 def connexion_supabase():
     return create_client(
