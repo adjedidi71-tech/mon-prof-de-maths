@@ -87,6 +87,12 @@ st.markdown("""
 /* Avatar cliquable sans modifier sa position */
 .st-key-mathicap_zone_profil {
     position: relative !important;
+    /* Laisser passer les clics vers le bouton de l'avatar */
+    .st-key-mathicap_zone_profil
+    [data-testid="stElementContainer"]:has(.mathicap-icones),
+    .st-key-mathicap_zone_profil .mathicap-icones {
+        pointer-events: none !important;
+}
 }
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
