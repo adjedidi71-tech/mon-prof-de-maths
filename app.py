@@ -318,6 +318,12 @@ st.markdown("""
         font-size: 10px !important;
     }
 }
+/* Réduire l'espace au-dessus de l'en-tête sur PC uniquement */
+@media (min-width: 1025px) {
+    [data-testid="stMainBlockContainer"]:has(.mathicap-marque) {
+        padding-top: 3.5rem !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
