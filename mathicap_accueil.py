@@ -255,21 +255,6 @@ def _styles() -> None:
 
         @media (max-width: 640px) {
 
-            /* Garder le logo et le compte côte à côte */
-            div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
-            > div[data-testid="stColumn"]:first-child {
-                flex: 0 0 62% !important;
-                width: 62% !important;
-                min-width: 0 !important;
-            }
-
-            div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
-            > div[data-testid="stColumn"]:last-child {
-                flex: 0 0 33% !important;
-                width: 33% !important;
-                min-width: 0 !important;
-            }
-
             .mathicap-statut {
                 font-size: 0.78rem;
             }
