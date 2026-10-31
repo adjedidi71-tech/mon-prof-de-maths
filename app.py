@@ -405,6 +405,13 @@ with col_profil:
             + '</span></div>',
             unsafe_allow_html=True,
         )
+        if st.button(
+            "Ouvrir mon profil",
+            key="mathicap_avatar_clic",
+            disabled=not est_connecte,
+            help="Accéder à mon profil",
+        ):
+            st.session_state["mathicap_vue"] = "profil"
         if est_connecte:
             st.markdown(
                 '<div class="mathicap-connecte">● Connecté</div>',
