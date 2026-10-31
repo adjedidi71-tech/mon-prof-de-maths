@@ -75,9 +75,6 @@ from pathlib import Path
 # « Mon compte élève » par ce code.
 # Ne pas modifier les 2 lignes « afficher_interface_mathicap() »
 # ni « chapitres = { » plus bas.
-
-from pathlib import Path
-
 # Réinitialiser les champs AVANT leur éventuelle création.
 if st.session_state.pop("vider_champs_connexion", False):
     st.session_state["email_connexion"] = ""
@@ -97,7 +94,13 @@ st.markdown("""
     top: 0 !important;
     right: 0 !important;
     width: var(--mc-avatar) !important;
+    min-width: var(--mc-avatar) !important;
+    max-width: var(--mc-avatar) !important;
     height: var(--mc-avatar) !important;
+    min-height: var(--mc-avatar) !important;
+    max-height: var(--mc-avatar) !important;
+    margin: 0 !important;
+    padding: 0 !important;
     z-index: 10 !important;
 }
 
@@ -122,6 +125,10 @@ st.markdown("""
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic button:focus-visible {
     outline: 2px solid #2563eb !important;
     outline-offset: 3px !important;
+}
+.st-key-mathicap_zone_profil
+.st-key-mathicap_avatar_clic button p {
+    opacity: 0 !important;
 }
 /* ============================================================
    EN-TÊTE MATHICAP : tout est limité à l'en-tête
@@ -453,8 +460,6 @@ with col_profil:
                 '<div class="mathicap-connecte">● Connecté</div>',
                 unsafe_allow_html=True
             )
-            if st.button("Mon profil", key="mathicap_ouvrir_profil"):
-                st.session_state["mathicap_vue"] = "profil"
             if st.button("Déconnexion", key="mathicap_deconnexion_entete"):
                 jeton = st.session_state.pop("jeton_persistant", None)
                 if jeton:
