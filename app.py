@@ -129,6 +129,41 @@ st.markdown("""
         margin-left: auto !important;
     }
 }
+/* En-tête responsive sans défilement horizontal */
+@media (max-width: 767px) {
+
+    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 60%) minmax(0, 40%) !important;
+        gap: 0 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    > [data-testid="stColumn"] {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .mathicap-marque {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .st-key-mathicap_zone_profil {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .st-key-mathicap_zone_profil button {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
