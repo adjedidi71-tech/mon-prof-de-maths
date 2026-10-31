@@ -148,10 +148,14 @@ st.markdown("""
 }
 
 /* Zone compte : tout aligné à droite */
-.st-key-mathicap_zone_profil,
 .st-key-mathicap_zone_profil [data-testid="stVerticalBlock"] {
-    gap: 6px !important;
+    gap: 12px !important;
     align-items: flex-end !important;
+}
+
+.st-key-mathicap_zone_profil .mathicap-connecte {
+    display: block !important;
+    padding-bottom: 6px !important;
 }
 
 .st-key-mathicap_zone_profil [data-testid="stElementContainer"] {
