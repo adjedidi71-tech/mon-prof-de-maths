@@ -321,7 +321,7 @@ st.markdown("""
 /* Réduire l'espace au-dessus de l'en-tête sur PC uniquement */
 @media (min-width: 1025px) {
     [data-testid="stMainBlockContainer"]:has(.mathicap-marque) {
-        padding-top: 3rem !important;
+        padding-top: 2.5rem !important;
     }
 }
 </style>
