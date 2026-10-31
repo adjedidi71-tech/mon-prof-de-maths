@@ -86,70 +86,209 @@ est_connecte = bool(st.session_state.get("eleve_id"))
 
 st.markdown("""
 <style>
-@media (max-width: 767px) {
-    .st-key-mathicap_logo_principal [data-testid="stVerticalBlock"] {
-        gap: 0.1rem !important;
+/* ============================================================
+   EN-TÊTE MATHICAP : tout est limité à l'en-tête
+   (classes .mathicap-* et clé mathicap_zone_profil)
+   ============================================================ */
+
+/* Conteneur de l'en-tête : grille « logo flexible | compte à largeur automatique » */
+[data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+    /* Tailles ordinateur (> 1024 px) */
+    --mc-logo-w: 250px;
+    --mc-slogan: 1.1rem;
+    --mc-ico: 40px;
+    --mc-avatar: 52px;
+    --mc-ico-gap: 18px;
+    --mc-statut: 14px;
+    --mc-btn-h: 32px;
+    --mc-btn-fs: 13px;
+
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    column-gap: 12px !important;
+    row-gap: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+> [data-testid="stColumn"] {
+    flex: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Logo + slogan */
+[data-testid="stHorizontalBlock"]:has(.mathicap-marque) .mathicap-marque {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+[data-testid="stHorizontalBlock"]:has(.mathicap-marque) .mathicap-marque img {
+    display: block;
+    width: var(--mc-logo-w) !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+.mathicap-marque .mathicap-slogan {
+    font-size: var(--mc-slogan) !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    white-space: nowrap;
+}
+
+/* Zone compte : tout aligné à droite */
+.st-key-mathicap_zone_profil,
+.st-key-mathicap_zone_profil [data-testid="stVerticalBlock"] {
+    gap: 6px !important;
+    align-items: flex-end !important;
+}
+
+.st-key-mathicap_zone_profil [data-testid="stElementContainer"] {
+    width: 100% !important;
+}
+
+/* Icônes : recherche, notifications, profil (décoratives pour l'instant) */
+.st-key-mathicap_zone_profil .mathicap-icones {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--mc-ico-gap);
+    width: 100%;
+}
+
+.st-key-mathicap_zone_profil .mathicap-icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--mc-ico);
+    height: var(--mc-ico);
+    color: #12315f;
+}
+
+.st-key-mathicap_zone_profil .mathicap-icone svg {
+    width: 64%;
+    height: 64%;
+}
+
+.st-key-mathicap_zone_profil .mathicap-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--mc-avatar);
+    height: var(--mc-avatar);
+    border-radius: 50%;
+    overflow: hidden;
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.st-key-mathicap_zone_profil .mathicap-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.st-key-mathicap_zone_profil .mathicap-avatar svg {
+    width: 62%;
+    height: 62%;
+}
+
+/* Statut de connexion */
+.st-key-mathicap_zone_profil .mathicap-connecte {
+    color: #18864b !important;
+    font-size: var(--mc-statut) !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+    margin: 0 !important;
+}
+
+.st-key-mathicap_zone_profil .mathicap-connecte.mathicap-deconnecte {
+    color: #6b7280 !important;
+}
+
+/* Bouton Déconnexion : largeur = texte, compact */
+.st-key-mathicap_zone_profil [data-testid="stButton"] {
+    display: flex !important;
+    justify-content: flex-end !important;
+    width: 100% !important;
+}
+
+.st-key-mathicap_zone_profil [data-testid="stButton"] button {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: var(--mc-btn-h) !important;
+    min-height: var(--mc-btn-h) !important;
+    padding: 0 12px !important;
+    font-size: var(--mc-btn-fs) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+.st-key-mathicap_zone_profil [data-testid="stButton"] button p {
+    font-size: inherit !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+/* Tablette : 768 à 1024 px */
+@media (max-width: 1024px) {
+    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+        --mc-logo-w: 210px;
+        --mc-slogan: 1rem;
+        --mc-ico: 38px;
+        --mc-avatar: 48px;
+        --mc-ico-gap: 14px;
     }
 }
-/* En-tête compact sans débordement horizontal */
+
+/* Smartphone : moins de 768 px */
 @media (max-width: 767px) {
-
     [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) 130px !important;
-        gap: 8px !important;
-        width: 100% !important;
-        max-width: 100% !important;
+        --mc-logo-w: clamp(112px, 36vw, 170px);
+        --mc-slogan: clamp(0.72rem, 3.4vw, 0.9rem);
+        --mc-ico: 32px;
+        --mc-avatar: 38px;
+        --mc-ico-gap: 8px;
+        --mc-statut: 12px;
+        --mc-btn-h: 28px;
+        --mc-btn-fs: 11px;
+        column-gap: 8px !important;
     }
+}
 
-    [data-testid="stHorizontalBlock"]:has(.mathicap-marque)
-    > [data-testid="stColumn"] {
-        flex: none !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
-
-    .mathicap-marque {
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    .st-key-mathicap_zone_profil {
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    .mathicap-connecte {
-        color: #18864b !important;
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        white-space: nowrap !important;
-        text-align: right !important;
-        margin: 0 0 5px !important;
-    }
-
-    .st-key-mathicap_zone_profil [data-testid="stButton"] {
-        width: 100px !important;
-        max-width: 100% !important;
-        margin-left: auto !important;
-    }
-
-    .st-key-mathicap_zone_profil button {
-        width: 115px !important;
-        min-width: 115px !important;
-        max-width: 115px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 3px 6px !important;
-        font-size: 11px !important;
-        white-space: nowrap !important;
-        box-sizing: border-box !important;
+/* Très petit écran : 360 px et moins (dont 320 px) */
+@media (max-width: 360px) {
+    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+        --mc-logo-w: 112px;
+        --mc-slogan: 0.72rem;
+        --mc-ico: 28px;
+        --mc-avatar: 34px;
+        --mc-ico-gap: 6px;
+        --mc-statut: 11px;
+        --mc-btn-h: 26px;
+        --mc-btn-fs: 10.5px;
     }
 }
 </style>
 """, unsafe_allow_html=True)
-
 # En-tête : logo à gauche, profil à droite
 col_logo, col_profil = st.columns(
     [3, 1],
