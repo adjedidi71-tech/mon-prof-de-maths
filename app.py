@@ -388,6 +388,23 @@ st.markdown("""
     padding: 0 !important;
     border-radius: 50% !important;
 }
+/* Avatar parfaitement circulaire sur smartphone */
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_profil
+    .st-key-mathicap_avatar_clic
+    [data-testid="stButton"] button {
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        aspect-ratio: 1 / 1 !important;
+        border-radius: 50% !important;
+        box-sizing: border-box !important;
+        background-size: cover !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
