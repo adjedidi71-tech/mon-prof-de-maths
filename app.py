@@ -319,6 +319,18 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
+@st.cache_data(show_spinner=False)
+def _image_en_data_uri(nom_fichier: str) -> str:
+    """Charge une image PNG du dépôt, si elle existe."""
+    import base64
+
+    chemin = Path(__file__).with_name(nom_fichier)
+    if not chemin.is_file():
+        return ""
+    return "data:image/png;base64," + base64.b64encode(
+        chemin.read_bytes()
+    ).decode("ascii")
 # En-tête : logo à gauche, profil à droite
 col_logo, col_profil = st.columns(
     [3, 1],
