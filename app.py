@@ -291,6 +291,32 @@ st.markdown("""
         --mc-btn-fs: 10.5px;
     }
 }
+/* Bouton Déconnexion compact sur smartphone uniquement */
+@media (max-width: 767px) {
+
+    div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    > div[data-testid="stColumn"]:last-child
+    div[data-testid="stButton"] {
+        width: fit-content !important;
+        margin-left: auto !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    > div[data-testid="stColumn"]:last-child
+    div[data-testid="stButton"] button {
+        width: auto !important;
+        min-width: 0 !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 3px 9px !important;
+    }
+
+    div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    > div[data-testid="stColumn"]:last-child
+    div[data-testid="stButton"] button p {
+        font-size: 12px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 # En-tête : logo à gauche, profil à droite
