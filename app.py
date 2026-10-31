@@ -86,7 +86,42 @@ if st.session_state.pop("vider_champs_connexion", False):
 est_connecte = bool(st.session_state.get("eleve_id"))
 
 st.markdown("""
+/* Avatar cliquable sans modifier sa position */
+.st-key-mathicap_zone_profil {
+    position: relative !important;
+}
 
+.st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: var(--mc-avatar) !important;
+    height: var(--mc-avatar) !important;
+    z-index: 10 !important;
+}
+
+.st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic [data-testid="stButton"],
+.st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic button {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+.st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic button {
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 0 !important;
+    color: transparent !important;
+    cursor: pointer !important;
+}
+
+.st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic button:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 3px !important;
+}
 <style>
 /* ============================================================
    EN-TÊTE MATHICAP : tout est limité à l'en-tête
@@ -458,6 +493,8 @@ if est_connecte and st.session_state.get("mathicap_vue") == "profil":
     if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
         st.session_state["mathicap_vue"] = "accueil"
         st.rerun()
+if est_connecte and st.session_state.get("mathicap_vue") == "profil":
+    st.info("Clic sur l'avatar détecté : navigation vers Mon profil.")
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
 if not est_connecte:
     zone_compte, _ = st.columns([7, 3])
