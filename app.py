@@ -328,7 +328,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data(show_spinner=False)
 def _image_en_data_uri(nom_fichier: str) -> str:
     """Charge une image PNG du dépôt, si elle existe."""
     import base64
