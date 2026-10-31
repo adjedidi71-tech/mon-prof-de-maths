@@ -97,7 +97,7 @@ st.markdown("""
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
     position: absolute !important;
-    top: 10px !important;
+    top: 0 !important;
     right: 0 !important;
     width: var(--mc-avatar) !important;
     min-width: var(--mc-avatar) !important;
@@ -375,6 +375,18 @@ st.markdown("""
     [data-testid="stMainBlockContainer"]:has(.mathicap-marque) {
         padding-top: 2.75rem !important;
     }
+}
+/* Zone cliquable exactement aux dimensions de l'avatar */
+.st-key-mathicap_zone_profil
+.st-key-mathicap_avatar_clic [data-testid="stButton"] button {
+    width: var(--mc-avatar) !important;
+    min-width: var(--mc-avatar) !important;
+    max-width: var(--mc-avatar) !important;
+    height: var(--mc-avatar) !important;
+    min-height: var(--mc-avatar) !important;
+    max-height: var(--mc-avatar) !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
 }
 </style>
 """, unsafe_allow_html=True)
