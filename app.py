@@ -86,6 +86,7 @@ if st.session_state.pop("vider_champs_connexion", False):
 est_connecte = bool(st.session_state.get("eleve_id"))
 
 st.markdown("""
+<style>
 /* Avatar cliquable sans modifier sa position */
 .st-key-mathicap_zone_profil {
     position: relative !important;
@@ -122,7 +123,6 @@ st.markdown("""
     outline: 2px solid #2563eb !important;
     outline-offset: 3px !important;
 }
-<style>
 /* ============================================================
    EN-TÊTE MATHICAP : tout est limité à l'en-tête
    (classes .mathicap-* et clé mathicap_zone_profil)
