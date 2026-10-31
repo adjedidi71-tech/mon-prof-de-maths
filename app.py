@@ -96,7 +96,7 @@ st.markdown("""
 
     [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) 115px !important;
+        grid-template-columns: minmax(0, 1fr) 130px !important;
         gap: 8px !important;
         width: 100% !important;
         max-width: 100% !important;
