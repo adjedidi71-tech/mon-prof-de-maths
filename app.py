@@ -1,4 +1,5 @@
 import streamlit as st
+from pathlib import Path
 from google import genai
 from groq import Groq
 from banque_priorites import generer_exercices_priorites
@@ -365,6 +366,39 @@ with col_logo:
 
 with col_profil:
     with st.container(key="mathicap_zone_profil"):
+        _svg = (
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" '
+            'stroke-linejoin="round" aria-hidden="true">'
+        )
+
+        _avatar_uri = _image_en_data_uri("mathicap_avatar.png")
+
+        if _avatar_uri:
+            _avatar_html = f'<img src="{_avatar_uri}" alt="">'
+        else:
+            _avatar_html = (
+                '<svg viewBox="0 0 24 24" fill="currentColor" '
+                'aria-hidden="true"><circle cx="12" cy="9" r="4"/>'
+                '<path d="M4.5 21c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5z"/>'
+                '</svg>'
+            )
+
+        st.markdown(
+            '<div class="mathicap-icones">'
+            '<span class="mathicap-icone" aria-hidden="true">'
+            + _svg
+            + '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>'
+            '</svg></span>'
+            '<span class="mathicap-icone" aria-hidden="true">'
+            + _svg
+            + '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/>'
+            '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>'
+            '<span class="mathicap-avatar" aria-hidden="true">'
+            + _avatar_html
+            + '</span></div>',
+            unsafe_allow_html=True,
+        )
         if est_connecte:
             st.markdown(
                 '<div class="mathicap-connecte">● Connecté</div>',
