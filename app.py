@@ -319,7 +319,8 @@ st.markdown("""
     }
 }
 /* Réduire l'espace au-dessus de l'en-tête sur PC uniquement */
-@media (min-width: 1025px) {
+/* Hauteur cohérente sur PC, plein écran ou demi-écran */
+@media (min-width: 768px) {
     [data-testid="stMainBlockContainer"]:has(.mathicap-marque) {
         padding-top: 2.75rem !important;
     }
