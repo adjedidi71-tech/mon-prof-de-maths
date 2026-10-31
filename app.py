@@ -91,45 +91,62 @@ st.markdown("""
         gap: 0.1rem !important;
     }
 }
+/* En-tête compact sans débordement horizontal */
 @media (max-width: 767px) {
-    .st-key-mathicap_zone_profil [data-testid="stVerticalBlock"] {
-        align-items: flex-end !important;
+
+    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 115px !important;
+        gap: 8px !important;
         width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    > [data-testid="stColumn"] {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .mathicap-marque {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .st-key-mathicap_zone_profil {
+        width: 100% !important;
+        min-width: 0 !important;
     }
 
     .mathicap-connecte {
-        width: 100% !important;
-        text-align: right !important;
-        color: #1f8f47 !important;
+        color: #18864b !important;
+        font-size: 12px !important;
         font-weight: 700 !important;
-        margin: 0 0 8px 0 !important;
-    }
-
-    .st-key-mathicap_zone_profil button {
-        display: block !important;
-        margin-left: auto !important;
-        margin-right: 0 !important;
-        width: auto !important;
-        min-width: 160px !important;
-    }
-}
-@media (max-width: 767px) {
-    .mathicap-connecte {
-        font-size: 12px !important;
+        white-space: nowrap !important;
         text-align: right !important;
-        margin: 0 0 5px 0 !important;
+        margin: 0 0 5px !important;
+    }
+
+    .st-key-mathicap_zone_profil [data-testid="stButton"] {
+        width: 100px !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
     }
 
     .st-key-mathicap_zone_profil button {
-        font-size: 12px !important;
-        min-height: 32px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
         height: 32px !important;
-        padding: 3px 8px !important;
-        width: auto !important;
-        margin-left: auto !important;
+        min-height: 32px !important;
+        padding: 3px 6px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
     }
 }
-
 </style>
 """, unsafe_allow_html=True)
 
