@@ -97,7 +97,7 @@ st.markdown("""
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
     position: absolute !important;
-    top: 0 !important;
+    top: 10px !important;
     right: 0 !important;
     width: var(--mc-avatar) !important;
     min-width: var(--mc-avatar) !important;
