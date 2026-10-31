@@ -86,6 +86,7 @@ if st.session_state.pop("vider_champs_connexion", False):
 est_connecte = bool(st.session_state.get("eleve_id"))
 
 st.markdown("""
+
 <style>
 /* ============================================================
    EN-TÊTE MATHICAP : tout est limité à l'en-tête
