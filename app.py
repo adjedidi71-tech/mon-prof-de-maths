@@ -136,9 +136,9 @@ st.markdown("""
     }
 
     .st-key-mathicap_zone_profil button {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
+        width: 115px !important;
+        min-width: 115px !important;
+        max-width: 115px !important;
         height: 32px !important;
         min-height: 32px !important;
         padding: 3px 6px !important;
