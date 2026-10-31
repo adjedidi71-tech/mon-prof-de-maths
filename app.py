@@ -126,8 +126,6 @@ st.markdown("""
     font-size: 0 !important;
     color: transparent !important;
     cursor: pointer !important;
-    outline: 2px dashed red !important;
-    outline-offset: -2px !important;
 }
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic button:focus-visible {
@@ -533,8 +531,7 @@ if est_connecte and st.session_state.get("mathicap_vue") == "profil":
     if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
         st.session_state["mathicap_vue"] = "accueil"
         st.rerun()
-if est_connecte and st.session_state.get("mathicap_vue") == "profil":
-    st.info("Clic sur l'avatar détecté : navigation vers Mon profil.")
+
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
 if not est_connecte:
     zone_compte, _ = st.columns([7, 3])
