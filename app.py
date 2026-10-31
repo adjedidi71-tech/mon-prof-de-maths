@@ -113,6 +113,22 @@ st.markdown("""
         min-width: 160px !important;
     }
 }
+@media (max-width: 767px) {
+    .mathicap-connecte {
+        font-size: 12px !important;
+        text-align: right !important;
+        margin: 0 0 5px 0 !important;
+    }
+
+    .st-key-mathicap_zone_profil button {
+        font-size: 12px !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 3px 8px !important;
+        width: auto !important;
+        margin-left: auto !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
