@@ -306,15 +306,15 @@ st.markdown("""
     div[data-testid="stButton"] button {
         width: auto !important;
         min-width: 0 !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 3px 9px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        padding: 2px 6px !important;
     }
 
     div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
     > div[data-testid="stColumn"]:last-child
     div[data-testid="stButton"] button p {
-        font-size: 12px !important;
+        font-size: 11px !important;
     }
 }
 </style>
