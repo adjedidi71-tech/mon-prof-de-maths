@@ -321,7 +321,7 @@ st.markdown("""
         --mc-logo-w: clamp(112px, 36vw, 170px);
         --mc-slogan: clamp(0.72rem, 3.4vw, 0.9rem);
         --mc-ico: 32px;
-        --mc-avatar: 44px;
+        --mc-avatar: 52px;
         --mc-ico-gap: 8px;
         --mc-statut: 12px;
         --mc-btn-h: 28px;
@@ -336,7 +336,7 @@ st.markdown("""
         --mc-logo-w: 112px;
         --mc-slogan: 0.72rem;
         --mc-ico: 28px;
-        --mc-avatar: 38px;
+        --mc-avatar: 44px;
         --mc-ico-gap: 6px;
         --mc-statut: 11px;
         --mc-btn-h: 26px;
