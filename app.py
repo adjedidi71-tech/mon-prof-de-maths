@@ -616,46 +616,115 @@ with col_profil:
                 '● Déconnecté</div>',
                 unsafe_allow_html=True,
             )
+
 if est_connecte and st.query_params.get("vue") == "profil":
     st.subheader("Mon profil")
     st.markdown("### Mes informations personnelles")
 
+    identifiant_eleve = st.session_state["eleve_id"]
+    email_eleve = None
+    pseudo_eleve = ""
+    date_inscription = None
+    profil_charge = False
+
+    # Récupérer les informations du compte existant
     try:
         resultat_profil = supabase_privee.auth.admin.get_user_by_id(
-            st.session_state["eleve_id"]
+            identifiant_eleve
         )
-        email_eleve = getattr(resultat_profil.user, "email", None)
-        date_inscription = getattr(resultat_profil.user, "created_at", None)
-        pseudo_eleve = (resultat_profil.user.user_metadata or {}).get("pseudo")
+        utilisateur_profil = resultat_profil.user
+
+        if utilisateur_profil is None:
+            raise ValueError("Compte introuvable")
+
+        email_eleve = utilisateur_profil.email
+        pseudo_eleve = (
+            (utilisateur_profil.user_metadata or {}).get("pseudo") or ""
+        )
+        date_inscription = utilisateur_profil.created_at
+        profil_charge = True
+
     except Exception:
-        email_eleve = None
-        date_inscription = None
-        pseudo_eleve = None
-    
-    st.html(
-        f"<div><strong>Adresse e-mail :</strong> "
-        f"{escape(email_eleve or 'Information non disponible')}</div>"
-    )
-    st.html(
-        f"<div><strong>Pseudo :</strong> "
-        f"{escape(pseudo_eleve or 'Non renseigné')}</div>"
-    )
-        
+        st.warning("Informations du compte momentanément indisponibles.")
+
+    # Classe et date d'inscription
     classe_eleve = st.session_state.get("mathicap_classe")
 
-    st.write(
-        f"**Ma classe :** {classe_eleve or 'Non définie'}"
-    )
     if date_inscription:
         date_affichee = date_inscription.strftime("%d/%m/%Y")
     else:
         date_affichee = "Information non disponible"
-    
-    st.write(f"**Date d'inscription :** {date_affichee}")
 
-    if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
+    # Affichage homogène, sans lien e-mail cliquable
+    st.html(
+        '<div style="line-height: 1.9;">'
+        f'<div><strong>Adresse e-mail :</strong> '
+        f'{escape(email_eleve or "Information non disponible")}</div>'
+        f'<div><strong>Pseudo :</strong> '
+        f'{escape(pseudo_eleve or "Non renseigné")}</div>'
+        f'<div><strong>Ma classe :</strong> '
+        f'{escape(classe_eleve or "Non définie")}</div>'
+        f'<div><strong>Date d’inscription :</strong> '
+        f'{escape(date_affichee)}</div>'
+        '</div>'
+    )
+
+    # Confirmation après enregistrement
+    if st.session_state.pop("mathicap_pseudo_sauve", False):
+        st.success("Pseudo enregistré avec succès.")
+
+    # Modifier le pseudo sans toucher aux autres informations
+    if profil_charge:
+        with st.expander("Modifier mon pseudo"):
+            with st.form("mathicap_formulaire_pseudo"):
+                nouveau_pseudo = st.text_input(
+                    "Nouveau pseudo",
+                    value=pseudo_eleve,
+                    max_chars=30,
+                    help="Facultatif. Laisse vide pour retirer ton pseudo."
+                )
+
+                enregistrer_pseudo = st.form_submit_button("Enregistrer")
+
+            if enregistrer_pseudo:
+                nouveau_pseudo = nouveau_pseudo.strip()
+
+                if nouveau_pseudo == pseudo_eleve.strip():
+                    st.info("Aucune modification à enregistrer.")
+
+                else:
+                    try:
+                        compte_actuel = supabase_privee.auth.admin.get_user_by_id(
+                            identifiant_eleve
+                        )
+
+                        if compte_actuel.user is None:
+                            raise ValueError("Compte introuvable")
+
+                        infos = dict(
+                            compte_actuel.user.user_metadata or {}
+                        )
+
+                        infos["pseudo"] = nouveau_pseudo
+
+                        supabase_privee.auth.admin.update_user_by_id(
+                            identifiant_eleve,
+                            {"user_metadata": infos}
+                        )
+
+                        st.session_state["mathicap_pseudo_sauve"] = True
+                        st.rerun()
+
+                    except Exception:
+                        st.error("Impossible d'enregistrer le pseudo.")
+
+    if st.button(
+        "Retour à l'accueil",
+        key="mathicap_retour_accueil"
+    ):
         st.query_params["vue"] = "accueil"
         st.rerun()
+
 
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
 if not est_connecte:
