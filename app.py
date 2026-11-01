@@ -341,6 +341,7 @@ st.markdown("""
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center;
 }
 
 .st-key-mathicap_zone_profil .mathicap-avatar svg {
@@ -550,6 +551,27 @@ st.markdown("""
         max-width: 100% !important;
     }
 }
+
+/* Galerie d'avatars : boutons circulaires de la taille de l'avatar,
+   uniquement dans la fenêtre de sélection (PC et smartphone). */
+[class*="st-key-mathicap_avatar_galerie_"] button {
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+[class*="st-key-mathicap_avatar_galerie_"] button p {
+    font-size: 27px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -609,7 +631,8 @@ def _mathicap_preparer_photo(fichier):
             ).convert("RGB")
             for cote, qualite in ((160, 78), (144, 70), (128, 62), (112, 55)):
                 carre = ImageOps.fit(
-                    image, (cote, cote), method=Image.Resampling.LANCZOS
+                    image, (cote, cote), method=Image.Resampling.LANCZOS,
+                    centering=(0.5, 0.5)
                 )
                 sortie = BytesIO()
                 carre.save(sortie, format="JPEG", quality=qualite, optimize=True)
@@ -1141,7 +1164,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
             st.html(
                 '<img alt="Mon avatar actuel" '
                 'style="width:80px;height:80px;border-radius:50%;'
-                'object-fit:cover;display:block;" '
+                'object-fit:cover;object-position:center center;display:block;" '
                 f'src="{photo_apercu}">'
             )
 
@@ -1151,60 +1174,55 @@ if est_connecte and st.query_params.get("vue") == "profil":
     )
 
     if profil_charge:
-        methode_avatar = st.radio(
-            "Personnaliser mon avatar",
-            ["Choisir dans la galerie", "Importer une photo"],
-            horizontal=True,
-            key="mathicap_methode_avatar",
-        )
+        # Les options occupent une seule ligne ; la galerie est cachée tant
+        # que l'élève ne clique pas pour l'ouvrir.
+        with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+            with st.popover("Galerie d’avatars"):
+                st.caption("Sélectionne un avatar.")
+                avatars_items = list(AVATARS_MATHICAP.items())
+                for index in range(0, len(avatars_items), 4):
+                    colonnes = st.columns(4, gap="small")
+                    for colonne, (identifiant_avatar, (emoji, nom, _)) in zip(
+                        colonnes, avatars_items[index:index + 4]
+                    ):
+                        with colonne:
+                            if st.button(
+                                emoji,
+                                key=f"mathicap_avatar_galerie_{identifiant_avatar}",
+                                help=f"Choisir {nom}",
+                            ):
+                                try:
+                                    _mathicap_enregistrer_avatar(
+                                        identifiant_eleve, "galerie", identifiant_avatar
+                                    )
+                                    st.rerun()
+                                except Exception:
+                                    st.error("Impossible d'enregistrer cet avatar.")
 
-        if methode_avatar == "Choisir dans la galerie":
-            st.caption("Choisis un personnage. Il remplacera l'avatar actuel.")
-            avatars_items = list(AVATARS_MATHICAP.items())
-            for index in range(0, len(avatars_items), 4):
-                colonnes = st.columns(4, gap="small")
-                for colonne, (identifiant_avatar, (emoji, nom, _)) in zip(
-                    colonnes, avatars_items[index:index + 4]
+            with st.popover("Importer une photo"):
+                fichier_avatar = st.file_uploader(
+                    "Choisir une photo (JPG, PNG ou WEBP, 3 Mo maximum)",
+                    type=["jpg", "jpeg", "png", "webp"],
+                    accept_multiple_files=False,
+                    key="mathicap_fichier_avatar",
+                )
+                st.caption(
+                    "La photo est recadrée au centre du cercle "
+                    "et enregistrée dans un espace privé."
+                )
+                if st.button(
+                    "Utiliser cette photo",
+                    disabled=fichier_avatar is None,
+                    key="mathicap_avatar_valider_photo",
                 ):
-                    with colonne:
-                        if st.button(
-                            emoji,
-                            key=f"mathicap_avatar_galerie_{identifiant_avatar}",
-                            help=f"Choisir {nom}",
-                            use_container_width=True,
-                        ):
-                            try:
-                                _mathicap_enregistrer_avatar(
-                                    identifiant_eleve, "galerie", identifiant_avatar
-                                )
-                                st.rerun()
-                            except Exception:
-                                st.error("Impossible d'enregistrer cet avatar.")
-                        st.caption(nom)
-        else:
-            fichier_avatar = st.file_uploader(
-                "Choisir une photo (JPG, PNG ou WEBP, 3 Mo maximum)",
-                type=["jpg", "jpeg", "png", "webp"],
-                accept_multiple_files=False,
-                key="mathicap_fichier_avatar",
-            )
-            st.caption(
-                "L'image est cadrée au centre puis réduite en miniature "
-                "avant l'enregistrement dans un espace privé Supabase."
-            )
-            if st.button(
-                "Utiliser cette photo",
-                disabled=fichier_avatar is None,
-                key="mathicap_avatar_valider_photo",
-            ):
-                try:
-                    photo_prete = _mathicap_preparer_photo(fichier_avatar)
-                    _mathicap_importer_avatar(identifiant_eleve, photo_prete)
-                    st.rerun()
-                except ValueError as erreur:
-                    st.warning(str(erreur))
-                except Exception:
-                    st.error("Impossible d'enregistrer cette photo.")
+                    try:
+                        photo_prete = _mathicap_preparer_photo(fichier_avatar)
+                        _mathicap_importer_avatar(identifiant_eleve, photo_prete)
+                        st.rerun()
+                    except ValueError as erreur:
+                        st.warning(str(erreur))
+                    except Exception:
+                        st.error("Impossible d'enregistrer cette photo.")
 
         if avatar_type != "defaut" and st.button(
             "Revenir à l'avatar par défaut",
