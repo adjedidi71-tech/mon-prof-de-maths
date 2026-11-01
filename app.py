@@ -717,7 +717,49 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
                     except Exception:
                         st.error("Impossible d'enregistrer le pseudo.")
+                        
+    st.markdown("### Mes activités")
 
+    try:
+        resultat_series = (
+            supabase_privee.table("series_exercices")
+            .select("id, reponses")
+            .eq("eleve_id", identifiant_eleve)
+            .execute()
+        )
+
+        series_profil = resultat_series.data or []
+
+        total_series = len(series_profil)
+        series_avec_reponses = sum(
+            1 for serie in series_profil
+            if serie.get("reponses")
+        )
+
+        col_series, col_reponses = st.columns(2)
+
+        with col_series:
+            st.metric("Séries sauvegardées", total_series)
+
+        with col_reponses:
+            st.metric("Séries avec réponses", series_avec_reponses)
+
+    except Exception:
+        st.info("Impossible de charger les statistiques pour le moment.")
+
+    st.caption(
+        "Ces chiffres représentent ton activité enregistrée, "
+        "pas encore tes résultats ou tes notes."
+    )
+
+    if st.button(
+        "Voir mes séries enregistrées",
+        key="mathicap_profil_mes_series"
+    ):
+        st.session_state["mathicap_page"] = "Mes séries"
+        st.session_state["afficher_series"] = True
+        st.query_params["vue"] = "accueil"
+        st.rerun()
     if st.button(
         "Retour à l'accueil",
         key="mathicap_retour_accueil"
