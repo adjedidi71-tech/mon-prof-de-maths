@@ -535,7 +535,9 @@ def afficher_interface_mathicap() -> str:
         st.stop()
 
     if page == "Mes séries":
-        # Navigation compacte et adaptable au smartphone
+        st.header("Mes séries d'exercices")
+        
+         # Navigation compacte et adaptable au smartphone
         with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
             if st.button(
                 "← Mon profil",
@@ -553,7 +555,6 @@ def afficher_interface_mathicap() -> str:
             )
     
         st.session_state["afficher_series"] = True
-        st.header("Mes séries d'exercices")
         if not st.session_state.get("eleve_id"):
             st.info("Connecte-toi pour accéder aux séries enregistrées.")
             st.stop()
