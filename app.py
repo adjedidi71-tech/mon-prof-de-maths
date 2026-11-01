@@ -864,7 +864,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
             if serie.get("reponses")
         )
 
-        col_series, col_reponses = st.columns(2)
+        col_series, col_reponses, _ = st.columns([2, 2, 1], gap="small")
 
         with col_series:
             st.metric("Séries sauvegardées", total_series)
@@ -884,7 +884,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
         st.info("La progression est momentanément indisponible.")
     else:
         statistiques = _mathicap_statistiques_progression(series_profil)
-        col_exercices, col_saisies = st.columns(2)
+        col_exercices, col_saisies, _ = st.columns([2, 2, 1], gap="small")
 
         with col_exercices:
             st.metric(
@@ -936,7 +936,11 @@ if est_connecte and st.query_params.get("vue") == "profil":
                         total = compteurs["total"]
                         repondus = compteurs["avec_reponse"]
                         st.write(f"{nom} — {repondus}/{total} exercices avec réponse")
-                        st.progress(repondus / total)
+                        # Limiter la barre à la moitié de la largeur sur PC.
+                        # Les colonnes deviennent verticales sur smartphone.
+                        col_barre, _ = st.columns([1, 1], gap="small")
+                        with col_barre:
+                            st.progress(repondus / total)
 
                 if par_niveau:
                     st.markdown("**Par niveau**")
@@ -947,7 +951,11 @@ if est_connecte and st.query_params.get("vue") == "profil":
                             f"Niveau {niveau} — "
                             f"{repondus}/{total} exercices avec réponse"
                         )
-                        st.progress(repondus / total)
+                        # Limiter la barre à la moitié de la largeur sur PC.
+                        # Les colonnes deviennent verticales sur smartphone.
+                        col_barre, _ = st.columns([1, 1], gap="small")
+                        with col_barre:
+                            st.progress(repondus / total)
 
             if statistiques["non_classes"]:
                 st.caption(
