@@ -328,6 +328,9 @@ st.markdown("""
         --mc-btn-fs: 11px;
         column-gap: 8px !important;
     }
+    .st-key-mathicap_zone_profil .mathicap-icones {
+    gap: var(--mc-ico-gap);
+}
 }
 
 /* Très petit écran : 360 px et moins (dont 320 px) */
