@@ -671,7 +671,11 @@ if not est_connecte:
 
 
 # Nouvelle interface MathiCap Collège
-afficher_interface_mathicap()
+if not (
+    est_connecte
+    and st.session_state.get("mathicap_vue") == "profil"
+):
+    afficher_interface_mathicap()
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
