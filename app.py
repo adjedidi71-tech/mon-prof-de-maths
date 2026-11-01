@@ -640,6 +640,16 @@ if est_connecte and st.query_params.get("vue") == "profil":
     st.write(
         f"**Ma classe :** {classe_eleve or 'Non définie'}"
     )
+    if date_inscription:
+        date_affichee = (
+            date_inscription[8:10] + "/" +
+            date_inscription[5:7] + "/" +
+            date_inscription[:4]
+        )
+    else:
+        date_affichee = "Information non disponible"
+    
+    st.write(f"**Date d'inscription :** {date_affichee}")
 
     if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
         st.query_params["vue"] = "accueil"
