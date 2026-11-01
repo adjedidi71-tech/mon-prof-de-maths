@@ -413,7 +413,7 @@ st.markdown("""
 
     .st-key-mathicap_zone_profil .mathicap-icones {
         gap: 10px !important;
-        padding-right: calc(var(--mc-ico-gap) + 8px) !important;
+        padding-right: calc(var(--mc-ico-gap) + 44px) !important;
     }
 
     .st-key-mathicap_zone_profil .mathicap-icone {
