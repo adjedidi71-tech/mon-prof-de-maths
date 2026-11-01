@@ -479,6 +479,34 @@ st.markdown("""
         width: 84% !important;
     }
 }
+/* Séries enregistrées : alignement sur smartphone */
+@media (max-width: 767px) {
+
+    [data-testid="stHorizontalBlock"]:has(
+        [class*="st-key-reprendre_serie_"]
+    ) {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has(
+        [class*="st-key-reprendre_serie_"]
+    ) > [data-testid="stColumn"]:first-child {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has(
+        [class*="st-key-reprendre_serie_"]
+    ) > [data-testid="stColumn"]:last-child {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
