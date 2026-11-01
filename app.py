@@ -626,13 +626,19 @@ if est_connecte and st.query_params.get("vue") == "profil":
         )
         email_eleve = getattr(resultat_profil.user, "email", None)
         date_inscription = getattr(resultat_profil.user, "created_at", None)
+        pseudo_eleve = (resultat_profil.user.user_metadata or {}).get("pseudo")
     except Exception:
         email_eleve = None
         date_inscription = None
+        pseudo_eleve = None
     
     st.html(
         f"<div><strong>Adresse e-mail :</strong> "
         f"{escape(email_eleve or 'Information non disponible')}</div>"
+    )
+    st.html(
+        f"<div><strong>Pseudonyme :</strong> "
+        f"{escape(pseudo_eleve or 'Non renseigné')}</div>"
     )
         
     classe_eleve = st.session_state.get("mathicap_classe")
