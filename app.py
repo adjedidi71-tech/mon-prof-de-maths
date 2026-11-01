@@ -412,7 +412,7 @@ st.markdown("""
 @media (min-width: 768px), (orientation: landscape) {
 
     .st-key-mathicap_zone_profil .mathicap-icones {
-        gap: 4px !important;
+        gap: 12px !important;
         padding-right: calc(var(--mc-ico-gap) + 28px) !important;
     }
 
