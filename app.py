@@ -217,7 +217,7 @@ st.markdown("""
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--mc-ico-gap);
+    gap: 6px;
     width: 100%;
     padding-right: calc(var(--mc-ico-gap) + 22px);
     box-sizing: border-box;
