@@ -408,6 +408,23 @@ st.markdown("""
         background-size: cover !important;
     }
 }
+/* PC et smartphone paysage : rapprocher les icônes */
+@media (min-width: 768px), (orientation: landscape) {
+
+    .st-key-mathicap_zone_profil .mathicap-icones {
+        gap: 4px !important;
+        padding-right: calc(var(--mc-ico-gap) + 28px) !important;
+    }
+
+    .st-key-mathicap_zone_profil .mathicap-icone {
+        width: calc(var(--mc-ico) - 10px) !important;
+        flex: 0 0 calc(var(--mc-ico) - 10px) !important;
+    }
+
+    .st-key-mathicap_zone_profil .mathicap-icone svg {
+        width: 84% !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
