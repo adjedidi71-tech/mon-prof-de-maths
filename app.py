@@ -222,7 +222,12 @@ st.markdown("""
     padding-right: calc(var(--mc-ico-gap) + 22px);
     box-sizing: border-box;
 }
-
+/* PC uniquement : rapprocher la loupe et la cloche */
+@media (min-width: 1025px) {
+    .st-key-mathicap_zone_profil .mathicap-icones {
+        gap: 14px !important;
+    }
+}
 .st-key-mathicap_zone_profil .mathicap-icone {
     display: inline-flex;
     align-items: center;
