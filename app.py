@@ -82,6 +82,7 @@ if st.session_state.pop("vider_champs_connexion", False):
     st.session_state["mdp_connexion"] = ""
 
 est_connecte = bool(st.session_state.get("eleve_id"))
+    styles_mathicap_communs()
 
 st.markdown("""
 <style>
@@ -684,7 +685,6 @@ if not est_connecte:
                     st.error("Une erreur est survenue lors de la connexion.")
 # Nouvelle interface MathiCap Collège
 if est_connecte and st.query_params.get("vue") == "profil":
-    styles_mathicap_communs()
     st.stop()
 
 afficher_interface_mathicap()
