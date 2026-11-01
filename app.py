@@ -637,7 +637,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
         f"{escape(email_eleve or 'Information non disponible')}</div>"
     )
     st.html(
-        f"<div><strong>Pseudonyme :</strong> "
+        f"<div><strong>Pseudo :</strong> "
         f"{escape(pseudo_eleve or 'Non renseigné')}</div>"
     )
         
