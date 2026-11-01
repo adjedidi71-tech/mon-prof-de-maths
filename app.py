@@ -1299,7 +1299,11 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                             )
 
             for serie in series:
-                col_coche, col_contenu = st.columns([1, 3], gap="small")
+                col_coche, col_contenu = st.columns(
+                    [1.5, 8.5],
+                    gap="small",
+                    vertical_alignment="center"
+                )
 
                 with col_coche:
                     st.checkbox(
