@@ -527,7 +527,8 @@ with col_profil:
             disabled=not est_connecte,
             help="Accéder à mon profil",
         ):
-            st.session_state["mathicap_vue"] = "profil"
+            st.query_params["vue"] = "profil"
+            st.rerun()
         if est_connecte:
             st.markdown(
                 '<div class="mathicap-connecte">● Connecté</div>',
@@ -577,7 +578,7 @@ if est_connecte and st.session_state.get("mathicap_vue") == "profil":
     )
 
     if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
-        st.session_state["mathicap_vue"] = "accueil"
+        st.query_params["vue"] = "accueil"
         st.rerun()
 
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
