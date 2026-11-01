@@ -628,11 +628,11 @@ if est_connecte and st.query_params.get("vue") == "profil":
     except Exception:
         email_eleve = None
     
-    st.markdown(
-        f"<strong>Adresse e-mail :</strong> "
-        f"{escape(email_eleve or 'Information non disponible')}",
-        unsafe_allow_html=True
+    st.html(
+        f"<div><strong>Adresse e-mail :</strong> "
+        f"{escape(email_eleve or 'Information non disponible')}</div>"
     )
+        
     classe_eleve = st.session_state.get("mathicap_classe")
 
     st.write(
