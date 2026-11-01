@@ -407,7 +407,7 @@ def afficher_interface_mathicap() -> str:
     Pour toute autre page, le contenu est affiché puis st.stop() empêche
     l'ancien générateur d'exercices de se lancer en arrière-plan.
     """
-    _styles()
+ 
     if "mathicap_page" not in st.session_state:
         st.session_state["mathicap_page"] = "Accueil"
     if "mathicap_classe" not in st.session_state:
