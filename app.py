@@ -764,6 +764,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
         "Retour à l'accueil",
         key="mathicap_retour_accueil"
     ):
+        st.session_state["mathicap_page"] = "Accueil"
         st.query_params["vue"] = "accueil"
         st.rerun()
 
@@ -869,197 +870,206 @@ if not est_connecte:
 if est_connecte and st.query_params.get("vue") == "profil":
     st.stop()
 
-afficher_interface_mathicap()
-chapitres = {
-    "1. Opérations": [
-        "Addition, soustraction et multiplication de nombres décimaux",
-        "Division euclidienne, multiples et diviseurs",
-        "Division par un nombre décimal",
-        "Priorités opératoires",
-        "Distributivité simple"
-    ],
-    "2. Nombres relatifs": [
-        "Les nombres relatifs",
-        "Repérage sur une droite graduée",
-        "Repérage dans un repère orthogonal du plan",
-        "Comparaison de nombres relatifs"
-    ],
-    "3. Addition, soustraction de nombres relatifs": [
-        "Simplification d'écriture",
-        "Addition de nombres relatifs",
-        "Soustraction de deux nombres relatifs",
-        "Enchaînement d'additions et de soustractions"
-    ],
-    "4. Nombres rationnels": [
-        "Comparaison de fractions",
-        "Comparaison de proportions",
-        "Addition et soustraction de fractions",
-        "Résolution de problèmes avec des fractions"
-    ],
-    "5. Puissances": [
-        "Carré et cube d'un nombre",
-        "Carrés des entiers de 0 à 12",
-        "Enchaînement de calculs avec des puissances simples",
-        "Valeur d'une expression contenant une puissance"
-    ],
-    "6. Calcul littéral": [
-        "Produire des expressions littérales",
-        "Calcul de la valeur d'une expression littérale",
-        "Reconnaître une somme, un produit",
-        "Utilisation de la distributivité simple",
-        "Test d'une égalité",
-        "Résolution d'une équation du 1er degré"
-    ],
-    "7. Représentation de l'espace": [
-        "Perspective cavalière et patrons",
-        "Unités de volume et de capacité",
-        "Volumes du pavé droit et du prisme droit",
-        "Aire du disque",
-        "Volume du cylindre de révolution"
-    ],
-    "8. Transformations, angles": [
-        "Demi-tour ou symétrie centrale",
-        "Propriétés conservées",
-        "Centre de symétrie, axe de symétrie",
-        "Symétrie centrale et figures usuelles",
-        "Nouveau vocabulaire des angles",
-        "Angles alternes-internes et angles correspondants"
-    ],
-    "9. Triangles": [
-        "Somme des angles d'un triangle",
-        "Construction de triangles",
-        "Médiatrices d'un triangle (rappels)",
-        "Médiatrices d'un triangle rectangle",
-        "Aire d'un triangle et hauteurs",
-        "Médianes d'un triangle"
-    ],
-    "10. Parallélogrammes": [
-        "Connaître le parallélogramme",
-        "Reconnaître un parallélogramme",
-        "Rectangles",
-        "Losanges",
-        "Carrés",
-        "Aire du parallélogramme",
-        "Unités de longueur et d'aire"
-    ],
-    "11. Statistiques": [
-        "Effectif, fréquence",
-        "Moyenne d'une série de données",
-        "Représentations graphiques"
-    ],
-    "12. Probabilités": [
-        "Expérience aléatoire et événement",
-        "Attribuer une probabilité à une issue",
-        "Déterminer la probabilité d'un événement"
-    ],
-    "13. Proportionnalité": [
-        "Pourcentages",
-        "Proportions",
-        "Situations relevant ou non de la proportionnalité",
-        "Linéarité et retour à l'unité",
-        "Coefficient de proportionnalité",
-        "Caractérisation graphique d'une situation de proportionnalité",
-        "Produire une formule"
-    ],
-    "14. Fonctions": [
-        "Expression d'une grandeur en fonction d'une autre",
-        "Interprétation d'un tableau de valeurs ou d'un graphique",
-        "Passage d'une formule à un tableau",
-        "Produire une formule"
+# Une série ouverte depuis « Mes séries » s'affiche dans « Exercices ».
+# La navigation est préparée ici, avant la création du widget de menu.
+if st.session_state.pop("_mathicap_ouvrir_serie", False):
+    st.session_state["mathicap_page"] = "Exercices"
+    st.session_state["afficher_series"] = False
+
+page_mathicap = afficher_interface_mathicap()
+
+if page_mathicap == "Exercices":
+    # Réserver les sélecteurs et la génération à la rubrique Exercices.
+    chapitres = {
+        "1. Opérations": [
+            "Addition, soustraction et multiplication de nombres décimaux",
+            "Division euclidienne, multiples et diviseurs",
+            "Division par un nombre décimal",
+            "Priorités opératoires",
+            "Distributivité simple"
+        ],
+        "2. Nombres relatifs": [
+            "Les nombres relatifs",
+            "Repérage sur une droite graduée",
+            "Repérage dans un repère orthogonal du plan",
+            "Comparaison de nombres relatifs"
+        ],
+        "3. Addition, soustraction de nombres relatifs": [
+            "Simplification d'écriture",
+            "Addition de nombres relatifs",
+            "Soustraction de deux nombres relatifs",
+            "Enchaînement d'additions et de soustractions"
+        ],
+        "4. Nombres rationnels": [
+            "Comparaison de fractions",
+            "Comparaison de proportions",
+            "Addition et soustraction de fractions",
+            "Résolution de problèmes avec des fractions"
+        ],
+        "5. Puissances": [
+            "Carré et cube d'un nombre",
+            "Carrés des entiers de 0 à 12",
+            "Enchaînement de calculs avec des puissances simples",
+            "Valeur d'une expression contenant une puissance"
+        ],
+        "6. Calcul littéral": [
+            "Produire des expressions littérales",
+            "Calcul de la valeur d'une expression littérale",
+            "Reconnaître une somme, un produit",
+            "Utilisation de la distributivité simple",
+            "Test d'une égalité",
+            "Résolution d'une équation du 1er degré"
+        ],
+        "7. Représentation de l'espace": [
+            "Perspective cavalière et patrons",
+            "Unités de volume et de capacité",
+            "Volumes du pavé droit et du prisme droit",
+            "Aire du disque",
+            "Volume du cylindre de révolution"
+        ],
+        "8. Transformations, angles": [
+            "Demi-tour ou symétrie centrale",
+            "Propriétés conservées",
+            "Centre de symétrie, axe de symétrie",
+            "Symétrie centrale et figures usuelles",
+            "Nouveau vocabulaire des angles",
+            "Angles alternes-internes et angles correspondants"
+        ],
+        "9. Triangles": [
+            "Somme des angles d'un triangle",
+            "Construction de triangles",
+            "Médiatrices d'un triangle (rappels)",
+            "Médiatrices d'un triangle rectangle",
+            "Aire d'un triangle et hauteurs",
+            "Médianes d'un triangle"
+        ],
+        "10. Parallélogrammes": [
+            "Connaître le parallélogramme",
+            "Reconnaître un parallélogramme",
+            "Rectangles",
+            "Losanges",
+            "Carrés",
+            "Aire du parallélogramme",
+            "Unités de longueur et d'aire"
+        ],
+        "11. Statistiques": [
+            "Effectif, fréquence",
+            "Moyenne d'une série de données",
+            "Représentations graphiques"
+        ],
+        "12. Probabilités": [
+            "Expérience aléatoire et événement",
+            "Attribuer une probabilité à une issue",
+            "Déterminer la probabilité d'un événement"
+        ],
+        "13. Proportionnalité": [
+            "Pourcentages",
+            "Proportions",
+            "Situations relevant ou non de la proportionnalité",
+            "Linéarité et retour à l'unité",
+            "Coefficient de proportionnalité",
+            "Caractérisation graphique d'une situation de proportionnalité",
+            "Produire une formule"
+        ],
+        "14. Fonctions": [
+            "Expression d'une grandeur en fonction d'une autre",
+            "Interprétation d'un tableau de valeurs ou d'un graphique",
+            "Passage d'une formule à un tableau",
+            "Produire une formule"
+        ]
+    }
+
+    chapitre = st.selectbox(
+        "Chapitre",
+        list(chapitres.keys())
+    )
+
+    if chapitre == "1. Opérations":
+        partie = chapitres[chapitre][0]
+    else:
+        partie = st.selectbox(
+            "Sous-chapitre",
+            chapitres[chapitre]
+        )
+
+    st.write("**Type d'exercice**")
+
+    categories = [
+        "Mes automatismes",
+        "Je m'entraîne",
+        "Je résous des problèmes"
     ]
-}
 
-chapitre = st.selectbox(
-    "Chapitre",
-    list(chapitres.keys())
-)
-
-if chapitre == "1. Opérations":
-    partie = chapitres[chapitre][0]
-else:
-    partie = st.selectbox(
-        "Sous-chapitre",
-        chapitres[chapitre]
-    )
-
-st.write("**Type d'exercice**")
-
-categories = [
-    "Mes automatismes",
-    "Je m'entraîne",
-    "Je résous des problèmes"
-]
-
-type_exercice = st.radio(
-    "Choisis une catégorie",
-    categories,
-    horizontal=True,
-    label_visibility="collapsed",
-    key="categorie_exercice"
-)
-
-couleurs_categories = {
-    "Mes automatismes": ("#E8F3FF", "#2478D4"),
-    "Je m'entraîne": ("#FFF3D9", "#D99416"),
-    "Je résous des problèmes": ("#F0E7FF", "#8956D8")
-}
-
-descriptions = {
-    "Mes automatismes": "Bases et réflexes — niveaux 1 à 3",
-    "Je m'entraîne": "Calculs élaborés — niveaux 4 à 6",
-    "Je résous des problèmes": "Raisonnement — niveaux 7 à 9"
-}
-
-fond, couleur = couleurs_categories[type_exercice]
-
-st.markdown(
-    f"""
-    <div style="
-        background-color: {fond};
-        border: 2px solid {couleur};
-        border-radius: 12px;
-        padding: 18px;
-        margin: 12px 0;
-        color: #202B45;
-    ">
-        <strong>{type_exercice}</strong>
-        <p style="margin-bottom:0">
-            {descriptions[type_exercice]}
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-col2 = st.container()
-with col2:
-    difficulte = st.radio(
-        "Difficulté",
-        [1, 2, 3],
-        index=1,
+    type_exercice = st.radio(
+        "Choisis une catégorie",
+        categories,
         horizontal=True,
-        format_func=lambda x: {
-            1: "1 - Facile",
-            2: "2 - Moyen",
-            3: "3 - Difficile"
-        }[x]
+        label_visibility="collapsed",
+        key="categorie_exercice"
     )
 
-debut_niveau = {
-    "Mes automatismes": 0,
-    "Je m'entraîne": 3,
-    "Je résous des problèmes": 6
-}
+    couleurs_categories = {
+        "Mes automatismes": ("#E8F3FF", "#2478D4"),
+        "Je m'entraîne": ("#FFF3D9", "#D99416"),
+        "Je résous des problèmes": ("#F0E7FF", "#8956D8")
+    }
 
-niveau_reel = debut_niveau[type_exercice] + difficulte
+    descriptions = {
+        "Mes automatismes": "Bases et réflexes — niveaux 1 à 3",
+        "Je m'entraîne": "Calculs élaborés — niveaux 4 à 6",
+        "Je résous des problèmes": "Raisonnement — niveaux 7 à 9"
+    }
 
-st.write(f"**Progression : niveau {niveau_reel} sur 9**")
-st.progress(niveau_reel / 9)
-nombre = st.selectbox(
-    "Nombre d'exercices",
-    [1, 2, 3, 4, 5],
-    index=2
-)
+    fond, couleur = couleurs_categories[type_exercice]
+
+    st.markdown(
+        f"""
+        <div style="
+            background-color: {fond};
+            border: 2px solid {couleur};
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
+            color: #202B45;
+        ">
+            <strong>{type_exercice}</strong>
+            <p style="margin-bottom:0">
+                {descriptions[type_exercice]}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    col2 = st.container()
+    with col2:
+        difficulte = st.radio(
+            "Difficulté",
+            [1, 2, 3],
+            index=1,
+            horizontal=True,
+            format_func=lambda x: {
+                1: "1 - Facile",
+                2: "2 - Moyen",
+                3: "3 - Difficile"
+            }[x]
+        )
+
+    debut_niveau = {
+        "Mes automatismes": 0,
+        "Je m'entraîne": 3,
+        "Je résous des problèmes": 6
+    }
+
+    niveau_reel = debut_niveau[type_exercice] + difficulte
+
+    st.write(f"**Progression : niveau {niveau_reel} sur 9**")
+    st.progress(niveau_reel / 9)
+    nombre = st.selectbox(
+        "Nombre d'exercices",
+        [1, 2, 3, 4, 5],
+        index=2
+    )
 
 import secrets
 import string
@@ -1124,244 +1134,247 @@ if (
     except Exception:
         pass
 
-if st.session_state.get("eleve_id"):
-    st.subheader("Mes exercices sauvegardés")
+if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
+    # La rubrique « Mes séries » ouvre directement la liste enregistrée.
+    try:
+        series = recuperer_exercices_eleve(
+            st.session_state["eleve_id"]
+        )
 
-    if st.button("Retrouver mes séries") or st.session_state.get("afficher_series", False):
-        st.session_state["afficher_series"] = True
-        try:
-            series = recuperer_exercices_eleve(
-                st.session_state["eleve_id"]
-            )
+        if not series:
+            st.info("Aucune série enregistrée pour ce compte.")
+        else:
+            st.success(f"{len(series)} série(s) retrouvée(s).")
+            ids_series = [s["id"] for s in series]
 
-            if not series:
-                st.info("Aucune série enregistrée pour ce compte.")
-            else:
-                st.success(f"{len(series)} série(s) retrouvée(s).")
-                ids_series = [s["id"] for s in series]
+            cle_tout = f"tout_selectionner_{st.session_state['eleve_id']}"
 
-                cle_tout = f"tout_selectionner_{st.session_state['eleve_id']}"
+            def cocher_toutes_series():
+                etat = st.session_state[cle_tout]
+                for identifiant in ids_series:
+                    st.session_state[f"cocher_serie_{identifiant}"] = etat
 
-                def cocher_toutes_series():
-                    etat = st.session_state[cle_tout]
-                    for identifiant in ids_series:
-                        st.session_state[f"cocher_serie_{identifiant}"] = etat
-
-                def synchroniser_selection():
-                    st.session_state[cle_tout] = all(
-                        st.session_state.get(
-                            f"cocher_serie_{identifiant}", False
-                        )
-                        for identifiant in ids_series
-                    )
-
-                st.checkbox(
-                    "Tout sélectionner",
-                    key=cle_tout,
-                    on_change=cocher_toutes_series
-                )
-
-                selection = [
-                    identifiant
-                    for identifiant in ids_series
-                    if st.session_state.get(
+            def synchroniser_selection():
+                st.session_state[cle_tout] = all(
+                    st.session_state.get(
                         f"cocher_serie_{identifiant}", False
                     )
+                    for identifiant in ids_series
+                )
+
+            st.checkbox(
+                "Tout sélectionner",
+                key=cle_tout,
+                on_change=cocher_toutes_series
+            )
+
+            selection = [
+                identifiant
+                for identifiant in ids_series
+                if st.session_state.get(
+                    f"cocher_serie_{identifiant}", False
+                )
+            ]
+
+            if st.button(
+                "Supprimer les séries cochées",
+                disabled=not selection
+            ):
+                st.session_state["suppression_en_attente"] = {
+                    "mode": "selection",
+                    "ids": list(selection),
+                    "eleve_id": st.session_state["eleve_id"]
+                }
+
+            demande = st.session_state.get("suppression_en_attente")
+
+            if (
+                demande
+                and demande["eleve_id"] == st.session_state["eleve_id"]
+            ):
+                mode = demande["mode"]
+
+                ids_valides = [
+                    identifiant
+                    for identifiant in demande["ids"]
+                    if identifiant in ids_series
                 ]
 
-                if st.button(
-                    "Supprimer les séries cochées",
-                    disabled=not selection
-                ):
-                    st.session_state["suppression_en_attente"] = {
-                        "mode": "selection",
-                        "ids": list(selection),
-                        "eleve_id": st.session_state["eleve_id"]
-                    }
+                if mode == "toutes":
+                    st.warning(
+                        "Attention : toutes tes séries et leurs réponses "
+                        "seront définitivement supprimées."
+                    )
+                elif ids_valides:
+                    st.warning(
+                        f"Attention : {len(ids_valides)} série(s) "
+                        "seront définitivement supprimée(s)."
+                    )
 
-                demande = st.session_state.get("suppression_en_attente")
+                if mode == "toutes" or ids_valides:
+                    col_c1, col_c2 = st.columns(2)
 
-                if (
-                    demande
-                    and demande["eleve_id"] == st.session_state["eleve_id"]
-                ):
-                    mode = demande["mode"]
-
-                    ids_valides = [
-                        identifiant
-                        for identifiant in demande["ids"]
-                        if identifiant in ids_series
-                    ]
-
-                    if mode == "toutes":
-                        st.warning(
-                            "Attention : toutes tes séries et leurs réponses "
-                            "seront définitivement supprimées."
-                        )
-                    elif ids_valides:
-                        st.warning(
-                            f"Attention : {len(ids_valides)} série(s) "
-                            "seront définitivement supprimée(s)."
+                    with col_c1:
+                        confirmer = st.button(
+                            "Oui, supprimer définitivement",
+                            key="confirmer_suppression_series"
                         )
 
-                    if mode == "toutes" or ids_valides:
-                        col_c1, col_c2 = st.columns(2)
+                    with col_c2:
+                        annuler = st.button(
+                            "Annuler",
+                            key="annuler_suppression_series"
+                        )
 
-                        with col_c1:
-                            confirmer = st.button(
-                                "Oui, supprimer définitivement",
-                                key="confirmer_suppression_series"
+                    if annuler:
+                        st.session_state.pop(
+                            "suppression_en_attente", None
+                        )
+                        st.rerun()
+
+                    if confirmer:
+                        try:
+                            requete = (
+                                supabase_privee
+                                .table("series_exercices")
+                                .delete()
+                                .eq(
+                                    "eleve_id",
+                                    st.session_state["eleve_id"]
+                                )
                             )
 
-                        with col_c2:
-                            annuler = st.button(
-                                "Annuler",
-                                key="annuler_suppression_series"
-                            )
-
-                        if annuler:
-                            st.session_state.pop(
-                                "suppression_en_attente", None
-                            )
-                            st.rerun()
-
-                        if confirmer:
-                            try:
-                                requete = (
-                                    supabase_privee
-                                    .table("series_exercices")
-                                    .delete()
-                                    .eq(
-                                        "eleve_id",
-                                        st.session_state["eleve_id"]
-                                    )
+                            if mode == "selection":
+                                requete = requete.in_(
+                                    "id", ids_valides
                                 )
 
-                                if mode == "selection":
-                                    requete = requete.in_(
-                                        "id", ids_valides
-                                    )
+                            resultat = requete.select("id").execute()
 
-                                resultat = requete.select("id").execute()
+                            ids_supprimes = {
+                                ligne["id"]
+                                for ligne in (resultat.data or [])
+                            }
 
-                                ids_supprimes = {
-                                    ligne["id"]
-                                    for ligne in (resultat.data or [])
+                            if (
+                                mode == "selection"
+                                and ids_supprimes != set(ids_valides)
+                            ):
+                                st.error(
+                                    "La suppression n'a pas été confirmée "
+                                    "pour toutes les séries. "
+                                    "Actualise la liste avant de réessayer."
+                                )
+                            else:
+                                codes_supprimes = {
+                                    s["code_reprise"]
+                                    for s in series
+                                    if s["id"] in ids_supprimes
                                 }
 
                                 if (
-                                    mode == "selection"
-                                    and ids_supprimes != set(ids_valides)
+                                    mode == "toutes"
+                                    or st.session_state.get("code_actuel")
+                                    in codes_supprimes
                                 ):
-                                    st.error(
-                                        "La suppression n'a pas été confirmée "
-                                        "pour toutes les séries. "
-                                        "Actualise la liste avant de réessayer."
+                                    st.session_state["exercices_actuels"] = []
+                                    st.session_state.pop("code_actuel", None)
+                                    st.session_state["serie_version"] = (
+                                        st.session_state.get(
+                                            "serie_version", 0
+                                        ) + 1
                                     )
-                                else:
-                                    codes_supprimes = {
-                                        s["code_reprise"]
-                                        for s in series
-                                        if s["id"] in ids_supprimes
-                                    }
 
-                                    if (
-                                        mode == "toutes"
-                                        or st.session_state.get("code_actuel")
-                                        in codes_supprimes
-                                    ):
-                                        st.session_state["exercices_actuels"] = []
-                                        st.session_state.pop("code_actuel", None)
-                                        st.session_state["serie_version"] = (
-                                            st.session_state.get(
-                                                "serie_version", 0
-                                            ) + 1
-                                        )
-
-                                    st.session_state.pop(
-                                        "suppression_en_attente", None
-                                    )
-                                    st.session_state["afficher_series"] = True
-                                    st.rerun()
-
-                            except Exception:
-                                st.error(
-                                    "Impossible de supprimer les séries. "
-                                    "Aucune nouvelle tentative automatique "
-                                    "ne sera effectuée."
+                                st.session_state.pop(
+                                    "suppression_en_attente", None
                                 )
+                                st.session_state["afficher_series"] = True
+                                st.rerun()
 
-                for serie in series:
-                    col_coche, col_contenu = st.columns([1, 3], gap="small")
-
-                    with col_coche:
-                        st.checkbox(
-                            f"Série n° {serie['id']}",
-                            key=f"cocher_serie_{serie['id']}",
-                            on_change=synchroniser_selection
-                        )
-
-                    with col_contenu:
-                       if st.button(
-                         "Ouvrir",
-                         key=f"reprendre_serie_{serie['id']}"
-                      ):
-                         st.session_state.exercices_actuels = serie["exercices"]
-                         st.session_state.code_actuel = serie["code_reprise"]
-
-                         reponses = serie.get("reponses") or {}
-                         for numero, exercice in enumerate(serie["exercices"], start=1):
-                            donnees = reponses.get(str(numero), {})
-                        
-                            if not isinstance(donnees, dict):
-                                continue
-                        
-                            if donnees.get("type") != "banque":
-                                continue
-                        
-                            champs_sauvegardes = donnees.get("champs") or {}
-                            bilan = donnees.get("bilan")
-
-                            cle_bilan = (
-                                f"bilan_banque_{st.session_state.get('serie_version', 0)}"
-                                f"_{numero}"
+                        except Exception:
+                            st.error(
+                                "Impossible de supprimer les séries. "
+                                "Aucune nouvelle tentative automatique "
+                                "ne sera effectuée."
                             )
-                            
-                            if isinstance(bilan, dict):
-                                st.session_state[cle_bilan] = bilan
-                            else:
-                                st.session_state.pop(cle_bilan, None)
-                        
-                            for champ in exercice.get("champs_reponse", []):
-                                cle = (
-                                    f"banque_{st.session_state.get('serie_version', 0)}"
-                                    f"_{numero}_{champ['id']}"
-                                )
-                        
-                                valeur = champs_sauvegardes.get(champ["id"], "")
-                        
-                                if champ["type"] == "choix":
-                                    if valeur not in champ["options"]:
-                                        valeur = "Choisir..."
-                        
-                                st.session_state[cle] = valeur
-                            
-                         for numero, exercice in enumerate(
-                             serie["exercices"], start=1
-                         ):
-                             cle = f"reponse_{numero}"
-                             valeur = reponses.get(str(numero))
 
-                             if valeur is not None:
-                                st.session_state[cle] = valeur
-                             elif cle in st.session_state:
-                                 del st.session_state[cle]
-                         st.session_state["serie_ouverte_depuis_liste"] = True
-                         st.session_state["afficher_series"] = False
-                         st.rerun()
+            for serie in series:
+                col_coche, col_contenu = st.columns([1, 3], gap="small")
 
-        except Exception:
-            st.error("Impossible de récupérer tes exercices.")
+                with col_coche:
+                    st.checkbox(
+                        f"Série n° {serie['id']}",
+                        key=f"cocher_serie_{serie['id']}",
+                        on_change=synchroniser_selection
+                    )
+
+                with col_contenu:
+                   if st.button(
+                     "Ouvrir",
+                     key=f"reprendre_serie_{serie['id']}"
+                  ):
+                     st.session_state.exercices_actuels = serie["exercices"]
+                     st.session_state.code_actuel = serie["code_reprise"]
+
+                     reponses = serie.get("reponses") or {}
+                     for numero, exercice in enumerate(serie["exercices"], start=1):
+                        donnees = reponses.get(str(numero), {})
+                        
+                        if not isinstance(donnees, dict):
+                            continue
+                        
+                        if donnees.get("type") != "banque":
+                            continue
+                        
+                        champs_sauvegardes = donnees.get("champs") or {}
+                        bilan = donnees.get("bilan")
+
+                        cle_bilan = (
+                            f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+                            f"_{numero}"
+                        )
+                            
+                        if isinstance(bilan, dict):
+                            st.session_state[cle_bilan] = bilan
+                        else:
+                            st.session_state.pop(cle_bilan, None)
+                        
+                        for champ in exercice.get("champs_reponse", []):
+                            cle = (
+                                f"banque_{st.session_state.get('serie_version', 0)}"
+                                f"_{numero}_{champ['id']}"
+                            )
+                        
+                            valeur = champs_sauvegardes.get(champ["id"], "")
+                        
+                            if champ["type"] == "choix":
+                                if valeur not in champ["options"]:
+                                    valeur = "Choisir..."
+                        
+                            st.session_state[cle] = valeur
+                            
+                     for numero, exercice in enumerate(
+                         serie["exercices"], start=1
+                     ):
+                         cle = f"reponse_{numero}"
+                         valeur = reponses.get(str(numero))
+
+                         if valeur is not None:
+                            st.session_state[cle] = valeur
+                         elif cle in st.session_state:
+                             del st.session_state[cle]
+                     st.session_state["serie_ouverte_depuis_liste"] = True
+                     st.session_state["afficher_series"] = False
+                     st.session_state["_mathicap_ouvrir_serie"] = True
+                     st.rerun()
+
+    except Exception:
+        st.error("Impossible de récupérer tes exercices.")
+
+# Ne jamais afficher le générateur au-dessous de la liste des séries.
+if page_mathicap == "Mes séries":
+    st.stop()
+
 zone_serie_ouverte = st.container()
 
 def generer_code_reprise():
