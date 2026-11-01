@@ -566,7 +566,15 @@ with col_profil:
             )
 if est_connecte and st.session_state.get("mathicap_vue") == "profil":
     st.subheader("Mon profil")
-    st.write("Bienvenue dans ton espace personnel MathiCap.")
+    st.markdown("### Mes informations personnelles")
+
+    session_eleve = st.session_state.get("session_eleve")
+    utilisateur = getattr(session_eleve, "user", None)
+    email_eleve = getattr(utilisateur, "email", None)
+    
+    st.write(
+        f"**Adresse e-mail :** {email_eleve or 'Information non disponible'}"
+    )
 
     if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
         st.session_state["mathicap_vue"] = "accueil"
