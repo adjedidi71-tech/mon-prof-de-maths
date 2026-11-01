@@ -507,6 +507,18 @@ st.markdown("""
         min-width: 0 !important;
     }
 }
+
+/* Profil : lisibilite du score de correction sur smartphone uniquement */
+@media (max-width: 767px) {
+    .st-key-mathicap_score_corrections [data-testid="stMetricValue"],
+    .st-key-mathicap_score_corrections [data-testid="stMetricValue"] > div {
+        font-size: clamp(1rem, 4.6vw, 1.3rem) !important;
+        line-height: 1.35 !important;
+        white-space: normal !important;
+        overflow-wrap: break-word !important;
+        max-width: 100% !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -904,11 +916,12 @@ if est_connecte and st.query_params.get("vue") == "profil":
         )
 
         if statistiques["questions_verifiees"]:
-            st.metric(
-                "Résultats des corrections enregistrées",
-                f"{statistiques['bonnes_verifiees']} bonnes réponses "
-                f"/ {statistiques['questions_verifiees']}",
-            )
+            with st.container(key="mathicap_score_corrections"):
+                st.metric(
+                    "Résultats des corrections enregistrées",
+                    f"{statistiques['bonnes_verifiees']} bonnes réponses "
+                    f"/ {statistiques['questions_verifiees']}",
+                )
             st.caption(
                 "Résultats calculés uniquement à partir des bilans "
                 "de vérification sauvegardés ; les exercices sans bilan "
