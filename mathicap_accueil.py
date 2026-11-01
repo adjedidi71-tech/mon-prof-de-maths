@@ -534,6 +534,25 @@ def afficher_interface_mathicap() -> str:
         st.stop()
 
     if page == "Mes séries":
+        col_profil, col_accueil = st.columns(2)
+    
+        with col_profil:
+            if st.button(
+                "← Mon profil",
+                key="mathicap_series_retour_profil",
+                disabled=not bool(st.session_state.get("eleve_id"))
+            ):
+                st.query_params["vue"] = "profil"
+                st.rerun()
+    
+        with col_accueil:
+            st.button(
+                "← Accueil",
+                key="mathicap_series_retour_accueil",
+                on_click=_aller_vers,
+                args=("Accueil",)
+            )
+    
         st.session_state["afficher_series"] = True
         st.header("Mes séries d'exercices")
         if not st.session_state.get("eleve_id"):
