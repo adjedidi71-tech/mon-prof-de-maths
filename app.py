@@ -88,7 +88,7 @@ st.markdown("""
 /* Couleurs du slogan MathiCap sur toutes les pages */
 .mathicap-marque .mathicap-slogan {
     font-weight: 700;
-    letter-spacing: 1.2px !important;
+    letter-spacing: 1.6px !important;
     background: linear-gradient(
         90deg,
         #0b4d91 0%,
