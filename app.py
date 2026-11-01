@@ -2,6 +2,11 @@ import streamlit as st
 import time
 from html import escape
 from pathlib import Path
+from io import BytesIO
+import base64
+import re
+from uuid import uuid4
+from PIL import Image, ImageOps, UnidentifiedImageError
 from google import genai
 from groq import Groq
 from banque_priorites import generer_exercices_priorites
@@ -86,14 +91,36 @@ est_connecte = bool(st.session_state.get("eleve_id"))
 # Synchronisation de la classe avec le compte Supabase
 CLASSES_MATHICAP = ("6e", "5e", "4e", "3e")
 
+
+def _mathicap_initiale_pseudo(pseudo):
+    """Première lettre du pseudo, sans exiger de nom ni de prénom."""
+    if not isinstance(pseudo, str):
+        return ""
+    return next((caractere.upper()[0] for caractere in pseudo if caractere.isalpha()), "")
+
+
 if est_connecte:
     identifiant = st.session_state["eleve_id"]
 
     if st.session_state.get("_classe_identifiant") != identifiant:
+        # Une autre connexion ne doit jamais reprendre l'avatar de l'ancien compte.
+        st.session_state["mathicap_avatar_type"] = "defaut"
+        st.session_state["mathicap_avatar_choix"] = ""
+        st.session_state["mathicap_avatar_fichier"] = ""
+        st.session_state["mathicap_avatar_pseudo"] = ""
         try:
             compte = supabase_privee.auth.admin.get_user_by_id(identifiant)
-            classe_compte = (
-                (compte.user.user_metadata or {}).get("mathicap_classe")
+            donnees_compte = compte.user.user_metadata or {}
+            classe_compte = donnees_compte.get("mathicap_classe")
+            st.session_state["mathicap_avatar_pseudo"] = donnees_compte.get("pseudo") or ""
+            st.session_state["mathicap_avatar_type"] = donnees_compte.get(
+                "mathicap_avatar_type", "defaut"
+            )
+            st.session_state["mathicap_avatar_choix"] = donnees_compte.get(
+                "mathicap_avatar_choix", ""
+            )
+            st.session_state["mathicap_avatar_fichier"] = donnees_compte.get(
+                "mathicap_avatar_fichier", ""
             )
 
             st.session_state["mathicap_classe"] = (
@@ -132,6 +159,10 @@ if est_connecte:
 else:
     st.session_state.pop("_classe_identifiant", None)
     st.session_state.pop("_classe_enregistree", None)
+    st.session_state.pop("mathicap_avatar_type", None)
+    st.session_state.pop("mathicap_avatar_choix", None)
+    st.session_state.pop("mathicap_avatar_fichier", None)
+    st.session_state.pop("mathicap_avatar_pseudo", None)
 styles_mathicap_communs()
 
 st.markdown("""
@@ -532,6 +563,181 @@ def _image_en_data_uri(nom_fichier: str) -> str:
     return "data:image/png;base64," + base64.b64encode(
         chemin.read_bytes()
     ).decode("ascii")
+# Choix de la galerie enregistré dans Supabase Auth ; photos dans un bucket privé.
+# Aucune photo volumineuse n'est insérée dans les métadonnées d'authentification.
+BUCKET_AVATARS_MATHICAP = "mathicap-avatars"
+AVATARS_MATHICAP = {
+    "renard": ("🦊", "Renard", "#ffe5c2"),
+    "panda": ("🐼", "Panda", "#e4edf5"),
+    "chat": ("🐱", "Chat", "#ffe2e0"),
+    "lapin": ("🐰", "Lapin", "#f0e3ff"),
+    "grenouille": ("🐸", "Grenouille", "#dcf7d7"),
+    "lion": ("🦁", "Lion", "#ffe9a8"),
+    "pingouin": ("🐧", "Pingouin", "#dceeff"),
+    "licorne": ("🦄", "Licorne", "#fce0f4"),
+}
+
+
+def _mathicap_chemin_avatar_valide(identifiant, chemin):
+    """Empêcher la lecture des photos appartenant à un autre compte."""
+    return bool(
+        isinstance(identifiant, str)
+        and isinstance(chemin, str)
+        and re.fullmatch(r"[0-9a-fA-F-]{36}/[0-9a-f]{32}\.jpg", chemin)
+        and chemin.startswith(identifiant + "/")
+    )
+
+
+def _mathicap_preparer_photo(fichier):
+    """Photo carrée, miniature JPEG sans métadonnées EXIF (20 Ko maximum)."""
+    brut = fichier.getvalue()
+    if not brut or len(brut) > 3 * 1024 * 1024:
+        raise ValueError("Choisis une image de 3 Mo maximum.")
+
+    try:
+        with Image.open(BytesIO(brut)) as image:
+            if image.format not in {"JPEG", "PNG", "WEBP"}:
+                raise ValueError("Format non reconnu : utilise JPG, PNG ou WEBP.")
+            largeur, hauteur = image.size
+            if largeur * hauteur > 20_000_000:
+                raise ValueError("Image trop grande : utilise une photo plus petite.")
+            image.load()
+            image = ImageOps.exif_transpose(image)
+            image = Image.alpha_composite(
+                Image.new("RGBA", image.size, (255, 255, 255, 255)),
+                image.convert("RGBA"),
+            ).convert("RGB")
+            for cote, qualite in ((160, 78), (144, 70), (128, 62), (112, 55)):
+                carre = ImageOps.fit(
+                    image, (cote, cote), method=Image.Resampling.LANCZOS
+                )
+                sortie = BytesIO()
+                carre.save(sortie, format="JPEG", quality=qualite, optimize=True)
+                miniature = sortie.getvalue()
+                if len(miniature) <= 20_000:
+                    return miniature
+    except (OSError, UnidentifiedImageError) as exc:
+        raise ValueError("L'image ne peut pas être lue.") from exc
+
+    raise ValueError("Image trop complexe : essaie une autre photo.")
+
+
+def _mathicap_verifier_stockage_prive():
+    """Créer le bucket à la première importation, jamais en mode public."""
+    stockage = supabase_privee.storage
+    try:
+        bucket = stockage.get_bucket(BUCKET_AVATARS_MATHICAP)
+    except Exception:
+        try:
+            stockage.create_bucket(
+                BUCKET_AVATARS_MATHICAP,
+                options={
+                    "public": False,
+                    "allowed_mime_types": ["image/jpeg"],
+                    "file_size_limit": 200_000,
+                },
+            )
+        except Exception:
+            # En cas de création simultanée, vérifier s'il existe à présent.
+            pass
+        try:
+            bucket = stockage.get_bucket(BUCKET_AVATARS_MATHICAP)
+        except Exception as exc:
+            raise ValueError(
+                "Stockage des avatars indisponible dans Supabase."
+            ) from exc
+
+    est_public = (
+        bucket.get("public", False)
+        if isinstance(bucket, dict)
+        else getattr(bucket, "public", False)
+    )
+    if est_public:
+        raise ValueError(
+            "Le bucket des avatars est public : passe-le en privé dans Supabase."
+        )
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def _mathicap_lire_avatar_prive(identifiant, chemin):
+    """Transmettre uniquement la petite photo du compte connecté."""
+    if not _mathicap_chemin_avatar_valide(identifiant, chemin):
+        return ""
+    try:
+        miniature = supabase_privee.storage.from_(BUCKET_AVATARS_MATHICAP).download(
+            chemin
+        )
+        if not isinstance(miniature, bytes) or not (
+            0 < len(miniature) <= 30_000 and miniature.startswith(b"\xff\xd8")
+        ):
+            return ""
+        return "data:image/jpeg;base64," + base64.b64encode(
+            miniature
+        ).decode("ascii")
+    except Exception:
+        return ""
+
+
+def _mathicap_enregistrer_avatar(identifiant, mode, choix="", chemin=""):
+    """Conserver le pseudo et la classe et supprimer l'ancienne photo si besoin."""
+    if mode not in ("defaut", "galerie", "photo"):
+        raise ValueError("Type d'avatar non valide")
+    if mode == "galerie" and choix not in AVATARS_MATHICAP:
+        raise ValueError("Avatar non valide")
+    if mode == "photo" and not _mathicap_chemin_avatar_valide(
+        identifiant, chemin
+    ):
+        raise ValueError("Photo non valide")
+
+    compte = supabase_privee.auth.admin.get_user_by_id(identifiant)
+    if not compte.user:
+        raise ValueError("Compte introuvable")
+    infos = dict(compte.user.user_metadata or {})
+    ancienne_photo = infos.get("mathicap_avatar_fichier", "")
+    infos["mathicap_avatar_type"] = mode
+    infos["mathicap_avatar_choix"] = choix if mode == "galerie" else ""
+    infos["mathicap_avatar_fichier"] = chemin if mode == "photo" else ""
+    supabase_privee.auth.admin.update_user_by_id(
+        identifiant, {"user_metadata": infos}
+    )
+    st.session_state["mathicap_avatar_type"] = mode
+    st.session_state["mathicap_avatar_choix"] = infos["mathicap_avatar_choix"]
+    st.session_state["mathicap_avatar_fichier"] = infos["mathicap_avatar_fichier"]
+    st.session_state["mathicap_avatar_sauve"] = True
+
+    # L'échec d'un nettoyage ne doit pas annuler l'enregistrement réussi.
+    if (
+        ancienne_photo != infos["mathicap_avatar_fichier"]
+        and _mathicap_chemin_avatar_valide(identifiant, ancienne_photo)
+    ):
+        try:
+            supabase_privee.storage.from_(BUCKET_AVATARS_MATHICAP).remove(
+                [ancienne_photo]
+            )
+        except Exception:
+            pass
+
+
+def _mathicap_importer_avatar(identifiant, photo_jpeg):
+    """Sauver la photo privée, puis la référencer dans le compte élève."""
+    _mathicap_verifier_stockage_prive()
+    chemin = f"{identifiant}/{uuid4().hex}.jpg"
+    stockage = supabase_privee.storage.from_(BUCKET_AVATARS_MATHICAP)
+    stockage.upload(
+        chemin,
+        photo_jpeg,
+        file_options={"content-type": "image/jpeg", "upsert": "false"},
+    )
+    try:
+        _mathicap_enregistrer_avatar(identifiant, "photo", chemin=chemin)
+    except Exception:
+        try:
+            stockage.remove([chemin])
+        except Exception:
+            pass
+        raise
+
+
 # En-tête : logo à gauche, profil à droite
 col_logo, col_profil = st.columns(
     [3, 1],
@@ -572,7 +778,22 @@ with col_profil:
             'stroke-linejoin="round" aria-hidden="true">'
         )
 
-        _avatar_uri = _image_en_data_uri("mathicap_avatar.png")
+        _avatar_mode = st.session_state.get("mathicap_avatar_type", "defaut")
+        _avatar_choix = st.session_state.get("mathicap_avatar_choix", "")
+        _fichier_avatar = st.session_state.get("mathicap_avatar_fichier", "")
+        _avatar_initiale = _mathicap_initiale_pseudo(
+            st.session_state.get("mathicap_avatar_pseudo", "")
+        )
+        if _avatar_mode == "photo":
+            _avatar_uri = _mathicap_lire_avatar_prive(
+                st.session_state.get("eleve_id", ""), _fichier_avatar
+            ) or _image_en_data_uri("mathicap_avatar.png")
+        elif _avatar_mode == "galerie" and _avatar_choix in AVATARS_MATHICAP:
+            _avatar_uri = ""  # Galerie : avatar dessiné par CSS.
+        elif _avatar_mode == "defaut" and _avatar_initiale:
+            _avatar_uri = ""  # Sans avatar choisi : initiale du pseudo.
+        else:
+            _avatar_uri = _image_en_data_uri("mathicap_avatar.png")
 
         if _avatar_uri:
             _avatar_html = f'<img src="{_avatar_uri}" alt="">'
@@ -612,6 +833,63 @@ with col_profil:
                 """,
                 unsafe_allow_html=True,
             )
+        elif _avatar_mode == "galerie" and _avatar_choix in AVATARS_MATHICAP:
+            _emoji, _, _couleur_fond = AVATARS_MATHICAP[_avatar_choix]
+            # Emoji et couleur issus de la liste interne, non de texte libre.
+            st.markdown(
+                f"""
+                <style>
+                .st-key-mathicap_zone_profil
+                .st-key-mathicap_avatar_clic button {{
+                    background: {_couleur_fond} !important;
+                    position: relative !important;
+                }}
+                .st-key-mathicap_zone_profil
+                .st-key-mathicap_avatar_clic button::after {{
+                    content: "{_emoji}";
+                    position: absolute;
+                    inset: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: calc(var(--mc-avatar) * 0.59);
+                    line-height: 1;
+                    color: initial !important;
+                    -webkit-text-fill-color: initial !important;
+                    pointer-events: none;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+        elif _avatar_mode == "defaut" and _avatar_initiale:
+            st.markdown(
+                f"""
+                <style>
+                .st-key-mathicap_zone_profil
+                .st-key-mathicap_avatar_clic button {{
+                    background: #dceafe !important;
+                    position: relative !important;
+                }}
+                .st-key-mathicap_zone_profil
+                .st-key-mathicap_avatar_clic button::after {{
+                    content: "{_avatar_initiale}";
+                    position: absolute;
+                    inset: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: calc(var(--mc-avatar) * 0.54);
+                    line-height: 1;
+                    font-weight: 700;
+                    color: #2056a5 !important;
+                    -webkit-text-fill-color: #2056a5 !important;
+                    pointer-events: none;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
         if st.button(
             "Ouvrir mon profil",
             key="mathicap_avatar_clic",
@@ -645,6 +923,11 @@ with col_profil:
                     "exercices_actuels",
                     "code_actuel",
                     "jeton_persistant",
+                    "mathicap_avatar_type",
+                    "mathicap_avatar_choix",
+                    "mathicap_avatar_fichier",
+                    "mathicap_avatar_pseudo",
+                    "mathicap_avatar_sauve",
                 ):
                     st.session_state.pop(cle, None)
 
@@ -780,7 +1063,18 @@ if est_connecte and st.query_params.get("vue") == "profil":
         pseudo_eleve = (
             (utilisateur_profil.user_metadata or {}).get("pseudo") or ""
         )
+        st.session_state["mathicap_avatar_pseudo"] = pseudo_eleve
         date_inscription = utilisateur_profil.created_at
+        donnees_avatar = utilisateur_profil.user_metadata or {}
+        st.session_state["mathicap_avatar_type"] = donnees_avatar.get(
+            "mathicap_avatar_type", "defaut"
+        )
+        st.session_state["mathicap_avatar_choix"] = donnees_avatar.get(
+            "mathicap_avatar_choix", ""
+        )
+        st.session_state["mathicap_avatar_fichier"] = donnees_avatar.get(
+            "mathicap_avatar_fichier", ""
+        )
         profil_charge = True
 
     except Exception:
@@ -807,6 +1101,122 @@ if est_connecte and st.query_params.get("vue") == "profil":
         f'{escape(date_affichee)}</div>'
         '</div>'
     )
+
+    # Personnalisation de l'avatar, propre au compte de chaque élève.
+    st.markdown("### Mon avatar")
+    if st.session_state.pop("mathicap_avatar_sauve", False):
+        st.success("Avatar enregistré. Il sera retrouvé sur tes appareils.")
+
+    avatar_type = st.session_state.get("mathicap_avatar_type", "defaut")
+    avatar_choix = st.session_state.get("mathicap_avatar_choix", "")
+    avatar_fichier = st.session_state.get("mathicap_avatar_fichier", "")
+    if avatar_type == "galerie" and avatar_choix in AVATARS_MATHICAP:
+        emoji_apercu, nom_apercu, fond_apercu = AVATARS_MATHICAP[avatar_choix]
+        st.html(
+            f'<div role="img" aria-label="Avatar {escape(nom_apercu)}" '
+            'style="width:80px;height:80px;border-radius:50%;'
+            f'background:{fond_apercu};display:flex;align-items:center;'
+            'justify-content:center;font-size:48px;">'
+            f'{emoji_apercu}</div>'
+        )
+    else:
+        if avatar_type == "photo":
+            photo_apercu = _mathicap_lire_avatar_prive(
+                identifiant_eleve, avatar_fichier
+            )
+        elif avatar_type == "defaut" and _mathicap_initiale_pseudo(pseudo_eleve):
+            initiale = _mathicap_initiale_pseudo(pseudo_eleve)
+            st.html(
+                '<div role="img" aria-label="Initiale du pseudo" '
+                'style="width:80px;height:80px;border-radius:50%;'
+                'background:#dceafe;color:#2056a5;display:flex;'
+                'align-items:center;justify-content:center;font-size:43px;'
+                'font-weight:700;">'
+                f'{escape(initiale)}</div>'
+            )
+            photo_apercu = ""
+        else:
+            photo_apercu = _image_en_data_uri("mathicap_avatar.png")
+        if photo_apercu:
+            st.html(
+                '<img alt="Mon avatar actuel" '
+                'style="width:80px;height:80px;border-radius:50%;'
+                'object-fit:cover;display:block;" '
+                f'src="{photo_apercu}">'
+            )
+
+    st.caption(
+        "Sans avatar choisi, la première lettre du pseudo s'affiche. "
+        "Sans pseudo, l'avatar MathiCap apparaît."
+    )
+
+    if profil_charge:
+        methode_avatar = st.radio(
+            "Personnaliser mon avatar",
+            ["Choisir dans la galerie", "Importer une photo"],
+            horizontal=True,
+            key="mathicap_methode_avatar",
+        )
+
+        if methode_avatar == "Choisir dans la galerie":
+            st.caption("Choisis un personnage. Il remplacera l'avatar actuel.")
+            avatars_items = list(AVATARS_MATHICAP.items())
+            for index in range(0, len(avatars_items), 4):
+                colonnes = st.columns(4, gap="small")
+                for colonne, (identifiant_avatar, (emoji, nom, _)) in zip(
+                    colonnes, avatars_items[index:index + 4]
+                ):
+                    with colonne:
+                        if st.button(
+                            emoji,
+                            key=f"mathicap_avatar_galerie_{identifiant_avatar}",
+                            help=f"Choisir {nom}",
+                            use_container_width=True,
+                        ):
+                            try:
+                                _mathicap_enregistrer_avatar(
+                                    identifiant_eleve, "galerie", identifiant_avatar
+                                )
+                                st.rerun()
+                            except Exception:
+                                st.error("Impossible d'enregistrer cet avatar.")
+                        st.caption(nom)
+        else:
+            fichier_avatar = st.file_uploader(
+                "Choisir une photo (JPG, PNG ou WEBP, 3 Mo maximum)",
+                type=["jpg", "jpeg", "png", "webp"],
+                accept_multiple_files=False,
+                key="mathicap_fichier_avatar",
+            )
+            st.caption(
+                "L'image est cadrée au centre puis réduite en miniature "
+                "avant l'enregistrement dans un espace privé Supabase."
+            )
+            if st.button(
+                "Utiliser cette photo",
+                disabled=fichier_avatar is None,
+                key="mathicap_avatar_valider_photo",
+            ):
+                try:
+                    photo_prete = _mathicap_preparer_photo(fichier_avatar)
+                    _mathicap_importer_avatar(identifiant_eleve, photo_prete)
+                    st.rerun()
+                except ValueError as erreur:
+                    st.warning(str(erreur))
+                except Exception:
+                    st.error("Impossible d'enregistrer cette photo.")
+
+        if avatar_type != "defaut" and st.button(
+            "Revenir à l'avatar par défaut",
+            key="mathicap_avatar_defaut",
+        ):
+            try:
+                _mathicap_enregistrer_avatar(identifiant_eleve, "defaut")
+                st.rerun()
+            except Exception:
+                st.error("Impossible de rétablir l'avatar par défaut.")
+    else:
+        st.info("Connecte-toi à ton profil pour personnaliser l'avatar.")
 
     # Confirmation après enregistrement
     if st.session_state.pop("mathicap_pseudo_sauve", False):
@@ -851,6 +1261,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
                             {"user_metadata": infos}
                         )
 
+                        st.session_state["mathicap_avatar_pseudo"] = nouveau_pseudo
                         st.session_state["mathicap_pseudo_sauve"] = True
                         st.rerun()
 
