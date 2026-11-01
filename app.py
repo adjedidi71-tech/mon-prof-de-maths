@@ -225,7 +225,7 @@ st.markdown("""
 /* PC uniquement : rapprocher la loupe et la cloche */
 @media (min-width: 1025px) {
     .st-key-mathicap_zone_profil .mathicap-icones {
-        gap: 14px !important;
+        gap: 24px !important;
     }
 }
 .st-key-mathicap_zone_profil .mathicap-icone {
