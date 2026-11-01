@@ -434,96 +434,97 @@ def afficher_interface_mathicap() -> str:
 
         st.session_state["_mathicap_page_precedente"] = page
 
-    # Bandeau des classes
-    st.markdown("**Ma classe**")
+    if page != "Mes séries":
+        # Bandeau des classes
+        st.markdown("**Ma classe**")
 
-    couleurs = {
-        "6e": ("#DCEBFF", "#1458B8", "#2678EF"),
-        "5e": ("#DDF6E8", "#116A42", "#21A46A"),
-        "4e": ("#FFF0D8", "#985300", "#F0981B"),
-        "3e": ("#EFE2FF", "#6733A8", "#8752D6"),
-    }
+        couleurs = {
+            "6e": ("#DCEBFF", "#1458B8", "#2678EF"),
+            "5e": ("#DDF6E8", "#116A42", "#21A46A"),
+            "4e": ("#FFF0D8", "#985300", "#F0981B"),
+            "3e": ("#EFE2FF", "#6733A8", "#8752D6"),
+        }
 
-    def choisir_classe(nouvelle_classe):
-        st.session_state["mathicap_classe"] = nouvelle_classe
+        def choisir_classe(nouvelle_classe):
+            st.session_state["mathicap_classe"] = nouvelle_classe
 
-    classe_active = st.session_state["mathicap_classe"]
+        classe_active = st.session_state["mathicap_classe"]
 
-    # Construire les styles une seule fois
-    regles_css = []
+        # Construire les styles une seule fois
+        regles_css = []
 
-    for nom, (fond, texte, accent) in couleurs.items():
-        selectionnee = nom == classe_active
+        for nom, (fond, texte, accent) in couleurs.items():
+            selectionnee = nom == classe_active
 
-        fond_bouton = accent if selectionnee else fond
-        texte_bouton = "#FFFFFF" if selectionnee else texte
-        epaisseur = "3px" if selectionnee else "1px"
+            fond_bouton = accent if selectionnee else fond
+            texte_bouton = "#FFFFFF" if selectionnee else texte
+            epaisseur = "3px" if selectionnee else "1px"
 
+            regles_css.append(
+                f"""
+                .st-key-mathicap_bouton_{nom} button {{
+                    background-color: {fond_bouton} !important;
+                    color: {texte_bouton} !important;
+                    border: {epaisseur} solid {accent} !important;
+                    border-radius: 10px !important;
+                    min-height: 56px !important;
+                    font-weight: 700 !important;
+                    font-size: 1.05rem !important;
+                }}
+                """
+            )
+
+        # Adaptation mobile : quatre boutons sur une ligne
         regles_css.append(
-            f"""
-            .st-key-mathicap_bouton_{nom} button {{
-                background-color: {fond_bouton} !important;
-                color: {texte_bouton} !important;
-                border: {epaisseur} solid {accent} !important;
-                border-radius: 10px !important;
-                min-height: 56px !important;
-                font-weight: 700 !important;
-                font-size: 1.05rem !important;
-            }}
+            """
+            @media (max-width: 640px) {
+                .st-key-mathicap_ligne_classes
+                [data-testid="stHorizontalBlock"] {
+                    flex-direction: row !important;
+                    flex-wrap: nowrap !important;
+                    gap: 6px !important;
+                }
+
+                .st-key-mathicap_ligne_classes
+                [data-testid="stColumn"] {
+                    min-width: 0 !important;
+                    width: 25% !important;
+                    flex: 1 1 0% !important;
+                }
+
+                .st-key-mathicap_ligne_classes button {
+                    min-height: 48px !important;
+                    padding: 6px 4px !important;
+                }
+            }
             """
         )
 
-    # Adaptation mobile : quatre boutons sur une ligne
-    regles_css.append(
-        """
-        @media (max-width: 640px) {
-            .st-key-mathicap_ligne_classes
-            [data-testid="stHorizontalBlock"] {
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                gap: 6px !important;
-            }
+        # Injecter le CSS une seule fois, sans bloc visible
+        st.html("<style>" + "\n".join(regles_css) + "</style>")
 
-            .st-key-mathicap_ligne_classes
-            [data-testid="stColumn"] {
-                min-width: 0 !important;
-                width: 25% !important;
-                flex: 1 1 0% !important;
-            }
+        with st.container(key="mathicap_ligne_classes"):
+            colonnes_classes = st.columns(4, gap="small")
 
-            .st-key-mathicap_ligne_classes button {
-                min-height: 48px !important;
-                padding: 6px 4px !important;
-            }
-        }
-        """
-    )
+            for colonne, nom in zip(colonnes_classes, couleurs):
+                with colonne:
+                    st.button(
+                        nom,
+                        key=f"mathicap_bouton_{nom}",
+                        width="stretch",
+                        on_click=choisir_classe,
+                        args=(nom,),
+                    )
 
-    # Injecter le CSS une seule fois, sans bloc visible
-    st.html("<style>" + "\n".join(regles_css) + "</style>")
+        classe = st.session_state["mathicap_classe"]
 
-    with st.container(key="mathicap_ligne_classes"):
-        colonnes_classes = st.columns(4, gap="small")
-
-        for colonne, nom in zip(colonnes_classes, couleurs):
-            with colonne:
-                st.button(
-                    nom,
-                    key=f"mathicap_bouton_{nom}",
-                    width="stretch",
-                    on_click=choisir_classe,
-                    args=(nom,),
-                )
-
-    classe = st.session_state["mathicap_classe"]
-
-    if classe != "5e":
-        st.title(f"MathiCap Collège — {classe}")
-        st.info(
-            f"Le programme de {classe} sera développé progressivement. "
-            "Le chapitre 1 actuellement opérationnel appartient à la classe de 5e."
-        )
-        st.stop()
+        if classe != "5e":
+            st.title(f"MathiCap Collège — {classe}")
+            st.info(
+                f"Le programme de {classe} sera développé progressivement. "
+                "Le chapitre 1 actuellement opérationnel appartient à la classe de 5e."
+            )
+            st.stop()
 
     if page == "Accueil":
         _accueil()
@@ -534,9 +535,8 @@ def afficher_interface_mathicap() -> str:
         st.stop()
 
     if page == "Mes séries":
-        col_profil, col_accueil = st.columns(2)
-    
-        with col_profil:
+        # Navigation compacte et adaptable au smartphone
+        with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
             if st.button(
                 "← Mon profil",
                 key="mathicap_series_retour_profil",
@@ -544,8 +544,7 @@ def afficher_interface_mathicap() -> str:
             ):
                 st.query_params["vue"] = "profil"
                 st.rerun()
-    
-        with col_accueil:
+
             st.button(
                 "← Accueil",
                 key="mathicap_series_retour_accueil",
