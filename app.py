@@ -223,7 +223,6 @@ st.markdown("""
     box-sizing: border-box;
 }
 
-}
 .st-key-mathicap_zone_profil .mathicap-icone {
     display: inline-flex;
     align-items: center;
