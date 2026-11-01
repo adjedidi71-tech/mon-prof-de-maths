@@ -5,7 +5,7 @@ from google import genai
 from groq import Groq
 from banque_priorites import generer_exercices_priorites
 from supabase import create_client
-from mathicap_accueil import afficher_interface_mathicap
+from mathicap_accueil import afficher_interface_mathicap, _styles as styles_mathicap_communs
 from auth_persistante import (
     enregistrer_session,
     supprimer_session,
@@ -690,10 +690,10 @@ if not est_connecte:
                     st.error("Une erreur est survenue lors de la connexion.")
 # Nouvelle interface MathiCap Collège
 if est_connecte and st.session_state.get("mathicap_vue") == "profil":
+    styles_mathicap_communs()
     st.stop()
 
 afficher_interface_mathicap()
-
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
