@@ -581,6 +581,11 @@ if est_connecte and st.query_params.get("vue") == "profil":
     st.write(
         f"**Adresse e-mail :** {email_eleve or 'Information non disponible'}"
     )
+    classe_eleve = st.session_state.get("mathicap_classe")
+
+    st.write(
+        f"**Ma classe :** {classe_eleve or 'Non définie'}"
+    )
 
     if st.button("Retour à l'accueil", key="mathicap_retour_accueil"):
         st.query_params["vue"] = "accueil"
