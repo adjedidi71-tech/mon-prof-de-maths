@@ -565,7 +565,7 @@ with col_profil:
                 '● Déconnecté</div>',
                 unsafe_allow_html=True,
             )
-if est_connecte and st.session_state.get("mathicap_vue") == "profil":
+if est_connecte and st.query_params.get("vue") == "profil":
     st.subheader("Mon profil")
     st.markdown("### Mes informations personnelles")
 
@@ -679,7 +679,7 @@ if not est_connecte:
                 except Exception:
                     st.error("Une erreur est survenue lors de la connexion.")
 # Nouvelle interface MathiCap Collège
-if est_connecte and st.session_state.get("mathicap_vue") == "profil":
+if est_connecte and st.query_params.get("vue") == "profil":
     styles_mathicap_communs()
     st.stop()
 
