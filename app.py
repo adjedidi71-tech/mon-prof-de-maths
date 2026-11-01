@@ -625,8 +625,10 @@ if est_connecte and st.query_params.get("vue") == "profil":
             st.session_state["eleve_id"]
         )
         email_eleve = getattr(resultat_profil.user, "email", None)
+        date_inscription = getattr(resultat_profil.user, "created_at", None)
     except Exception:
         email_eleve = None
+        date_inscription = None
     
     st.html(
         f"<div><strong>Adresse e-mail :</strong> "
