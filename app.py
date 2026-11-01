@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from pathlib import Path
 from google import genai
 from groq import Groq
@@ -658,7 +659,8 @@ if not est_connecte:
                         st.session_state["jeton_persistant"] = jeton_persistant
                         enregistrer_jeton_navigateur(jeton_persistant)
                         st.session_state["vider_champs_connexion"] = True
-                        st.rerun()  # Cache immédiatement les champs après connexion.
+                        time.sleep(1.5)
+                        st.rerun()  
                     else:
                         st.error("Connexion impossible.")
                 except Exception:
