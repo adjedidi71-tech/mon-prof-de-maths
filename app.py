@@ -645,6 +645,105 @@ with col_profil:
                 unsafe_allow_html=True,
             )
 
+def _mathicap_reponse_renseignee(valeur):
+    """Une réponse vide ou le choix par défaut ne compte pas."""
+    if valeur is None:
+        return False
+    if isinstance(valeur, str):
+        return valeur.strip() not in ("", "Choisir...")
+    return isinstance(valeur, (int, float)) and not isinstance(valeur, bool)
+
+
+def _mathicap_statistiques_progression(series):
+    """Bilan fondé uniquement sur les exercices et réponses sauvegardés."""
+    statistiques = {
+        "exercices_total": 0,
+        "exercices_avec_reponse": 0,
+        "reponses_renseignees": 0,
+        "bonnes_verifiees": 0,
+        "questions_verifiees": 0,
+        "par_chapitre": {},
+        "par_niveau": {},
+        "non_classes": 0,
+    }
+
+    for serie in series:
+        exercices = serie.get("exercices") or []
+        reponses = serie.get("reponses") or {}
+        if not isinstance(exercices, list):
+            continue
+        if not isinstance(reponses, dict):
+            reponses = {}
+
+        for numero, exercice in enumerate(exercices, start=1):
+            if not isinstance(exercice, dict):
+                continue
+            statistiques["exercices_total"] += 1
+            reponse = reponses.get(str(numero))
+            compte_reponses = 0
+
+            if isinstance(reponse, dict) and reponse.get("type") == "banque":
+                champs_saisis = reponse.get("champs") or {}
+                if isinstance(champs_saisis, dict):
+                    champs_attendus = exercice.get("champs_reponse") or []
+                    if isinstance(champs_attendus, list) and champs_attendus:
+                        identifiants = [
+                            champ.get("id") for champ in champs_attendus
+                            if isinstance(champ, dict) and champ.get("id")
+                        ]
+                    else:
+                        identifiants = list(champs_saisis)
+                    compte_reponses = sum(
+                        1 for identifiant in identifiants
+                        if _mathicap_reponse_renseignee(
+                            champs_saisis.get(identifiant)
+                        )
+                    )
+
+                bilan = reponse.get("bilan")
+                if isinstance(bilan, dict):
+                    bonnes = bilan.get("bonnes")
+                    total = bilan.get("total")
+                    if (
+                        type(bonnes) is int and type(total) is int
+                        and 0 <= bonnes <= total and total > 0
+                    ):
+                        statistiques["bonnes_verifiees"] += bonnes
+                        statistiques["questions_verifiees"] += total
+
+            elif _mathicap_reponse_renseignee(reponse):
+                compte_reponses = 1
+
+            statistiques["reponses_renseignees"] += compte_reponses
+            a_repondu = compte_reponses > 0
+            if a_repondu:
+                statistiques["exercices_avec_reponse"] += 1
+
+            chapitre = exercice.get("mathicap_chapitre")
+            niveau = exercice.get("mathicap_niveau")
+            chapitre_valide = isinstance(chapitre, str) and bool(chapitre.strip())
+            niveau_valide = type(niveau) is int and 1 <= niveau <= 9
+
+            if chapitre_valide:
+                compteurs = statistiques["par_chapitre"].setdefault(
+                    chapitre, {"total": 0, "avec_reponse": 0}
+                )
+                compteurs["total"] += 1
+                compteurs["avec_reponse"] += int(a_repondu)
+
+            if niveau_valide:
+                compteurs = statistiques["par_niveau"].setdefault(
+                    niveau, {"total": 0, "avec_reponse": 0}
+                )
+                compteurs["total"] += 1
+                compteurs["avec_reponse"] += int(a_repondu)
+
+            if not (chapitre_valide and niveau_valide):
+                statistiques["non_classes"] += 1
+
+    return statistiques
+
+
 if est_connecte and st.query_params.get("vue") == "profil":
     st.subheader("Mon profil")
     st.markdown("### Mes informations personnelles")
@@ -747,11 +846,12 @@ if est_connecte and st.query_params.get("vue") == "profil":
                         st.error("Impossible d'enregistrer le pseudo.")
                         
     st.markdown("### Mes activités")
+    series_profil = None
 
     try:
         resultat_series = (
             supabase_privee.table("series_exercices")
-            .select("id, reponses")
+            .select("id, exercices, reponses")
             .eq("eleve_id", identifiant_eleve)
             .execute()
         )
@@ -776,9 +876,89 @@ if est_connecte and st.query_params.get("vue") == "profil":
         st.info("Impossible de charger les statistiques pour le moment.")
 
     st.caption(
-        "Ces chiffres représentent ton activité enregistrée, "
-        "pas encore tes résultats ou tes notes."
+        "Ces chiffres représentent les séries encore sauvegardées sur ton compte."
     )
+
+    st.markdown("### Ma progression")
+    if series_profil is None:
+        st.info("La progression est momentanément indisponible.")
+    else:
+        statistiques = _mathicap_statistiques_progression(series_profil)
+        col_exercices, col_saisies = st.columns(2)
+
+        with col_exercices:
+            st.metric(
+                "Exercices avec réponse",
+                f"{statistiques['exercices_avec_reponse']} "
+                f"/ {statistiques['exercices_total']}",
+            )
+        with col_saisies:
+            st.metric(
+                "Réponses renseignées",
+                statistiques["reponses_renseignees"],
+            )
+
+        st.caption(
+            "Un exercice est compté dès qu'au moins une réponse est "
+            "enregistrée. Cela ne signifie pas qu'il est terminé ou réussi."
+        )
+
+        if statistiques["questions_verifiees"]:
+            st.metric(
+                "Résultats des corrections enregistrées",
+                f"{statistiques['bonnes_verifiees']} bonnes réponses "
+                f"/ {statistiques['questions_verifiees']}",
+            )
+            st.caption(
+                "Résultats calculés uniquement à partir des bilans "
+                "de vérification sauvegardés ; les exercices sans bilan "
+                "ne sont pas notés."
+            )
+        else:
+            st.caption(
+                "Aucun bilan de correction enregistré pour le moment. "
+                "Aucune note n'est estimée."
+            )
+
+        with st.expander("Progression par chapitre et par niveau"):
+            par_chapitre = statistiques["par_chapitre"]
+            par_niveau = statistiques["par_niveau"]
+            if not par_chapitre and not par_niveau:
+                st.info(
+                    "Les anciennes séries ne contiennent pas de chapitre "
+                    "ni de niveau enregistrés. Ce suivi apparaîtra "
+                    "avec les nouvelles séries."
+                )
+            else:
+                if par_chapitre:
+                    st.markdown("**Par chapitre**")
+                    for nom, compteurs in sorted(par_chapitre.items()):
+                        total = compteurs["total"]
+                        repondus = compteurs["avec_reponse"]
+                        st.write(f"{nom} — {repondus}/{total} exercices avec réponse")
+                        st.progress(repondus / total)
+
+                if par_niveau:
+                    st.markdown("**Par niveau**")
+                    for niveau, compteurs in sorted(par_niveau.items()):
+                        total = compteurs["total"]
+                        repondus = compteurs["avec_reponse"]
+                        st.write(
+                            f"Niveau {niveau} — "
+                            f"{repondus}/{total} exercices avec réponse"
+                        )
+                        st.progress(repondus / total)
+
+            if statistiques["non_classes"]:
+                st.caption(
+                    f"{statistiques['non_classes']} exercice(s) "
+                    "sans chapitre ou niveau enregistré(s) ne figurent "
+                    "pas dans tous ces regroupements."
+                )
+            st.caption(
+                "Ces barres mesurent la saisie de réponses, "
+                "pas la maîtrise des notions."
+            )
 
     if st.button(
         "Voir mes séries enregistrées",
@@ -2869,6 +3049,13 @@ if st.button("Générer mes exercices"):
                     )
                     for _ in range(nombre)
                 ]
+        # Mémoriser le chapitre et le niveau pour les nouveaux suivis.
+        # Les anciennes séries restent lisibles sans ces métadonnées.
+        for exercice in exercices:
+            if isinstance(exercice, dict):
+                exercice.setdefault("mathicap_chapitre", chapitre)
+                exercice.setdefault("mathicap_niveau", niveau_reel)
+
         st.session_state.exercices_actuels = exercices
         st.session_state["serie_ouverte_depuis_liste"] = False
         st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
