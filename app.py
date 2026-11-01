@@ -575,7 +575,10 @@ if est_connecte and st.session_state.get("mathicap_vue") == "profil":
 if not est_connecte:
     zone_compte, _ = st.columns([7, 3])
     with zone_compte:
-        st.markdown("**Mon compte élève**")
+        st.markdown(
+            '<div style="padding-top: 12px; font-weight: 600;">Mon compte élève</div>',
+            unsafe_allow_html=True
+        )
         with st.container(border=True):
             with st.form("formulaire_connexion"):
                 col_email, col_mdp, col_action = st.columns(
