@@ -569,9 +569,13 @@ if est_connecte and st.query_params.get("vue") == "profil":
     st.subheader("Mon profil")
     st.markdown("### Mes informations personnelles")
 
-    session_eleve = st.session_state.get("session_eleve")
-    utilisateur = getattr(session_eleve, "user", None)
-    email_eleve = getattr(utilisateur, "email", None)
+    try:
+        resultat_profil = supabase_privee.auth.admin.get_user_by_id(
+            st.session_state["eleve_id"]
+        )
+        email_eleve = getattr(resultat_profil.user, "email", None)
+    except Exception:
+        email_eleve = None
     
     st.write(
         f"**Adresse e-mail :** {email_eleve or 'Information non disponible'}"
