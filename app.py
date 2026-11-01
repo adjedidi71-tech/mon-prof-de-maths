@@ -228,8 +228,10 @@ st.markdown("""
 /* Conteneur de l'en-tête : grille « logo flexible | compte à largeur automatique » */
 [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
     /* Tailles ordinateur (> 1024 px) */
-    --mc-logo-w: 250px;
-    --mc-slogan: 1.1rem;
+    /* Logo et slogan utilisent une dimension de référence commune. */
+    --mc-brand-w: 250px;
+    --mc-logo-w: var(--mc-brand-w);
+    --mc-slogan: calc(var(--mc-brand-w) * 0.078);
     --mc-ico: 40px;
     --mc-avatar: 52px;
     --mc-ico-gap: 18px;
@@ -260,7 +262,8 @@ st.markdown("""
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: calc(var(--mc-brand-w) * 0.016);
+    width: var(--mc-brand-w);
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
@@ -269,17 +272,73 @@ st.markdown("""
 
 [data-testid="stHorizontalBlock"]:has(.mathicap-marque) .mathicap-marque img {
     display: block;
-    width: var(--mc-logo-w) !important;
+    width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
 }
 
 [data-testid="stHorizontalBlock"]:has(.mathicap-marque)
 .mathicap-marque .mathicap-slogan {
+    width: 100%;
     font-size: var(--mc-slogan) !important;
     line-height: 1.25 !important;
+    letter-spacing: 0 !important;
     margin: 0 !important;
     white-space: nowrap;
+}
+
+/* L'espacement du point suit lui aussi la taille du bloc. */
+.mathicap-marque .mathicap-slogan span {
+    padding: 0 calc(var(--mc-brand-w) * 0.012) !important;
+}
+
+/* Bouton Streamlit invisible superposé au logo et au slogan :
+   retour à l'accueil sans recharger le navigateur ni perdre la session. */
+.st-key-mathicap_bloc_marque {
+    position: relative !important;
+    width: var(--mc-brand-w) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+}
+
+.st-key-mathicap_bloc_marque [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+
+.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 5 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic [data-testid="stButton"],
+.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+}
+
+.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button p {
+    opacity: 0 !important;
+}
+
+.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 3px !important;
 }
 
 /* Zone compte : tout aligné à droite */
@@ -393,8 +452,7 @@ st.markdown("""
 /* Tablette : 768 à 1024 px */
 @media (max-width: 1024px) {
     [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
-        --mc-logo-w: 210px;
-        --mc-slogan: 1rem;
+        --mc-brand-w: 210px;
         --mc-ico: 38px;
         --mc-avatar: 48px;
         --mc-ico-gap: 14px;
@@ -404,8 +462,7 @@ st.markdown("""
 /* Smartphone : moins de 768 px */
 @media (max-width: 767px) {
     [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
-        --mc-logo-w: clamp(112px, 36vw, 170px);
-        --mc-slogan: clamp(0.72rem, 3.4vw, 0.9rem);
+        --mc-brand-w: clamp(112px, 36vw, 170px);
         --mc-ico: 32px;
         --mc-avatar: 52px;
         --mc-ico-gap: 8px;
@@ -422,8 +479,7 @@ st.markdown("""
 /* Très petit écran : 360 px et moins (dont 320 px) */
 @media (max-width: 360px) {
     [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
-        --mc-logo-w: 112px;
-        --mc-slogan: 0.72rem;
+        --mc-brand-w: 112px;
         --mc-ico: 28px;
         --mc-avatar: 44px;
         --mc-ico-gap: 6px;
@@ -761,7 +817,14 @@ def _mathicap_importer_avatar(identifiant, photo_jpeg):
         raise
 
 
-# En-tête : logo à gauche, profil à droite
+# Retour à l'accueil depuis toutes les pages, sans effacer la série en cours.
+def _mathicap_retour_accueil_logo():
+    st.session_state["mathicap_page"] = "Accueil"
+    st.session_state["afficher_series"] = False
+    st.query_params["vue"] = "accueil"
+
+
+# En-tête : bloc logo/slogan à gauche, profil à droite
 col_logo, col_profil = st.columns(
     [3, 1],
     vertical_alignment="top",
@@ -778,20 +841,29 @@ with col_logo:
         logo_principal.read_bytes()
     ).decode("ascii")
 
-    st.markdown(
-        f"""
-        <div class="mathicap-marque">
-            <img
-                src="data:image/png;base64,{logo_base64}"
-                alt="MathiCap Collège"
-            >
-            <div class="mathicap-slogan">
-                J'apprends <span>•</span> Je réussis
+    # Un seul bloc visuel : les dimensions du logo et du slogan sont liées.
+    # Le bouton transparent couvre exactement le bloc et garde la session active.
+    with st.container(key="mathicap_bloc_marque"):
+        st.markdown(
+            f"""
+            <div class="mathicap-marque">
+                <img
+                    src="data:image/png;base64,{logo_base64}"
+                    alt="MathiCap Collège"
+                >
+                <div class="mathicap-slogan">
+                    J'apprends <span>•</span> Je réussis
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
+        st.button(
+            "Retour à l'accueil",
+            key="mathicap_logo_clic",
+            on_click=_mathicap_retour_accueil_logo,
+            help="Revenir à l'accueil MathiCap",
+        )
 
 with col_profil:
     with st.container(key="mathicap_zone_profil"):
