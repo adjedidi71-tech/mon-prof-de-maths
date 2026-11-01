@@ -40,25 +40,6 @@ def _styles() -> None:
     st.markdown(
         """
         <style>
-        /* Couleurs du slogan MathiCap sur toutes les pages */
-        .mathicap-marque .mathicap-slogan {
-            font-weight: 700;
-            background: linear-gradient(
-                90deg,
-                #0b4d91 0%,
-                #1f7ae0 55%,
-                #f3a11a 100%
-            );
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .mathicap-marque .mathicap-slogan span {
-            color: #f3a11a;
-            -webkit-text-fill-color: #f3a11a;
-            font-weight: 800;
-        }
         .mathicap-hero {
             background: linear-gradient(112deg, #eaf4ff 0%, #f3f9ff 67%, #fff6e9 100%);
             border: 1px solid #dceafe;
