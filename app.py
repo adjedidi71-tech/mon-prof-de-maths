@@ -668,14 +668,12 @@ if not est_connecte:
                         st.error("Connexion impossible.")
                 except Exception:
                     st.error("Une erreur est survenue lors de la connexion.")
-
-
 # Nouvelle interface MathiCap Collège
-if not (
-    est_connecte
-    and st.session_state.get("mathicap_vue") == "profil"
-):
-    afficher_interface_mathicap()
+if est_connecte and st.session_state.get("mathicap_vue") == "profil":
+    st.stop()
+
+afficher_interface_mathicap()
+
 chapitres = {
     "1. Opérations": [
         "Addition, soustraction et multiplication de nombres décimaux",
