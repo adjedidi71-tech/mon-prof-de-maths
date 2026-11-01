@@ -409,7 +409,10 @@ def afficher_interface_mathicap() -> str:
     """
  
     if "mathicap_page" not in st.session_state:
-        st.session_state["mathicap_page"] = "Accueil"
+        if st.query_params.get("vue") == "series":
+            st.session_state["mathicap_page"] = "Mes séries"
+        else:
+            st.session_state["mathicap_page"] = "Accueil"
     if "mathicap_classe" not in st.session_state:
         st.session_state["mathicap_classe"] = "5e"
 
@@ -420,6 +423,11 @@ def afficher_interface_mathicap() -> str:
             st.title("MathiCap Collège")
         st.divider()
         page = st.radio("Navigation", PAGES, key="mathicap_page")
+        if page == "Mes séries":
+            if st.query_params.get("vue") != "series":
+                st.query_params["vue"] = "series"
+        elif st.query_params.get("vue") == "series":
+            st.query_params["vue"] = "accueil"
         st.divider()
         st.caption("MathiCap Collège · Programme en développement")
 
