@@ -160,6 +160,7 @@ st.markdown("""
     row-gap: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    overflow-x: clip !important;
 }
 
 [data-testid="stHorizontalBlock"]:has(.mathicap-marque)
