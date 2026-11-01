@@ -85,6 +85,25 @@ est_connecte = bool(st.session_state.get("eleve_id"))
 
 st.markdown("""
 <style>
+/* Couleurs du slogan MathiCap sur toutes les pages */
+.mathicap-marque .mathicap-slogan {
+    font-weight: 700;
+    background: linear-gradient(
+        90deg,
+        #0b4d91 0%,
+        #1f7ae0 55%,
+        #f3a11a 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.mathicap-marque .mathicap-slogan span {
+    color: #f3a11a;
+    -webkit-text-fill-color: #f3a11a;
+    font-weight: 800;
+}
 /* Avatar cliquable sans modifier sa position */
 .st-key-mathicap_zone_profil {
     position: relative !important;
