@@ -494,7 +494,7 @@ st.markdown("""
     [data-testid="stHorizontalBlock"]:has(
         [class*="st-key-reprendre_serie_"]
     ) > [data-testid="stColumn"]:first-child {
-        flex: 8 0 !important;
+        flex: 1 1 0 !important;
         width: auto !important;
         min-width: 0 !important;
     }
