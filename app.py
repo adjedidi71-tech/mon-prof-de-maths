@@ -219,7 +219,7 @@ st.markdown("""
     justify-content: flex-end;
     gap: var(--mc-ico-gap);
     width: 100%;
-    padding-right: calc(var(--mc-avatar) + var(--mc-ico-gap));
+    padding-right: var(--mc-ico-gap);
     box-sizing: border-box;
 }
 
