@@ -82,7 +82,7 @@ if st.session_state.pop("vider_champs_connexion", False):
     st.session_state["mdp_connexion"] = ""
 
 est_connecte = bool(st.session_state.get("eleve_id"))
-    styles_mathicap_communs()
+styles_mathicap_communs()
 
 st.markdown("""
 <style>
