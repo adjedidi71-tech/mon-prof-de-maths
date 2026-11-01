@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from html import escape
 from pathlib import Path
 from google import genai
 from groq import Groq
@@ -627,8 +628,10 @@ if est_connecte and st.query_params.get("vue") == "profil":
     except Exception:
         email_eleve = None
     
-    st.write(
-        f"**Adresse e-mail :** {email_eleve or 'Information non disponible'}"
+    st.markdown(
+        f"<strong>Adresse e-mail :</strong> "
+        f"{escape(email_eleve or 'Information non disponible')}",
+        unsafe_allow_html=True
     )
     classe_eleve = st.session_state.get("mathicap_classe")
 
