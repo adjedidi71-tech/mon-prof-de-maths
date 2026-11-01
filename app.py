@@ -82,6 +82,55 @@ if st.session_state.pop("vider_champs_connexion", False):
     st.session_state["mdp_connexion"] = ""
 
 est_connecte = bool(st.session_state.get("eleve_id"))
+# Synchronisation de la classe avec le compte Supabase
+CLASSES_MATHICAP = ("6e", "5e", "4e", "3e")
+
+if est_connecte:
+    identifiant = st.session_state["eleve_id"]
+
+    if st.session_state.get("_classe_identifiant") != identifiant:
+        try:
+            compte = supabase_privee.auth.admin.get_user_by_id(identifiant)
+            classe_compte = (
+                (compte.user.user_metadata or {}).get("mathicap_classe")
+            )
+
+            st.session_state["mathicap_classe"] = (
+                classe_compte
+                if classe_compte in CLASSES_MATHICAP
+                else "5e"
+            )
+            st.session_state["_classe_enregistree"] = classe_compte
+            st.session_state["_classe_identifiant"] = identifiant
+
+        except Exception:
+            st.warning("Impossible de récupérer la classe du compte.")
+
+    classe_choisie = st.session_state.get("mathicap_classe")
+
+    if (
+        st.session_state.get("_classe_identifiant") == identifiant
+        and classe_choisie in CLASSES_MATHICAP
+        and classe_choisie != st.session_state.get("_classe_enregistree")
+    ):
+        try:
+            compte = supabase_privee.auth.admin.get_user_by_id(identifiant)
+            infos = dict(compte.user.user_metadata or {})
+            infos["mathicap_classe"] = classe_choisie
+
+            supabase_privee.auth.admin.update_user_by_id(
+                identifiant,
+                {"user_metadata": infos}
+            )
+
+            st.session_state["_classe_enregistree"] = classe_choisie
+
+        except Exception:
+            st.warning("Impossible d'enregistrer la classe.")
+
+else:
+    st.session_state.pop("_classe_identifiant", None)
+    st.session_state.pop("_classe_enregistree", None)
 styles_mathicap_communs()
 
 st.markdown("""
