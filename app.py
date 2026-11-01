@@ -641,11 +641,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
         f"**Ma classe :** {classe_eleve or 'Non définie'}"
     )
     if date_inscription:
-        date_affichee = (
-            date_inscription[8:10] + "/" +
-            date_inscription[5:7] + "/" +
-            date_inscription[:4]
-        )
+        date_affichee = date_inscription.strftime("%d/%m/%Y")
     else:
         date_affichee = "Information non disponible"
     
