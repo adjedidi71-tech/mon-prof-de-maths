@@ -767,7 +767,7 @@ st.markdown("""
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
         justify-self: start !important;
-        width: min(1800px, 100%) !important;
+        width: min(180px, 100%) !important;
         margin-top: -65px !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
@@ -778,7 +778,7 @@ st.markdown("""
     .st-key-mathicap_barre_recherche {
         --mc-recherche-h: 40px;
         --mc-recherche-bouton-w: 34px;
-        width: 1800px !important;
+        width: 180px !important;
         max-width: 100% !important;
         margin-top: 0 !important;
     }
