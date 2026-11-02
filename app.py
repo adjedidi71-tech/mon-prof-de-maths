@@ -776,7 +776,7 @@ st.markdown("""
         grid-row: 1 !important;
     }
     .st-key-mathicap_barre_recherche {
-        --mc-recherche-h: 30px;
+        --mc-recherche-h: 40px;
         --mc-recherche-bouton-w: 34px;
         width: 230px !important;
         max-width: 100% !important;
