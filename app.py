@@ -784,8 +784,8 @@ st.markdown("""
     /* Hauteur du champ de recherche */
     .st-key-mathicap_barre_recherche [data-baseweb="input"],
     .st-key-mathicap_barre_recherche input {
-        height: 36px !important;
-        min-height: 36px !important;
+        height: 32px !important;
+        min-height: 32px !important;
     }
 
     /* Hauteur du bouton loupe */
