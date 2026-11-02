@@ -649,65 +649,43 @@ st.markdown("""
     }
 }
 
-/* Recherche intégrée dans l'en-tête, largeur stable (PC et mobile). */
+/* Recherche : un seul champ, loupe decorée à l'intérieur, validation par Entrée. */
 .st-key-mathicap_barre_recherche {
-    width: 230px !important;
+    width: 320px !important;
+    min-width: 0 !important;
     max-width: 100% !important;
-    min-width: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    margin-top: 9px !important;
+    margin: 9px 0 0 !important;
     padding: 0 !important;
 }
-.st-key-mathicap_barre_recherche [data-testid="stForm"] {
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 0 !important;
-    width: 100% !important;
-}
-.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
-    flex: 1 1 0 !important;
-    width: auto !important;
-    min-width: 0 !important;
-}
-.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
-    flex: 0 0 42px !important;
-    min-width: 42px !important;
-    width: 42px !important;
-}
-/* Case et loupe forment un seul contrôle visuel. */
 .st-key-mathicap_barre_recherche [data-baseweb="input"] {
-    border-radius: 9px 0 0 9px !important;
+    position: relative !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    background-color: #f0f2f6 !important;
 }
 .st-key-mathicap_barre_recherche input {
-    height: 40px !important;
-    min-height: 40px !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding-right: 44px !important;
+    box-sizing: border-box !important;
     font-size: 14px !important;
-    min-width: 0 !important;
+    background-color: transparent !important;
 }
-.st-key-mathicap_barre_recherche button {
-    width: 42px !important;
-    min-width: 42px !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    font-size: 21px !important;
-    line-height: 1 !important;
-    border-radius: 0 9px 9px 0 !important;
-    background: #eaf1fd !important;
-    color: #12315f !important;
+/* La loupe est DANS le champ et ne crée plus de bouton séparé. */
+.st-key-mathicap_barre_recherche [data-baseweb="input"]::after {
+    content: "🔍";
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    font-size: 20px;
+    line-height: 1;
+    pointer-events: none;
 }
-/* Lorsque la largeur disponible ne permet plus 3 blocs sur une ligne :
-   logo + cloche/avatar en haut ; recherche centrée sur la ligne suivante.
-   La largeur de la recherche reste 320 px, même si l'écran pivote. */
+/* Smartphone portrait : largeur et position déjà approuvées. */
 @media (max-width: 760px) {
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         grid-template-columns: minmax(0, 1fr) auto !important;
@@ -723,7 +701,7 @@ st.markdown("""
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
         justify-self: start !important;
-        width: min(260px, 100%) !important;
+        width: min(230px, 100%) !important;
         margin-top: -65px !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
@@ -732,7 +710,27 @@ st.markdown("""
         grid-row: 1 !important;
     }
     .st-key-mathicap_barre_recherche {
+        width: 230px !important;
+        max-width: 100% !important;
         margin-top: 0 !important;
+    }
+    .st-key-mathicap_barre_recherche [data-baseweb="input"] {
+        height: 30px !important;
+        min-height: 30px !important;
+    }
+    .st-key-mathicap_barre_recherche input {
+        font-size: 13px !important;
+        padding-right: 35px !important;
+    }
+    .st-key-mathicap_barre_recherche [data-baseweb="input"]::after {
+        font-size: 18px !important;
+        right: 9px !important;
+    }
+}
+/* Position du bloc profil sur smartphone, indépendamment du PC. */
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_profil {
+        transform: translateY(-50px) !important;
     }
 }
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
@@ -766,36 +764,6 @@ st.markdown("""
     font-size: 27px !important;
     line-height: 1 !important;
     margin: 0 !important;
-}
-/* Ajustement vertical du bloc profil sur smartphone */
-@media (max-width: 767px) {
-    .st-key-mathicap_zone_profil {
-        transform: translateY(-30px) !important;
-    }
-}
-/* Recherche : dimensions sur smartphone uniquement */
-@media (max-width: 760px) {
-
-    .st-key-mathicap_barre_recherche {
-        width: 230px !important;
-        max-width: 100% !important;
-    }
-/* Champ de recherche : hauteur totale */
-.st-key-mathicap_barre_recherche [data-baseweb="input"],
-.st-key-mathicap_barre_recherche input {
-    height: 30px !important;
-    min-height: 30px !important;
-    box-sizing: border-box !important;
-}
-
-/* Bouton loupe : même hauteur */
-.st-key-mathicap_barre_recherche button {
-    height: 30px !important;
-    min-height: 30px !important;
-    padding: 0 !important;
-    font-size: 22px !important;
-    box-sizing: border-box !important;
-}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1117,6 +1085,19 @@ def _mathicap_texte_recherche(texte):
     )
 
 
+def _mathicap_valider_recherche_entete():
+    """Cherche le contenu saisi lorsque l'élève valide avec Entrée."""
+    st.session_state["mathicap_recherche_active"] = (
+        st.session_state.get("mathicap_mot_cle_entete", "").strip()
+    )
+
+
+def _mathicap_fermer_recherche_entete():
+    """Permet de relancer la même recherche après fermeture des résultats."""
+    st.session_state.pop("mathicap_recherche_active", None)
+    st.session_state["mathicap_mot_cle_entete"] = ""
+
+
 # En-tête unifié : logo à gauche, recherche centrale, compte à droite.
 # La disposition est pilotée par CSS pour le PC et le smartphone.
 col_logo, col_recherche, col_profil = st.columns(
@@ -1157,25 +1138,15 @@ with col_logo:
     )
 
 with col_recherche:
-    # Recherche directe dans l'en-tête, sans rediriger vers une autre page.
-    # La saisie se fait à gauche, puis le clic sur la loupe lance la recherche.
+    # Champ unique : loupe à l'intérieur, validation de la recherche par Entrée.
     with st.container(key="mathicap_barre_recherche"):
-        with st.form("mathicap_form_recherche_entete", border=False, clear_on_submit=False):
-            col_mot_cle, col_loupe = st.columns(
-                [5.5, 1], gap="small", vertical_alignment="center", wrap=False
-            )
-            with col_mot_cle:
-                mot_cle_recherche = st.text_input(
-                    "Mot-clé à rechercher",
-                    placeholder="Chercher un chapitre…",
-                    label_visibility="collapsed",
-                    key="mathicap_mot_cle_entete",
-                )
-            with col_loupe:
-                recherche_lancee = st.form_submit_button(
-                    "🔍", key="mathicap_lancer_recherche",
-                    help="Lancer la recherche", use_container_width=True,
-                )
+        st.text_input(
+            "Mot-clé à rechercher",
+            placeholder="Chercher un chapitre…",
+            label_visibility="collapsed",
+            key="mathicap_mot_cle_entete",
+            on_change=_mathicap_valider_recherche_entete,
+        )
 
 
 with col_profil:
@@ -1469,9 +1440,6 @@ def _mathicap_statistiques_progression(series):
     return statistiques
 
 
-if recherche_lancee:
-    st.session_state["mathicap_recherche_active"] = mot_cle_recherche.strip()
-
 # Les résultats s'affichent sous l'en-tête, sans changer de page.
 recherche_active = st.session_state.get("mathicap_recherche_active", "")
 if recherche_active:
@@ -1501,9 +1469,11 @@ if recherche_active:
                     )
         else:
             st.info("Aucun chapitre ou notion ne correspond à ce mot-clé.")
-        if st.button("Fermer les résultats", key="mathicap_fermer_recherche"):
-            st.session_state.pop("mathicap_recherche_active", None)
-            st.rerun()
+        st.button(
+            "Fermer les résultats",
+            key="mathicap_fermer_recherche",
+            on_click=_mathicap_fermer_recherche_entete,
+        )
 
 if est_connecte and st.query_params.get("vue") == "profil":
     st.subheader("Mon profil")
