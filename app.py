@@ -773,6 +773,28 @@ st.markdown("""
         transform: translateY(-30px) !important;
     }
 }
+/* Recherche : dimensions sur smartphone uniquement */
+@media (max-width: 760px) {
+
+    .st-key-mathicap_barre_recherche {
+        width: 230px !important;
+        max-width: 100% !important;
+    }
+
+    /* Hauteur du champ de recherche */
+    .st-key-mathicap_barre_recherche [data-baseweb="input"],
+    .st-key-mathicap_barre_recherche input {
+        height: 36px !important;
+        min-height: 36px !important;
+    }
+
+    /* Hauteur du bouton loupe */
+    .st-key-mathicap_barre_recherche button {
+        height: 36px !important;
+        min-height: 36px !important;
+        font-size: 18px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
