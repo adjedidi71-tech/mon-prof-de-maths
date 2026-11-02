@@ -656,7 +656,7 @@ st.markdown("""
     min-width: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    margin-top: 6px !important;
+    margin-top: 9px !important;
     padding: 0 !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stForm"] {
