@@ -236,7 +236,7 @@ st.markdown("""
 
     display: grid !important;
     /* La recherche garde 320 px sur PC plein écran ou demi-écran. */
-    grid-template-columns: minmax(0, 1fr) 320px auto !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 320px) auto !important;
     align-items: start !important;
     column-gap: 12px !important;
     row-gap: 0 !important;
@@ -750,8 +750,9 @@ st.markdown("""
     line-height: 1 !important;
     margin: 0 !important;
 }
-/* Smartphone portrait : largeur et position déjà approuvées. */
-@media (max-width: 760px) {
+/* Ecrans etroits : garder le mode PC pour les demi-fenetres assez larges.
+   Sous 620 px, conserver la disposition smartphone validee. */
+@media (max-width: 620px) {
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         grid-template-columns: minmax(0, 1fr) auto !important;
         row-gap: 8px !important;
