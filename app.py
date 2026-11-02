@@ -236,7 +236,8 @@ st.markdown("""
     --mc-btn-fs: 13px;
 
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
+    /* La recherche garde 320 px sur PC plein écran ou demi-écran. */
+    grid-template-columns: minmax(0, 1fr) 320px auto !important;
     align-items: start !important;
     column-gap: 12px !important;
     row-gap: 0 !important;
@@ -251,6 +252,19 @@ st.markdown("""
     width: auto !important;
     min-width: 0 !important;
     max-width: 100% !important;
+}
+
+/* Dans la grille de l'en-tête, chaque bloc a un emplacement identifié. */
+[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+> [data-testid="stColumn"]:nth-child(2) {
+    width: 320px !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    justify-self: end !important;
+}
+[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+> [data-testid="stColumn"]:nth-child(3) {
+    justify-self: end !important;
 }
 
 /* Le vrai bouton Streamlit porte directement le logo et le slogan.
@@ -562,12 +576,10 @@ st.markdown("""
         font-size: 10px !important;
     }
 }
-/* Réduire l'espace au-dessus de l'en-tête sur PC uniquement */
-/* Hauteur cohérente sur PC, plein écran ou demi-écran */
-@media (min-width: 768px) {
-    [data-testid="stMainBlockContainer"]:has(.st-key-mathicap_logo_clic) {
-        padding-top: 2.75rem !important;
-    }
+/* Logo au plus haut sous la barre Streamlit, PC et smartphone.
+   Même règle en plein écran, demi-écran et orientation paysage. */
+[data-testid="stMainBlockContainer"]:has(.st-key-mathicap_logo_clic) {
+    padding-top: 0.5rem !important;
 }
 /* Zone cliquable exactement aux dimensions de l'avatar */
 .st-key-mathicap_zone_profil
@@ -657,55 +669,91 @@ div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     max-width: var(--mc-ico) !important;
 }
 
-/* Barre de recherche : à droite sur PC, toujours lisible sur mobile. */
+/* Recherche intégrée dans l'en-tête, largeur stable (PC et mobile). */
 .st-key-mathicap_barre_recherche {
-    width: min(100%, 330px) !important;
-    margin-left: auto !important;
-    margin-top: 0 !important;
+    width: 320px !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 9px !important;
+    padding: 0 !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stForm"] {
     border: none !important;
     padding: 0 !important;
+    margin: 0 !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] {
+    display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 0 !important;
+    width: 100% !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
+    flex: 1 1 0 !important;
     width: auto !important;
+    min-width: 0 !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
-    flex: 0 0 44px !important;
-    min-width: 44px !important;
-    width: 44px !important;
+    flex: 0 0 42px !important;
+    min-width: 42px !important;
+    width: 42px !important;
+}
+/* Case et loupe forment un seul contrôle visuel. */
+.st-key-mathicap_barre_recherche [data-baseweb="input"] {
+    border-radius: 9px 0 0 9px !important;
 }
 .st-key-mathicap_barre_recherche input {
     height: 40px !important;
     min-height: 40px !important;
     font-size: 14px !important;
+    min-width: 0 !important;
 }
 .st-key-mathicap_barre_recherche button {
-    width: 40px !important;
-    min-width: 40px !important;
+    width: 42px !important;
+    min-width: 42px !important;
     height: 40px !important;
     min-height: 40px !important;
     padding: 0 !important;
-    font-size: 23px !important;
+    margin: 0 !important;
+    font-size: 21px !important;
     line-height: 1 !important;
+    border-radius: 0 9px 9px 0 !important;
+    background: #eaf1fd !important;
+    color: #12315f !important;
 }
-@media (max-width: 767px) {
+/* Lorsque la largeur disponible ne permet plus 3 blocs sur une ligne :
+   logo + cloche/avatar en haut ; recherche centrée sur la ligne suivante.
+   La largeur de la recherche reste 320 px, même si l'écran pivote. */
+@media (max-width: 760px) {
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        row-gap: 8px !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+    > [data-testid="stColumn"]:first-child {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+    > [data-testid="stColumn"]:nth-child(2) {
+        grid-column: 1 / -1 !important;
+        grid-row: 2 !important;
+        justify-self: center !important;
+        width: min(320px, 100%) !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+    > [data-testid="stColumn"]:nth-child(3) {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+    }
     .st-key-mathicap_barre_recherche {
-        width: min(100%, 290px) !important;
-    }
-    .st-key-mathicap_barre_recherche input {
-        font-size: 13px !important;
+        margin-top: 0 !important;
     }
 }
-
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
 @media (max-width: 767px) {
     .st-key-mathicap_score_corrections [data-testid="stMetricValue"],
@@ -1058,12 +1106,13 @@ def _mathicap_texte_recherche(texte):
     )
 
 
-# En-tête : bloc logo/slogan à gauche, profil à droite
-col_logo, col_profil = st.columns(
-    [3, 1],
+# En-tête unifié : logo à gauche, recherche centrale, compte à droite.
+# La disposition est pilotée par CSS pour le PC et le smartphone.
+col_logo, col_recherche, col_profil = st.columns(
+    [3, 2, 1],
     vertical_alignment="top",
     gap="small",
-    wrap=True,
+    wrap=False,
 )
 
 with col_logo:
@@ -1095,6 +1144,28 @@ with col_logo:
         on_click=_mathicap_retour_accueil_logo,
         help="Revenir à l'accueil MathiCap",
     )
+
+with col_recherche:
+    # Recherche directe dans l'en-tête, sans rediriger vers une autre page.
+    # La saisie se fait à gauche, puis le clic sur la loupe lance la recherche.
+    with st.container(key="mathicap_barre_recherche"):
+        with st.form("mathicap_form_recherche_entete", border=False, clear_on_submit=False):
+            col_mot_cle, col_loupe = st.columns(
+                [5.5, 1], gap="small", vertical_alignment="center", wrap=False
+            )
+            with col_mot_cle:
+                mot_cle_recherche = st.text_input(
+                    "Mot-clé à rechercher",
+                    placeholder="Chercher un chapitre…",
+                    label_visibility="collapsed",
+                    key="mathicap_mot_cle_entete",
+                )
+            with col_loupe:
+                recherche_lancee = st.form_submit_button(
+                    "🔍", key="mathicap_lancer_recherche",
+                    help="Lancer la recherche", use_container_width=True,
+                )
+
 
 with col_profil:
     with st.container(key="mathicap_zone_profil"):
@@ -1374,26 +1445,6 @@ def _mathicap_statistiques_progression(series):
 
     return statistiques
 
-
-# Recherche directe dans l'en-tête, sans rediriger vers une autre page.
-# La saisie se fait à gauche, puis le clic sur la loupe lance la recherche.
-with st.container(key="mathicap_barre_recherche"):
-    with st.form("mathicap_form_recherche_entete", border=False, clear_on_submit=False):
-        col_mot_cle, col_loupe = st.columns(
-            [5.5, 1], gap="small", vertical_alignment="center", wrap=False
-        )
-        with col_mot_cle:
-            mot_cle_recherche = st.text_input(
-                "Mot-clé à rechercher",
-                placeholder="Chercher un chapitre…",
-                label_visibility="collapsed",
-                key="mathicap_mot_cle_entete",
-            )
-        with col_loupe:
-            recherche_lancee = st.form_submit_button(
-                "🔍", key="mathicap_lancer_recherche",
-                help="Lancer la recherche", use_container_width=True,
-            )
 
 if recherche_lancee:
     st.session_state["mathicap_recherche_active"] = mot_cle_recherche.strip()
