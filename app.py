@@ -579,7 +579,7 @@ st.markdown("""
 /* Logo au plus haut sous la barre Streamlit, PC et smartphone.
    Même règle en plein écran, demi-écran et orientation paysage. */
 [data-testid="stMainBlockContainer"]:has(.st-key-mathicap_logo_clic) {
-    padding-top: 0.5rem !important;
+    padding-top: 2rem !important;
 }
 /* Zone cliquable exactement aux dimensions de l'avatar */
 .st-key-mathicap_zone_profil
