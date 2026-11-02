@@ -715,7 +715,7 @@ st.markdown("""
         margin-top: 0 !important;
     }
     .st-key-mathicap_barre_recherche [data-baseweb="input"] {
-        height: 30px !important;
+        height: 20px !important;
         min-height: 30px !important;
     }
     .st-key-mathicap_barre_recherche input {
