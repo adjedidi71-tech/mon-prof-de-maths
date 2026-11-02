@@ -784,14 +784,14 @@ st.markdown("""
     /* Hauteur du champ de recherche */
     .st-key-mathicap_barre_recherche [data-baseweb="input"],
     .st-key-mathicap_barre_recherche input {
-        height: 32px !important;
-        min-height: 32px !important;
+        height: 30px !important;
+        min-height: 30px !important;
     }
 
     /* Hauteur du bouton loupe */
     .st-key-mathicap_barre_recherche button {
-        height: 36px !important;
-        min-height: 36px !important;
+        height: 30px !important;
+        min-height: 30px !important;
         font-size: 18px !important;
     }
 }
