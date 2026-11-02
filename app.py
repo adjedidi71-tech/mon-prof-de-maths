@@ -176,9 +176,7 @@ st.markdown("""
 }
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
-    position: absolute !important;
-    top: 0 !important;
-    right: 0 !important;
+    position: static !important;
     width: var(--mc-avatar) !important;
     min-width: var(--mc-avatar) !important;
     max-width: var(--mc-avatar) !important;
@@ -371,19 +369,38 @@ st.markdown("""
     width: 100% !important;
 }
 
-/* Espacement sous la rangée d'icônes (sans boutons superposés). */
-.mathicap-espace-icones {
-    display: block;
-    height: var(--mc-avatar);
-    width: 100%;
-    pointer-events: none;
+/* Cloche et avatar placés côte à côte dans un vrai conteneur horizontal.
+   Aucun bouton n'est superposé : les deux restent visibles sur smartphone. */
+.st-key-mathicap_icones_actions,
+.st-key-mathicap_icones_actions [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    column-gap: var(--mc-ico-gap) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_icones_actions [data-testid="stElementContainer"] {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_icones_actions .st-key-mathicap_notifications_clic {
+    flex: 0 0 var(--mc-ico) !important;
+    width: var(--mc-ico) !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_icones_actions .st-key-mathicap_avatar_clic {
+    flex: 0 0 var(--mc-avatar) !important;
+    width: var(--mc-avatar) !important;
 }
 
 /* Cloche : bouton natif avec une surface de clic stable sur tous les écrans. */
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
-    position: absolute !important;
-    top: 0 !important;
-    right: calc(var(--mc-avatar) + var(--mc-ico-gap)) !important;
+    position: static !important;
     width: var(--mc-ico) !important;
     min-width: var(--mc-ico) !important;
     max-width: var(--mc-ico) !important;
@@ -550,29 +567,20 @@ st.markdown("""
         --mc-btn-fs: 10.5px;
     }
 }
-/* Bouton Déconnexion compact sur smartphone uniquement */
+/* Déconnexion compacte sur smartphone uniquement : ne pas toucher aux icônes. */
 @media (max-width: 767px) {
-
-    div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
-    > div[data-testid="stColumn"]:last-child
-    div[data-testid="stButton"] {
+    .st-key-mathicap_zone_profil .st-key-mathicap_deconnexion_entete [data-testid="stButton"] {
         width: fit-content !important;
         margin-left: auto !important;
     }
-
-    div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
-    > div[data-testid="stColumn"]:last-child
-    div[data-testid="stButton"] button {
+    .st-key-mathicap_zone_profil .st-key-mathicap_deconnexion_entete button {
         width: auto !important;
         min-width: 0 !important;
         height: 24px !important;
         min-height: 24px !important;
         padding: 1px 4px !important;
     }
-
-    div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
-    > div[data-testid="stColumn"]:last-child
-    div[data-testid="stButton"] button p {
+    .st-key-mathicap_zone_profil .st-key-mathicap_deconnexion_entete button p {
         font-size: 10px !important;
     }
 }
@@ -642,31 +650,6 @@ st.markdown("""
         width: auto !important;
         min-width: 0 !important;
     }
-}
-
-/* Priorité sur les règles globales de Déconnexion pour la cloche. */
-div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
-> div[data-testid="stColumn"]:last-child
-.st-key-mathicap_notifications_clic [data-testid="stButton"],
-div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
-> div[data-testid="stColumn"]:last-child
-.st-key-mathicap_notifications_clic button {
-    width: var(--mc-ico) !important;
-    min-width: var(--mc-ico) !important;
-    max-width: var(--mc-ico) !important;
-    height: var(--mc-ico) !important;
-    min-height: var(--mc-ico) !important;
-    max-height: var(--mc-ico) !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Les boutons d'icône restent carrés même si les éléments du profil
-   imposent par ailleurs une largeur à 100 %. */
-.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic[data-testid="stElementContainer"] {
-    width: var(--mc-ico) !important;
-    min-width: var(--mc-ico) !important;
-    max-width: var(--mc-ico) !important;
 }
 
 /* Recherche intégrée dans l'en-tête, largeur stable (PC et mobile). */
@@ -1216,15 +1199,6 @@ with col_profil:
             }}
             </style>"""
         )
-        # La zone d'espacement conserve la position de Connecté/Déconnexion.
-        st.html('<div class="mathicap-espace-icones" aria-hidden="true"></div>')
-        st.button(
-            "Notifications",
-            key="mathicap_notifications_clic",
-            help="Accéder aux notifications",
-            on_click=_mathicap_ouvrir_icone,
-            args=("notifications",),
-        )
         if _avatar_uri:
             st.markdown(
                 f"""
@@ -1297,14 +1271,31 @@ with col_profil:
                 """,
                 unsafe_allow_html=True,
             )
-        if st.button(
-            "Ouvrir mon profil",
-            key="mathicap_avatar_clic",
-            disabled=not est_connecte,
-            help="Accéder à mon profil",
+        # Deux véritables boutons voisins, dans le flux du document.
+        # Résout la disparition de la cloche sur les écrans étroits.
+        with st.container(
+            horizontal=True,
+            wrap=False,
+            horizontal_alignment="right",
+            vertical_alignment="center",
+            gap=None,
+            key="mathicap_icones_actions",
         ):
-            st.query_params["vue"] = "profil"
-            st.rerun()
+            st.button(
+                "Notifications",
+                key="mathicap_notifications_clic",
+                help="Accéder aux notifications",
+                on_click=_mathicap_ouvrir_icone,
+                args=("notifications",),
+            )
+            if st.button(
+                "Ouvrir mon profil",
+                key="mathicap_avatar_clic",
+                disabled=not est_connecte,
+                help="Accéder à mon profil",
+            ):
+                st.query_params["vue"] = "profil"
+                st.rerun()
         if est_connecte:
             st.markdown(
                 '<div class="mathicap-connecte">● Connecté</div>',
