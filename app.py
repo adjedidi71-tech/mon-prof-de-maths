@@ -171,6 +171,7 @@ st.markdown("""
 /* En-tête : les trois boutons ont de vraies zones de clic. */
 .st-key-mathicap_zone_profil {
     position: relative !important;
+    transform: translateY(-30px) !important;
     width: calc(var(--mc-avatar) + var(--mc-ico) + var(--mc-ico-gap)) !important;
     min-width: calc(var(--mc-avatar) + var(--mc-ico) + var(--mc-ico-gap)) !important;
 }
