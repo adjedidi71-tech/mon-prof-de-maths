@@ -651,7 +651,7 @@ st.markdown("""
 
 /* Recherche intégrée dans l'en-tête, largeur stable (PC et mobile). */
 .st-key-mathicap_barre_recherche {
-    width: 260px !important;
+    width: 240px !important;
     max-width: 100% !important;
     min-width: 0 !important;
     margin-left: 0 !important;
