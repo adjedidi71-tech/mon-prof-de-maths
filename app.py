@@ -780,20 +780,22 @@ st.markdown("""
         width: 230px !important;
         max-width: 100% !important;
     }
+/* Champ de recherche : hauteur totale */
+.st-key-mathicap_barre_recherche [data-baseweb="input"],
+.st-key-mathicap_barre_recherche input {
+    height: 30px !important;
+    min-height: 30px !important;
+    box-sizing: border-box !important;
+}
 
-    /* Hauteur du champ de recherche */
-    .st-key-mathicap_barre_recherche [data-baseweb="input"],
-    .st-key-mathicap_barre_recherche input {
-        height: 30px !important;
-        min-height: 30px !important;
-    }
-
-    /* Hauteur du bouton loupe */
-    .st-key-mathicap_barre_recherche button {
-        height: 30px !important;
-        min-height: 30px !important;
-        font-size: 18px !important;
-    }
+/* Bouton loupe : même hauteur */
+.st-key-mathicap_barre_recherche button {
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+    font-size: 22px !important;
+    box-sizing: border-box !important;
+}
 }
 </style>
 """, unsafe_allow_html=True)
