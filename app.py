@@ -769,7 +769,7 @@ st.markdown("""
 /* Ajustement vertical du bloc profil sur smartphone */
 @media (max-width: 767px) {
     .st-key-mathicap_zone_profil {
-        transform: translateY(-40px) !important;
+        transform: translateY(-35px) !important;
     }
 }
 </style>
