@@ -226,7 +226,7 @@ st.markdown("""
    ============================================================ */
 
 /* Conteneur de l'en-tête : grille « logo flexible | compte à largeur automatique » */
-[data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
     /* Tailles ordinateur (> 1024 px) */
     /* Logo et slogan utilisent une dimension de référence commune. */
     --mc-brand-w: 250px;
@@ -249,7 +249,7 @@ st.markdown("""
     overflow-x: clip !important;
 }
 
-[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
 > [data-testid="stColumn"] {
     flex: none !important;
     width: auto !important;
@@ -257,103 +257,91 @@ st.markdown("""
     max-width: 100% !important;
 }
 
-/* Logo + slogan */
-[data-testid="stHorizontalBlock"]:has(.mathicap-marque) .mathicap-marque {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: calc(var(--mc-brand-w) * 0.016);
-    width: var(--mc-brand-w);
-    min-width: 0;
-    max-width: 100%;
-    overflow: hidden;
-    padding: 0 !important;
-}
-
-[data-testid="stHorizontalBlock"]:has(.mathicap-marque) .mathicap-marque img {
-    display: block;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-}
-
-[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
-.mathicap-marque .mathicap-slogan {
-    width: 100%;
-    font-size: var(--mc-slogan) !important;
-    line-height: 1.25 !important;
-    letter-spacing: 0 !important;
-    margin: 0 !important;
-    white-space: nowrap;
-}
-
-/* L'espacement du point suit lui aussi la taille du bloc. */
-.mathicap-marque .mathicap-slogan span {
-    padding: 0 calc(var(--mc-brand-w) * 0.012) !important;
-}
-
-/* Bouton Streamlit invisible superposé au logo et au slogan :
-   retour à l'accueil sans recharger le navigateur ni perdre la session. */
-.st-key-mathicap_bloc_marque {
-    position: relative !important;
+/* Le vrai bouton Streamlit porte directement le logo et le slogan.
+   Il n'y a plus de bouton transparent superposé à une image. */
+.st-key-mathicap_logo_clic {
     width: var(--mc-brand-w) !important;
-    max-width: 100% !important;
     min-width: 0 !important;
-    padding: 0 !important;
+    max-width: 100% !important;
 }
 
-/* Le bloc vertical est le repère de toute la zone marque :
-   le bouton doit recouvrir l'image ET le slogan, pas seulement une ligne. */
-.st-key-mathicap_bloc_marque [data-testid="stVerticalBlock"] {
-    position: relative !important;
-    gap: 0 !important;
-}
-
-/* Certaines versions de Streamlit ajoutent un conteneur autour du bouton.
-   Il doit lui aussi occuper toute la hauteur du bloc de marque. */
-.st-key-mathicap_bloc_marque [data-testid="stVerticalBlock"]
-> [data-testid="stElementContainer"]:has(.st-key-mathicap_logo_clic) {
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 5 !important;
-    height: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-}
-
-.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic {
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 5 !important;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic [data-testid="stButton"],
-.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button {
+.st-key-mathicap_logo_clic [data-testid="stButton"] {
     display: block !important;
     width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    max-height: none !important;
 }
 
-.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: transparent !important;
+.st-key-mathicap_logo_clic button {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: calc(var(--mc-brand-w) * 0.016) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
     padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: left !important;
     cursor: pointer !important;
 }
 
-.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button p {
-    opacity: 0 !important;
+/* L'image est peinte directement sur le bouton : toute l'image est cliquable.
+   L'aspect-ratio réel de l'image et son contenu sont précisés plus bas. */
+.st-key-mathicap_logo_clic button::before {
+    content: "";
+    display: block !important;
+    width: 100% !important;
+    flex: none !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+    pointer-events: none !important;
 }
 
-.st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button:focus-visible {
+.st-key-mathicap_logo_clic button::after {
+    content: "J'apprends  •  Je réussis";
+    display: block !important;
+    width: 100% !important;
+    font-size: var(--mc-slogan) !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    background: linear-gradient(90deg, #0b3d91 0%, #1f7ae0 55%, #f3a11a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    pointer-events: none !important;
+}
+
+/* Le libellé pour lecteurs d'écran n'ajoute aucune hauteur au bouton. */
+.st-key-mathicap_logo_clic button [data-testid="stMarkdownContainer"] {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+}
+
+.st-key-mathicap_logo_clic button p {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.st-key-mathicap_logo_clic button:focus-visible {
     outline: 2px solid #2563eb !important;
     outline-offset: 3px !important;
 }
@@ -468,7 +456,7 @@ st.markdown("""
 
 /* Tablette : 768 à 1024 px */
 @media (max-width: 1024px) {
-    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: 210px;
         --mc-ico: 38px;
         --mc-avatar: 48px;
@@ -478,7 +466,7 @@ st.markdown("""
 
 /* Smartphone : moins de 768 px */
 @media (max-width: 767px) {
-    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: clamp(112px, 36vw, 170px);
         --mc-ico: 32px;
         --mc-avatar: 52px;
@@ -495,7 +483,7 @@ st.markdown("""
 
 /* Très petit écran : 360 px et moins (dont 320 px) */
 @media (max-width: 360px) {
-    [data-testid="stHorizontalBlock"]:has(.mathicap-marque) {
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: 112px;
         --mc-ico: 28px;
         --mc-avatar: 44px;
@@ -508,14 +496,14 @@ st.markdown("""
 /* Bouton Déconnexion compact sur smartphone uniquement */
 @media (max-width: 767px) {
 
-    div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > div[data-testid="stColumn"]:last-child
     div[data-testid="stButton"] {
         width: fit-content !important;
         margin-left: auto !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > div[data-testid="stColumn"]:last-child
     div[data-testid="stButton"] button {
         width: auto !important;
@@ -525,7 +513,7 @@ st.markdown("""
         padding: 1px 4px !important;
     }
 
-    div[data-testid="stHorizontalBlock"]:has(.mathicap-marque)
+    div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > div[data-testid="stColumn"]:last-child
     div[data-testid="stButton"] button p {
         font-size: 10px !important;
@@ -534,7 +522,7 @@ st.markdown("""
 /* Réduire l'espace au-dessus de l'en-tête sur PC uniquement */
 /* Hauteur cohérente sur PC, plein écran ou demi-écran */
 @media (min-width: 768px) {
-    [data-testid="stMainBlockContainer"]:has(.mathicap-marque) {
+    [data-testid="stMainBlockContainer"]:has(.st-key-mathicap_logo_clic) {
         padding-top: 2.75rem !important;
     }
 }
@@ -858,29 +846,26 @@ with col_logo:
         logo_principal.read_bytes()
     ).decode("ascii")
 
-    # Un seul bloc visuel : les dimensions du logo et du slogan sont liées.
-    # Le bouton transparent couvre exactement le bloc et garde la session active.
-    with st.container(key="mathicap_bloc_marque"):
-        st.markdown(
-            f"""
-            <div class="mathicap-marque">
-                <img
-                    src="data:image/png;base64,{logo_base64}"
-                    alt="MathiCap Collège"
-                >
-                <div class="mathicap-slogan">
-                    J'apprends <span>•</span> Je réussis
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.button(
-            "Retour à l'accueil",
-            key="mathicap_logo_clic",
-            on_click=_mathicap_retour_accueil_logo,
-            help="Revenir à l'accueil MathiCap",
-        )
+    # Dimensions natives : pas d'étirement du logo quel que soit l'écran.
+    with Image.open(logo_principal) as image_logo:
+        largeur_logo, hauteur_logo = image_logo.size
+
+    # st.html avec uniquement du CSS ne crée pas de décalage vertical.
+    # Le PNG est affiché comme image de fond du véritable bouton cliquable.
+    st.html(
+        f"""<style>
+        .st-key-mathicap_logo_clic button::before {{
+            aspect-ratio: {largeur_logo} / {hauteur_logo} !important;
+            background-image: url('data:image/png;base64,{logo_base64}') !important;
+        }}
+        </style>"""
+    )
+    st.button(
+        "MathiCap Collège — Retour à l'accueil",
+        key="mathicap_logo_clic",
+        on_click=_mathicap_retour_accueil_logo,
+        help="Revenir à l'accueil MathiCap",
+    )
 
 with col_profil:
     with st.container(key="mathicap_zone_profil"):
