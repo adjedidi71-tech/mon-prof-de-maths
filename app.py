@@ -236,7 +236,7 @@ st.markdown("""
 
     display: grid !important;
     /* La recherche garde 320 px sur PC plein écran ou demi-écran. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 280px) auto !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 320px) auto !important;
     align-items: start !important;
     column-gap: 12px !important;
     row-gap: 0 !important;
@@ -256,7 +256,7 @@ st.markdown("""
 /* Dans la grille de l'en-tête, chaque bloc a un emplacement identifié. */
 [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
 > [data-testid="stColumn"]:nth-child(2) {
-    width: 2800px !important;
+    width: 320px !important;
     max-width: 100% !important;
     min-width: 0 !important;
     justify-self: end !important;
@@ -542,7 +542,7 @@ st.markdown("""
 @media (max-width: 767px) {
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: clamp(112px, 36vw, 170px);
-        --mc-ico: 38px;
+        --mc-ico: 32px;
         --mc-avatar: 52px;
         --mc-ico-gap: 8px;
         --mc-statut: 12px;
@@ -654,7 +654,7 @@ st.markdown("""
 .st-key-mathicap_barre_recherche {
     --mc-recherche-h: 40px;
     --mc-recherche-bouton-w: 40px;
-    width: 280px !important;
+    width: 320px !important;
     min-width: 0 !important;
     max-width: 100% !important;
     margin: 9px 0 0 !important;
@@ -767,7 +767,7 @@ st.markdown("""
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
         justify-self: start !important;
-        width: min(220px, 100%) !important;
+        width: min(230px, 100%) !important;
         margin-top: -65px !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
@@ -776,9 +776,9 @@ st.markdown("""
         grid-row: 1 !important;
     }
     .st-key-mathicap_barre_recherche {
-        --mc-recherche-h: 40px;
+        --mc-recherche-h: 30px;
         --mc-recherche-bouton-w: 34px;
-        width: 220px !important;
+        width: 230px !important;
         max-width: 100% !important;
         margin-top: 0 !important;
     }
@@ -792,7 +792,7 @@ st.markdown("""
 /* Position du bloc profil sur smartphone, indépendamment du PC. */
 @media (max-width: 767px) {
     .st-key-mathicap_zone_profil {
-        transform: translateY(-30px) !important;
+        transform: translateY(-50px) !important;
     }
 }
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
@@ -1487,6 +1487,15 @@ def _mathicap_statistiques_progression(series):
                         statistiques["bonnes_verifiees"] += bonnes
                         statistiques["questions_verifiees"] += total
 
+            elif isinstance(reponse, dict) and reponse.get("type") == "simple":
+                compte_reponses = int(_mathicap_reponse_renseignee(reponse.get("valeur")))
+                bilan_simple = reponse.get("bilan")
+                if isinstance(bilan_simple, dict):
+                    bonnes = bilan_simple.get("bonnes")
+                    total = bilan_simple.get("total")
+                    if type(bonnes) is int and type(total) is int and 0 <= bonnes <= total and total > 0:
+                        statistiques["bonnes_verifiees"] += bonnes
+                        statistiques["questions_verifiees"] += total
             elif _mathicap_reponse_renseignee(reponse):
                 compte_reponses = 1
 
@@ -2039,6 +2048,20 @@ if vue_icone == "notifications":
     st.stop()
 
 # Nouvelle interface MathiCap Collège
+# Synchroniser le menu avec l'URL, y compris lors d'une véritable actualisation.
+# Ne pas écraser la page choisie au menu lorsque la session est déjà active.
+_vue_mathicap = st.query_params.get("vue")
+_page_en_memoire = st.session_state.get("mathicap_page")
+if _page_en_memoire is None and _vue_mathicap == "exercices":
+    st.session_state["mathicap_page"] = "Exercices"
+elif _page_en_memoire is not None and _vue_mathicap != "profil":
+    if _page_en_memoire == "Exercices" and _vue_mathicap != "exercices":
+        st.query_params["vue"] = "exercices"
+    elif _page_en_memoire == "Mes séries" and _vue_mathicap != "series":
+        st.query_params["vue"] = "series"
+    elif _page_en_memoire not in ("Exercices", "Mes séries") and _vue_mathicap in ("exercices", "series"):
+        st.query_params["vue"] = "accueil"
+
 if est_connecte and st.query_params.get("vue") == "profil":
     st.stop()
 
@@ -2168,52 +2191,75 @@ def recuperer_exercices_eleve(eleve_id):
     )
 
     return resultat.data or []
-if (
-    st.session_state.get("eleve_id")
-    and "exercices_actuels" not in st.session_state
-):
+def _mathicap_retablir_serie(serie, *, nouvelle_version=False):
+    """Réhydrate tous les widgets depuis Supabase AVANT leur création Streamlit."""
+    if not isinstance(serie, dict) or not isinstance(serie.get("exercices"), list):
+        return False
+    exercices = serie["exercices"]
+    reponses = serie.get("reponses") or {}
+    if not isinstance(reponses, dict):
+        reponses = {}
+
+    version = st.session_state.get("serie_version", 0) + (1 if nouvelle_version else 0)
+    st.session_state["serie_version"] = version
+    st.session_state["exercices_actuels"] = exercices
+    st.session_state["code_actuel"] = serie.get("code_reprise")
+    st.session_state["serie_ouverte_depuis_liste"] = True
+    if serie.get("id") is not None:
+        st.session_state["serie_id_actuel"] = serie["id"]
+
+    for numero, exercice in enumerate(exercices, start=1):
+        if not isinstance(exercice, dict):
+            continue
+        valeur = reponses.get(str(numero))
+        cle_bilan_banque = f"bilan_banque_{version}_{numero}"
+        cle_bilan_simple = f"bilan_simple_{version}_{numero}"
+        st.session_state.pop(cle_bilan_banque, None)
+        st.session_state.pop(cle_bilan_simple, None)
+
+        if isinstance(valeur, dict) and valeur.get("type") == "banque":
+            champs_sauvegardes = valeur.get("champs") or {}
+            if not isinstance(champs_sauvegardes, dict):
+                champs_sauvegardes = {}
+            for champ in exercice.get("champs_reponse", []):
+                if champ.get("id") not in champs_sauvegardes:
+                    continue
+                saisie = champs_sauvegardes[champ["id"]]
+                if champ.get("type") == "choix" and saisie not in champ.get("options", []):
+                    saisie = "Choisir..."
+                st.session_state[f"banque_{version}_{numero}_{champ['id']}"] = saisie
+            if isinstance(valeur.get("bilan"), dict):
+                st.session_state[cle_bilan_banque] = valeur["bilan"]
+        elif exercice.get("reponse_attendue") is not None:
+            if isinstance(valeur, dict) and valeur.get("type") == "simple":
+                saisie = valeur.get("valeur")
+                if isinstance(valeur.get("bilan"), dict):
+                    st.session_state[cle_bilan_simple] = valeur["bilan"]
+            else:
+                saisie = valeur
+            if isinstance(saisie, (int, float)) and not isinstance(saisie, bool):
+                st.session_state[f"reponse_{version}_{numero}"] = saisie
+        elif not exercice.get("champs_reponse"):
+            if isinstance(valeur, str):
+                st.session_state[f"reponse_texte_{version}_{numero}"] = valeur
+    return True
+
+
+if st.session_state.get("eleve_id") and "exercices_actuels" not in st.session_state:
     try:
-        series_auto = recuperer_exercices_eleve(
-            st.session_state["eleve_id"]
-        )
-
+        series_auto = recuperer_exercices_eleve(st.session_state["eleve_id"])
         if series_auto:
-            derniere_serie = series_auto[0]
-
-            st.session_state.exercices_actuels = derniere_serie["exercices"]
-            st.session_state.code_actuel = derniere_serie["code_reprise"]
-            reponses = derniere_serie.get("reponses") or {}
-            version = st.session_state.get("serie_version", 0)
-
-            for numero, exercice in enumerate(derniere_serie["exercices"], start=1):
-                donnees = reponses.get(str(numero))
-
-                if isinstance(donnees, dict) and donnees.get("type") == "banque":
-                    champs_sauvegardes = donnees.get("champs") or {}
-
-                    for champ in exercice.get("champs_reponse", []):
-                        if champ["id"] not in champs_sauvegardes:
-                            continue
-
-                        valeur = champs_sauvegardes[champ["id"]]
-
-                        if champ["type"] == "choix":
-                            if valeur not in champ["options"]:
-                                valeur = "Choisir..."
-
-                        cle = f"banque_{version}_{numero}_{champ['id']}"
-                        st.session_state[cle] = valeur
-
-                    bilan = donnees.get("bilan")
-
-                    if isinstance(bilan, dict):
-                        st.session_state[f"bilan_banque_{version}_{numero}"] = bilan
-
-                elif donnees is not None:
-                    st.session_state[f"reponse_{version}_{numero}"] = donnees
-
+            # Priorité à la série exacte ouverte avant actualisation.
+            identifiant_url = st.query_params.get("serie_id")
+            cible = next(
+                (serie for serie in series_auto if str(serie.get("id")) == str(identifiant_url)),
+                None,
+            ) if identifiant_url else None
+            if cible is None:
+                cible = series_auto[0]
+            _mathicap_retablir_serie(cible)
     except Exception:
-        pass
+        st.session_state["erreur_reprise_series"] = True
 
 if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
@@ -2360,6 +2406,8 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                 ):
                                     st.session_state["exercices_actuels"] = []
                                     st.session_state.pop("code_actuel", None)
+                                    st.session_state.pop("serie_id_actuel", None)
+                                    st.query_params.pop("serie_id", None)
                                     st.session_state["serie_version"] = (
                                         st.session_state.get(
                                             "serie_version", 0
@@ -2398,60 +2446,14 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                      "Ouvrir",
                      key=f"reprendre_serie_{serie['id']}"
                   ):
-                     st.session_state.exercices_actuels = serie["exercices"]
-                     st.session_state.code_actuel = serie["code_reprise"]
-
-                     reponses = serie.get("reponses") or {}
-                     for numero, exercice in enumerate(serie["exercices"], start=1):
-                        donnees = reponses.get(str(numero), {})
-                        
-                        if not isinstance(donnees, dict):
-                            continue
-                        
-                        if donnees.get("type") != "banque":
-                            continue
-                        
-                        champs_sauvegardes = donnees.get("champs") or {}
-                        bilan = donnees.get("bilan")
-
-                        cle_bilan = (
-                            f"bilan_banque_{st.session_state.get('serie_version', 0)}"
-                            f"_{numero}"
-                        )
-                            
-                        if isinstance(bilan, dict):
-                            st.session_state[cle_bilan] = bilan
-                        else:
-                            st.session_state.pop(cle_bilan, None)
-                        
-                        for champ in exercice.get("champs_reponse", []):
-                            cle = (
-                                f"banque_{st.session_state.get('serie_version', 0)}"
-                                f"_{numero}_{champ['id']}"
-                            )
-                        
-                            valeur = champs_sauvegardes.get(champ["id"], "")
-                        
-                            if champ["type"] == "choix":
-                                if valeur not in champ["options"]:
-                                    valeur = "Choisir..."
-                        
-                            st.session_state[cle] = valeur
-                            
-                     for numero, exercice in enumerate(
-                         serie["exercices"], start=1
-                     ):
-                         cle = f"reponse_{numero}"
-                         valeur = reponses.get(str(numero))
-
-                         if valeur is not None:
-                            st.session_state[cle] = valeur
-                         elif cle in st.session_state:
-                             del st.session_state[cle]
-                     st.session_state["serie_ouverte_depuis_liste"] = True
-                     st.session_state["afficher_series"] = False
-                     st.session_state["_mathicap_ouvrir_serie"] = True
-                     st.rerun()
+                     if _mathicap_retablir_serie(serie, nouvelle_version=True):
+                         st.session_state["afficher_series"] = False
+                         st.session_state["_mathicap_ouvrir_serie"] = True
+                         st.query_params["vue"] = "exercices"
+                         st.query_params["serie_id"] = str(serie["id"])
+                         st.rerun()
+                     else:
+                         st.error("Cette série ne peut pas être restaurée.")
 
     except Exception:
         st.error("Impossible de récupérer tes exercices.")
@@ -2474,13 +2476,17 @@ def sauvegarder_serie(exercices):
          
     code = generer_code_reprise()
     try:
-        supabase_privee.table("series_exercices").insert({
+        resultat = supabase_privee.table("series_exercices").insert({
             "eleve_id": st.session_state.get("eleve_id"),
             "code_reprise": code,
             "exercices": exercices,
             "reponses": {},
             "progression": 0
         }).execute()
+        donnees = resultat.data or []
+        if not donnees:
+            raise RuntimeError("La création de la série n'a pas été confirmée.")
+        st.session_state["serie_id_actuel"] = donnees[0].get("id")
         return code
     except Exception as e:
         raise RuntimeError(
@@ -2533,13 +2539,28 @@ def sauvegarder_reponse(code, numero, reponse):
     
 def enregistrer_reponse_auto(numero):
     code = st.session_state.get("code_actuel")
-    reponse = st.session_state.get(f"reponse_{numero}")
+    version = st.session_state.get("serie_version", 0)
+    reponse = st.session_state.get(f"reponse_{version}_{numero}")
+    st.session_state.pop(f"bilan_simple_{version}_{numero}", None)
 
     if code and reponse is not None:
         try:
-            sauvegarder_reponse(code, numero, reponse)
+            if not sauvegarder_reponse(code, numero, reponse):
+                st.session_state["erreur_sauvegarde"] = True
         except Exception:
             st.session_state["erreur_sauvegarde"] = True
+def enregistrer_reponse_texte_auto(numero):
+    """Conserve les réponses rédigées, qui n'étaient pas sauvegardées avant."""
+    code = st.session_state.get("code_actuel")
+    cle = f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+    if code and st.session_state.get("eleve_id"):
+        try:
+            if not sauvegarder_reponse(code, numero, st.session_state.get(cle, "")):
+                st.session_state["erreur_sauvegarde"] = True
+        except Exception:
+            st.session_state["erreur_sauvegarde"] = True
+
+
 def enregistrer_reponses_banque_auto(numero):
     cle_bilan = (
     f"bilan_banque_{st.session_state.get('serie_version', 0)}"
@@ -3932,12 +3953,16 @@ if st.button("Générer mes exercices"):
         st.session_state.exercices_actuels = exercices
         st.session_state["serie_ouverte_depuis_liste"] = False
         st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
+        st.query_params["vue"] = "exercices"
+        st.query_params.pop("serie_id", None)
     
         if st.session_state.get("eleve_id"):
             try:
                 code = sauvegarder_serie(exercices)
                 if code:
                     st.session_state.code_actuel = code
+                    if st.session_state.get("serie_id_actuel") is not None:
+                        st.query_params["serie_id"] = str(st.session_state["serie_id_actuel"])
                     st.success("Exercices générés et sauvegardés !")
                 else:
                     st.error("Sauvegarde impossible.")
@@ -3952,6 +3977,10 @@ else:
     zone_affichage = st.container()
 
 with zone_affichage:
+    if st.session_state.pop("erreur_sauvegarde", False):
+        st.error("Une réponse n'a pas pu être enregistrée. Vérifie ta connexion avant de quitter cette page.")
+    if st.session_state.pop("erreur_reprise_series", False):
+        st.warning("Impossible de récupérer automatiquement la dernière série enregistrée.")
     if st.session_state.exercices_actuels:
         for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
             st.subheader(f"Exercice {numero}")           
@@ -3995,24 +4024,38 @@ with zone_affichage:
                         on_change=enregistrer_reponse_auto,
                         args=(numero,)
                     )    
+                cle_bilan_simple = (
+                    f"bilan_simple_{st.session_state.get('serie_version', 0)}_{numero}"
+                )
                 if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
-                    if reponse_eleve is not None:
-                        try:
-                            sauvegarder_reponse(
-                                st.session_state.code_actuel,
-                                numero,
-                                reponse_eleve
-                            )
-                            st.info("Réponse enregistrée.")
-                        except Exception:
-                            st.error("Impossible d'enregistrer la réponse.")
-    
                     if reponse_eleve is None:
                         st.warning("Saisis d'abord ta réponse.")
-                    elif reponse_eleve == exercice["reponse_attendue"]:
-                        st.success("Bonne réponse !")
                     else:
-                        st.error("Réponse incorrecte. Essaie encore.")
+                        correcte = reponse_eleve == exercice["reponse_attendue"]
+                        bilan_simple = {"bonnes": int(correcte), "total": 1}
+                        st.session_state[cle_bilan_simple] = bilan_simple
+                        code = st.session_state.get("code_actuel")
+                        if code and st.session_state.get("eleve_id"):
+                            try:
+                                confirme = sauvegarder_reponse(code, numero, {
+                                    "type": "simple",
+                                    "valeur": reponse_eleve,
+                                    "bilan": bilan_simple,
+                                })
+                                if not confirme:
+                                    st.error("Le résultat n'a pas pu être enregistré.")
+                            except Exception:
+                                st.error("Le résultat n'a pas pu être enregistré.")
+                        if correcte:
+                            st.success("Bonne réponse !")
+                        else:
+                            st.error("Réponse incorrecte. Essaie encore.")
+                elif isinstance(st.session_state.get(cle_bilan_simple), dict):
+                    dernier = st.session_state[cle_bilan_simple]
+                    st.caption(
+                        "Dernière vérification : "
+                        + ("Bonne réponse" if dernier.get("bonnes") else "Réponse incorrecte")
+                    )
             elif exercice.get("champs_reponse"):        
                 champs = exercice["champs_reponse"]
                 division_euclidienne = (
@@ -4221,18 +4264,28 @@ with zone_affichage:
                             )
                             reponses_banque[champ["id"]] = st.session_state.get(cle, "")
     
-                        sauvegarder_reponse(
-                            code,
-                            numero,
-                            {
-                                "type": "banque",
-                                "champs": reponses_banque,
-                                "bilan": {
-                                    "bonnes": bonnes_reponses,
-                                    "total": total_reponses
+                        bilan_verifie = {
+                            "bonnes": bonnes_reponses,
+                            "total": total_reponses,
+                        }
+                        try:
+                            confirme = sauvegarder_reponse(
+                                code,
+                                numero,
+                                {
+                                    "type": "banque",
+                                    "champs": reponses_banque,
+                                    "bilan": bilan_verifie,
                                 }
-                            }
-                        )
+                            )
+                            if confirme:
+                                st.session_state[
+                                    f"bilan_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+                                ] = bilan_verifie
+                            else:
+                                st.error("Le bilan n'a pas pu être enregistré.")
+                        except Exception:
+                            st.error("Le bilan n'a pas pu être enregistré.")
                 cle_bilan = (
                     f"bilan_banque_{st.session_state.get('serie_version', 0)}"
                     f"_{numero}"
@@ -4251,9 +4304,27 @@ with zone_affichage:
                     "Ta réponse :",
                     placeholder="Écris ici tes réponses aux questions de l'exercice.",
                     height=150,
-                    key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+                    key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}",
+                    on_change=enregistrer_reponse_texte_auto,
+                    args=(numero,),
                 )
-                
+                if st.button(
+                    "Enregistrer ma réponse",
+                    key=f"enregistrer_texte_{st.session_state.get('serie_version', 0)}_{numero}",
+                ):
+                    code = st.session_state.get("code_actuel")
+                    cle_texte = f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+                    if code and st.session_state.get("eleve_id"):
+                        try:
+                            if sauvegarder_reponse(code, numero, st.session_state.get(cle_texte, "")):
+                                st.success("Réponse enregistrée.")
+                            else:
+                                st.error("Impossible d'enregistrer cette réponse.")
+                        except Exception:
+                            st.error("Impossible d'enregistrer cette réponse.")
+                    else:
+                        st.warning("Connecte-toi pour sauvegarder ta réponse.")
+
             with st.expander(
                 f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
                 expanded=False
