@@ -649,7 +649,8 @@ st.markdown("""
     }
 }
 
-/* Recherche : un seul champ, loupe decorée à l'intérieur, validation par Entrée. */
+/* Recherche : un champ unique et un vrai bouton loupe superposé dedans.
+   Le formulaire permet de valider avec Entrée OU en cliquant sur la loupe. */
 .st-key-mathicap_barre_recherche {
     width: 320px !important;
     min-width: 0 !important;
@@ -657,9 +658,19 @@ st.markdown("""
     margin: 9px 0 0 !important;
     padding: 0 !important;
 }
-.st-key-mathicap_barre_recherche [data-baseweb="input"] {
+/* Le formulaire ne crée ni bordure ni marge supplémentaire. */
+.st-key-mathicap_barre_recherche [data-testid="stForm"] {
     position: relative !important;
-    height: 30px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stForm"] [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+.st-key-mathicap_barre_recherche [data-baseweb="input"] {
+    height: 40px !important;
     min-height: 40px !important;
     box-sizing: border-box !important;
     border-radius: 9px !important;
@@ -669,21 +680,52 @@ st.markdown("""
     width: 100% !important;
     height: 100% !important;
     min-height: 0 !important;
-    padding-right: 44px !important;
+    padding-right: 43px !important;
     box-sizing: border-box !important;
     font-size: 14px !important;
     background-color: transparent !important;
 }
-/* La loupe est DANS le champ et ne crée plus de bouton séparé. */
-.st-key-mathicap_barre_recherche [data-baseweb="input"]::after {
-    content: "🔍";
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    font-size: 20px;
-    line-height: 1;
-    pointer-events: none;
+/* Le bouton occupe la partie droite du champ SANS créer une seconde case.
+   On positionne son conteneur pour qu'il ne prenne aucune hauteur dans le formulaire. */
+.st-key-mathicap_barre_recherche [data-testid="stForm"]
+[data-testid="stElementContainer"]:has([data-testid="stFormSubmitButton"]) {
+    position: absolute !important;
+    right: 3px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 5 !important;
+    width: 35px !important;
+    height: 34px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] {
+    width: 100% !important;
+    height: 100% !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button:hover {
+    background: rgba(37, 99, 235, 0.10) !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button p {
+    font-size: 20px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
 }
 /* Smartphone portrait : largeur et position déjà approuvées. */
 @media (max-width: 760px) {
@@ -715,22 +757,28 @@ st.markdown("""
         margin-top: 0 !important;
     }
     .st-key-mathicap_barre_recherche [data-baseweb="input"] {
-        height: 20px !important;
+        height: 30px !important;
         min-height: 30px !important;
     }
     .st-key-mathicap_barre_recherche input {
         font-size: 13px !important;
         padding-right: 35px !important;
     }
-    .st-key-mathicap_barre_recherche [data-baseweb="input"]::after {
+    /* Loupe native, accessible au clic, centrée dans le champ. */
+    .st-key-mathicap_barre_recherche [data-testid="stForm"]
+    [data-testid="stElementContainer"]:has([data-testid="stFormSubmitButton"]) {
+        width: 30px !important;
+        height: 26px !important;
+        right: 2px !important;
+    }
+    .st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button p {
         font-size: 18px !important;
-        right: 9px !important;
     }
 }
 /* Position du bloc profil sur smartphone, indépendamment du PC. */
 @media (max-width: 767px) {
     .st-key-mathicap_zone_profil {
-        transform: translateY(-30px) !important;
+        transform: translateY(-50px) !important;
     }
 }
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
@@ -764,31 +812,6 @@ st.markdown("""
     font-size: 27px !important;
     line-height: 1 !important;
     margin: 0 !important;
-}
-/* Hauteur réelle de la recherche sur smartphone */
-@media (max-width: 760px) {
-
-    .st-key-mathicap_barre_recherche {
-        --hauteur-recherche: 30px;
-    }
-
-    .st-key-mathicap_barre_recherche [data-baseweb="input"] {
-        height: var(--hauteur-recherche) !important;
-        min-height: var(--hauteur-recherche) !important;
-        max-height: var(--hauteur-recherche) !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    .st-key-mathicap_barre_recherche input {
-        height: 100% !important;
-        min-height: 0 !important;
-        max-height: 100% !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        box-sizing: border-box !important;
-    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1163,15 +1186,26 @@ with col_logo:
     )
 
 with col_recherche:
-    # Champ unique : loupe à l'intérieur, validation de la recherche par Entrée.
+    # Un seul bloc visuel. Le clic sur la loupe ou Entrée soumet le formulaire.
     with st.container(key="mathicap_barre_recherche"):
-        st.text_input(
-            "Mot-clé à rechercher",
-            placeholder="Chercher un chapitre…",
-            label_visibility="collapsed",
-            key="mathicap_mot_cle_entete",
-            on_change=_mathicap_valider_recherche_entete,
-        )
+        with st.form(
+            "mathicap_recherche_formulaire",
+            border=False,
+            clear_on_submit=False,
+            enter_to_submit=True,
+        ):
+            st.text_input(
+                "Mot-clé à rechercher",
+                placeholder="Chercher un chapitre…",
+                label_visibility="collapsed",
+                key="mathicap_mot_cle_entete",
+            )
+            st.form_submit_button(
+                "🔍",
+                key="mathicap_recherche_loupe",
+                help="Lancer la recherche",
+                on_click=_mathicap_valider_recherche_entete,
+            )
 
 
 with col_profil:
