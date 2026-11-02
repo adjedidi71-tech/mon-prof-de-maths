@@ -236,7 +236,7 @@ st.markdown("""
 
     display: grid !important;
     /* La recherche garde 320 px sur PC plein écran ou demi-écran. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 320px) auto !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 280px) auto !important;
     align-items: start !important;
     column-gap: 12px !important;
     row-gap: 0 !important;
@@ -256,7 +256,7 @@ st.markdown("""
 /* Dans la grille de l'en-tête, chaque bloc a un emplacement identifié. */
 [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
 > [data-testid="stColumn"]:nth-child(2) {
-    width: 320px !important;
+    width: 2800px !important;
     max-width: 100% !important;
     min-width: 0 !important;
     justify-self: end !important;
@@ -654,7 +654,7 @@ st.markdown("""
 .st-key-mathicap_barre_recherche {
     --mc-recherche-h: 40px;
     --mc-recherche-bouton-w: 40px;
-    width: 320px !important;
+    width: 280px !important;
     min-width: 0 !important;
     max-width: 100% !important;
     margin: 9px 0 0 !important;
