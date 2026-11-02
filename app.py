@@ -651,7 +651,7 @@ st.markdown("""
 
 /* Recherche intégrée dans l'en-tête, largeur stable (PC et mobile). */
 .st-key-mathicap_barre_recherche {
-    width: 320px !important;
+    width: 260px !important;
     max-width: 100% !important;
     min-width: 0 !important;
     margin-left: 0 !important;
@@ -722,8 +722,8 @@ st.markdown("""
     > [data-testid="stColumn"]:nth-child(2) {
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
-        justify-self: center !important;
-        width: min(320px, 100%) !important;
+        justify-self: start !important;
+        width: min(260px, 100%) !important;
         margin-top: -65px !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
