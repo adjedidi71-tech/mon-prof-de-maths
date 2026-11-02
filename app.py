@@ -778,7 +778,7 @@ st.markdown("""
 /* Position du bloc profil sur smartphone, indépendamment du PC. */
 @media (max-width: 767px) {
     .st-key-mathicap_zone_profil {
-        transform: translateY(-50px) !important;
+        transform: translateY(-30px) !important;
     }
 }
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
