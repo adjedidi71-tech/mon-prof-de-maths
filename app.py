@@ -719,12 +719,12 @@ st.markdown("""
         grid-row: 1 !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
-    margin-top: -60px !important;
     > [data-testid="stColumn"]:nth-child(2) {
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
         justify-self: center !important;
         width: min(320px, 100%) !important;
+        margin-top: -40px !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > [data-testid="stColumn"]:nth-child(3) {
