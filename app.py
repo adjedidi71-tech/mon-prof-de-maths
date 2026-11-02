@@ -302,8 +302,23 @@ st.markdown("""
     padding: 0 !important;
 }
 
+/* Le bloc vertical est le repère de toute la zone marque :
+   le bouton doit recouvrir l'image ET le slogan, pas seulement une ligne. */
 .st-key-mathicap_bloc_marque [data-testid="stVerticalBlock"] {
+    position: relative !important;
     gap: 0 !important;
+}
+
+/* Certaines versions de Streamlit ajoutent un conteneur autour du bouton.
+   Il doit lui aussi occuper toute la hauteur du bloc de marque. */
+.st-key-mathicap_bloc_marque [data-testid="stVerticalBlock"]
+> [data-testid="stElementContainer"]:has(.st-key-mathicap_logo_clic) {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 5 !important;
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
 }
 
 .st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic {
@@ -318,9 +333,11 @@ st.markdown("""
 
 .st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic [data-testid="stButton"],
 .st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button {
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
-    min-height: 0 !important;
+    min-height: 100% !important;
+    max-height: none !important;
 }
 
 .st-key-mathicap_bloc_marque .st-key-mathicap_logo_clic button {
