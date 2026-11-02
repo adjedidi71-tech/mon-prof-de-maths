@@ -171,8 +171,8 @@ st.markdown("""
 /* En-tête : les trois boutons ont de vraies zones de clic. */
 .st-key-mathicap_zone_profil {
     position: relative !important;
-    width: calc(var(--mc-avatar) + 2 * var(--mc-ico) + 2 * var(--mc-ico-gap)) !important;
-    min-width: calc(var(--mc-avatar) + 2 * var(--mc-ico) + 2 * var(--mc-ico-gap)) !important;
+    width: calc(var(--mc-avatar) + var(--mc-ico) + var(--mc-ico-gap)) !important;
+    min-width: calc(var(--mc-avatar) + var(--mc-ico) + var(--mc-ico-gap)) !important;
 }
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
@@ -360,38 +360,33 @@ st.markdown("""
 /* Espacement sous la rangée d'icônes (sans boutons superposés). */
 .mathicap-espace-icones {
     display: block;
-    height: var(--mc-ico);
+    height: var(--mc-avatar);
     width: 100%;
     pointer-events: none;
 }
 
-/* Loupe et cloche : deux vrais boutons Streamlit, placés avant l'avatar. */
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic,
+/* Cloche : bouton natif avec une surface de clic stable sur tous les écrans. */
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
     position: absolute !important;
     top: 0 !important;
+    right: calc(var(--mc-avatar) + var(--mc-ico-gap)) !important;
     width: var(--mc-ico) !important;
     min-width: var(--mc-ico) !important;
     max-width: var(--mc-ico) !important;
     height: var(--mc-ico) !important;
     min-height: var(--mc-ico) !important;
     max-height: var(--mc-ico) !important;
-    z-index: 11 !important;
     margin: 0 !important;
     padding: 0 !important;
+    z-index: 12 !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic {
-    right: calc(var(--mc-avatar) + var(--mc-ico) + 2 * var(--mc-ico-gap)) !important;
-}
-.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
-    right: calc(var(--mc-avatar) + var(--mc-ico-gap)) !important;
-}
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic [data-testid="stButton"],
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic [data-testid="stButton"] {
+    display: block !important;
     width: var(--mc-ico) !important;
+    min-width: var(--mc-ico) !important;
     height: var(--mc-ico) !important;
+    margin: 0 !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button,
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button {
     position: relative !important;
     display: flex !important;
@@ -411,35 +406,31 @@ st.markdown("""
     color: #12315f !important;
     cursor: pointer !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button:hover,
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button:hover {
     background: #eaf1fc !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button:focus-visible,
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button:focus-visible {
     outline: 2px solid #2563eb !important;
     outline-offset: 2px !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button p,
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button p {
     position: absolute !important;
     width: 1px !important;
     height: 1px !important;
     margin: 0 !important;
-    padding: 0 !important;
     overflow: hidden !important;
     clip-path: inset(50%) !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button::before,
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button::before {
     content: "";
-    display: block;
-    width: 68%;
-    height: 68%;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    pointer-events: none;
+    display: block !important;
+    flex: none !important;
+    width: 78% !important;
+    height: 78% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+    pointer-events: none !important;
 }
 
 .st-key-mathicap_zone_profil .mathicap-avatar {
@@ -641,11 +632,10 @@ st.markdown("""
     }
 }
 
-/* Les deux boutons d'icône gardent une zone de clic carrée sur mobile.
-   Ces règles, plus ciblées, prennent le pas sur celles de Déconnexion. */
+/* Priorité sur les règles globales de Déconnexion pour la cloche. */
 div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
 > div[data-testid="stColumn"]:last-child
-.st-key-mathicap_recherche_clic button,
+.st-key-mathicap_notifications_clic [data-testid="stButton"],
 div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
 > div[data-testid="stColumn"]:last-child
 .st-key-mathicap_notifications_clic button {
@@ -655,7 +645,65 @@ div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     height: var(--mc-ico) !important;
     min-height: var(--mc-ico) !important;
     max-height: var(--mc-ico) !important;
+    margin: 0 !important;
     padding: 0 !important;
+}
+
+/* Les boutons d'icône restent carrés même si les éléments du profil
+   imposent par ailleurs une largeur à 100 %. */
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic[data-testid="stElementContainer"] {
+    width: var(--mc-ico) !important;
+    min-width: var(--mc-ico) !important;
+    max-width: var(--mc-ico) !important;
+}
+
+/* Barre de recherche : à droite sur PC, toujours lisible sur mobile. */
+.st-key-mathicap_barre_recherche {
+    width: min(100%, 330px) !important;
+    margin-left: auto !important;
+    margin-top: 0 !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stForm"] {
+    border: none !important;
+    padding: 0 !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
+    flex: 0 0 44px !important;
+    min-width: 44px !important;
+    width: 44px !important;
+}
+.st-key-mathicap_barre_recherche input {
+    height: 40px !important;
+    min-height: 40px !important;
+    font-size: 14px !important;
+}
+.st-key-mathicap_barre_recherche button {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    font-size: 23px !important;
+    line-height: 1 !important;
+}
+@media (max-width: 767px) {
+    .st-key-mathicap_barre_recherche {
+        width: min(100%, 290px) !important;
+    }
+    .st-key-mathicap_barre_recherche input {
+        font-size: 13px !important;
+    }
 }
 
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
@@ -981,6 +1029,7 @@ CHAPITRES_MATHICAP = {
 
 # Retour à l'accueil depuis toutes les pages, sans effacer la série en cours.
 def _mathicap_retour_accueil_logo():
+    st.session_state.pop("mathicap_recherche_active", None)
     st.session_state["mathicap_page"] = "Accueil"
     st.session_state["afficher_series"] = False
     st.query_params["vue"] = "accueil"
@@ -993,6 +1042,7 @@ def _mathicap_ouvrir_icone(vue):
 
 def _mathicap_ouvrir_chapitre_recherche(chapitre):
     """Depuis la recherche, ouvre le chapitre réellement disponible."""
+    st.session_state.pop("mathicap_recherche_active", None)
     st.session_state["_mathicap_chapitre_a_ouvrir"] = chapitre
     st.session_state["mathicap_page"] = "Exercices"
     st.session_state["afficher_series"] = False
@@ -1082,23 +1132,14 @@ with col_profil:
             'fill="none" stroke="#12315f" stroke-width="2" '
             'stroke-linecap="round" stroke-linejoin="round">'
         )
-        _svg_recherche = (
-            _icone_svg_debut
-            + '<circle cx="11" cy="11" r="6.5"/>'
-            + '<path d="M16 16l5 5"/></svg>'
-        )
         _svg_notifications = (
             _icone_svg_debut
             + '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/>'
             + '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg>'
         )
-        _recherche_b64 = base64.b64encode(_svg_recherche.encode()).decode()
         _notifications_b64 = base64.b64encode(_svg_notifications.encode()).decode()
         st.html(
             f"""<style>
-            .st-key-mathicap_recherche_clic button::before {{
-                background-image: url("data:image/svg+xml;base64,{_recherche_b64}") !important;
-            }}
             .st-key-mathicap_notifications_clic button::before {{
                 background-image: url("data:image/svg+xml;base64,{_notifications_b64}") !important;
             }}
@@ -1106,13 +1147,6 @@ with col_profil:
         )
         # La zone d'espacement conserve la position de Connecté/Déconnexion.
         st.html('<div class="mathicap-espace-icones" aria-hidden="true"></div>')
-        st.button(
-            "Rechercher",
-            key="mathicap_recherche_clic",
-            help="Rechercher un chapitre ou une notion",
-            on_click=_mathicap_ouvrir_icone,
-            args=("recherche",),
-        )
         st.button(
             "Notifications",
             key="mathicap_notifications_clic",
@@ -1340,6 +1374,62 @@ def _mathicap_statistiques_progression(series):
 
     return statistiques
 
+
+# Recherche directe dans l'en-tête, sans rediriger vers une autre page.
+# La saisie se fait à gauche, puis le clic sur la loupe lance la recherche.
+with st.container(key="mathicap_barre_recherche"):
+    with st.form("mathicap_form_recherche_entete", border=False, clear_on_submit=False):
+        col_mot_cle, col_loupe = st.columns(
+            [5.5, 1], gap="small", vertical_alignment="center", wrap=False
+        )
+        with col_mot_cle:
+            mot_cle_recherche = st.text_input(
+                "Mot-clé à rechercher",
+                placeholder="Chercher un chapitre…",
+                label_visibility="collapsed",
+                key="mathicap_mot_cle_entete",
+            )
+        with col_loupe:
+            recherche_lancee = st.form_submit_button(
+                "🔍", key="mathicap_lancer_recherche",
+                help="Lancer la recherche", use_container_width=True,
+            )
+
+if recherche_lancee:
+    st.session_state["mathicap_recherche_active"] = mot_cle_recherche.strip()
+
+# Les résultats s'affichent sous l'en-tête, sans changer de page.
+recherche_active = st.session_state.get("mathicap_recherche_active", "")
+if recherche_active:
+    terme = _mathicap_texte_recherche(recherche_active)
+    trouves = [
+        (nom, [n for n in notions if terme in _mathicap_texte_recherche(n)])
+        for nom, notions in CHAPITRES_MATHICAP.items()
+        if terme in _mathicap_texte_recherche(nom)
+        or any(terme in _mathicap_texte_recherche(n) for n in notions)
+    ]
+    with st.container(border=True):
+        st.markdown(f"**Résultats pour : {escape(recherche_active)}**")
+        if trouves:
+            st.caption(f"{len(trouves)} chapitre(s) trouvé(s).")
+            for indice, (nom, notions) in enumerate(trouves):
+                col_detail, col_ouvrir = st.columns(
+                    [3, 1], vertical_alignment="center"
+                )
+                with col_detail:
+                    st.markdown(f"**{nom}**")
+                    if notions:
+                        st.caption("Notions correspondantes : " + ", ".join(notions))
+                with col_ouvrir:
+                    st.button(
+                        "Ouvrir", key=f"mathicap_recherche_resultat_{indice}",
+                        on_click=_mathicap_ouvrir_chapitre_recherche, args=(nom,),
+                    )
+        else:
+            st.info("Aucun chapitre ou notion ne correspond à ce mot-clé.")
+        if st.button("Fermer les résultats", key="mathicap_fermer_recherche"):
+            st.session_state.pop("mathicap_recherche_active", None)
+            st.rerun()
 
 if est_connecte and st.query_params.get("vue") == "profil":
     st.subheader("Mon profil")
@@ -1807,46 +1897,8 @@ if not est_connecte:
 # La page active est gardée dans l'URL : une actualisation y revient.
 vue_icone = st.query_params.get("vue")
 if vue_icone == "recherche":
-    st.subheader("Recherche")
-    st.caption("Chapitres et notions de 5e actuellement répertoriés dans MathiCap.")
-    recherche = st.text_input(
-        "Rechercher un chapitre ou une notion",
-        placeholder="Ex. fractions, distributivité, triangles…",
-        key="mathicap_recherche_texte",
-    )
-    if recherche.strip():
-        terme = _mathicap_texte_recherche(recherche.strip())
-        trouves = [
-            (nom, [notion for notion in notions if terme in _mathicap_texte_recherche(notion)])
-            for nom, notions in CHAPITRES_MATHICAP.items()
-            if terme in _mathicap_texte_recherche(nom)
-            or any(terme in _mathicap_texte_recherche(n) for n in notions)
-        ]
-        if trouves:
-            st.caption(f"{len(trouves)} chapitre(s) trouvé(s).")
-            for indice, (nom, notions) in enumerate(trouves):
-                col_detail, col_ouvrir = st.columns([3, 1], vertical_alignment="center")
-                with col_detail:
-                    st.markdown(f"**{nom}**")
-                    if notions:
-                        st.caption("Notions correspondantes : " + ", ".join(notions))
-                with col_ouvrir:
-                    st.button(
-                        "Ouvrir",
-                        key=f"mathicap_recherche_ouvrir_{indice}",
-                        on_click=_mathicap_ouvrir_chapitre_recherche,
-                        args=(nom,),
-                    )
-        else:
-            st.info("Aucun chapitre ni aucune notion ne correspond à ta recherche.")
-    else:
-        st.info("Entre un mot pour trouver un chapitre ou une notion.")
-    st.button(
-        "← Accueil",
-        key="mathicap_recherche_retour",
-        on_click=_mathicap_retour_accueil_logo,
-    )
-    st.stop()
+    # Compatibilité des anciens liens : la recherche se fait désormais dans l'en-tête.
+    st.query_params["vue"] = "accueil"
 
 if vue_icone == "notifications":
     st.subheader("Notifications")
