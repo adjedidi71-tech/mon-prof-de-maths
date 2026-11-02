@@ -724,7 +724,7 @@ st.markdown("""
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
         justify-self: center !important;
-        width: min(320px, 100%) !important;
+        width: min(420px, 100%) !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > [data-testid="stColumn"]:nth-child(3) {
