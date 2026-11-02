@@ -766,6 +766,12 @@ st.markdown("""
     line-height: 1 !important;
     margin: 0 !important;
 }
+/* Ajustement vertical du bloc profil sur smartphone */
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_profil {
+        transform: translateY(-50px) !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
