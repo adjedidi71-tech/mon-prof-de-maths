@@ -765,6 +765,31 @@ st.markdown("""
     line-height: 1 !important;
     margin: 0 !important;
 }
+/* Hauteur réelle de la recherche sur smartphone */
+@media (max-width: 760px) {
+
+    .st-key-mathicap_barre_recherche {
+        --hauteur-recherche: 25px;
+    }
+
+    .st-key-mathicap_barre_recherche [data-baseweb="input"] {
+        height: var(--hauteur-recherche) !important;
+        min-height: var(--hauteur-recherche) !important;
+        max-height: var(--hauteur-recherche) !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .st-key-mathicap_barre_recherche input {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
