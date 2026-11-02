@@ -542,7 +542,7 @@ st.markdown("""
 @media (max-width: 767px) {
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: clamp(112px, 36vw, 170px);
-        --mc-ico: 32px;
+        --mc-ico: 38px;
         --mc-avatar: 52px;
         --mc-ico-gap: 8px;
         --mc-statut: 12px;
