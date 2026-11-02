@@ -438,7 +438,7 @@ st.markdown("""
     cursor: pointer !important;
 }
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button:hover {
-    background: #eaf1fc !important;
+    background-color: #eaf1fc !important;
 }
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button:focus-visible {
     outline: 2px solid #2563eb !important;
@@ -452,16 +452,12 @@ st.markdown("""
     overflow: hidden !important;
     clip-path: inset(50%) !important;
 }
-.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button::before {
-    content: "";
-    display: block !important;
-    flex: none !important;
-    width: 78% !important;
-    height: 78% !important;
+/* Le pictogramme est peint directement sur le fond du bouton,
+   comme l'avatar. Aucun pseudo-element n'est necessaire. */
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button {
+    background-position: center center !important;
     background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: contain !important;
-    pointer-events: none !important;
+    background-size: calc(var(--mc-ico) * .72) calc(var(--mc-ico) * .72) !important;
 }
 
 .st-key-mathicap_zone_profil .mathicap-avatar {
@@ -1192,12 +1188,16 @@ with col_profil:
             + '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg>'
         )
         _notifications_b64 = base64.b64encode(_svg_notifications.encode()).decode()
-        st.html(
+        # Image de fond directement sur le vrai bouton : meme approche
+        # que le bouton-avatar, deja valide sur PC et smartphone.
+        st.markdown(
             f"""<style>
-            .st-key-mathicap_notifications_clic button::before {{
+            .st-key-mathicap_zone_profil
+            .st-key-mathicap_notifications_clic button {{
                 background-image: url("data:image/svg+xml;base64,{_notifications_b64}") !important;
             }}
-            </style>"""
+            </style>""",
+            unsafe_allow_html=True,
         )
         if _avatar_uri:
             st.markdown(
