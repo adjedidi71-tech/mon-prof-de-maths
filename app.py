@@ -769,7 +769,7 @@ st.markdown("""
 @media (max-width: 760px) {
 
     .st-key-mathicap_barre_recherche {
-        --hauteur-recherche: 20px;
+        --hauteur-recherche: 30px;
     }
 
     .st-key-mathicap_barre_recherche [data-baseweb="input"] {
