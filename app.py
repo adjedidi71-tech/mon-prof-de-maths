@@ -168,15 +168,11 @@ styles_mathicap_communs()
 st.markdown("""
 <style>
 
-/* Avatar cliquable sans modifier sa position */
+/* En-tête : les trois boutons ont de vraies zones de clic. */
 .st-key-mathicap_zone_profil {
     position: relative !important;
-    /* Laisser passer les clics vers le bouton de l'avatar */
-    .st-key-mathicap_zone_profil
-    [data-testid="stElementContainer"]:has(.mathicap-icones),
-    .st-key-mathicap_zone_profil .mathicap-icones {
-        pointer-events: none !important;
-}
+    width: calc(var(--mc-avatar) + 2 * var(--mc-ico) + 2 * var(--mc-ico-gap)) !important;
+    min-width: calc(var(--mc-avatar) + 2 * var(--mc-ico) + 2 * var(--mc-ico-gap)) !important;
 }
 
 .st-key-mathicap_zone_profil .st-key-mathicap_avatar_clic {
@@ -361,30 +357,89 @@ st.markdown("""
     width: 100% !important;
 }
 
-/* Icônes : recherche, notifications, profil (décoratives pour l'instant) */
-.st-key-mathicap_zone_profil .mathicap-icones {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    width: 100%;
-    padding-right: calc(var(--mc-ico-gap) + 22px);
-    box-sizing: border-box;
-}
-
-.st-key-mathicap_zone_profil .mathicap-icone {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: var(--mc-ico);
+/* Espacement sous la rangée d'icônes (sans boutons superposés). */
+.mathicap-espace-icones {
+    display: block;
     height: var(--mc-ico);
-    color: #12315f;
+    width: 100%;
+    pointer-events: none;
 }
 
-.st-key-mathicap_zone_profil .mathicap-icone svg {
-    width: 64%;
-    height: 64%;
+/* Loupe et cloche : deux vrais boutons Streamlit, placés avant l'avatar. */
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic,
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
+    position: absolute !important;
+    top: 0 !important;
+    width: var(--mc-ico) !important;
+    min-width: var(--mc-ico) !important;
+    max-width: var(--mc-ico) !important;
+    height: var(--mc-ico) !important;
+    min-height: var(--mc-ico) !important;
+    max-height: var(--mc-ico) !important;
+    z-index: 11 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic {
+    right: calc(var(--mc-avatar) + var(--mc-ico) + 2 * var(--mc-ico-gap)) !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
+    right: calc(var(--mc-avatar) + var(--mc-ico-gap)) !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic [data-testid="stButton"],
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic [data-testid="stButton"] {
+    width: var(--mc-ico) !important;
+    height: var(--mc-ico) !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button,
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: var(--mc-ico) !important;
+    min-width: var(--mc-ico) !important;
+    max-width: var(--mc-ico) !important;
+    height: var(--mc-ico) !important;
+    min-height: var(--mc-ico) !important;
+    max-height: var(--mc-ico) !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #12315f !important;
+    cursor: pointer !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button:hover,
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button:hover {
+    background: #eaf1fc !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button:focus-visible,
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 2px !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button p,
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button p {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+}
+.st-key-mathicap_zone_profil .st-key-mathicap_recherche_clic button::before,
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button::before {
+    content: "";
+    display: block;
+    width: 68%;
+    height: 68%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    pointer-events: none;
 }
 
 .st-key-mathicap_zone_profil .mathicap-avatar {
@@ -476,9 +531,6 @@ st.markdown("""
         --mc-btn-fs: 11px;
         column-gap: 8px !important;
     }
-    .st-key-mathicap_zone_profil .mathicap-icones {
-    gap: var(--mc-ico-gap);
-}
 }
 
 /* Très petit écran : 360 px et moins (dont 320 px) */
@@ -558,19 +610,7 @@ st.markdown("""
 /* PC et smartphone paysage : rapprocher les icônes */
 @media (min-width: 768px), (orientation: landscape) {
 
-    .st-key-mathicap_zone_profil .mathicap-icones {
-        gap: 16px !important;
-        padding-right: calc(var(--mc-ico-gap) + 58px) !important;
-    }
-
-    .st-key-mathicap_zone_profil .mathicap-icone {
-        width: calc(var(--mc-ico) - 10px) !important;
-        flex: 0 0 calc(var(--mc-ico) - 10px) !important;
-    }
-
-    .st-key-mathicap_zone_profil .mathicap-icone svg {
-        width: 84% !important;
-    }
+    /* Les icônes gardent leur taille de bouton à toute orientation. */
 }
 /* Séries enregistrées : alignement sur smartphone */
 @media (max-width: 767px) {
@@ -599,6 +639,23 @@ st.markdown("""
         width: auto !important;
         min-width: 0 !important;
     }
+}
+
+/* Les deux boutons d'icône gardent une zone de clic carrée sur mobile.
+   Ces règles, plus ciblées, prennent le pas sur celles de Déconnexion. */
+div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+> div[data-testid="stColumn"]:last-child
+.st-key-mathicap_recherche_clic button,
+div[data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+> div[data-testid="stColumn"]:last-child
+.st-key-mathicap_notifications_clic button {
+    width: var(--mc-ico) !important;
+    min-width: var(--mc-ico) !important;
+    max-width: var(--mc-ico) !important;
+    height: var(--mc-ico) !important;
+    min-height: var(--mc-ico) !important;
+    max-height: var(--mc-ico) !important;
+    padding: 0 !important;
 }
 
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
@@ -822,11 +879,133 @@ def _mathicap_importer_avatar(identifiant, photo_jpeg):
         raise
 
 
+# Catalogue commun aux exercices et à la recherche, sans duplication.
+CHAPITRES_MATHICAP = {
+    "1. Opérations": [
+        "Addition, soustraction et multiplication de nombres décimaux",
+        "Division euclidienne, multiples et diviseurs",
+        "Division par un nombre décimal",
+        "Priorités opératoires",
+        "Distributivité simple"
+    ],
+    "2. Nombres relatifs": [
+        "Les nombres relatifs",
+        "Repérage sur une droite graduée",
+        "Repérage dans un repère orthogonal du plan",
+        "Comparaison de nombres relatifs"
+    ],
+    "3. Addition, soustraction de nombres relatifs": [
+        "Simplification d'écriture",
+        "Addition de nombres relatifs",
+        "Soustraction de deux nombres relatifs",
+        "Enchaînement d'additions et de soustractions"
+    ],
+    "4. Nombres rationnels": [
+        "Comparaison de fractions",
+        "Comparaison de proportions",
+        "Addition et soustraction de fractions",
+        "Résolution de problèmes avec des fractions"
+    ],
+    "5. Puissances": [
+        "Carré et cube d'un nombre",
+        "Carrés des entiers de 0 à 12",
+        "Enchaînement de calculs avec des puissances simples",
+        "Valeur d'une expression contenant une puissance"
+    ],
+    "6. Calcul littéral": [
+        "Produire des expressions littérales",
+        "Calcul de la valeur d'une expression littérale",
+        "Reconnaître une somme, un produit",
+        "Utilisation de la distributivité simple",
+        "Test d'une égalité",
+        "Résolution d'une équation du 1er degré"
+    ],
+    "7. Représentation de l'espace": [
+        "Perspective cavalière et patrons",
+        "Unités de volume et de capacité",
+        "Volumes du pavé droit et du prisme droit",
+        "Aire du disque",
+        "Volume du cylindre de révolution"
+    ],
+    "8. Transformations, angles": [
+        "Demi-tour ou symétrie centrale",
+        "Propriétés conservées",
+        "Centre de symétrie, axe de symétrie",
+        "Symétrie centrale et figures usuelles",
+        "Nouveau vocabulaire des angles",
+        "Angles alternes-internes et angles correspondants"
+    ],
+    "9. Triangles": [
+        "Somme des angles d'un triangle",
+        "Construction de triangles",
+        "Médiatrices d'un triangle (rappels)",
+        "Médiatrices d'un triangle rectangle",
+        "Aire d'un triangle et hauteurs",
+        "Médianes d'un triangle"
+    ],
+    "10. Parallélogrammes": [
+        "Connaître le parallélogramme",
+        "Reconnaître un parallélogramme",
+        "Rectangles",
+        "Losanges",
+        "Carrés",
+        "Aire du parallélogramme",
+        "Unités de longueur et d'aire"
+    ],
+    "11. Statistiques": [
+        "Effectif, fréquence",
+        "Moyenne d'une série de données",
+        "Représentations graphiques"
+    ],
+    "12. Probabilités": [
+        "Expérience aléatoire et événement",
+        "Attribuer une probabilité à une issue",
+        "Déterminer la probabilité d'un événement"
+    ],
+    "13. Proportionnalité": [
+        "Pourcentages",
+        "Proportions",
+        "Situations relevant ou non de la proportionnalité",
+        "Linéarité et retour à l'unité",
+        "Coefficient de proportionnalité",
+        "Caractérisation graphique d'une situation de proportionnalité",
+        "Produire une formule"
+    ],
+    "14. Fonctions": [
+        "Expression d'une grandeur en fonction d'une autre",
+        "Interprétation d'un tableau de valeurs ou d'un graphique",
+        "Passage d'une formule à un tableau",
+        "Produire une formule"
+    ]
+}
+
 # Retour à l'accueil depuis toutes les pages, sans effacer la série en cours.
 def _mathicap_retour_accueil_logo():
     st.session_state["mathicap_page"] = "Accueil"
     st.session_state["afficher_series"] = False
     st.query_params["vue"] = "accueil"
+
+
+def _mathicap_ouvrir_icone(vue):
+    """Ouvre une rubrique sans effacer la série en cours ni la connexion."""
+    st.query_params["vue"] = vue
+
+
+def _mathicap_ouvrir_chapitre_recherche(chapitre):
+    """Depuis la recherche, ouvre le chapitre réellement disponible."""
+    st.session_state["_mathicap_chapitre_a_ouvrir"] = chapitre
+    st.session_state["mathicap_page"] = "Exercices"
+    st.session_state["afficher_series"] = False
+    st.query_params["vue"] = "accueil"
+
+
+def _mathicap_texte_recherche(texte):
+    """Normalise une recherche sans distinguer les accents ou la casse."""
+    import unicodedata
+    return "".join(
+        lettre for lettre in unicodedata.normalize("NFD", str(texte).casefold())
+        if unicodedata.category(lettre) != "Mn"
+    )
 
 
 # En-tête : bloc logo/slogan à gauche, profil à droite
@@ -869,12 +1048,6 @@ with col_logo:
 
 with col_profil:
     with st.container(key="mathicap_zone_profil"):
-        _svg = (
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
-            'stroke-width="2" stroke-linecap="round" '
-            'stroke-linejoin="round" aria-hidden="true">'
-        )
-
         _avatar_mode = st.session_state.get("mathicap_avatar_type", "defaut")
         _avatar_choix = st.session_state.get("mathicap_avatar_choix", "")
         _fichier_avatar = st.session_state.get("mathicap_avatar_fichier", "")
@@ -902,18 +1075,50 @@ with col_profil:
                 '</svg>'
             )
 
-        st.markdown(
-            '<div class="mathicap-icones">'
-            '<span class="mathicap-icone" aria-hidden="true">'
-            + _svg
-            + '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>'
-            '</svg></span>'
-            '<span class="mathicap-icone" aria-hidden="true">'
-            + _svg
+        # SVG conservés : mêmes pictogrammes, mais boutons natifs cliquables.
+        import base64
+        _icone_svg_debut = (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
+            'fill="none" stroke="#12315f" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round">'
+        )
+        _svg_recherche = (
+            _icone_svg_debut
+            + '<circle cx="11" cy="11" r="6.5"/>'
+            + '<path d="M16 16l5 5"/></svg>'
+        )
+        _svg_notifications = (
+            _icone_svg_debut
             + '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/>'
-            '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>'
-            '</div>',
-            unsafe_allow_html=True,
+            + '<path d="M10 20.5a2 2 0 0 0 4 0"/></svg>'
+        )
+        _recherche_b64 = base64.b64encode(_svg_recherche.encode()).decode()
+        _notifications_b64 = base64.b64encode(_svg_notifications.encode()).decode()
+        st.html(
+            f"""<style>
+            .st-key-mathicap_recherche_clic button::before {{
+                background-image: url("data:image/svg+xml;base64,{_recherche_b64}") !important;
+            }}
+            .st-key-mathicap_notifications_clic button::before {{
+                background-image: url("data:image/svg+xml;base64,{_notifications_b64}") !important;
+            }}
+            </style>"""
+        )
+        # La zone d'espacement conserve la position de Connecté/Déconnexion.
+        st.html('<div class="mathicap-espace-icones" aria-hidden="true"></div>')
+        st.button(
+            "Rechercher",
+            key="mathicap_recherche_clic",
+            help="Rechercher un chapitre ou une notion",
+            on_click=_mathicap_ouvrir_icone,
+            args=("recherche",),
+        )
+        st.button(
+            "Notifications",
+            key="mathicap_notifications_clic",
+            help="Accéder aux notifications",
+            on_click=_mathicap_ouvrir_icone,
+            args=("notifications",),
         )
         if _avatar_uri:
             st.markdown(
@@ -1598,6 +1803,65 @@ if not est_connecte:
                         st.error("Connexion impossible.")
                 except Exception:
                     st.error("Une erreur est survenue lors de la connexion.")
+# Rubriques accessibles depuis les icônes de l'en-tête.
+# La page active est gardée dans l'URL : une actualisation y revient.
+vue_icone = st.query_params.get("vue")
+if vue_icone == "recherche":
+    st.subheader("Recherche")
+    st.caption("Chapitres et notions de 5e actuellement répertoriés dans MathiCap.")
+    recherche = st.text_input(
+        "Rechercher un chapitre ou une notion",
+        placeholder="Ex. fractions, distributivité, triangles…",
+        key="mathicap_recherche_texte",
+    )
+    if recherche.strip():
+        terme = _mathicap_texte_recherche(recherche.strip())
+        trouves = [
+            (nom, [notion for notion in notions if terme in _mathicap_texte_recherche(notion)])
+            for nom, notions in CHAPITRES_MATHICAP.items()
+            if terme in _mathicap_texte_recherche(nom)
+            or any(terme in _mathicap_texte_recherche(n) for n in notions)
+        ]
+        if trouves:
+            st.caption(f"{len(trouves)} chapitre(s) trouvé(s).")
+            for indice, (nom, notions) in enumerate(trouves):
+                col_detail, col_ouvrir = st.columns([3, 1], vertical_alignment="center")
+                with col_detail:
+                    st.markdown(f"**{nom}**")
+                    if notions:
+                        st.caption("Notions correspondantes : " + ", ".join(notions))
+                with col_ouvrir:
+                    st.button(
+                        "Ouvrir",
+                        key=f"mathicap_recherche_ouvrir_{indice}",
+                        on_click=_mathicap_ouvrir_chapitre_recherche,
+                        args=(nom,),
+                    )
+        else:
+            st.info("Aucun chapitre ni aucune notion ne correspond à ta recherche.")
+    else:
+        st.info("Entre un mot pour trouver un chapitre ou une notion.")
+    st.button(
+        "← Accueil",
+        key="mathicap_recherche_retour",
+        on_click=_mathicap_retour_accueil_logo,
+    )
+    st.stop()
+
+if vue_icone == "notifications":
+    st.subheader("Notifications")
+    if est_connecte:
+        st.info("Aucune notification pour le moment.")
+        st.caption("Les notifications seront disponibles lorsqu'un service de notification sera activé dans MathiCap.")
+    else:
+        st.info("Connecte-toi pour accéder à tes notifications.")
+    st.button(
+        "← Accueil",
+        key="mathicap_notifications_retour",
+        on_click=_mathicap_retour_accueil_logo,
+    )
+    st.stop()
+
 # Nouvelle interface MathiCap Collège
 if est_connecte and st.query_params.get("vue") == "profil":
     st.stop()
@@ -1612,108 +1876,17 @@ page_mathicap = afficher_interface_mathicap()
 
 if page_mathicap == "Exercices":
     # Réserver les sélecteurs et la génération à la rubrique Exercices.
-    chapitres = {
-        "1. Opérations": [
-            "Addition, soustraction et multiplication de nombres décimaux",
-            "Division euclidienne, multiples et diviseurs",
-            "Division par un nombre décimal",
-            "Priorités opératoires",
-            "Distributivité simple"
-        ],
-        "2. Nombres relatifs": [
-            "Les nombres relatifs",
-            "Repérage sur une droite graduée",
-            "Repérage dans un repère orthogonal du plan",
-            "Comparaison de nombres relatifs"
-        ],
-        "3. Addition, soustraction de nombres relatifs": [
-            "Simplification d'écriture",
-            "Addition de nombres relatifs",
-            "Soustraction de deux nombres relatifs",
-            "Enchaînement d'additions et de soustractions"
-        ],
-        "4. Nombres rationnels": [
-            "Comparaison de fractions",
-            "Comparaison de proportions",
-            "Addition et soustraction de fractions",
-            "Résolution de problèmes avec des fractions"
-        ],
-        "5. Puissances": [
-            "Carré et cube d'un nombre",
-            "Carrés des entiers de 0 à 12",
-            "Enchaînement de calculs avec des puissances simples",
-            "Valeur d'une expression contenant une puissance"
-        ],
-        "6. Calcul littéral": [
-            "Produire des expressions littérales",
-            "Calcul de la valeur d'une expression littérale",
-            "Reconnaître une somme, un produit",
-            "Utilisation de la distributivité simple",
-            "Test d'une égalité",
-            "Résolution d'une équation du 1er degré"
-        ],
-        "7. Représentation de l'espace": [
-            "Perspective cavalière et patrons",
-            "Unités de volume et de capacité",
-            "Volumes du pavé droit et du prisme droit",
-            "Aire du disque",
-            "Volume du cylindre de révolution"
-        ],
-        "8. Transformations, angles": [
-            "Demi-tour ou symétrie centrale",
-            "Propriétés conservées",
-            "Centre de symétrie, axe de symétrie",
-            "Symétrie centrale et figures usuelles",
-            "Nouveau vocabulaire des angles",
-            "Angles alternes-internes et angles correspondants"
-        ],
-        "9. Triangles": [
-            "Somme des angles d'un triangle",
-            "Construction de triangles",
-            "Médiatrices d'un triangle (rappels)",
-            "Médiatrices d'un triangle rectangle",
-            "Aire d'un triangle et hauteurs",
-            "Médianes d'un triangle"
-        ],
-        "10. Parallélogrammes": [
-            "Connaître le parallélogramme",
-            "Reconnaître un parallélogramme",
-            "Rectangles",
-            "Losanges",
-            "Carrés",
-            "Aire du parallélogramme",
-            "Unités de longueur et d'aire"
-        ],
-        "11. Statistiques": [
-            "Effectif, fréquence",
-            "Moyenne d'une série de données",
-            "Représentations graphiques"
-        ],
-        "12. Probabilités": [
-            "Expérience aléatoire et événement",
-            "Attribuer une probabilité à une issue",
-            "Déterminer la probabilité d'un événement"
-        ],
-        "13. Proportionnalité": [
-            "Pourcentages",
-            "Proportions",
-            "Situations relevant ou non de la proportionnalité",
-            "Linéarité et retour à l'unité",
-            "Coefficient de proportionnalité",
-            "Caractérisation graphique d'une situation de proportionnalité",
-            "Produire une formule"
-        ],
-        "14. Fonctions": [
-            "Expression d'une grandeur en fonction d'une autre",
-            "Interprétation d'un tableau de valeurs ou d'un graphique",
-            "Passage d'une formule à un tableau",
-            "Produire une formule"
-        ]
-    }
+    chapitres = CHAPITRES_MATHICAP
 
+    # Lorsqu'on vient de la loupe, le bon chapitre est présélectionné.
+    # Le choix reste modifiable normalement dans la page Exercices.
+    chapitre_recherche = st.session_state.pop("_mathicap_chapitre_a_ouvrir", None)
+    if chapitre_recherche in chapitres:
+        st.session_state["mathicap_choix_chapitre"] = chapitre_recherche
     chapitre = st.selectbox(
         "Chapitre",
-        list(chapitres.keys())
+        list(chapitres.keys()),
+        key="mathicap_choix_chapitre",
     )
 
     if chapitre == "1. Opérations":
