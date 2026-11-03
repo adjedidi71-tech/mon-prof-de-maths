@@ -772,8 +772,8 @@ st.markdown("""
         grid-row: 2 !important;
         justify-self: start !important;
         width: min(230px, 100%) !important;
-        /* Ligne 2 sous tout le bloc profil, sans chevauchement de Déconnexion. */
-        margin-top: 0 !important;
+        /* Recherche plus près du slogan, sans déplacer l'avatar. */
+        margin-top: -72px !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > [data-testid="stColumn"]:nth-child(3) {
@@ -851,41 +851,60 @@ st.markdown("""
 .st-key-mathicap_reglages_exercices [data-testid="stProgress"] {
     max-width: 740px !important;
 }
-/* Réponses : des colonnes flexibles plutôt que des dimensions d'écrans spécifiques.
-   Deux colonnes utiles : intitulé complet à gauche, saisie à droite. */
+/* Exercices : aucune hauteur fixe et aucun défilement propre aux questions.
+   Garder la disposition native de Streamlit pour les rangées courtes. */
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(112px, min(40%, 220px)) !important;
-    width: 100% !important;
     max-width: min(100%, 640px) !important;
-    gap: 8px 12px !important;
-    align-items: center !important;
+    width: 100% !important;
+    align-items: flex-start !important;
     height: auto !important;
     min-height: 0 !important;
+    overflow: visible !important;
     margin-bottom: 12px !important;
 }
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"],
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"] {
-    flex: none !important;
-    width: 100% !important;
     min-width: 0 !important;
-    max-width: 100% !important;
     height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
 }
-.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"]:first-child p,
-.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"]:first-child p,
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"] [data-testid="stVerticalBlock"],
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"] [data-testid="stVerticalBlock"] {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
 .st-key-mathicap_zone_exercices_affichage [data-testid="stMarkdownContainer"] p {
     white-space: normal !important;
     overflow-wrap: anywhere !important;
-    line-height: 1.45 !important;
     height: auto !important;
     max-height: none !important;
+    line-height: 1.45 !important;
+}
+/* Les énoncés gardent une largeur de lecture raisonnable sur grand écran. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mathicap_enonce_"],
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mathicap_question_"] {
+    max-width: min(100%, 880px) !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+/* Intitulés et réponses se suivent dans le flux normal de la page. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mathicap_champ_reponse_"] {
+    width: min(100%, 280px) !important;
+    max-width: 100% !important;
+    margin: 2px 0 12px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mathicap_reponse_texte_"] {
+    width: min(100%, 580px) !important;
+    max-width: 100% !important;
+    margin: 2px 0 12px !important;
 }
 .st-key-mathicap_zone_exercices_affichage [data-testid="stExpander"] {
     max-width: min(100%, 880px) !important;
 }
-/* Champs toujours utilisables, y compris quand le contenu se rétrécit. */
 .st-key-mathicap_zone_exercices_affichage [data-testid="stNumberInput"] input,
 .st-key-mathicap_zone_exercices_affichage [data-testid="stTextInput"] input,
 .st-key-mathicap_zone_exercices_affichage [data-testid="stSelectbox"] {
@@ -893,7 +912,7 @@ st.markdown("""
     min-width: 0 !important;
     box-sizing: border-box !important;
 }
-/* Lorsque la place manque, ne pas réduire artificiellement le nombre saisi. */
+/* Sur smartphone, conserver la visibilité des nombres saisis. */
 @media (max-width: 620px) {
     .st-key-mathicap_zone_exercices_affichage [data-testid="stNumberInput"] button {
         display: none !important;
@@ -901,14 +920,6 @@ st.markdown("""
     .st-key-mathicap_zone_exercices_affichage [data-testid="stNumberInput"] input,
     .st-key-mathicap_zone_exercices_affichage [data-testid="stTextInput"] input {
         padding-inline: 8px !important;
-    }
-}
-/* Très petits téléphones ou zoom important : lisibilité avant alignement. */
-@media (max-width: 350px) {
-    .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
-    .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) {
-        grid-template-columns: minmax(0, 1fr) !important;
-        row-gap: 4px !important;
     }
 }
 
@@ -4113,14 +4124,15 @@ def _mathicap_afficher_serie_et_reponses():
                     lignes_calcul = exercice["enonce"].split("\n\n")[1:]
                     st.write("Utilise la distributivité pour calculer :")
                 else:
-                    st.write(exercice["enonce"])
+                    with st.container(key=f"mathicap_enonce_{numero}"):
+                        st.write(exercice["enonce"])
 
     
                 if exercice.get("reponse_attendue") is not None:  
                     col_texte, col_saisie = st.columns(
                         [1.4, 1],
                         gap="small",
-                        vertical_alignment="center",
+                        vertical_alignment="top",
                         wrap=False
                     )
 
@@ -4204,7 +4216,7 @@ def _mathicap_afficher_serie_et_reponses():
                                 col_calcul, col_reponse = st.columns(
                                     [1.4, 1],
                                     gap="small",
-                                    vertical_alignment="center",
+                                    vertical_alignment="top",
                                     wrap=False
                                 )
 
@@ -4232,17 +4244,13 @@ def _mathicap_afficher_serie_et_reponses():
                                         args=(numero,)
                                     )
                             else:
-                                col_texte, col_saisie = st.columns(
-                                    [1.4, 1],
-                                    gap="small",
-                                    vertical_alignment="center",
-                                    wrap=False
-                                )
-
-                                with col_texte:
+                                # Le libellé est écrit directement sur la page.
+                                # Aucune colonne de hauteur fixe ne peut le tronquer.
+                                with st.container(key=f"mathicap_question_{numero}_{index}"):
                                     st.write(etiquette)
-
-                                with col_saisie:
+                                with st.container(
+                                    key=f"mathicap_champ_reponse_{numero}_{index}"
+                                ):
                                     st.text_input(
                                         etiquette,
                                         label_visibility="collapsed",
@@ -4253,17 +4261,11 @@ def _mathicap_afficher_serie_et_reponses():
                                     )
 
                         elif champ["type"] == "choix":
-                            col_texte, col_saisie = st.columns(
-                                [1.4, 1],
-                                gap="small",
-                                vertical_alignment="center",
-                                wrap=False
-                            )
-
-                            with col_texte:
+                            with st.container(key=f"mathicap_question_{numero}_{index}"):
                                 st.write(etiquette)
-
-                            with col_saisie:
+                            with st.container(
+                                key=f"mathicap_champ_reponse_{numero}_{index}"
+                            ):
                                 st.selectbox(
                                     etiquette,
                                     ["Choisir..."] + champ["options"],
@@ -4274,13 +4276,16 @@ def _mathicap_afficher_serie_et_reponses():
                                 )
 
                         elif champ["type"] == "texte_libre":
-                            st.text_area(
-                                etiquette,
-                                height=90,
-                                key=cle,
-                                on_change=enregistrer_reponses_banque_auto,
-                                args=(numero,)
-                            )
+                            with st.container(
+                                key=f"mathicap_reponse_texte_{numero}_{index}"
+                            ):
+                                st.text_area(
+                                    etiquette,
+                                    height=90,
+                                    key=cle,
+                                    on_change=enregistrer_reponses_banque_auto,
+                                    args=(numero,)
+                                )
 
                     if st.button(
                         "Vérifier mes réponses",
@@ -4419,14 +4424,15 @@ def _mathicap_afficher_serie_et_reponses():
                             f"sur {bilan['total']}**"
                         )    
                 else:
-                    st.text_area(
-                        "Ta réponse :",
-                        placeholder="Écris ici tes réponses aux questions de l'exercice.",
-                        height=150,
-                        key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}",
-                        on_change=enregistrer_reponse_texte_auto,
-                        args=(numero,),
-                    )
+                    with st.container(key=f"mathicap_reponse_texte_libre_{numero}"):
+                        st.text_area(
+                            "Ta réponse :",
+                            placeholder="Écris ici tes réponses aux questions de l'exercice.",
+                            height=150,
+                            key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}",
+                            on_change=enregistrer_reponse_texte_auto,
+                            args=(numero,),
+                        )
                     if st.button(
                         "Enregistrer ma réponse",
                         key=f"enregistrer_texte_{st.session_state.get('serie_version', 0)}_{numero}",
