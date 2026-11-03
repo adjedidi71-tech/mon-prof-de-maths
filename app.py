@@ -54,6 +54,98 @@ def connexion_supabase_privee():
 
 supabase_privee = connexion_supabase_privee()
 
+
+# Gestion des mots de passe : API publique Supabase Auth, sans accès administrateur.
+def _mathicap_client_auth_temporaire():
+    # Un client par opération évite de partager la session d'un élève avec un autre.
+    return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+
+
+def _mathicap_mot_de_passe_valide(valeur):
+    return len(valeur) >= 10 and len(valeur) <= 128
+
+
+def _mathicap_formulaire_recuperation():
+    st.markdown("### Réinitialiser mon mot de passe")
+    st.caption("Un code de vérification sera envoyé à ton adresse e-mail.")
+    with st.form("mathicap_demande_recuperation"):
+        adresse = st.text_input("Adresse e-mail du compte", key="mathicap_recup_email")
+        demander = st.form_submit_button("Recevoir un code")
+    if demander:
+        if not adresse.strip() or "@" not in adresse:
+            st.warning("Saisis une adresse e-mail valide.")
+        else:
+            try:
+                _mathicap_client_auth_temporaire().auth.reset_password_for_email(adresse.strip())
+                st.session_state["mathicap_recup_adresse"] = adresse.strip()
+                st.success("Si cette adresse possède un compte, un message a été envoyé. Vérifie aussi les indésirables.")
+            except Exception:
+                st.error("Envoi momentanément impossible. Réessaie plus tard.")
+
+    with st.form("mathicap_validation_recuperation"):
+        adresse_code = st.text_input(
+            "Adresse e-mail", value=st.session_state.get("mathicap_recup_adresse", ""),
+            key="mathicap_recup_adresse_code",
+        )
+        code = st.text_input("Code reçu par e-mail", key="mathicap_recup_code")
+        nouveau = st.text_input("Nouveau mot de passe (10 caractères minimum)", type="password", key="mathicap_recup_nouveau")
+        confirmation = st.text_input("Confirmer le nouveau mot de passe", type="password", key="mathicap_recup_confirmation")
+        valider = st.form_submit_button("Enregistrer mon nouveau mot de passe")
+    if valider:
+        if not adresse_code.strip() or not code.strip():
+            st.warning("Renseigne ton adresse et le code reçu.")
+        elif not _mathicap_mot_de_passe_valide(nouveau):
+            st.warning("Choisis un mot de passe entre 10 et 128 caractères.")
+        elif nouveau != confirmation:
+            st.warning("Les deux mots de passe ne correspondent pas.")
+        else:
+            try:
+                client = _mathicap_client_auth_temporaire()
+                resultat = client.auth.verify_otp({
+                    "email": adresse_code.strip(), "token": code.strip(), "type": "recovery"
+                })
+                if not resultat.session or not resultat.user:
+                    raise ValueError("Vérification refusée")
+                client.auth.update_user({"password": nouveau})
+                client.auth.sign_out()
+                st.session_state.pop("mathicap_recup_adresse", None)
+                st.success("Mot de passe modifié. Tu peux maintenant te connecter.")
+            except Exception:
+                st.error("Code invalide ou expiré, ou modification impossible. Demande un nouveau code si nécessaire.")
+    if st.button("Retour à la connexion", key="mathicap_retour_connexion_mdp"):
+        st.session_state["mathicap_afficher_recuperation"] = False
+        st.rerun()
+
+
+def _mathicap_formulaire_changement_mdp(email_compte, identifiant):
+    with st.expander("Changer mon mot de passe"):
+        st.caption("Pour protéger ton compte, confirme ton mot de passe actuel.")
+        with st.form("mathicap_changement_mdp"):
+            actuel = st.text_input("Mot de passe actuel", type="password")
+            nouveau = st.text_input("Nouveau mot de passe (10 caractères minimum)", type="password")
+            confirmation = st.text_input("Confirmer le nouveau mot de passe", type="password")
+            changer = st.form_submit_button("Modifier mon mot de passe")
+        if changer:
+            if not email_compte or not actuel:
+                st.warning("Le mot de passe actuel est nécessaire.")
+            elif not _mathicap_mot_de_passe_valide(nouveau):
+                st.warning("Choisis un mot de passe entre 10 et 128 caractères.")
+            elif nouveau != confirmation:
+                st.warning("Les deux nouveaux mots de passe ne correspondent pas.")
+            elif actuel == nouveau:
+                st.warning("Le nouveau mot de passe doit être différent de l'ancien.")
+            else:
+                try:
+                    client = _mathicap_client_auth_temporaire()
+                    resultat = client.auth.sign_in_with_password({"email": email_compte, "password": actuel})
+                    if not resultat.user or resultat.user.id != identifiant:
+                        raise ValueError("Compte incorrect")
+                    client.auth.update_user({"password": nouveau})
+                    client.auth.sign_out()
+                    st.success("Mot de passe modifié. Utilise-le lors de ta prochaine connexion.")
+                except Exception:
+                    st.error("Modification impossible. Vérifie ton mot de passe actuel ou réessaie plus tard.")
+
 if not st.session_state.get("eleve_id"):
     jeton = lire_jeton_navigateur()
 
@@ -1743,6 +1835,9 @@ if est_connecte and st.query_params.get("vue") == "profil":
         '</div>'
     )
 
+    if profil_charge:
+        _mathicap_formulaire_changement_mdp(email_eleve, identifiant_eleve)
+
     # Personnalisation de l'avatar, propre au compte de chaque élève.
     st.markdown("### Mon avatar")
     if st.session_state.pop("mathicap_avatar_sauve", False):
@@ -2077,6 +2172,12 @@ if not est_connecte:
                     connexion = st.form_submit_button(
                         "Se connecter", use_container_width=True
                     )
+
+            if st.button("Mot de passe oublié ?", key="mathicap_mdp_oublie"):
+                st.session_state["mathicap_afficher_recuperation"] = True
+                st.rerun()
+            if st.session_state.get("mathicap_afficher_recuperation"):
+                _mathicap_formulaire_recuperation()
 
             with st.popover("Créer un compte"):
                 with st.form("formulaire_inscription"):
