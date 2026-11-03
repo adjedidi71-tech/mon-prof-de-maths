@@ -21,6 +21,19 @@ from auth_persistante import (
     verifier_session
 )
 
+
+def _mathicap_correction_division_euclidienne(dividende, diviseur, quotient, reste):
+    """Présente le quotient, le reste et l'égalité euclidienne pour un collégien."""
+    produit = diviseur * quotient
+    return (
+        f"**{dividende} ÷ {diviseur} → quotient {quotient}, reste {reste}.**\n\n"
+        f"**Écriture de la division euclidienne :**\n\n"
+        f"{dividende} = {diviseur} × {quotient} + {reste}\n\n"
+        f"**Vérification :** {diviseur} × {quotient} = {produit}, "
+        f"puis {produit} + {reste} = {dividende}.\n\n"
+        f"Le reste {reste} est inférieur au diviseur {diviseur}."
+    )
+
 def connexion_supabase():
     return create_client(
         st.secrets["SUPABASE_URL"],
@@ -773,7 +786,7 @@ st.markdown("""
         justify-self: start !important;
         width: min(230px, 100%) !important;
         /* Recherche plus près du slogan, sans déplacer l'avatar. */
-        margin-top: -72px !important;
+        margin-top: clamp(-72px, calc(20vw - 148px), -24px) !important;
     }
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
     > [data-testid="stColumn"]:nth-child(3) {
@@ -3109,8 +3122,8 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
             dividende = diviseur * quotient + reste
 
             enonce = f"Effectue la division euclidienne de {dividende} par {diviseur}."
-            correction = (
-                f"{dividende} = {diviseur} × {quotient} + {reste}"
+            correction = _mathicap_correction_division_euclidienne(
+                dividende, diviseur, quotient, reste
             )
             champs_reponse = [
                 {
@@ -4454,7 +4467,40 @@ def _mathicap_afficher_serie_et_reponses():
                     f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
                     expanded=False
                 ):
-                    st.markdown(exercice["correction"].replace("\n", "  \n"))
+                    texte_correction = exercice["correction"]
+                    # Rendre explicites le quotient et le reste, y compris
+                    # pour les séries créées avant cette mise à jour.
+                    champs_division = exercice.get("champs_reponse") or []
+                    if (
+                        exercice.get("enonce", "").startswith(
+                            "Effectue la division euclidienne de "
+                        )
+                        and {champ.get("id") for champ in champs_division}
+                        == {"quotient", "reste"}
+                    ):
+                        donnees_division = {
+                            champ["id"]: champ.get("attendu")
+                            for champ in champs_division
+                        }
+                        match_division = re.search(
+                            r"division euclidienne de (\d+) par (\d+)",
+                            exercice.get("enonce", ""),
+                            flags=re.IGNORECASE,
+                        )
+                        if (
+                            match_division
+                            and all(
+                                donnees_division.get(cle) is not None
+                                for cle in ("quotient", "reste")
+                            )
+                        ):
+                            dividende, diviseur = map(int, match_division.groups())
+                            quotient = int(donnees_division["quotient"])
+                            reste = int(donnees_division["reste"])
+                            texte_correction = _mathicap_correction_division_euclidienne(
+                                dividende, diviseur, quotient, reste
+                            )
+                    st.markdown(texte_correction.replace("\n", "  \n"))
             
 
 _mathicap_afficher_serie_et_reponses()
