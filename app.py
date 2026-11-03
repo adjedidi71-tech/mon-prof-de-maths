@@ -235,8 +235,12 @@ st.markdown("""
     --mc-btn-fs: 13px;
 
     display: grid !important;
-    /* La recherche garde 320 px sur PC plein écran ou demi-écran. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 320px) auto !important;
+    /* La recherche occupe jusqu'à 320px, mais se réduit progressivement
+       avec la fenêtre plutôt que d'empiéter sur la marque ou le profil. */
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, clamp(180px, calc(100vw - 430px), 320px))
+        auto !important;
     align-items: start !important;
     column-gap: 12px !important;
     row-gap: 0 !important;
@@ -256,8 +260,8 @@ st.markdown("""
 /* Dans la grille de l'en-tête, chaque bloc a un emplacement identifié. */
 [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
 > [data-testid="stColumn"]:nth-child(2) {
-    width: 320px !important;
-    max-width: 100% !important;
+    width: 100% !important;
+    max-width: 320px !important;
     min-width: 0 !important;
     justify-self: end !important;
 }
@@ -654,7 +658,7 @@ st.markdown("""
 .st-key-mathicap_barre_recherche {
     --mc-recherche-h: 40px;
     --mc-recherche-bouton-w: 40px;
-    width: 320px !important;
+    width: min(320px, 100%) !important;
     min-width: 0 !important;
     max-width: 100% !important;
     margin: 9px 0 0 !important;
@@ -797,10 +801,10 @@ st.markdown("""
         transform: translateY(-30px) !important;
     }
 }
-/* En demi-écran PC : ne pas remonter inutilement le profil. */
+/* En demi-écran PC, conserver la position du profil validee. */
 @media (min-width: 768px) and (max-width: 1100px) {
     .st-key-mathicap_zone_profil {
-        transform: translateY(-10px) !important;
+        transform: translateY(-30px) !important;
     }
 }
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
@@ -836,52 +840,6 @@ st.markdown("""
     margin: 0 !important;
 }
 
-/* Réponses des exercices : sur smartphone, garder calcul et saisie sur la même ligne.
-   Cible uniquement les rangées avec des champs d'exercice enregistrables. */
-@media (max-width: 620px) {
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        gap: 10px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"],
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"] {
-        min-width: 0 !important;
-        width: auto !important;
-        max-width: 100% !important;
-    }
-
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"]:first-child,
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"]:first-child {
-        flex: 1 1 0 !important;
-    }
-
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"]:nth-child(2),
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"]:nth-child(2) {
-        flex: 0 0 39% !important;
-    }
-
-    /* La troisième colonne servait seulement d'espace vide sur PC. */
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"]:nth-child(3),
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"]:nth-child(3) {
-        display: none !important;
-    }
-
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"]:first-child p,
-    [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"]:first-child p {
-        margin: 0 !important;
-        line-height: 1.4 !important;
-        overflow-wrap: anywhere;
-    }
-    /* Pas d'effet sur les champs du compte ni sur la recherche. */
-}
-
 /* ===== MathiCap : page exercices, disposition harmonisée ===== */
 @media (min-width: 768px) {
     .st-key-mathicap_reglages_exercices { max-width: 880px !important; }
@@ -893,26 +851,67 @@ st.markdown("""
 .st-key-mathicap_reglages_exercices [data-testid="stProgress"] {
     max-width: 740px !important;
 }
-/* Les réponses restent à gauche, à proximité de leur énoncé même sur grand PC. */
+/* Réponses : des colonnes flexibles plutôt que des dimensions d'écrans spécifiques.
+   Deux colonnes utiles : intitulé complet à gauche, saisie à droite. */
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) {
-    max-width: 740px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(112px, min(40%, 220px)) !important;
+    width: 100% !important;
+    max-width: min(100%, 640px) !important;
+    gap: 8px 12px !important;
+    align-items: center !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin-bottom: 12px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"],
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"] {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]) > [data-testid="stColumn"]:first-child p,
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) > [data-testid="stColumn"]:first-child p,
+.st-key-mathicap_zone_exercices_affichage [data-testid="stMarkdownContainer"] p {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.45 !important;
+    height: auto !important;
+    max-height: none !important;
 }
 .st-key-mathicap_zone_exercices_affichage [data-testid="stExpander"] {
-    max-width: 880px !important;
+    max-width: min(100%, 880px) !important;
 }
-/* Pas d'empilement question/réponse sur smartphone ; les champs peuvent s'adapter. */
+/* Champs toujours utilisables, y compris quand le contenu se rétrécit. */
+.st-key-mathicap_zone_exercices_affichage [data-testid="stNumberInput"] input,
+.st-key-mathicap_zone_exercices_affichage [data-testid="stTextInput"] input,
+.st-key-mathicap_zone_exercices_affichage [data-testid="stSelectbox"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+/* Lorsque la place manque, ne pas réduire artificiellement le nombre saisi. */
 @media (max-width: 620px) {
-    .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
-    .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) {
-        width: 100% !important;
-        max-width: 100% !important;
+    .st-key-mathicap_zone_exercices_affichage [data-testid="stNumberInput"] button {
+        display: none !important;
     }
     .st-key-mathicap_zone_exercices_affichage [data-testid="stNumberInput"] input,
     .st-key-mathicap_zone_exercices_affichage [data-testid="stTextInput"] input {
-        min-width: 0 !important;
+        padding-inline: 8px !important;
     }
 }
+/* Très petits téléphones ou zoom important : lisibilité avant alignement. */
+@media (max-width: 350px) {
+    .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
+    .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]) {
+        grid-template-columns: minmax(0, 1fr) !important;
+        row-gap: 4px !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -4118,8 +4117,8 @@ def _mathicap_afficher_serie_et_reponses():
 
     
                 if exercice.get("reponse_attendue") is not None:  
-                    col_texte, col_saisie, _ = st.columns(
-                        [2.2, 2.0, 2.8],
+                    col_texte, col_saisie = st.columns(
+                        [1.4, 1],
                         gap="small",
                         vertical_alignment="center",
                         wrap=False
@@ -4185,7 +4184,7 @@ def _mathicap_afficher_serie_et_reponses():
 
                     if division_euclidienne:
                         colonnes_division = st.columns(
-                            [1.0, 1.0, 1.7],
+                            [1.0, 1.0],
                             gap="small",
                             wrap=False
                         )
@@ -4202,8 +4201,8 @@ def _mathicap_afficher_serie_et_reponses():
                     
                         if champ["type"] == "nombre":
                             if est_distributivite:
-                                col_calcul, col_reponse, _ = st.columns(
-                                    [2.4, 2.1, 2.5],
+                                col_calcul, col_reponse = st.columns(
+                                    [1.4, 1],
                                     gap="small",
                                     vertical_alignment="center",
                                     wrap=False
@@ -4233,8 +4232,8 @@ def _mathicap_afficher_serie_et_reponses():
                                         args=(numero,)
                                     )
                             else:
-                                col_texte, col_saisie, _ = st.columns(
-                                    [2.4, 2.1, 2.5],
+                                col_texte, col_saisie = st.columns(
+                                    [1.4, 1],
                                     gap="small",
                                     vertical_alignment="center",
                                     wrap=False
@@ -4254,8 +4253,8 @@ def _mathicap_afficher_serie_et_reponses():
                                     )
 
                         elif champ["type"] == "choix":
-                            col_texte, col_saisie, _ = st.columns(
-                                [2.4, 2.1, 2.5],
+                            col_texte, col_saisie = st.columns(
+                                [1.4, 1],
                                 gap="small",
                                 vertical_alignment="center",
                                 wrap=False
