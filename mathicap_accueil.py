@@ -27,6 +27,11 @@ PAGES = (
 LOGO = Path(__file__).with_name("mathicap_logo.png")
 
 
+def _mathicap_demander_fermeture_volet() -> None:
+    """Referme le volet après un choix dans le menu latéral."""
+    st.session_state["_mathicap_fermer_volet_navigation"] = True
+
+
 def _aller_vers(page: str) -> None:
     """Callback exécuté avant le prochain rendu des widgets Streamlit."""
     st.session_state["mathicap_page"] = page
@@ -272,6 +277,14 @@ def _styles() -> None:
         }
 
 
+        /* Largeur confortable sur les grands écrans, sans toucher à la connexion */
+        @media (min-width: 1280px) {
+            [data-testid="stMainBlockContainer"] {
+                max-width: 1320px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+        }
         /* ===== Tableau de bord MathiCap : couleurs et animations douces ===== */
         .mathicap-hero {
             position: relative;
@@ -296,6 +309,24 @@ def _styles() -> None:
             pointer-events: none;
         }
         .mathicap-hero h1 { max-width: 85%; font-weight: 800; }
+        .mathicap-hero { max-width: 1280px; width: 100%; margin-inline: auto; }
+        .mathicap-hero .mathicap-hero-motifs {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .mathicap-hero .mathicap-formule {
+            font-size: clamp(1.2rem, 2.5vw, 2.25rem);
+            letter-spacing: .02em;
+        }
+        .mathicap-hero .mathicap-symboles {
+            font-size: clamp(1.3rem, 2.7vw, 2.5rem);
+            letter-spacing: .15em;
+        }
+        .mathicap-dashboard { width: 100%; }
         .mathicap-hero p { max-width: 70ch; }
         .mathicap-hero .mathicap-hero-motifs {
             position: absolute;
@@ -396,7 +427,14 @@ def _styles() -> None:
         @keyframes mathicap-flotte { 0%,100% {transform: translateY(0) rotate(-9deg)} 50% {transform: translateY(7px) rotate(-5deg)} }
         @media (max-width: 640px) {
             .mathicap-hero h1 { max-width: 100%; padding-right: 20px; }
-            .mathicap-hero .mathicap-hero-motifs { right: 9px; top: 7px; font-size: 1.05rem; letter-spacing: .14rem; opacity: .42; }
+            .mathicap-hero .mathicap-hero-motifs {
+                right: 10px; top: 9px; opacity: .3;
+                transform: none; gap: 2px;
+            }
+            .mathicap-hero .mathicap-formule { font-size: .9rem; }
+            .mathicap-hero .mathicap-symboles { font-size: 1rem; }
+            .mathicap-hero h1, .mathicap-hero p { position: relative; z-index: 1; }
+            .mathicap-hero h1 { padding-top: 22px; }
             .mathicap-hero { padding: 17px !important; }
             .mathicap-stat-carte { padding: 13px 10px; }
             .mathicap-stat-intitule { font-size: .78rem; }
@@ -430,7 +468,7 @@ def _accueil() -> None:
         f"""
         <section class="mathicap-hero" aria-label="Bienvenue sur MathiCap">
           <span class="mathicap-mini-label">✦ Ton espace de maths</span>
-          <div class="mathicap-hero-motifs" aria-hidden="true">π × +</div>
+          <div class="mathicap-hero-motifs" aria-hidden="true"><span class="mathicap-formule">3 × (4 + 2) = 18</span><span class="mathicap-symboles">π &nbsp; x² &nbsp; + &nbsp; ÷</span></div>
           <h1>{salutation}</h1>
           <p>Explore, essaie, progresse ! Chaque petit pas compte.</p>
           <span class="mathicap-note">Cours · Défis · Exercices · Révisions</span>
@@ -578,11 +616,45 @@ def afficher_interface_mathicap() -> str:
         else:
             st.title("MathiCap Collège")
         st.divider()
-        page = st.radio("Navigation", PAGES, key="mathicap_page")
+        page = st.radio(
+            "Navigation", PAGES, key="mathicap_page",
+            on_change=_mathicap_demander_fermeture_volet,
+        )
         st.divider()
         st.caption("MathiCap Collège · Programme en développement")
 
-    
+    # Après le choix d'une rubrique, cliquer sur le bouton natif de
+    # fermeture de Streamlit. Ne pas masquer le volet par CSS : l'élève
+    # doit pouvoir le rouvrir avec la flèche habituelle.
+    if st.session_state.pop("_mathicap_fermer_volet_navigation", False):
+        st.html(
+            """<script>
+            (() => {
+                let attempts = 0;
+                const collapse = () => {
+                    const sidebar = document.querySelector('[data-testid="stSidebar"]');
+                    if (!sidebar) {
+                        if (attempts++ < 12) setTimeout(collapse, 80);
+                        return;
+                    }
+                    // Ne jamais rebasculer un volet déjà fermé.
+                    if (sidebar.getAttribute('data-collapsed') === 'true' ||
+                        sidebar.getAttribute('aria-expanded') === 'false') return;
+                    const button = sidebar.querySelector(
+                        '[data-testid="stSidebarCollapseButton"] button'
+                    );
+                    if (button) {
+                        button.click();
+                    } else if (attempts++ < 12) {
+                        setTimeout(collapse, 80);
+                    }
+                };
+                requestAnimationFrame(collapse);
+            })();
+            </script>""",
+            unsafe_allow_javascript=True,
+        )
+
     ancienne_page = st.session_state.get("_mathicap_page_precedente")
 
     if ancienne_page != page:
