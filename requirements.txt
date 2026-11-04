@@ -1,5 +1,6 @@
-streamlit
+streamlit==1.66.0
 supabase
-streamlit-local-storage
 google-genai
 groq
+pillow
+
