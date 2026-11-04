@@ -2816,6 +2816,38 @@ if st.session_state.pop("_mathicap_ouvrir_serie", False):
     st.session_state["mathicap_page"] = "Exercices"
     st.session_state["afficher_series"] = False
 
+# Tableau de bord : lecture du compte connecté, jamais d'un autre élève.
+# Seules les séries sauvegardées sont comptées ; aucune note inventée.
+@st.cache_data(ttl=30, show_spinner=False)
+def _mathicap_donnees_tableau_bord(identifiant):
+    reponse = (
+        supabase_privee.table("series_exercices")
+        .select("id, exercices, reponses")
+        .eq("eleve_id", identifiant)
+        .execute()
+    )
+    series = reponse.data or []
+    statistiques = _mathicap_statistiques_progression(series)
+    return {
+        "disponible": True,
+        "nb_series": len(series),
+        "bonnes": statistiques["bonnes_verifiees"],
+        "questions_verifiees": statistiques["questions_verifiees"],
+        "exercices_repondus": statistiques["exercices_avec_reponse"],
+        "exercices_total": statistiques["exercices_total"],
+    }
+
+if est_connecte and st.session_state.get("mathicap_page", "Accueil") == "Accueil":
+    try:
+        st.session_state["_mathicap_dashboard_donnees"] = (
+            _mathicap_donnees_tableau_bord(st.session_state["eleve_id"])
+        )
+    except Exception:
+        # Ne pas bloquer le reste de MathiCap si les statistiques sont indisponibles.
+        st.session_state["_mathicap_dashboard_donnees"] = {"disponible": False}
+else:
+    st.session_state.pop("_mathicap_dashboard_donnees", None)
+
 page_mathicap = afficher_interface_mathicap()
 
 if page_mathicap == "Exercices":
