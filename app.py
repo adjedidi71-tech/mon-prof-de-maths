@@ -22,6 +22,15 @@ from auth_persistante import (
 )
 
 
+# Configuration avant l'affichage du composant navigateur (Streamlit v2).
+st.set_page_config(
+    page_title="MathiCap Collège",
+    page_icon="📐",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+
 def _mathicap_correction_division_euclidienne(dividende, diviseur, quotient, reste):
     """Présente le quotient, le reste et l'égalité euclidienne pour un collégien."""
     produit = diviseur * quotient
@@ -252,9 +261,12 @@ def _mathicap_formulaire_changement_mdp(email_compte, identifiant):
                         "ou réessaie plus tard."
                     )
 
-if not st.session_state.get("eleve_id"):
-    jeton = lire_jeton_navigateur()
+# Le pont navigateur doit être monté une seule fois, à chaque exécution,
+# y compris lorsque l'élève est connecté (sauvegarde/suppression du jeton).
+jeton_navigateur = lire_jeton_navigateur()
 
+if not st.session_state.get("eleve_id"):
+    jeton = jeton_navigateur
     if isinstance(jeton, str) and jeton:
         try:
             eleve_id = verifier_session(supabase_privee, jeton)
@@ -281,12 +293,6 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("jeton_persistant", None)
         st.session_state.pop("session_eleve", None)
         
-st.set_page_config(
-    page_title="MathiCap Collège",
-    page_icon="📐",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 from pathlib import Path
 # EN-TÊTE MATHICAP + COMPTE ÉLÈVE
 # Remplacer l'ancien affichage du grand logo ET tout l'ancien bloc
@@ -1729,6 +1735,10 @@ with col_profil:
                     except Exception:
                         pass
 
+                # Le jeton doit aussi être retiré du navigateur ; sinon
+                # le compte risquerait d'être restauré à la prochaine visite.
+                effacer_jeton_navigateur()
+
                 try:
                     supabase.auth.sign_out()
                 except Exception:
@@ -2380,9 +2390,10 @@ if not est_connecte:
                             supabase_privee, resultat.user.id
                         )
                         st.session_state["jeton_persistant"] = jeton_persistant
+                        # L'écriture locale est appliquée au rerun suivant par
+                        # le pont natif Streamlit. Aucun composant externe à charger.
                         enregistrer_jeton_navigateur(jeton_persistant)
                         st.session_state["vider_champs_connexion"] = True
-                        time.sleep(1.5)
                         st.rerun()  
                     else:
                         st.error("Connexion impossible.")
