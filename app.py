@@ -126,7 +126,8 @@ def _mathicap_formulaire_recuperation():
         else:
             st.info(
                 "Si cette adresse possède un compte, un code a été envoyé à "
-                f"{adresse_confirmee}. Vérifie aussi les indésirables."
+                f"{adresse_confirmee}. Vérifie aussi les indésirables.",
+                width=500,
             )
             with st.form("mathicap_validation_recuperation"):
                 code = st.text_input(
@@ -204,12 +205,13 @@ def _mathicap_formulaire_changement_mdp(email_compte, identifiant):
         st.session_state["mathicap_mdp_profil_ouvert"] = False
 
     if st.session_state.pop("mathicap_mdp_profil_succes", False):
-        st.success("Mot de passe modifié. Utilise-le lors de ta prochaine connexion.")
+        st.success("Mot de passe modifié. Utilise-le lors de ta prochaine connexion.", width=500)
 
     with st.expander(
         "Changer mon mot de passe",
         expanded=False,
         key="mathicap_mdp_profil_ouvert",
+        width=500,
         on_change="rerun",
     ):
         st.caption("Pour protéger ton compte, confirme ton mot de passe actuel.")
@@ -1539,7 +1541,6 @@ with col_logo:
         "MathiCap Collège — Retour à l'accueil",
         key="mathicap_logo_clic",
         on_click=_mathicap_retour_accueil_logo,
-        help="Revenir à l'accueil MathiCap",
     )
 
 with col_recherche:
@@ -1718,7 +1719,6 @@ with col_profil:
                 "Ouvrir mon profil",
                 key="mathicap_avatar_clic",
                 disabled=not est_connecte,
-                help="Accéder à mon profil",
             ):
                 st.query_params["vue"] = "profil"
                 st.rerun()
@@ -1904,7 +1904,7 @@ if recherche_active:
                         on_click=_mathicap_ouvrir_chapitre_recherche, args=(nom,),
                     )
         else:
-            st.info("Aucun chapitre ou notion ne correspond à ce mot-clé.")
+            st.info("Aucun chapitre ou notion ne correspond à ce mot-clé.", width=500)
         st.button(
             "Fermer les résultats",
             key="mathicap_fermer_recherche",
@@ -1980,7 +1980,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
     # Personnalisation de l'avatar, propre au compte de chaque élève.
     st.markdown("### Mon avatar")
     if st.session_state.pop("mathicap_avatar_sauve", False):
-        st.success("Avatar enregistré. Il sera retrouvé sur tes appareils.")
+        st.success("Avatar enregistré. Il sera retrouvé sur tes appareils.", width=500)
 
     avatar_type = st.session_state.get("mathicap_avatar_type", "defaut")
     avatar_choix = st.session_state.get("mathicap_avatar_choix", "")
@@ -2086,20 +2086,21 @@ if est_connecte and st.query_params.get("vue") == "profil":
             except Exception:
                 st.error("Impossible de rétablir l'avatar par défaut.")
     else:
-        st.info("Connecte-toi à ton profil pour personnaliser l'avatar.")
+        st.info("Connecte-toi à ton profil pour personnaliser l'avatar.", width=500)
 
     # Confirmation après enregistrement
     if st.session_state.pop("mathicap_pseudo_sauve", False):
-        st.success("Pseudo enregistré avec succès.")
+        st.success("Pseudo enregistré avec succès.", width=500)
 
     # Modifier le pseudo sans toucher aux autres informations
     if profil_charge:
-        with st.expander("Modifier mon pseudo"):
+        with st.expander("Modifier mon pseudo", width=500):
             with st.form("mathicap_formulaire_pseudo"):
                 nouveau_pseudo = st.text_input(
                     "Nouveau pseudo",
                     value=pseudo_eleve,
                     max_chars=30,
+                    width=420,
                     help="Facultatif. Laisse vide pour retirer ton pseudo."
                 )
 
@@ -2109,7 +2110,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
                 nouveau_pseudo = nouveau_pseudo.strip()
 
                 if nouveau_pseudo == pseudo_eleve.strip():
-                    st.info("Aucune modification à enregistrer.")
+                    st.info("Aucune modification à enregistrer.", width=500)
 
                 else:
                     try:
@@ -2166,7 +2167,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
             st.metric("Séries avec réponses", series_avec_reponses)
 
     except Exception:
-        st.info("Impossible de charger les statistiques pour le moment.")
+        st.info("Impossible de charger les statistiques pour le moment.", width=500)
 
     st.caption(
         "Ces chiffres représentent les séries encore sauvegardées sur ton compte."
@@ -2174,7 +2175,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     st.markdown("### Ma progression")
     if series_profil is None:
-        st.info("La progression est momentanément indisponible.")
+        st.info("La progression est momentanément indisponible.", width=500)
     else:
         statistiques = _mathicap_statistiques_progression(series_profil)
         col_exercices, col_saisies, _ = st.columns([2, 2, 1], gap="small")
@@ -2214,14 +2215,15 @@ if est_connecte and st.query_params.get("vue") == "profil":
                 "Aucune note n'est estimée."
             )
 
-        with st.expander("Progression par chapitre et par niveau"):
+        with st.expander("Progression par chapitre et par niveau", width=500):
             par_chapitre = statistiques["par_chapitre"]
             par_niveau = statistiques["par_niveau"]
             if not par_chapitre and not par_niveau:
                 st.info(
                     "Les anciennes séries ne contiennent pas de chapitre "
                     "ni de niveau enregistrés. Ce suivi apparaîtra "
-                    "avec les nouvelles séries."
+                    "avec les nouvelles séries.",
+                    width=500,
                 )
             else:
                 if par_chapitre:
@@ -2325,7 +2327,8 @@ if not est_connecte:
             if _mathicap_recup_succes:
                 st.success(
                     "Mot de passe réinitialisé. Tu peux te connecter avec "
-                    "ton nouveau mot de passe."
+                    "ton nouveau mot de passe.",
+                    width=500,
                 )
 
             if st.button("Mot de passe oublié ?", key="mathicap_mdp_oublie"):
@@ -2366,7 +2369,8 @@ if not est_connecte:
                             })
                             st.success(
                                 "Inscription demandée. Consulte ton e-mail "
-                                "pour confirmer ton compte."
+                                "pour confirmer ton compte.",
+                                width=500,
                             )
                         except Exception:
                             st.error(
@@ -2409,10 +2413,10 @@ if vue_icone == "recherche":
 if vue_icone == "notifications":
     st.subheader("Notifications")
     if est_connecte:
-        st.info("Aucune notification pour le moment.")
+        st.info("Aucune notification pour le moment.", width=500)
         st.caption("Les notifications seront disponibles lorsqu'un service de notification sera activé dans MathiCap.")
     else:
-        st.info("Connecte-toi pour accéder à tes notifications.")
+        st.info("Connecte-toi pour accéder à tes notifications.", width=500)
     st.button(
         "← Accueil",
         key="mathicap_notifications_retour",
@@ -2652,9 +2656,9 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
         )
 
         if not series:
-            st.info("Aucune série enregistrée pour ce compte.")
+            st.info("Aucune série enregistrée pour ce compte.", width=500)
         else:
-            st.success(f"{len(series)} série(s) retrouvée(s).")
+            st.success(f"{len(series)} série(s) retrouvée(s).", width=500)
             ids_series = [s["id"] for s in series]
 
             cle_tout = f"tout_selectionner_{st.session_state['eleve_id']}"
@@ -4306,7 +4310,8 @@ if st.button("Générer mes exercices"):
                     except Exception:
                         st.info(
                             "Les IA sont temporairement indisponibles. "
-                            "Des exercices alternatifs ont été générés."
+                            "Des exercices alternatifs ont été générés.",
+                            width=500,
                         )
                         exercices = [
                             generer_exercice(chapitre, partie, difficulte, type_exercice)
@@ -4359,14 +4364,14 @@ if st.button("Générer mes exercices"):
                     st.session_state.code_actuel = code
                     if st.session_state.get("serie_id_actuel") is not None:
                         st.query_params["serie_id"] = str(st.session_state["serie_id_actuel"])
-                    st.success("Exercices générés et sauvegardés !")
+                    st.success("Exercices générés et sauvegardés !", width=500)
                 else:
                     st.error("Sauvegarde impossible.")
             except Exception:
                 st.error("Sauvegarde impossible.")
         else:
             st.session_state.code_actuel = None
-            st.info("Connecte-toi pour sauvegarder tes exercices.")
+            st.info("Connecte-toi pour sauvegarder tes exercices.", width=500)
 # Les saisies ne relancent plus toute l'application (en-tête, menus et statistiques).
 # Le fragment garde le défilement plus stable lors de la sauvegarde automatique.
 @st.fragment
@@ -4444,7 +4449,7 @@ def _mathicap_afficher_serie_et_reponses():
                                 except Exception:
                                     st.error("Le résultat n'a pas pu être enregistré.")
                             if correcte:
-                                st.success("Bonne réponse !")
+                                st.success("Bonne réponse !", width=500)
                             else:
                                 st.error("Réponse incorrecte. Essaie encore.")
                     elif isinstance(st.session_state.get(cle_bilan_simple), dict):
@@ -4712,7 +4717,7 @@ def _mathicap_afficher_serie_et_reponses():
                         if code and st.session_state.get("eleve_id"):
                             try:
                                 if sauvegarder_reponse(code, numero, st.session_state.get(cle_texte, "")):
-                                    st.success("Réponse enregistrée.")
+                                    st.success("Réponse enregistrée.", width=500)
                                 else:
                                     st.error("Impossible d'enregistrer cette réponse.")
                             except Exception:
