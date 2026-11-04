@@ -872,25 +872,85 @@ st.markdown("""
     }
 }
 
-/* Recherche MathiCap : la loupe ouvre une fenêtre native Streamlit.
-   Clic hors de la fenêtre = fermeture automatique, sans script externe. */
+/* Recherche MathiCap intégrée à la page (aucune fenêtre flottante).
+   Au repos : loupe seule. Champ dévoilé par clic ; disparition sur clic extérieur.
+   Sur smartphone : saisie sous la loupe et dans le flux normal de la page. */
 .st-key-mathicap_barre_recherche {
     --mc-recherche-h: 40px;
     --mc-recherche-bouton-w: 40px;
     width: min(320px, 100%) !important;
     max-width: 100% !important;
-    min-height: var(--mc-recherche-h) !important;
+    min-width: 0 !important;
     margin: 9px 0 0 !important;
     padding: 0 !important;
 }
-/* Déclencheur unique : la loupe reste à droite, sans cadre. */
-.st-key-mathicap_recherche_popover {
+.st-key-mathicap_barre_recherche [data-testid="stForm"] {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"]
+> [data-testid="stColumn"]:first-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+}
+/* La saisie existe dans Streamlit mais ne prend aucune place tant que
+   l'utilisateur n'a pas cliqué sur la loupe. */
+.st-key-mathicap_barre_recherche:not(.mc-recherche-ouverte) [data-testid="stHorizontalBlock"]
+> [data-testid="stColumn"]:first-child {
+    display: none !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"]
+> [data-testid="stColumn"]:last-child {
+    flex: 0 0 var(--mc-recherche-bouton-w) !important;
     width: var(--mc-recherche-bouton-w) !important;
     min-width: var(--mc-recherche-bouton-w) !important;
     max-width: var(--mc-recherche-bouton-w) !important;
-    margin-left: auto !important;
 }
-.st-key-mathicap_recherche_popover button {
+.st-key-mathicap_barre_recherche [data-baseweb="input"] {
+    height: var(--mc-recherche-h) !important;
+    min-height: var(--mc-recherche-h) !important;
+    border: 0 !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.st-key-mathicap_barre_recherche [data-baseweb="input"]:focus-within {
+    border-bottom: 2px solid #2563eb !important;
+}
+.st-key-mathicap_barre_recherche input {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: var(--mc-recherche-h) !important;
+    padding: 0 6px !important;
+    font-size: 14px !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+/* La loupe est le véritable bouton de validation Streamlit :
+   le premier clic l'ouvre sans envoyer de formulaire ;
+   une fois ouvert, elle permet aussi de lancer la recherche. */
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -900,108 +960,30 @@ st.markdown("""
     height: var(--mc-recherche-h) !important;
     min-height: var(--mc-recherche-h) !important;
     max-height: var(--mc-recherche-h) !important;
-    padding: 0 !important;
     margin: 0 !important;
-    border: 0 !important;
+    padding: 0 !important;
+    border: none !important;
     border-radius: 50% !important;
     background: transparent !important;
     box-shadow: none !important;
+    color: #12315f !important;
     text-decoration: none !important;
     cursor: pointer !important;
 }
-.st-key-mathicap_recherche_popover button p {
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button:hover {
+    background: rgba(31,122,224,.08) !important;
+    text-decoration: none !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 2px !important;
+}
+.st-key-mathicap_barre_recherche [data-testid="stFormSubmitButton"] button p {
     font-size: 23px !important;
     line-height: 1 !important;
     text-decoration: none !important;
     margin: 0 !important;
 }
-.st-key-mathicap_recherche_popover button:hover {
-    background: rgba(31,122,224,.08) !important;
-    text-decoration: none !important;
-}
-.st-key-mathicap_recherche_popover button:focus-visible {
-    outline: 2px solid #2563eb !important;
-    outline-offset: 2px !important;
-}
-/* Masque uniquement la flèche du popover de recherche : une seule loupe
-   apparaît, tandis que les autres popovers conservent leur flèche. */
-.st-key-mathicap_recherche_popover [data-testid="stPopover"] > button svg,
-.st-key-mathicap_recherche_popover [data-testid="stPopoverButton"] > button svg {
-    display: none !important;
-}
-/* Champ affiché dans le popover, sous la loupe, sans cadre de saisie. */
-.st-key-mathicap_recherche_saisie {
-    width: min(320px, calc(100vw - 60px)) !important;
-    max-width: 100% !important;
-}
-.st-key-mathicap_recherche_saisie [data-testid="stForm"] {
-    border: 0 !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-.st-key-mathicap_recherche_saisie [data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 0 !important;
-    min-width: 0 !important;
-}
-.st-key-mathicap_recherche_saisie [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    width: auto !important;
-}
-.st-key-mathicap_recherche_saisie [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
-    flex: 0 0 40px !important;
-    width: 40px !important;
-    min-width: 40px !important;
-}
-.st-key-mathicap_recherche_saisie [data-baseweb="input"] {
-    height: 40px !important;
-    min-height: 40px !important;
-    border: 0 !important;
-    border-bottom: 1px solid #94a3b8 !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-.st-key-mathicap_recherche_saisie [data-baseweb="input"]:focus-within {
-    border-bottom: 2px solid #2563eb !important;
-}
-.st-key-mathicap_recherche_saisie input {
-    width: 100% !important;
-    height: 100% !important;
-    padding: 0 6px !important;
-    font-size: 14px !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
-.st-key-mathicap_recherche_saisie [data-testid="stFormSubmitButton"] button {
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    text-decoration: none !important;
-}
-.st-key-mathicap_recherche_saisie [data-testid="stFormSubmitButton"] button p {
-    font-size: 21px !important;
-    text-decoration: none !important;
-}
-/* Smartphone : la loupe est alignée à gauche sous l'en-tête.
-   Le popover natif positionne le champ sous la loupe sans chevauchement. */
 @media (max-width: 620px) {
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         grid-template-columns: minmax(0, 1fr) auto !important;
@@ -1029,14 +1011,28 @@ st.markdown("""
     }
     .st-key-mathicap_barre_recherche {
         --mc-recherche-h: 36px;
+        --mc-recherche-bouton-w: 36px;
         width: min(230px, 100%) !important;
         max-width: 100% !important;
         margin: 0 !important;
     }
-    .st-key-mathicap_recherche_popover {
-        margin-left: 0 !important;
+    /* La loupe reste à gauche, et le champ ouvert descend en dessous. */
+    .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] {
+        flex-direction: column-reverse !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
     }
-    .st-key-mathicap_recherche_saisie input {
+    .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"]
+    > [data-testid="stColumn"]:last-child {
+        flex: 0 0 36px !important;
+    }
+    .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"]
+    > [data-testid="stColumn"]:first-child {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .st-key-mathicap_barre_recherche input {
         font-size: 13px !important;
     }
 }
@@ -1473,6 +1469,53 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Interactions légères et isolées à la seule barre de recherche.
+# Pas d'iframe/popover, pas de nouveau composant ni de modification Supabase.
+# st.html autorise ce script statique sous Streamlit 1.66.0.
+st.html(
+    """<script>
+    (() => {
+      const rootSelector = '.st-key-mathicap_barre_recherche';
+      const buttonSelector = '[data-testid="stFormSubmitButton"] button';
+      const listenerKey = '__mathicap_recherche_inline_20261104';
+      const getRoot = () => document.querySelector(rootSelector);
+      // Après une recherche ou un changement de page, l'en-tête est replié.
+      getRoot()?.classList.remove('mc-recherche-ouverte');
+      if (window[listenerKey]) return;
+      window[listenerKey] = true;
+
+      document.addEventListener('click', (event) => {
+        const root = getRoot();
+        if (!root || !(event.target instanceof Element)) return;
+        const button = event.target.closest(buttonSelector);
+        if (button && root.contains(button)) {
+          if (!root.classList.contains('mc-recherche-ouverte')) {
+            // Ce premier clic sert à ouvrir le champ, pas à envoyer le formulaire.
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            root.classList.add('mc-recherche-ouverte');
+            requestAnimationFrame(() => root.querySelector('input')?.focus());
+          }
+          return;
+        }
+        if (!root.contains(event.target)) {
+          root.classList.remove('mc-recherche-ouverte');
+        }
+      }, true);
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const root = getRoot();
+        if (!root?.classList.contains('mc-recherche-ouverte')) return;
+        root.classList.remove('mc-recherche-ouverte');
+        if (root.contains(document.activeElement)) document.activeElement.blur();
+      }, true);
+    })();
+    </script>""",
+    unsafe_allow_javascript=True,
+)
+
 def _image_en_data_uri(nom_fichier: str) -> str:
     """Charge une image PNG du dépôt, si elle existe."""
     import base64
@@ -1868,42 +1911,35 @@ with col_logo:
     )
 
 with col_recherche:
-    # Le popover natif est une vraie fenêtre contextuelle :
-    # cliquer ailleurs la ferme, et la recherche reste accessible au clavier.
-    # Sa fermeture ne dépend pas d'une variable booléenne persistante.
+    # Recherche dans le flux de la page : loupe seule au repos.
+    # Au premier clic : le champ devient visible, à gauche sur PC
+    # et en dessous sur smartphone. Un clic extérieur le replie.
+    # Une fois ouvert, Entrée ou la loupe valident la recherche.
     with st.container(key="mathicap_barre_recherche"):
-        with st.popover(
-            "🔍",
-            key="mathicap_recherche_popover",
-            on_change="rerun",
-            width="content",
-            help="Ouvrir ou fermer la recherche",
+        with st.form(
+            "mathicap_recherche_formulaire",
+            border=False,
+            clear_on_submit=False,
+            enter_to_submit=True,
         ):
-            with st.container(key="mathicap_recherche_saisie"):
-                with st.form(
-                    "mathicap_recherche_formulaire",
-                    border=False,
-                    clear_on_submit=False,
-                    enter_to_submit=True,
-                ):
-                    col_saisie, col_loupe = st.columns(
-                        [8, 1], gap=None, vertical_alignment="center", wrap=False
-                    )
-                    with col_saisie:
-                        st.text_input(
-                            "Mot-clé à rechercher",
-                            placeholder="Chercher un chapitre…",
-                            label_visibility="collapsed",
-                            key="mathicap_mot_cle_entete",
-                        )
-                    with col_loupe:
-                        st.form_submit_button(
-                            "🔍",
-                            key="mathicap_recherche_valider",
-                            on_click=_mathicap_valider_recherche_entete,
-                            help="Lancer la recherche (ou appuyer sur Entrée)",
-                            use_container_width=True,
-                        )
+            col_saisie, col_loupe = st.columns(
+                [8, 1], gap=None, vertical_alignment="center", wrap=False
+            )
+            with col_saisie:
+                st.text_input(
+                    "Mot-clé à rechercher",
+                    placeholder="Chercher un chapitre…",
+                    label_visibility="collapsed",
+                    key="mathicap_mot_cle_entete",
+                )
+            with col_loupe:
+                st.form_submit_button(
+                    "🔍",
+                    key="mathicap_recherche_valider",
+                    on_click=_mathicap_valider_recherche_entete,
+                    help="Ouvrir la recherche / lancer la recherche",
+                    use_container_width=True,
+                )
 
 with col_profil:
     with st.container(key="mathicap_zone_profil"):
