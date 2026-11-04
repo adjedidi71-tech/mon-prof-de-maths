@@ -270,84 +270,256 @@ def _styles() -> None:
                 white-space: nowrap;
             }
         }
+
+
+        /* ===== Tableau de bord MathiCap : couleurs et animations douces ===== */
+        .mathicap-hero {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            background: linear-gradient(118deg, #dceeff 0%, #eef7ff 48%, #fff0d5 100%) !important;
+            border: 1px solid #bddcf6 !important;
+            border-radius: 24px !important;
+            padding: clamp(20px, 3.3vw, 36px) !important;
+            box-shadow: 0 8px 24px rgba(13, 66, 124, .06);
+        }
+        .mathicap-hero::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            width: 300px;
+            height: 300px;
+            top: -175px;
+            right: -55px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,188,65,.27), rgba(255,188,65,0) 72%);
+            pointer-events: none;
+        }
+        .mathicap-hero h1 { max-width: 85%; font-weight: 800; }
+        .mathicap-hero p { max-width: 70ch; }
+        .mathicap-hero .mathicap-hero-motifs {
+            position: absolute;
+            top: 20px;
+            right: 22px;
+            color: #1f64ac;
+            opacity: .57;
+            font-weight: 900;
+            letter-spacing: .35rem;
+            font-size: clamp(1.15rem, 2.8vw, 2.3rem);
+            transform: rotate(-9deg);
+            pointer-events: none;
+            animation: mathicap-flotte 6s ease-in-out infinite;
+        }
+        .mathicap-mini-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            color: #16457d;
+            background: rgba(255,255,255,.72);
+            font-weight: 700;
+            font-size: .82rem;
+            margin-bottom: 10px;
+        }
+        .mathicap-dashboard { margin: 12px 0 22px; max-width: 1000px; }
+        .mathicap-dashboard-grille {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .mathicap-stat-carte {
+            border: 1px solid #d4e3f4;
+            border-radius: 18px;
+            padding: 16px 18px;
+            background: #f0f7ff;
+            color: #143e70;
+        }
+        .mathicap-stat-carte:nth-child(2) {
+            background: #f1fbf4;
+            border-color: #cce9d6;
+            color: #145d40;
+        }
+        .mathicap-stat-nombre {
+            display: block;
+            font-size: clamp(1.6rem, 3vw, 2rem);
+            font-weight: 850;
+            line-height: 1.25;
+        }
+        .mathicap-stat-intitule { display: block; font-weight: 650; font-size: .9rem; }
+        .mathicap-stat-info { display: block; font-size: .75rem; color: #45647c; margin-top: 5px; }
+        .mathicap-progression {
+            border: 1px solid #e5dcf9;
+            border-radius: 17px;
+            padding: 14px 18px;
+            background: #faf7ff;
+            color: #4c3483;
+        }
+        .mathicap-progression-entete { display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: .91rem; font-weight: 750; }
+        .mathicap-progression-piste {
+            width: 100%;
+            height: 12px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 10px 0 8px;
+            background: #e9e1f5;
+        }
+        .mathicap-progression-remplissage {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #7850d3 0%, #2b8ee8 100%);
+            transition: width .7s ease-out;
+        }
+        .mathicap-progression-note { font-size: .79rem; color: #6c5a89; }
+        .st-key-mathicap_cartes [data-testid="stColumn"] button {
+            position: relative;
+            transition: transform .18s ease, background .18s ease, box-shadow .18s ease !important;
+            border-radius: 18px !important;
+            font-weight: 600 !important;
+            min-height: 165px !important;
+        }
+        .st-key-mathicap_cartes [data-testid="stColumn"]:nth-child(1) button { background: #eaf4ff !important; border-color: #a9d0fb !important; }
+        .st-key-mathicap_cartes [data-testid="stColumn"]:nth-child(2) button { background: #ebfaef !important; border-color: #b7e5c7 !important; }
+        .st-key-mathicap_cartes [data-testid="stColumn"]:nth-child(3) button { background: #fff4e3 !important; border-color: #ffd69c !important; }
+        .st-key-mathicap_cartes [data-testid="stColumn"]:nth-child(4) button { background: #f1eafa !important; border-color: #d5c0f8 !important; }
+        .st-key-mathicap_cartes [data-testid="stColumn"]:nth-child(5) button { background: #e7faf9 !important; border-color: #b5e7e4 !important; }
+        .st-key-mathicap_cartes [data-testid="stColumn"]:nth-child(6) button { background: #fff0f1 !important; border-color: #f5cad0 !important; }
+        .st-key-mathicap_cartes [data-testid="stColumn"] button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(28,59,106,.12) !important;
+        }
+        .st-key-mathicap_cartes [data-testid="stColumn"] button:focus-visible {
+            outline: 3px solid #1a66c9 !important;
+            outline-offset: 2px;
+        }
+        @keyframes mathicap-flotte { 0%,100% {transform: translateY(0) rotate(-9deg)} 50% {transform: translateY(7px) rotate(-5deg)} }
+        @media (max-width: 640px) {
+            .mathicap-hero h1 { max-width: 100%; padding-right: 20px; }
+            .mathicap-hero .mathicap-hero-motifs { right: 9px; top: 7px; font-size: 1.05rem; letter-spacing: .14rem; opacity: .42; }
+            .mathicap-hero { padding: 17px !important; }
+            .mathicap-stat-carte { padding: 13px 10px; }
+            .mathicap-stat-intitule { font-size: .78rem; }
+            .mathicap-stat-info { font-size: .7rem; }
+            .mathicap-progression { padding: 12px; }
+            .st-key-mathicap_cartes [data-testid="stColumn"] button { min-height: 154px !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .mathicap-hero .mathicap-hero-motifs,
+            .st-key-mathicap_cartes [data-testid="stColumn"] button,
+            .mathicap-progression-remplissage {
+                animation: none !important;
+                transition: none !important;
+                transform: none !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 def _accueil() -> None:
+    """Accueil visuel ; les données de progression proviennent uniquement des séries enregistrées."""
+    from html import escape
+
+    connecte = bool(st.session_state.get("eleve_id"))
+    pseudo = st.session_state.get("mathicap_avatar_pseudo", "")
+    pseudo = pseudo.strip() if isinstance(pseudo, str) else ""
+    salutation = f"Bonjour, {escape(pseudo[:30])} !" if connecte and pseudo else "Bienvenue sur MathiCap !"
     st.markdown(
-        """
-        <div class="mathicap-hero">
-          <h1>Bienvenue sur MathiCap Collège !</h1>
-          <p>Apprends les mathématiques clairement et progresse pas à pas, à ton rythme.</p>
-          <span class="mathicap-note">Cours · QCM · Exercices · Révisions · Évaluations</span>
-        </div>
+        f"""
+        <section class="mathicap-hero" aria-label="Bienvenue sur MathiCap">
+          <span class="mathicap-mini-label">✦ Ton espace de maths</span>
+          <div class="mathicap-hero-motifs" aria-hidden="true">π × +</div>
+          <h1>{salutation}</h1>
+          <p>Explore, essaie, progresse ! Chaque petit pas compte.</p>
+          <span class="mathicap-note">Cours · Défis · Exercices · Révisions</span>
+        </section>
         """,
         unsafe_allow_html=True,
     )
 
-    a, b = st.columns(2)
+    if connecte:
+        donnees = st.session_state.get("_mathicap_dashboard_donnees")
+        if isinstance(donnees, dict) and donnees.get("disponible"):
+            nb_series = max(0, int(donnees.get("nb_series", 0)))
+            bonnes = max(0, int(donnees.get("bonnes", 0)))
+            questions_verifiees = max(0, int(donnees.get("questions_verifiees", 0)))
+            repondus = max(0, int(donnees.get("exercices_repondus", 0)))
+            total = max(0, int(donnees.get("exercices_total", 0)))
+            pourcentage = round(100 * repondus / total) if total else 0
+            st.markdown(
+                f"""
+                <section class="mathicap-dashboard" aria-label="Ton tableau de bord">
+                  <div class="mathicap-dashboard-grille">
+                    <div class="mathicap-stat-carte">
+                      <span class="mathicap-stat-nombre">📚 {nb_series}</span>
+                      <span class="mathicap-stat-intitule">Séries enregistrées</span>
+                      <span class="mathicap-stat-info">Retrouve ton travail quand tu veux</span>
+                    </div>
+                    <div class="mathicap-stat-carte">
+                      <span class="mathicap-stat-nombre">⭐ {bonnes}</span>
+                      <span class="mathicap-stat-intitule">Bonnes réponses vérifiées</span>
+                      <span class="mathicap-stat-info">Sur {questions_verifiees} questions vérifiées</span>
+                    </div>
+                  </div>
+                  <div class="mathicap-progression">
+                    <div class="mathicap-progression-entete"><span>🎯 Exercices avec réponse</span><span>{repondus} / {total}</span></div>
+                    <div class="mathicap-progression-piste" role="progressbar" aria-label="Exercices avec une réponse" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{pourcentage}">
+                      <div class="mathicap-progression-remplissage" style="width:{pourcentage}%"></div>
+                    </div>
+                    <div class="mathicap-progression-note">{pourcentage} % des exercices enregistrés ont au moins une réponse. Ce n'est pas une note de maîtrise.</div>
+                  </div>
+                </section>
+                """, unsafe_allow_html=True,
+            )
+        else:
+            st.caption("Ton tableau de bord sera disponible lorsque tes séries auront été chargées.")
+    else:
+        st.caption("Connecte-toi pour retrouver tes séries et suivre ta progression.")
+
+    a, b = st.columns(2, gap="small")
     with a:
         st.button(
-            "Commencer les exercices →",
+            "✏️ Commencer mes exercices",
             key="mathicap_commencer",
-            type="primary",
-            use_container_width=True,
+            width="stretch",
             on_click=_aller_vers,
             args=("Exercices",),
         )
     with b:
         st.button(
-            "Reprendre ma progression",
+            "▶️ Reprendre mes séries",
             key="mathicap_reprendre",
-            use_container_width=True,
-            disabled=not bool(st.session_state.get("eleve_id")),
+            width="stretch",
+            disabled=not connecte,
             on_click=_aller_vers,
-            args=("Exercices",),
-            help="Ouvre la zone d'exercices et la dernière série récupérable.",
+            args=("Mes séries",),
+            help="Accède aux séries enregistrées sur ton compte.",
         )
 
-    with st.container(border=True):
-        col1, col2 = st.columns([3, 1], vertical_alignment="center")
-        with col1:
-            st.markdown("**🎯 Parcours conseillé — chapitre 1 : Opérations**")
-            st.write(
-                "Commence par le cours, vérifie ta compréhension puis "
-                "entraîne-toi avec les neuf niveaux progressifs."
-            )
-            st.caption(
-                "Parcours initial proposé à tous ; la personnalisation selon "
-                "les résultats sera ajoutée dans une prochaine étape."
-            )
-        with col2:
-            st.button(
-                "Voir le parcours →",
-                key="mathicap_voir_parcours",
-                use_container_width=True,
-                on_click=_aller_vers,
-                args=("Parcours conseillé",),
-            )
+    st.markdown('<div class="mathicap-section-heading">🧭 Mon parcours</div>', unsafe_allow_html=True)
+    with st.container(border=False):
+        st.markdown("**🎯 Parcours conseillé — chapitre 1 : Opérations**")
+        st.write("Découvre la méthode, entraîne-toi, puis vérifie tes acquis à ton rythme.")
+        st.button(
+            "Voir le parcours →", key="mathicap_voir_parcours",
+            on_click=_aller_vers, args=("Parcours conseillé",),
+        )
 
-    st.markdown('<div class="mathicap-section-heading">Je choisis mon activité</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mathicap-section-heading">✨ Je choisis mon activité</div>', unsafe_allow_html=True)
 
     activites = (
-        ("📖", "Cours & points à retenir", "Découvrir les méthodes et les exemples.", "Cours"),
-        ("✅", "QCM rapides", "Vérifier la compréhension du cours.", "QCM"),
-        ("✏️", "Exercices progressifs", "S'entraîner du niveau 1 au niveau 9.", "Exercices"),
-        ("⏱️", "Évaluations", "Se préparer aux contrôles.", "Évaluations"),
-        ("📄", "Fiches de révision", "Retenir l'essentiel du chapitre.", "Fiches de révision"),
-        ("💡", "Mon Prof IA", "Obtenir une explication ou un indice.", "Mon Prof IA"),
+        ("📖", "Cours & points à retenir", "Comprendre avec des exemples.", "Cours"),
+        ("✅", "QCM rapides", "Tester ce que j'ai compris.", "QCM"),
+        ("✏️", "Exercices progressifs", "Du niveau 1 au niveau 9.", "Exercices"),
+        ("⏱️", "Évaluations", "Me préparer aux contrôles.", "Évaluations"),
+        ("📄", "Fiches de révision", "Retrouver l'essentiel.", "Fiches de révision"),
+        ("💡", "Mon Prof IA", "Une explication, un indice.", "Mon Prof IA"),
     )
-    
-    # Six cartes : 3 par ligne sur PC, 2 sur smartphone
-        # Six cartes entièrement cliquables
     with st.container(key="mathicap_cartes"):
         colonnes = st.columns(6, gap="small")
-
-        for colonne, (icone, titre, description, page) in zip(
-            colonnes, activites
-        ):
+        for colonne, (icone, titre, description, page) in zip(colonnes, activites):
             with colonne:
                 st.button(
                     f"{icone}  **{titre}**  \n{description}",
@@ -357,25 +529,12 @@ def _accueil() -> None:
                     on_click=_aller_vers,
                     args=(page,),
                 )
-
-    # Mes progrès : conserver cette partie
-
-    with st.container(border=True):
-        st.markdown("**📊 Mes progrès**")
-        st.caption(
-            "Le suivi par compétence sera affiché ici dès que les résultats "
-            "des QCM et des exercices auront été reliés au tableau de bord."
+    if connecte:
+        st.button(
+            "📚 Voir toutes mes séries sauvegardées →",
+            key="mathicap_mes_series_accueil", on_click=_aller_vers,
+            args=("Mes séries",),
         )
-        if st.session_state.get("eleve_id"):
-            st.button(
-                "Retrouver mes séries sauvegardées →",
-                key="mathicap_mes_series_accueil",
-                on_click=_aller_vers,
-                args=("Mes séries",),
-            )
-        else:
-            st.info("Connecte-toi pour enregistrer et reprendre tes séries d'exercices.")
-
 
 def _page_en_preparation(page: str) -> None:
     st.title(page)
@@ -409,10 +568,7 @@ def afficher_interface_mathicap() -> str:
     """
  
     if "mathicap_page" not in st.session_state:
-        if st.query_params.get("vue") == "series":
-            st.session_state["mathicap_page"] = "Mes séries"
-        else:
-            st.session_state["mathicap_page"] = "Accueil"
+        st.session_state["mathicap_page"] = "Accueil"
     if "mathicap_classe" not in st.session_state:
         st.session_state["mathicap_classe"] = "5e"
 
@@ -423,11 +579,6 @@ def afficher_interface_mathicap() -> str:
             st.title("MathiCap Collège")
         st.divider()
         page = st.radio("Navigation", PAGES, key="mathicap_page")
-        if page == "Mes séries":
-            if st.query_params.get("vue") != "series":
-                st.query_params["vue"] = "series"
-        elif st.query_params.get("vue") == "series":
-            st.query_params["vue"] = "accueil"
         st.divider()
         st.caption("MathiCap Collège · Programme en développement")
 
@@ -543,9 +694,7 @@ def afficher_interface_mathicap() -> str:
         st.stop()
 
     if page == "Mes séries":
-        st.header("Mes séries d'exercices")
-        
-         # Navigation compacte et adaptable au smartphone
+        # Navigation compacte et adaptable au smartphone
         with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
             if st.button(
                 "← Mon profil",
@@ -563,6 +712,7 @@ def afficher_interface_mathicap() -> str:
             )
     
         st.session_state["afficher_series"] = True
+        st.header("Mes séries d'exercices")
         if not st.session_state.get("eleve_id"):
             st.info("Connecte-toi pour accéder aux séries enregistrées.")
             st.stop()
