@@ -5167,3 +5167,4 @@ def _mathicap_afficher_serie_et_reponses():
             
 
 _mathicap_afficher_serie_et_reponses()
+
