@@ -216,7 +216,7 @@ def _mathicap_formulaire_changement_mdp(email_compte, identifiant):
     ):
         st.caption("Pour protéger ton compte, confirme ton mot de passe actuel.")
         with st.container(key="mathicap_mdp_profil_etroit"):
-            with st.form("mathicap_changement_mdp"):
+            with st.form("mathicap_changement_mdp", border=False):
                 actuel = st.text_input(
                     "Mot de passe actuel",
                     type="password",
@@ -1165,6 +1165,226 @@ st.markdown("""
     }
 }
 
+
+/* MathiCap : titres déroulants cliquables, sans encadrement.
+   La balise native details/summary garde le fonctionnement au clavier. */
+[data-testid="stExpander"],
+[data-testid="stExpander"] details {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+[data-testid="stExpander"] summary {
+    padding: 6px 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+}
+[data-testid="stExpander"] summary:hover {
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+}
+[data-testid="stExpander"] summary:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 3px !important;
+}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+    border: 0 !important;
+    padding: 8px 0 12px !important;
+    background: transparent !important;
+}
+/* Navigation : uniquement du texte cliquable. Ne pas toucher aux boutons
+   qui enregistrent, suppriment ou vérifient une réponse. */
+:is(.st-key-mathicap_retour_accueil,
+    .st-key-mathicap_notifications_retour,
+    .st-key-mathicap_profil_mes_series,
+    .st-key-mathicap_exercices_mes_series,
+    .st-key-mathicap_retour_connexion_mdp) button {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 5px 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #0b3d91 !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+:is(.st-key-mathicap_retour_accueil,
+    .st-key-mathicap_notifications_retour,
+    .st-key-mathicap_profil_mes_series,
+    .st-key-mathicap_exercices_mes_series,
+    .st-key-mathicap_retour_connexion_mdp) button:hover {
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+    background: transparent !important;
+}
+:is(.st-key-mathicap_retour_accueil,
+    .st-key-mathicap_notifications_retour,
+    .st-key-mathicap_profil_mes_series,
+    .st-key-mathicap_exercices_mes_series,
+    .st-key-mathicap_retour_connexion_mdp) button:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 3px !important;
+}
+
+
+/* =========================================================
+   MATHICAP — PRÉSENTATION COMMUNE : TITRES ET ACTIONS SANS CADRE
+   Les contrôles gardent leur sémantique native (clavier, état, clic).
+   Les sélecteurs sont volontairement de faible spécificité pour
+   préserver les commandes spéciales : classe, recherche, logo, avatar.
+   ========================================================= */
+
+/* Titres de sections déroulantes : aucun rectangle, flèche conservée. */
+:where([data-testid="stExpander"], [data-testid="stExpander"] details) {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+:where([data-testid="stExpander"] summary) {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 8px 0 !important;
+    cursor: pointer !important;
+}
+:where([data-testid="stExpander"] summary:hover) {
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+}
+:where([data-testid="stExpander"] summary:focus-visible) {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 3px !important;
+}
+:where([data-testid="stExpander"] [data-testid="stExpanderDetails"]) {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 8px 0 12px !important;
+}
+
+/* Boutons, actions de formulaires et déclencheurs de fenêtres contextuelles :
+   du texte cliquable, sans rectangle. Les formulaires de saisie conservent
+   les bordures nécessaires autour des champs e-mail, mot de passe, réponse. */
+:where([data-testid="stButton"] button,
+       [data-testid="stFormSubmitButton"] button,
+       [data-testid="stPopover"] button,
+       [data-testid="stPopoverButton"] button) {
+    border: 0 !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: #0b3d91 !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 6px 3px !important;
+    cursor: pointer !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+}
+:where([data-testid="stButton"] button:hover,
+       [data-testid="stFormSubmitButton"] button:hover,
+       [data-testid="stPopover"] button:hover,
+       [data-testid="stPopoverButton"] button:hover) {
+    border-color: transparent !important;
+    background: transparent !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+}
+:where([data-testid="stButton"] button:focus-visible,
+       [data-testid="stFormSubmitButton"] button:focus-visible,
+       [data-testid="stPopover"] button:focus-visible,
+       [data-testid="stPopoverButton"] button:focus-visible) {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 3px !important;
+}
+:where([data-testid="stButton"] button:disabled,
+       [data-testid="stFormSubmitButton"] button:disabled) {
+    opacity: 0.50 !important;
+    cursor: not-allowed !important;
+    text-decoration: none !important;
+}
+
+/* Suppression : rouge même sans fond ou bordure. */
+.st-key-mathicap_supprimer_series_cochees button,
+.st-key-confirmer_suppression_series button {
+    color: #b42318 !important;
+    font-weight: 750 !important;
+}
+
+/* Popovers : déclencheur sans cadre ; la fenêtre ouverte reste distincte. */
+:where([data-testid="stPopover"] > button,
+       [data-testid="stPopoverButton"] > button) {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Cadres de formulaires et de blocs décoratifs : pas de cadre externe.
+   Les champs de saisie, les sélecteurs et les confirmations restent visibles. */
+:where([data-testid="stForm"], [data-testid="stVerticalBlockBorderWrapper"]) {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Tous les messages : texte et icône natifs, sans bandeau ni bordure.
+   Les couleurs et symboles de succès, information, alerte et erreur
+   restent ceux de Streamlit. */
+:where([data-testid="stAlert"],
+       [data-testid="stAlert"] [data-baseweb="notification"]) {
+    width: min(100%, 500px) !important;
+    max-width: min(100%, 500px) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+:where([data-testid="stAlert"] [data-baseweb="notification"]) {
+    padding: 7px 0 !important;
+}
+
+/* Exceptions de lisibilité : sélecteur de classe 6e/5e/4e/3e.
+   Ce sont des choix de valeur, pas des titres à ouvrir :
+   on conserve leur couleur et leur état visuel. */
+.st-key-mathicap_ligne_classes button,
+[class*="st-key-mathicap_bouton_"] button {
+    width: 100% !important;
+    min-height: 48px !important;
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+/* Les cartes d'activité deviennent des choix textuels sans rectangle,
+   mais conservent leur zone de clic dans la grille responsive. */
+.st-key-mathicap_cartes button {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 10px 4px !important;
+    text-align: left !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.st-key-mathicap_cartes button:hover {
+    background: transparent !important;
+    text-decoration: underline !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -2095,7 +2315,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
     # Modifier le pseudo sans toucher aux autres informations
     if profil_charge:
         with st.expander("Modifier mon pseudo", width=500):
-            with st.form("mathicap_formulaire_pseudo"):
+            with st.form("mathicap_formulaire_pseudo", border=False):
                 nouveau_pseudo = st.text_input(
                     "Nouveau pseudo",
                     value=pseudo_eleve,
@@ -2692,6 +2912,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
 
             if st.button(
                 "Supprimer les séries cochées",
+                key="mathicap_supprimer_series_cochees",
                 disabled=not selection
             ):
                 st.session_state["suppression_en_attente"] = {
