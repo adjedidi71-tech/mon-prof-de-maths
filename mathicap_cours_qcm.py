@@ -142,34 +142,54 @@ def _style():
     .mc-quiz-box {max-width:850px;border-radius:20px;padding:16px 19px;
          background:linear-gradient(115deg,#eff7ff,#f8f3ff);margin:13px 0;}
     .mc-quiz-box h2 {font-size:1.32rem;color:#173969;line-height:1.35;}
-    /* Commandes QCM : mêmes dimensions et lisibilité sur PC et mobile. */
-    .st-key-mc_qcm_demarrer {max-width:850px;margin:15px 0 18px}
-    .st-key-mc_qcm_demarrer button {
-        min-height:48px;width:100%;border-radius:13px;
-        background:#e7f1ff;border:2px solid #85afe9;color:#163c72;
-        font-weight:800;font-size:1.06rem;
+    /* Commandes QCM : styles localisés, prioritaires sur les CSS globaux. */
+    .st-key-mc_qcm_reprise_zone,
+    .st-key-mc_qcm_demarrer_zone {max-width:850px!important;margin:12px 0 18px!important}
+    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary,
+    .st-key-mc_qcm_reprise_zone details > summary {
+        min-height:54px!important;padding:12px 16px!important;
+        border-radius:13px!important;background:#eaf3ff!important;
+        border-left:5px solid #3878d9!important;
+        color:#173b70!important;
     }
-    .st-key-mc_qcm_demarrer button:hover {background:#d9eaff;border-color:#518cda}
-    .st-key-mc_qcm_demarrer button p {font-size:1.06rem;font-weight:800}
-    .st-key-mc_qcm_reprise_zone {max-width:850px;margin:12px 0 18px}
-    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] {
-        border:1px solid #bad5f4;border-radius:13px;background:#f3f8ff;
-    }
-    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary {
-        min-height:48px;padding:11px 14px;color:#163c72;
-    }
-    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary p {
-        font-size:1.06rem;font-weight:800;color:#163c72;
+    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary p,
+    .st-key-mc_qcm_reprise_zone details > summary p,
+    .st-key-mc_qcm_reprise_zone details > summary span {
+        font-size:clamp(1.05rem,2.4vw,1.23rem)!important;
+        font-weight:850!important;color:#173b70!important;
+        line-height:1.35!important;
     }
     .st-key-mc_qcm_reprise_zone [data-testid="stButton"] button {
-        min-height:40px;border-radius:10px;
+        min-height:43px!important;border-radius:11px!important;
+        font-size:1rem!important;font-weight:700!important;
+        border:1px solid #a9c7f3!important;
+        background:#f7faff!important;color:#153d73!important;
+    }
+    .st-key-mc_qcm_reprise_zone [data-testid="stButton"] button p {
+        font-size:1rem!important;font-weight:700!important;color:#153d73!important;
+    }
+    .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button,
+    .st-key-mc_qcm_demarrer button {
+        width:100%!important;min-height:54px!important;
+        padding:11px 16px!important;border-radius:13px!important;
+        background:#dcecff!important;border:2px solid #7da9ea!important;
+        color:#173b70!important;font-size:1.15rem!important;
+        font-weight:800!important;box-shadow:0 2px 9px #3573bd1c!important;
+    }
+    .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button p,
+    .st-key-mc_qcm_demarrer button p {
+        font-size:1.15rem!important;font-weight:800!important;
+        color:#173b70!important;
+    }
+    .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button:hover,
+    .st-key-mc_qcm_demarrer button:hover {
+        background:#cde3ff!important;border-color:#4c88d4!important;
     }
     @media(max-width:640px) {
-        .st-key-mc_qcm_demarrer button {min-height:46px}
-        .st-key-mc_qcm_demarrer button p,
-        .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary p {
-            font-size:1rem;
-        }
+        .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button,
+        .st-key-mc_qcm_demarrer button {min-height:50px!important}
+        .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button p,
+        .st-key-mc_qcm_demarrer button p {font-size:1.04rem!important}
     }
     @media (prefers-reduced-motion: reduce) { .mc-lecon-entete::before {animation:none !important} }
     @media (prefers-reduced-motion: no-preference) {
@@ -632,6 +652,49 @@ def _score_qcm(partie):
                for q in partie.get('questions', []))
 
 
+@st.fragment
+def _afficher_question_interactive():
+    """Réaffiche seulement le questionnaire lors des clics (pas toute la page)."""
+    partie = st.session_state.get('mathicap_qcm_partie')
+    if not partie:
+        st.rerun()
+    questions = partie['questions']
+    ident = partie['id']
+    # À la fin, relancer l'application une fois pour afficher le bilan.
+    if partie.get('terminee') or partie.get('index', 0) >= len(questions):
+        st.rerun()
+    i = partie['index']
+    q = questions[i]
+    st.progress(i / 10, text=f'Question {i + 1} sur 10')
+    st.caption(f"Réponses renseignées : {len(partie.get('reponses', {}))} sur 10 — corrections à la fin")
+    etat_sauvegarde = st.session_state.get('mc_qcm_etat_sauvegarde')
+    if etat_sauvegarde and not etat_sauvegarde[0]:
+        st.caption('⚠️ ' + etat_sauvegarde[1])
+    st.html('<div class="mc-quiz-box"><div class="mc-kicker">QUESTION '
+            + str(i + 1) + '/10</div><h2>' + escape(str(q['question']))
+            + '</h2></div>')
+    champ = f'mc_qcm_radio_{ident}_{i}'
+    precedente = partie['reponses'].get(q['id'])
+    index_precedent = precedente if isinstance(precedente, int) and 0 <= precedente < len(q['options']) else None
+    choix = st.radio('Choisis une seule réponse', q['options'], index=index_precedent,
+                     key=champ, on_change=_memoriser_choix_qcm, args=(ident, i))
+    if choix in q['options']:
+        partie['reponses'][q['id']] = q['options'].index(choix)
+    avertissement = st.session_state.pop('mc_qcm_avertissement', None)
+    if avertissement:
+        st.warning(avertissement)
+    gauche, droite = st.columns(2, gap='small')
+    with gauche:
+        if i > 0:
+            st.button('← Question précédente', key='mc_qcm_precedente',
+                      on_click=_changer_question_qcm, args=(ident, -1))
+    with droite:
+        dernier = i == len(questions) - 1
+        libelle = '✅ Terminer mon QCM' if dernier else 'Question suivante →'
+        st.button(libelle, key='mc_qcm_suivante', disabled=(choix is None),
+                  on_click=_changer_question_qcm, args=(ident, 1))
+
+
 def afficher_qcm(aller_vers=None):
     _style()
     st.subheader('QCM rapides')
@@ -671,8 +734,10 @@ def afficher_qcm(aller_vers=None):
 
     if partie and partie['notion'] != select:
         st.info('Une partie est en cours dans une autre notion. Démarre un nouveau QCM pour changer.', width=850)
-    st.button('🎯 Démarrer un nouveau QCM', key='mc_qcm_demarrer',
-              on_click=_demarrer_depuis_bouton, args=(select,))
+    with st.container(key='mc_qcm_demarrer_zone'):
+        st.button('🎯 Démarrer un nouveau QCM', key='mc_qcm_demarrer',
+                  type='primary', width='stretch',
+                  on_click=_demarrer_depuis_bouton, args=(select,))
     if not partie:
         st.info('Choisis une notion et commence. Réponds aux 10 questions : ton score et les corrections seront affichés seulement à la fin.', width=850)
         st.button('📖 Revoir le cours', key='mc_qcm_vers_cours',
@@ -751,33 +816,4 @@ def afficher_qcm(aller_vers=None):
                   args=(partie.get('notion', select), aller_vers))
         return
 
-    i = partie['index']
-    q = questions[i]
-    st.progress(i / 10, text=f'Question {i + 1} sur 10')
-    st.caption(f"Réponses renseignées : {len(partie.get('reponses', {}))} sur 10 — corrections à la fin")
-    etat_sauvegarde = st.session_state.get('mc_qcm_etat_sauvegarde')
-    if etat_sauvegarde and not etat_sauvegarde[0]:
-        st.caption('⚠️ ' + etat_sauvegarde[1])
-    st.html('<div class="mc-quiz-box"><div class="mc-kicker">QUESTION '
-            + str(i + 1) + '/10</div><h2>' + escape(str(q['question']))
-            + '</h2></div>')
-    champ = f'mc_qcm_radio_{ident}_{i}'
-    precedente = partie['reponses'].get(q['id'])
-    index_precedent = precedente if isinstance(precedente, int) and 0 <= precedente < len(q['options']) else None
-    choix = st.radio('Choisis une seule réponse', q['options'], index=index_precedent,
-                     key=champ, on_change=_memoriser_choix_qcm, args=(ident, i))
-    if choix in q['options']:
-        partie['reponses'][q['id']] = q['options'].index(choix)
-    avertissement = st.session_state.pop('mc_qcm_avertissement', None)
-    if avertissement:
-        st.warning(avertissement)
-    gauche, droite = st.columns(2, gap='small')
-    with gauche:
-        if i > 0:
-            st.button('← Question précédente', key='mc_qcm_precedente',
-                      on_click=_changer_question_qcm, args=(ident, -1))
-    with droite:
-        dernier = i == len(questions) - 1
-        libelle = '✅ Terminer mon QCM' if dernier else 'Question suivante →'
-        st.button(libelle, key='mc_qcm_suivante', disabled=(choix is None),
-                  on_click=_changer_question_qcm, args=(ident, 1))
+    _afficher_question_interactive()
