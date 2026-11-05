@@ -2731,6 +2731,10 @@ if est_connecte and st.query_params.get("vue") == "profil":
                 "pas la maîtrise des notions."
             )
 
+    # Résultats QCM, indépendants des statistiques des séries d'exercices.
+    from mathicap_qcm_resultats import afficher_progression_qcm
+    afficher_progression_qcm()
+
     if st.button(
         "Voir mes séries enregistrées",
         key="mathicap_profil_mes_series"
