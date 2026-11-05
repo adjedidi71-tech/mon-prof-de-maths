@@ -575,6 +575,14 @@ def _accueil() -> None:
         )
 
 def _page_en_preparation(page: str) -> None:
+    # Modules pédagogiques autonomes : aucun accès aux tables d’exercices.
+    if page in ("Cours", "QCM"):
+        from mathicap_cours_qcm import afficher_cours, afficher_qcm
+        if page == "Cours":
+            afficher_cours(aller_vers=_aller_vers)
+        else:
+            afficher_qcm(aller_vers=_aller_vers)
+        return
     st.title(page)
     if page == "Parcours conseillé":
         st.subheader("Première proposition : chapitre 1 — Opérations")
