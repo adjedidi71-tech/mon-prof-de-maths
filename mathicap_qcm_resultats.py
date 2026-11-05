@@ -73,9 +73,30 @@ def enregistrer_resultat(partie):
             "bonnes": bonnes,
             "total": 10,
         }, on_conflict="id").execute()
-        return True, "Résultat enregistré dans ton compte."
-    except Exception:
-        return False, "Enregistrement indisponible. Vérifie la configuration des résultats QCM dans Supabase."
+        # Une réponse d'écriture sans erreur ne suffit pas à prouver que la
+        # ligne est visible. Vérifier avec le même compte avant de confirmer.
+        controle = (client.table(TABLE)
+                    .select("bonnes,total")
+                    .eq("eleve_id", eleve_id)
+                    .eq("partie_id", partie_id)
+                    .limit(1)
+                    .execute())
+        lignes = controle.data or []
+        if (not lignes or int(lignes[0].get("bonnes", -1)) != bonnes
+                or int(lignes[0].get("total", -1)) != 10):
+            return False, ("Le score est affiché, mais sa sauvegarde n'est pas "
+                           "encore confirmée. Réessaie l'enregistrement.")
+        return True, "Score enregistré et vérifié dans ton compte."
+    except Exception as erreur:
+        # Code d'erreur PostgREST : ne pas afficher au navigateur les détails
+        # techniques, requêtes, clés ou identifiants de comptes.
+        code = str(getattr(erreur, "code", "") or "")
+        if code in ("PGRST205", "42P01"):
+            return False, "Table des scores introuvable : vérifie le script SQL dans Supabase."
+        if code == "42501":
+            return False, "Le serveur n'a pas les droits nécessaires pour enregistrer le score."
+        return False, ("Enregistrement indisponible pour le moment. "
+                       "Le score reste visible ; tu peux réessayer sans refaire le QCM.")
 
 
 def charger_resultats(limite=50):
