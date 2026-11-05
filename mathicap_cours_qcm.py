@@ -518,7 +518,25 @@ def afficher_qcm(aller_vers=None):
                 st.write(f'Ta réponse : {donne} · Bonne réponse : {bonne}')
                 st.caption(q['explain'])
                 st.divider()
-        st.caption('Ce premier modèle n’enregistre pas encore les scores dans Supabase. Les séries d’exercices existantes ne sont pas modifiées.')
+        # L'historique des QCM est distinct des séries d'exercices.
+        from mathicap_qcm_resultats import enregistrer_resultat, charger_resultats, LABELS
+        if not partie.get('sauvegarde_confirmee') and not partie.get('sauvegarde_tentee'):
+            partie['sauvegarde_tentee'] = True
+            partie['sauvegarde_confirmee'], partie['sauvegarde_message'] = enregistrer_resultat(partie)
+        if partie.get('sauvegarde_confirmee'):
+            st.success('Résultat du QCM enregistré dans ton compte.', width=850)
+        else:
+            st.caption(partie.get('sauvegarde_message', 'Le score reste visible, mais n’a pas été enregistré.'))
+            if st.session_state.get('eleve_id'):
+                if st.button('Réessayer l’enregistrement', key='mc_qcm_retenter_sauvegarde'):
+                    partie['sauvegarde_tentee'] = False
+                    st.rerun()
+        resultats, _ = charger_resultats(5)
+        if resultats:
+            with st.expander('📈 Mes derniers scores QCM'):
+                for ligne in resultats:
+                    st.write(f"{LABELS.get(ligne['notion'], ligne['notion'])} : "
+                             f"{ligne['bonnes']} / {ligne['total']}")
         if st.button('↻ Nouveau QCM',key='mc_qcm_recommencer'):
             _demarrer(select); st.rerun()
         return
