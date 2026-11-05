@@ -84,6 +84,9 @@ for _lesson in LESSONS:
         _lesson['retenir'] = r"8{,}4\div0{,}7 = 84\div7 = 12"
 
 QUESTION_BANK = {'decimaux': [{'id': 'd01', 'question': '12,4 + 3,75 = ?', 'options': ['15,79', '16,15', '15,115', '16,79'], 'answer': 1, 'explain': '12,40 + 3,75 = 16,15.', 'level': 1}, {'id': 'd02', 'question': '8,5 − 2,75 = ?', 'options': ['6,25', '5,75', '5,85', '6,75'], 'answer': 1, 'explain': '8,50 − 2,75 = 5,75.', 'level': 1}, {'id': 'd03', 'question': '2,4 × 1,5 = ?', 'options': ['3,6', '36', '2,9', '0,36'], 'answer': 0, 'explain': '24 × 15 = 360 ; avec deux chiffres décimaux, 3,60.', 'level': 1}, {'id': 'd04', 'question': '0,7 × 0,6 = ?', 'options': ['4,2', '0,42', '0,042', '1,3'], 'answer': 1, 'explain': '7 × 6 = 42 et deux chiffres décimaux : 0,42.', 'level': 1}, {'id': 'd05', 'question': '18,2 + 0,08 = ?', 'options': ['18,10', '18,28', '18,208', '18,82'], 'answer': 1, 'explain': '18,20 + 0,08 = 18,28.', 'level': 1}, {'id': 'd06', 'question': '15 − 4,65 = ?', 'options': ['11,65', '10,45', '10,35', '11,35'], 'answer': 2, 'explain': '15,00 − 4,65 = 10,35.', 'level': 1}, {'id': 'd07', 'question': '3,25 × 2 = ?', 'options': ['6,5', '6,05', '3,50', '65'], 'answer': 0, 'explain': 'Deux fois 3,25 donne 6,50.', 'level': 1}, {'id': 'd08', 'question': '0,4 + 0,06 = ?', 'options': ['0,10', '0,46', '0,406', '4,6'], 'answer': 1, 'explain': '0,40 + 0,06 = 0,46.', 'level': 1}, {'id': 'd09', 'question': '5,6 × 0,1 = ?', 'options': ['56', '5,06', '0,56', '0,056'], 'answer': 2, 'explain': 'Multiplier par 0,1 revient à diviser par 10.', 'level': 1}, {'id': 'd10', 'question': 'Un livre coûte 7,80 € et un stylo 1,35 €. Total ?', 'options': ['8,15 €', '8,95 €', '9,15 €', '9,25 €'], 'answer': 2, 'explain': '7,80 + 1,35 = 9,15 €.', 'level': 1}, {'id': 'd11', 'question': '12,04 − 1,9 = ?', 'options': ['11,14', '10,14', '10,24', '11,04'], 'answer': 1, 'explain': '12,04 − 1,90 = 10,14.', 'level': 1}, {'id': 'd12', 'question': '1,2 × 0,5 = ?', 'options': ['6', '0,6', '0,06', '1,7'], 'answer': 1, 'explain': '12 × 5 = 60 ; deux chiffres décimaux donnent 0,60.', 'level': 1}], 'euclidienne': [{'id': 'e01', 'question': '77 partagé en groupes de 9 : quotient et reste ?', 'options': ['8 et 5', '9 et 4', '7 et 8', '8 et 7'], 'answer': 0, 'explain': '77 = 9 × 8 + 5 et 5 est inférieur à 9.', 'level': 1}, {'id': 'e02', 'question': '53 ÷ 6 : quel reste ?', 'options': ['3', '4', '5', '6'], 'answer': 2, 'explain': '53 = 6 × 8 + 5.', 'level': 1}, {'id': 'e03', 'question': 'Dans une division euclidienne par 7, quel reste est impossible ?', 'options': ['0', '3', '6', '7'], 'answer': 3, 'explain': 'Le reste doit être strictement inférieur au diviseur, ici 7.', 'level': 1}, {'id': 'e04', 'question': 'Quel nombre est divisible par 9 ?', 'options': ['235', '243', '245', '248'], 'answer': 1, 'explain': '2 + 4 + 3 = 9, multiple de 9.', 'level': 1}, {'id': 'e05', 'question': 'Quel nombre est divisible par 3 mais PAS par 9 ?', 'options': ['135', '123', '117', '171'], 'answer': 1, 'explain': '1 + 2 + 3 = 6, divisible par 3 mais pas par 9.', 'level': 1}, {'id': 'e06', 'question': 'Lequel est un diviseur de 42 ?', 'options': ['5', '6', '8', '10'], 'answer': 1, 'explain': '42 = 6 × 7.', 'level': 1}, {'id': 'e07', 'question': 'Le nombre 48 est un multiple de…', 'options': ['5', '6', '7', '9'], 'answer': 1, 'explain': '48 = 6 × 8.', 'level': 1}, {'id': 'e08', 'question': '65 = 8 × 8 + 1. Quel est le quotient de 65 ÷ 8 ?', 'options': ['1', '7', '8', '9'], 'answer': 2, 'explain': '65 ÷ 8 : quotient 8, reste 1.', 'level': 1}, {'id': 'e09', 'question': 'Une division euclidienne est exacte quand…', 'options': ['le reste vaut 0', 'le quotient vaut 0', 'le diviseur vaut 1', 'le reste dépasse le diviseur'], 'answer': 0, 'explain': 'Une division exacte laisse un reste nul.', 'level': 1}, {'id': 'e10', 'question': 'Combien de sachets COMPLETS de 6 billes avec 38 billes ?', 'options': ['5', '6', '7', '8'], 'answer': 1, 'explain': '38 = 6 × 6 + 2 : 6 sachets complets.', 'level': 1}, {'id': 'e11', 'question': 'Quel est le reste de 100 ÷ 9 ?', 'options': ['0', '1', '2', '9'], 'answer': 1, 'explain': '100 = 9 × 11 + 1.', 'level': 1}, {'id': 'e12', 'question': 'Quel critère montre que 378 est divisible par 9 ?', 'options': ['Son dernier chiffre est pair', '3 + 7 + 8 = 18', 'Il finit par 8', 'Il est supérieur à 100'], 'answer': 1, 'explain': '3 + 7 + 8 = 18, multiple de 9.', 'level': 1}], 'division_decimale': [{'id': 'v01', 'question': '8,4 ÷ 0,7 = ?', 'options': ['1,2', '12', '0,12', '120'], 'answer': 1, 'explain': '8,4 ÷ 0,7 = 84 ÷ 7 = 12.', 'level': 1}, {'id': 'v02', 'question': '6,3 ÷ 0,9 = ?', 'options': ['0,7', '7', '70', '5,4'], 'answer': 1, 'explain': '63 ÷ 9 = 7.', 'level': 1}, {'id': 'v03', 'question': '1,26 ÷ 0,3 = ?', 'options': ['0,42', '42', '4,2', '3,6'], 'answer': 2, 'explain': '12,6 ÷ 3 = 4,2.', 'level': 1}, {'id': 'v04', 'question': '9,1 ÷ 2,8 = ?', 'options': ['32,5', '3,25', '2,8', '0,325'], 'answer': 1, 'explain': '91 ÷ 28 = 3,25.', 'level': 1}, {'id': 'v05', 'question': 'Pour transformer 5,6 ÷ 0,4, on écrit…', 'options': ['56 ÷ 4', '5,6 ÷ 4', '56 ÷ 0,4', '0,56 ÷ 4'], 'answer': 0, 'explain': 'Multiplier le dividende ET le diviseur par 10.', 'level': 1}, {'id': 'v06', 'question': '4,5 ÷ 0,5 = ?', 'options': ['0,9', '9', '90', '4'], 'answer': 1, 'explain': '45 ÷ 5 = 9.', 'level': 1}, {'id': 'v07', 'question': '1,2 ÷ 0,03 = ?', 'options': ['0,4', '4', '40', '400'], 'answer': 2, 'explain': 'Multiplier les deux nombres par 100 : 120 ÷ 3 = 40.', 'level': 1}, {'id': 'v08', 'question': 'Quelle égalité est vraie ?', 'options': ['2,4 ÷ 0,6 = 24 ÷ 6', '2,4 ÷ 0,6 = 2,4 ÷ 6', '2,4 ÷ 0,6 = 24 ÷ 0,6', '2,4 ÷ 0,6 = 0,24 ÷ 6'], 'answer': 0, 'explain': 'On déplace les deux virgules de la même façon.', 'level': 1}, {'id': 'v09', 'question': '3,6 ÷ 1,2 = ?', 'options': ['0,3', '3', '30', '4,8'], 'answer': 1, 'explain': '36 ÷ 12 = 3.', 'level': 1}, {'id': 'v10', 'question': '0,84 ÷ 0,07 = ?', 'options': ['1,2', '0,12', '12', '120'], 'answer': 2, 'explain': '84 ÷ 7 = 12.', 'level': 1}, {'id': 'v11', 'question': 'Pour vérifier 2,5 ÷ 0,5 = 5, on calcule…', 'options': ['5 + 0,5', '5 × 0,5', '2,5 × 0,5', '5 − 0,5'], 'answer': 1, 'explain': '5 × 0,5 = 2,5.', 'level': 1}, {'id': 'v12', 'question': 'Un ruban de 3,6 m est découpé en morceaux de 0,9 m. Nombre de morceaux ?', 'options': ['3', '4', '5', '9'], 'answer': 1, 'explain': '3,6 ÷ 0,9 = 36 ÷ 9 = 4.', 'level': 1}], 'priorites': [{'id': 'p01', 'question': '18 − 3 × 4 = ?', 'options': ['60', '6', '15', '24'], 'answer': 1, 'explain': '3 × 4 = 12, puis 18 − 12 = 6.', 'level': 1}, {'id': 'p02', 'question': '(18 − 3) × 4 = ?', 'options': ['6', '15', '60', '72'], 'answer': 2, 'explain': 'Parenthèses : 18 − 3 = 15, puis × 4.', 'level': 1}, {'id': 'p03', 'question': '4 + 3 × 5 = ?', 'options': ['35', '19', '23', '20'], 'answer': 1, 'explain': '3 × 5 = 15, puis 4 + 15 = 19.', 'level': 1}, {'id': 'p04', 'question': '24 ÷ 3 × 2 = ?', 'options': ['4', '16', '12', '2'], 'answer': 1, 'explain': 'Division et multiplication ont même priorité : de gauche à droite.', 'level': 1}, {'id': 'p05', 'question': '20 − (6 + 4) = ?', 'options': ['10', '18', '22', '30'], 'answer': 0, 'explain': '6 + 4 = 10, puis 20 − 10 = 10.', 'level': 1}, {'id': 'p06', 'question': '7 + 12 ÷ 3 = ?', 'options': ['19', '11', '6', '7'], 'answer': 1, 'explain': '12 ÷ 3 = 4, puis 7 + 4 = 11.', 'level': 1}, {'id': 'p07', 'question': '5 × (3 + 2) = ?', 'options': ['17', '25', '20', '15'], 'answer': 1, 'explain': 'La parenthèse vaut 5, donc 5 × 5 = 25.', 'level': 1}, {'id': 'p08', 'question': '30 ÷ 5 + 2 × 4 = ?', 'options': ['32', '14', '8', '24'], 'answer': 1, 'explain': '6 + 8 = 14.', 'level': 1}, {'id': 'p09', 'question': '9 − 8 ÷ 2 + 1 = ?', 'options': ['2', '6', '7', '1'], 'answer': 1, 'explain': '9 − 4 + 1 = 6.', 'level': 1}, {'id': 'p10', 'question': 'Quelle expression vaut 21 ?', 'options': ['3 × (5 + 2)', '3 × 5 + 2', '(3 + 5) × 2', '3 + 5 × 2'], 'answer': 0, 'explain': '3 × 7 = 21.', 'level': 1}, {'id': 'p11', 'question': '(12 + 8) ÷ 4 = ?', 'options': ['6', '5', '8', '20'], 'answer': 1, 'explain': '20 ÷ 4 = 5.', 'level': 1}, {'id': 'p12', 'question': '36 ÷ (3 × 4) = ?', 'options': ['48', '12', '3', '9'], 'answer': 2, 'explain': '3 × 4 = 12, puis 36 ÷ 12 = 3.', 'level': 1}], 'distributivite': [{'id': 't01', 'question': '3 × (4 + 2) = ?', 'options': ['3 × 4 + 2', '3 × 4 + 3 × 2', '3 + 4 × 2', '3 × 6 + 2'], 'answer': 1, 'explain': 'Distribuer 3 sur les deux termes : 12 + 6 = 18.', 'level': 1}, {'id': 't02', 'question': '5 × (12 − 2) = ?', 'options': ['5 × 12 − 5 × 2', '5 × 12 − 2', '5 × 10 − 2', '12 × 2 − 5'], 'answer': 0, 'explain': '5 × 12 − 5 × 2 = 60 − 10 = 50.', 'level': 1}, {'id': 't03', 'question': '4 × (6 + 3) = ?', 'options': ['30', '36', '24', '45'], 'answer': 1, 'explain': '4 × 6 + 4 × 3 = 24 + 12 = 36.', 'level': 1}, {'id': 't04', 'question': '7 × 19 = ?', 'options': ['7 × (20 − 1)', '7 × (20 + 1)', '7 + 20 − 1', '20 × (7 + 1)'], 'answer': 0, 'explain': '19 = 20 − 1, donc 140 − 7 = 133.', 'level': 1}, {'id': 't05', 'question': 'Quelle expression est égale à 2 × 5 + 2 × 3 ?', 'options': ['2 × (5 × 3)', '2 × (5 + 3)', '(2 + 5) × 3', '2 + 5 + 3'], 'answer': 1, 'explain': '2 est un facteur commun : 2 × (5 + 3).', 'level': 1}, {'id': 't06', 'question': '6 × (10 + 4) = ?', 'options': ['64', '84', '68', '140'], 'answer': 1, 'explain': '60 + 24 = 84.', 'level': 1}, {'id': 't07', 'question': '8 × 99 = ?', 'options': ['8 × (100 + 1)', '8 × (100 − 1)', '8 × 9 × 9', '800 + 8'], 'answer': 1, 'explain': '800 − 8 = 792.', 'level': 1}, {'id': 't08', 'question': '3 × (7 − 2) = ?', 'options': ['3 × 7 − 2', '3 × 7 − 3 × 2', '3 × 7 + 3 × 2', '3 × (7 + 2)'], 'answer': 1, 'explain': '21 − 6 = 15.', 'level': 1}, {'id': 't09', 'question': '2,5 × (8 + 2) = ?', 'options': ['20', '25', '10', '250'], 'answer': 1, 'explain': '2,5 × 8 + 2,5 × 2 = 20 + 5 = 25.', 'level': 1}, {'id': 't10', 'question': 'Quel est le facteur commun dans 9 × 4 + 9 × 6 ?', 'options': ['4', '6', '9', '10'], 'answer': 2, 'explain': 'Les deux termes contiennent le facteur 9.', 'level': 1}, {'id': 't11', 'question': '15 × 12 − 15 × 2 = ?', 'options': ['15 × 10', '15 × 14', '13 × 10', '15 × 12 × 2'], 'answer': 0, 'explain': '15 × (12 − 2) = 15 × 10 = 150.', 'level': 1}, {'id': 't12', 'question': 'Le développement correct de 2 × (a + b) est…', 'options': ['2a + b', '2a + 2b', 'a + 2b', '2ab'], 'answer': 1, 'explain': 'On multiplie a ET b par 2.', 'level': 1}]}
+from mathicap_qcm_banque_plus import enrichir_banque
+enrichir_banque(QUESTION_BANK)
+
 COURSE_IDS = [lesson['id'] for lesson in LESSONS]
 COURSE_BY_ID = {lesson['id']: lesson for lesson in LESSONS}
 COURSE_LABELS = {lesson['id']: lesson['titre'] for lesson in LESSONS}
@@ -453,23 +456,44 @@ def afficher_cours(aller_vers=None):
 
 
 def _tirer_questions(notion):
-    hasard=random.SystemRandom()
-    if notion==ALL_KEY:
-        questions=[]
+    """10 questions différentes, priorité aux questions non vues récemment."""
+    hasard = random.SystemRandom()
+    deja = set(st.session_state.get('mc_qcm_questions_deja_vues', set()))
+    try:
+        from mathicap_qcm_resultats import questions_deja_vues
+        deja.update(questions_deja_vues(12))
+    except Exception:
+        pass  # Un incident de stockage ne doit pas bloquer un QCM.
+
+    def choisir(nom, quantite):
+        pool = QUESTION_BANK[nom]
+        nouvelles = [q for q in pool if q['id'] not in deja]
+        selection = hasard.sample(nouvelles, min(quantite, len(nouvelles)))
+        if len(selection) < quantite:
+            deja_choisies = {q['id'] for q in selection}
+            autres = [q for q in pool if q['id'] not in deja_choisies]
+            selection += hasard.sample(autres, quantite - len(selection))
+        return selection
+
+    if notion == ALL_KEY:
+        questions = []
         for identifiant in COURSE_IDS:
-            questions += hasard.sample(QUESTION_BANK[identifiant],2)
+            questions.extend(choisir(identifiant, 2))
         hasard.shuffle(questions)
     else:
-        questions = hasard.sample(QUESTION_BANK[notion],10)
-    # Une seule bonne réponse ; l’ordre des choix change à chaque nouveau QCM.
-    resultat=[]
+        questions = choisir(notion, 10)
+
+    resultat = []
     for question in questions:
-        ordre=list(range(len(question['options'])))
+        ordre = list(range(len(question['options'])))
         hasard.shuffle(ordre)
-        copie=dict(question)
-        copie['options']=[question['options'][j] for j in ordre]
-        copie['answer']=ordre.index(question['answer'])
+        copie = dict(question)
+        copie['options'] = [question['options'][j] for j in ordre]
+        copie['answer'] = ordre.index(question['answer'])
         resultat.append(copie)
+
+    deja.update(q['id'] for q in resultat)
+    st.session_state['mc_qcm_questions_deja_vues'] = deja
     return resultat
 
 def _demarrer(notion):
@@ -485,6 +509,33 @@ def _demarrer(notion):
         'sauvegarde_tentee': False,
         'sauvegarde_confirmee': False,
     }
+    _sauvegarder_partie_en_cours()
+
+
+def _sauvegarder_partie_en_cours():
+    partie = st.session_state.get('mathicap_qcm_partie')
+    if not partie or partie.get('terminee'):
+        return
+    try:
+        from mathicap_qcm_resultats import enregistrer_partie
+        ok, message = enregistrer_partie(partie)
+        st.session_state['mc_qcm_etat_sauvegarde'] = (ok, message)
+    except Exception:
+        st.session_state['mc_qcm_etat_sauvegarde'] = (
+            False, 'Enregistrement temporairement indisponible.'
+        )
+
+
+def _ouvrir_serie_qcm(partie_id):
+    """Callback : recharge la série avant la création du sélecteur de notion."""
+    from mathicap_qcm_resultats import charger_partie
+    partie, message = charger_partie(partie_id)
+    if not partie:
+        st.session_state['mc_qcm_erreur_ouverture'] = message
+        return
+    st.session_state['mathicap_qcm_notion'] = partie['notion']
+    st.session_state['mathicap_qcm_partie'] = partie
+    st.session_state.pop('mc_qcm_erreur_ouverture', None)
 
 
 def _memoriser_choix_qcm(ident, indice):
@@ -499,7 +550,10 @@ def _memoriser_choix_qcm(ident, indice):
     valeur = st.session_state.get(cle)
     options = questions[indice]['options']
     if valeur in options:
-        partie['reponses'][questions[indice]['id']] = options.index(valeur)
+        nouvelle = options.index(valeur)
+        if partie['reponses'].get(questions[indice]['id']) != nouvelle:
+            partie['reponses'][questions[indice]['id']] = nouvelle
+            _sauvegarder_partie_en_cours()
 
 
 def _qcm_complet(partie):
@@ -520,6 +574,35 @@ def afficher_qcm(aller_vers=None):
     with st.container(key='mc_choix_notion_qcm'):
         select = _notion_selector('mathicap_qcm_notion', allow_all=True)
     partie = st.session_state.get('mathicap_qcm_partie')
+    erreur_ouverture = st.session_state.pop('mc_qcm_erreur_ouverture', None)
+    if erreur_ouverture:
+        st.warning(erreur_ouverture, width=850)
+
+    # Seules les parties en cours sont sauvegardées avec leurs dix questions.
+    # Les QCM terminés gardent leur score en base, pas leurs contenus.
+    if not partie:
+        from mathicap_qcm_resultats import charger_parties
+        parties_sauvees, erreur_sauvees = charger_parties(20)
+        if parties_sauvees:
+            with st.expander('📚 Reprendre mon QCM en cours', expanded=True):
+                for p in parties_sauvees[:10]:
+                    st.button('▶️ Reprendre — ' + str(p.get('notion_label','QCM'))
+                              + ' · ' + str(p.get('nombre_reponses', 0)) + '/10 réponses',
+                              key='mc_reprise_' + p['partie_id'],
+                              on_click=_ouvrir_serie_qcm, args=(p['partie_id'],))
+        elif erreur_sauvees and st.session_state.get('eleve_id'):
+            st.caption('Séries QCM indisponibles : ' + erreur_sauvees)
+
+    if not partie:
+        from mathicap_qcm_resultats import charger_resultats, LABELS
+        lignes, _ = charger_resultats(1)
+        if lignes:
+            dernier = lignes[0]
+            st.info('Dernier QCM terminé : '
+                    + LABELS.get(dernier['notion'], dernier['notion'])
+                    + ' — ' + str(dernier['bonnes']) + '/10. '
+                    'Le détail des réponses reste consultable uniquement pendant la session du QCM.')
+
     if partie and partie['notion'] != select:
         st.info('Une partie est en cours dans une autre notion. Démarre un nouveau QCM pour changer.', width=850)
     if st.button('🎯 Démarrer un nouveau QCM', key='mc_qcm_demarrer'):
@@ -564,7 +647,7 @@ def afficher_qcm(aller_vers=None):
             (partie['sauvegarde_confirmee'],
              partie['sauvegarde_message']) = enregistrer_resultat(partie)
         if partie.get('sauvegarde_confirmee'):
-            st.success('Score enregistré et vérifié dans ton compte MathiCap.', width=850)
+            st.success('Score enregistré dans ton compte MathiCap.', width=850)
         else:
             st.warning(partie.get('sauvegarde_message',
                                   'Score affiché, mais enregistrement non confirmé.'), width=850)
@@ -607,6 +690,9 @@ def afficher_qcm(aller_vers=None):
     q = questions[i]
     st.progress(i / 10, text=f'Question {i + 1} sur 10')
     st.caption(f"Réponses renseignées : {len(partie.get('reponses', {}))} sur 10 — corrections à la fin")
+    etat_sauvegarde = st.session_state.get('mc_qcm_etat_sauvegarde')
+    if etat_sauvegarde and not etat_sauvegarde[0]:
+        st.caption('⚠️ ' + etat_sauvegarde[1])
     st.html('<div class="mc-quiz-box"><div class="mc-kicker">QUESTION '
             + str(i + 1) + '/10</div><h2>' + escape(str(q['question']))
             + '</h2></div>')
@@ -621,6 +707,7 @@ def afficher_qcm(aller_vers=None):
     with gauche:
         if i > 0 and st.button('← Question précédente', key='mc_qcm_precedente'):
             partie['index'] = i - 1
+            _sauvegarder_partie_en_cours()
             st.rerun()
     with droite:
         dernier = i == len(questions) - 1
@@ -636,4 +723,5 @@ def afficher_qcm(aller_vers=None):
                     st.warning('Réponds aux dix questions avant de terminer.')
             else:
                 partie['index'] = i + 1
+                _sauvegarder_partie_en_cours()
             st.rerun()
