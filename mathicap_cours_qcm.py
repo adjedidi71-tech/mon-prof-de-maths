@@ -15,25 +15,58 @@ LESSONS = [{'id': 'decimaux', 'titre': 'Calculer avec des nombres décimaux', 'c
 # Phrases choisies pour le niveau 5e : aucun symbole d'inégalité nécessaire.
 NOTES_SIMPLES = {
     'decimaux': (
-        "Pour additionner ou soustraire, aligne les virgules. "
-        "Pour multiplier, calcule d'abord sans virgule, puis replace-la."
+        "Addition et soustraction : place les virgules l’une sous l’autre, "
+        "puis calcule colonne par colonne. Exemple : 5,6 + 2,75 = 5,60 + 2,75 = 8,35.\n"
+        "Multiplication : il ne faut PAS aligner les virgules. "
+        "Calcule d’abord comme s’il n’y avait pas de virgule : 24 × 15 = 360. "
+        "Dans 2,4 × 1,5, les deux nombres ont au total deux chiffres après leur virgule : "
+        "on compte donc deux chiffres en partant de la droite de 360, ce qui donne 3,60, soit 3,6."
     ),
     'euclidienne': (
         "Dividende = diviseur × quotient + reste. "
-        "Le reste est toujours plus petit que le diviseur."
+        "Le reste doit être plus petit que le diviseur. "
+        "Exemple : 77 = 9 × 8 + 5. On peut former 8 groupes de 9 et il reste 5."
     ),
     'division_decimale': (
-        "Pour supprimer la virgule du diviseur, déplace la virgule "
-        "du même nombre de rangs dans les deux nombres. "
-        "On ne peut jamais diviser par zéro."
+        "Quand le diviseur a une virgule, transforme-le en nombre entier. "
+        "S’il a un chiffre après la virgule, multiplie LES DEUX nombres par 10. "
+        "Exemple : 8,4 ÷ 0,7 devient 84 ÷ 7 = 12 : le résultat ne change pas.\n"
+        "S’il a deux chiffres après la virgule, multiplie les deux nombres par 100. "
+        "Exemple : 6 ÷ 0,25 devient 600 ÷ 25 = 24. "
+        "Attention : on ne peut jamais diviser par zéro."
     ),
     'priorites': (
-        "D'abord les parenthèses. Ensuite les multiplications et les divisions. "
-        "Enfin les additions et les soustractions."
+        "D’abord les parenthèses. Puis les multiplications et les divisions, "
+        "qui ont la même priorité : on les effectue de gauche à droite. "
+        "Enfin les additions et les soustractions, elles aussi de gauche à droite."
     ),
     'distributivite': (
-        "On multiplie chaque nombre à l'intérieur de la parenthèse. "
-        "Exemple : 3 × (4 + 2) = 3 × 4 + 3 × 2."
+        "On multiplie le nombre placé devant la parenthèse par CHACUN des nombres "
+        "à l’intérieur. Exemple : 3 × (4 + 2) = 3 × 4 + 3 × 2 = 18."
+    ),
+}
+
+ERREURS_ILLUSTREES = {
+    'decimaux': (
+        "Pour 0,4 × 0,5, calcule 4 × 5 = 20. Il y a deux chiffres "
+        "après la virgule au total : le résultat est 0,20 = 0,2, et non 20."
+    ),
+    'euclidienne': (
+        "53 ÷ 6 donne un quotient de 8 et un reste de 5, car 53 = 6 × 8 + 5. "
+        "On n’écrit pas « 53 ÷ 6 = 8 + 5 »."
+    ),
+    'division_decimale': (
+        "Pour 1,2 ÷ 0,3, il faut multiplier les deux nombres par 10 : "
+        "12 ÷ 3 = 4. Multiplier seulement 0,3 par 10 donnerait un résultat faux."
+    ),
+    'priorites': (
+        "24 ÷ 3 × 2 se calcule de gauche à droite : "
+        "24 ÷ 3 = 8, puis 8 × 2 = 16. "
+        "Si on fait 3 × 2 en premier, on trouve 4 : c’est faux."
+    ),
+    'distributivite': (
+        "2 × (5 + 3) = 2 × 5 + 2 × 3 = 16. "
+        "Écrire 2 × 5 + 3 = 13 oublie de multiplier le 3."
     ),
 }
 
@@ -256,7 +289,7 @@ def _explications_detaillees(notion):
         st.markdown('**Addition, case par case :** centièmes : 0 + 5 = 5 ; dixièmes : 4 + 7 = 11. J’écris 1 et je retiens 1 pour les unités. Puis 2 + 3 + 1 = 6. Résultat : **16,15**.')
         st.markdown('**Soustraction, case par case :** dans 20,00 − 7,86, le chiffre du haut est parfois trop petit. J’emprunte alors à la colonne de gauche. Je trouve, de droite à gauche, 4 centièmes, 1 dixième, 2 unités et 1 dizaine : **12,14**.')
         st.markdown('**Multiplication, case par case :** 24 × 5 = 120, puis 24 × 10 = 240 ; 120 + 240 = 360. Pour 2,4 × 1,5, il y a deux chiffres après les virgules des facteurs réunis : j’écris **3,60**, soit **3,6**.')
-        _vie_quotidienne('Un livre coûte 12,40 € et un stylo coûte 3,75 €. Tu poses l’addition pour trouver le total : 16,15 €. Si tu paies avec 20 €, il te reste 3,85 €.')
+        _vie_quotidienne('À la boulangerie, tu achètes un pain à 1,25 € et un gâteau à 2,80 €. Au total, tu paies 4,05 €. Si tu donnes 5 €, on te rend 0,95 €.')
     elif notion == 'euclidienne':
         st.markdown('**Je pose la division de 77 par 9**')
         st.html("""<div class="mc-div-layout" role="img" aria-label="Division euclidienne posée : 77 divisé par 9, quotient 8, reste 5">
@@ -271,7 +304,7 @@ def _explications_detaillees(notion):
         st.markdown('**Étape 2.** Je retire 72 à 77 : il reste 5.')
         st.markdown('**Étape 3.** Je vérifie : **77 = 9 × 8 + 5**. Le reste 5 est bien plus petit que 9.')
         st.markdown('**Autre exemple du manuel :** 269 ÷ 7. On trouve 38 groupes de 7 et il reste 3, car 7 × 38 = 266 puis 269 − 266 = 3.')
-        _vie_quotidienne('Tu prépares des lots de 9 cartes avec 77 cartes. Tu prépares 8 lots complets et tu gardes 5 cartes de côté.')
+        _vie_quotidienne('Dans une sortie scolaire, 49 élèves doivent former des équipes de 6. On forme 8 équipes complètes et un élève reste à placer, car 49 = 6 × 8 + 1.')
         st.markdown('#### 🔎 Reconnaître facilement les nombres divisibles')
         st.markdown('Un nombre est **divisible** par un autre lorsque la division tombe juste : il ne reste rien.')
         st.html("""<table class="mc-divisible"><thead><tr><th>Divisible par…</th><th>Comment le reconnaître ?</th><th>Exemple</th></tr></thead><tbody>
@@ -284,11 +317,12 @@ def _explications_detaillees(notion):
         st.markdown('**Multiple et diviseur :** comme 6 × 7 = 42, **42 est un multiple de 6** et **6 est un diviseur de 42**.')
     elif notion == 'division_decimale':
         st.markdown('**Exemple : 8,4 litres de jus à répartir dans des bouteilles de 0,7 litre.**')
-        for n,txt in [('1', 'Départ : 8,4 ÷ 0,7. Le diviseur 0,7 possède une virgule.'),
-                      ('2', 'Je multiplie les DEUX nombres par 10 : 84 ÷ 7.'),
-                      ('3', 'Je calcule 84 ÷ 7 = 12. Il y a donc 12 bouteilles.'),
+        for n,txt in [('1', 'Je pars de 8,4 ÷ 0,7. Le dividende 8,4 ET le diviseur 0,7 ont une virgule. Je veux rendre le diviseur entier.'),
+                      ('2', 'Je multiplie les deux nombres par 10 : 8,4 devient 84 et 0,7 devient 7. La division devient 84 ÷ 7.'),
+                      ('3', 'Je calcule 84 ÷ 7 = 12. Le quotient ne change pas : je peux remplir 12 bouteilles.'),
                       ('4', 'Je vérifie : 12 × 0,7 = 8,4.')]:
             st.html(f'<div class="mc-step"><strong>Étape {n}.</strong> {escape(txt)}</div>')
+        st.markdown('**Pourquoi est-ce autorisé ?** Multiplier le dividende et le diviseur par le même nombre ne change pas le quotient. En revanche, il serait faux de multiplier seulement le diviseur.')
         st.markdown('**Deuxième exemple : 1,26 ÷ 0,3 = 12,6 ÷ 3 = 4,2.**')
         st.markdown('Si le diviseur est **0,25**, je multiplie les deux nombres par **100** pour obtenir un diviseur entier de **25**.')
         _vie_quotidienne('Un ruban mesure 3,6 mètres. Tu coupes des morceaux de 0,9 mètre : 3,6 ÷ 0,9 = 36 ÷ 9 = 4 morceaux.')
@@ -300,7 +334,7 @@ def _explications_detaillees(notion):
                       ('4', 'Je calcule ensuite 15 × 4 = 60.')]:
             st.html(f'<div class="mc-step"><strong>Étape {n}.</strong> {escape(txt)}</div>')
         st.markdown('**Attention :** multiplication et division ont la même priorité. Si elles se suivent, calcule de gauche à droite. Exemple : 24 ÷ 3 × 2 = 8 × 2 = 16.')
-        _vie_quotidienne('Tu achètes 3 cahiers à 4 € et un stylo à 2 €. Tu écris 3 × 4 + 2 et tu trouves 14 €. Tu ne calcules pas 4 + 2 en premier.')
+        _vie_quotidienne('Au musée, deux entrées coûtent 8 € chacune et tu achètes une boisson à 3 €. Tu paies 2 × 8 + 3 = 19 €, sans additionner 8 et 3 avant de multiplier.')
     elif notion == 'distributivite':
         st.markdown('**Un grand rectangle peut être découpé en deux petits rectangles.**')
         for n,txt in [('1', 'Le rectangle mesure 3 cm de haut et 4 + 2 = 6 cm de long.'),
@@ -322,6 +356,26 @@ def _illustrer_notion(notion):
         + '<span class="mc-arrow" aria-hidden="true">→</span>'
         + '<span class="mc-equation-part">' + droite + '</span></div>'
     )
+
+
+def _aller_du_cours_au_qcm(notion, aller_vers):
+    """Préparer la navigation avant l'instanciation du menu Streamlit."""
+    st.session_state['mathicap_qcm_notion'] = notion
+    st.session_state.pop('mathicap_qcm_partie', None)
+    if aller_vers:
+        aller_vers('QCM')
+    else:
+        st.session_state['mathicap_page'] = 'QCM'
+
+
+def _aller_du_qcm_au_cours(notion, aller_vers):
+    """Même correction pour le bouton « Revoir le cours »."""
+    if notion in COURSE_IDS:
+        st.session_state['mathicap_cours_notion'] = notion
+    if aller_vers:
+        aller_vers('Cours')
+    else:
+        st.session_state['mathicap_page'] = 'Cours'
 
 
 def afficher_cours(aller_vers=None):
@@ -355,9 +409,11 @@ def afficher_cours(aller_vers=None):
                 st.latex(formule)
                 st.caption(explication)
     st.markdown('#### 📌 À retenir')
-    st.html('<div class="mc-remember">' + escape(NOTES_SIMPLES[notion]) + '</div>')
+    note_html = '<br><br>'.join(escape(part) for part in NOTES_SIMPLES[notion].split('\n'))
+    st.html('<div class="mc-remember">' + note_html + '</div>')
     st.markdown('#### ⚠️ Erreur à éviter')
-    st.warning(l['erreur'],width=850)
+    st.warning(l['erreur'], width=850)
+    st.markdown('**Exemple pour comprendre :** ' + ERREURS_ILLUSTREES[notion])
     if notion=='distributivite':
         st.markdown('#### 🎨 Laboratoire interactif : dessine la distributivité')
         st.caption('Déplace les curseurs : les deux aires et l’égalité se mettent à jour.')
@@ -390,11 +446,10 @@ def afficher_cours(aller_vers=None):
             else:
                 st.info('Essaie encore. Indice : '+explication,width=850)
     st.divider()
-    if st.button('✅ Passer au QCM de cette notion',key='mc_cours_vers_qcm'):
-        st.session_state['mathicap_qcm_notion']=notion
-        st.session_state.pop('mathicap_qcm_partie',None)
-        if aller_vers: aller_vers('QCM')
-        st.rerun()
+    st.button(
+        '✅ Passer au QCM de cette notion', key='mc_cours_vers_qcm',
+        on_click=_aller_du_cours_au_qcm, args=(notion, aller_vers),
+    )
 
 
 def _tirer_questions(notion):
@@ -439,10 +494,10 @@ def afficher_qcm(aller_vers=None):
             _demarrer(select);st.rerun()
     if not partie:
         st.info('Choisis une notion, puis démarre un QCM de 10 questions. Tu obtiendras une explication après chaque réponse.',width=850)
-        if st.button('📖 Revoir le cours',key='mc_qcm_vers_cours'):
-            if select in COURSE_IDS: st.session_state['mathicap_cours_notion']=select
-            if aller_vers: aller_vers('Cours')
-            st.rerun()
+        st.button(
+            '📖 Revoir le cours', key='mc_qcm_vers_cours',
+            on_click=_aller_du_qcm_au_cours, args=(select, aller_vers),
+        )
         return
     i=partie['index'];questions=partie['questions'];ident=partie['id']
     if i>=len(questions):
