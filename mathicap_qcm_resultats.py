@@ -104,7 +104,11 @@ def _message_erreur(exc):
 
 
 def enregistrer_partie(partie):
-    """Sauvegarde progressive de dix questions et des réponses déjà saisies."""
+    """Sauvegarde progressive avec une écriture conditionnelle et sans lecture répétée.
+
+    La première écriture vérifie la situation en base. Les suivantes ne peuvent
+    modifier qu'une ligne du même élève dont le statut est encore « en_cours ».
+    """
     erreur = _verifier_partie(partie)
     if erreur:
         return False, erreur
@@ -115,15 +119,30 @@ def enregistrer_partie(partie):
         eleve = _compte_valide(client)
         if not eleve:
             return False, 'Connecte-toi pour conserver tes séries QCM.'
-        # Ne jamais dégrader un résultat déjà marqué terminé.
-        ancien = (client.table(TABLE).select('statut')
-                  .eq('eleve_id', eleve).eq('partie_id', partie['id'])
-                  .limit(1).execute())
-        if (ancien.data or []) and ancien.data[0].get('statut') == 'termine':
-            return True, 'QCM déjà terminé.'
-        client.table(TABLE).upsert(_donnees(partie, eleve, False), on_conflict='id').execute()
+        donnees = _donnees(partie, eleve, False)
+        # Une lecture uniquement à la création ou à la première reprise non confirmée.
+        if not partie.get('_qcm_ligne_confirmee'):
+            ancien = (client.table(TABLE).select('statut')
+                      .eq('eleve_id', eleve).eq('partie_id', partie['id'])
+                      .limit(1).execute())
+            lignes = ancien.data or []
+            if lignes and lignes[0].get('statut') == 'termine':
+                return False, 'Ce QCM est déjà terminé, impossible de le modifier.'
+            if not lignes:
+                client.table(TABLE).insert(donnees).execute()
+                partie['_qcm_ligne_confirmee'] = True
+                return True, 'Série QCM sauvegardée.'
+        # Une seule requête : modification uniquement tant que la série est en cours.
+        mise_a_jour = (client.table(TABLE)
+                       .update({k: v for k, v in donnees.items() if k != 'id'})
+                       .eq('id', donnees['id']).eq('eleve_id', eleve)
+                       .eq('statut', 'en_cours').select('id').execute())
+        if not (mise_a_jour.data or []):
+            return False, 'Le QCM est introuvable ou déjà terminé : sauvegarde refusée.'
+        partie['_qcm_ligne_confirmee'] = True
         return True, 'Série QCM sauvegardée.'
     except Exception as exc:
+        # Ne pas déclarer un succès quand Supabase ne l'a pas confirmé.
         return False, _message_erreur(exc)
 
 
@@ -210,6 +229,7 @@ def charger_partie(partie_id):
             'revoir': False,
             'sauvegarde_tentee': termine,
             'sauvegarde_confirmee': termine,
+            '_qcm_ligne_confirmee': True,
         }
         erreur = _verifier_partie(partie)
         if erreur:
