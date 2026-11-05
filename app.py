@@ -2427,6 +2427,48 @@ if est_connecte and st.query_params.get("vue") == "profil":
        border-radius:20px;min-width:0}
     .mc-profile-muted {font-size:.8rem;color:#627c99;margin-top:7px;line-height:1.5}
     .mc-profile-avatar-heading {font-size:1.3rem;color:#174379;margin:15px 0 10px;font-weight:800}
+    /* MathiCap — Profil : titres interactifs colorés sans cadres. */
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary,
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary * {
+       font-size:clamp(1rem,1.15vw,1.1rem)!important;
+       font-weight:780!important;
+       color:#2159a2!important;
+       text-decoration:none!important;
+    }
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary {
+       padding:11px 2px!important;
+       transition:color .16s ease, transform .16s ease;
+    }
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary:hover,
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary:hover * {
+       color:#0d4089!important;text-decoration:none!important;
+    }
+    /* Ciblage individuel des trois commandes, sans changer leur fonction. */
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) .st-key-mathicap_mdp_profil_ouvert summary,
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) .st-key-mathicap_mdp_profil_ouvert summary * {
+       color:#7144b2!important;
+    }
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) .st-key-mc_profile_progression summary,
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) .st-key-mc_profile_progression summary * {
+       color:#13815c!important;
+    }
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) .st-key-mc_profile_pseudo summary,
+    [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) .st-key-mc_profile_pseudo summary * {
+       color:#1d68b4!important;
+    }
+    .mc-profile-qcm-heading {
+       color:#264680;font-weight:850;
+       font-size:clamp(1.15rem,2vw,1.5rem);
+       background:linear-gradient(100deg,#e9f0ff 0%,#f5edff 66%,#e6f9f1 100%);
+       border-left:4px solid #8061db;
+       padding:12px 16px;border-radius:0 14px 14px 0;
+       margin:20px 0 13px;max-width:650px;
+    }
+    @media(prefers-reduced-motion:reduce){
+       [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary {
+           transition:none!important;
+       }
+    }
     [data-testid='stMainBlockContainer']:has(.mc-profile-hero) [data-testid='stExpander'] {
        max-width:min(100%,520px)!important}
     [data-testid='stMainBlockContainer']:has(.mc-profile-hero) [data-testid='stTextInput']{
@@ -2500,32 +2542,12 @@ if est_connecte and st.query_params.get("vue") == "profil":
         date_affichee = "Information non disponible"
 
     # Profil lisible, cartes s'adaptant à la largeur réelle du navigateur.
-    avatar_pastille = escape((pseudo_eleve or "M")[0].upper())
-    avatar_mode_profil = st.session_state.get("mathicap_avatar_type", "defaut")
-    avatar_choix_profil = st.session_state.get("mathicap_avatar_choix", "")
-    if avatar_mode_profil == "galerie" and avatar_choix_profil in AVATARS_MATHICAP:
-        avatar_pastille = escape(AVATARS_MATHICAP[avatar_choix_profil][0])
-    elif avatar_mode_profil == "photo":
-        image_privee = _mathicap_lire_avatar_prive(
-            identifiant_eleve, st.session_state.get("mathicap_avatar_fichier", "")
-        )
-        if image_privee.startswith("data:image/jpeg;base64,"):
-            avatar_pastille = ('<img alt="Avatar choisi" src="' + image_privee
-                               + '" style="width:100%;height:100%;object-fit:cover;'
-                               'border-radius:50%">')
-    elif avatar_mode_profil == "defaut" and not pseudo_eleve.strip():
-        image_defaut = _image_en_data_uri("mathicap_avatar.png")
-        if image_defaut.startswith("data:image/png;base64,"):
-            avatar_pastille = ('<img alt="Avatar MathiCap" src="' + image_defaut
-                               + '" style="width:100%;height:100%;object-fit:cover;'
-                               'border-radius:50%">')
     classe_etiquette = escape(classe_eleve or "Non définie")
     nom_affiche = escape(pseudo_eleve.strip() or "élève")
     st.html(
         '<div class="mc-profile-shell">'
         '<div class="mc-profile-title">Mon profil</div>'
         '<div class="mc-profile-hero">'
-        f'<div class="mc-profile-portrait" aria-hidden="true">{avatar_pastille}</div>'
         '<div><div class="mc-profile-greeting">Bonjour, ' + nom_affiche + ' !</div>'
         f'<span class="mc-profile-class">Classe : {classe_etiquette}</span>'
         '<div class="mc-profile-gentle">Ton espace pour progresser à ton rythme.</div>'
@@ -2660,7 +2682,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     # Modifier le pseudo sans toucher aux autres informations
     if profil_charge:
-        with st.expander("Modifier mon pseudo", width=500):
+        with st.expander("Modifier mon pseudo", width=500, key="mc_profile_pseudo"):
             with st.form("mathicap_formulaire_pseudo", border=False):
                 nouveau_pseudo = st.text_input(
                     "Nouveau pseudo",
@@ -2782,7 +2804,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
                 "Aucune note n'est estimée."
             )
 
-        with st.expander("Progression par chapitre et par niveau", width=500):
+        with st.expander("Progression par chapitre et par niveau", width=500, key="mc_profile_progression"):
             par_chapitre = statistiques["par_chapitre"]
             par_niveau = statistiques["par_niveau"]
             if not par_chapitre and not par_niveau:
