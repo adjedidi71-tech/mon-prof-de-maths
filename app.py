@@ -2379,8 +2379,80 @@ if recherche_active:
         )
 
 if est_connecte and st.query_params.get("vue") == "profil":
-    st.subheader("Mon profil")
-    st.markdown("### Mes informations personnelles")
+
+    st.html("""<style>
+    .mc-profile-shell {max-width:1120px;width:100%;margin:4px 0 18px;min-width:0;color:#153060}
+    .mc-profile-title {font-size:clamp(1.7rem,3.2vw,2.1rem);margin:6px 0 15px;color:#122958;font-weight:850}
+    .mc-profile-hero {position:relative;isolation:isolate;overflow:hidden;
+       background:linear-gradient(112deg,#dcecff 0%,#e5f9ff 58%,#fff0cd 100%);
+       border:1px solid #b4d5fc;border-radius:23px;min-height:156px;
+       padding:22px 28px;display:flex;gap:20px;align-items:center;
+       box-shadow:0 7px 20px rgba(42,87,150,.07)}
+    .mc-profile-hero::after {content:'π   +   x²   ÷';position:absolute;right:14px;top:10px;
+       color:rgba(30,108,201,.18);font-weight:900;font-size:clamp(18px,2vw,32px);letter-spacing:9px;z-index:-1}
+    .mc-profile-portrait {height:99px;width:99px;border-radius:50%;display:flex;flex-shrink:0;
+       align-items:center;justify-content:center;background:#f0f7ff;color:#1454a6;
+       border:5px solid #fff;box-shadow:0 2px 12px #1b4f9820;font-size:38px;font-weight:850}
+    .mc-profile-greeting {font-weight:850;font-size:clamp(1.25rem,2.5vw,1.9rem);
+       line-height:1.25;color:#103672;margin:0 0 8px}
+    .mc-profile-class {display:inline-block;border-radius:99px;background:#1f63cf;color:white;
+       font-size:.83rem;padding:5px 12px;font-weight:750}
+    .mc-profile-gentle {margin-top:10px;color:#2d5d92;line-height:1.5;font-size:.91rem}
+    .mc-profile-section-title {font-size:clamp(1.1rem,2.1vw,1.4rem);font-weight:800;
+       margin:21px 0 10px;color:#183b73}
+    .mc-profile-infos {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;max-width:1120px;width:100%}
+    .mc-profile-info {border-radius:14px;border:1px solid #e0eaf8;background:#f5f9ff;
+       padding:14px 16px;min-width:0}
+    .mc-profile-info:nth-child(2){background:#f4f6ff}
+    .mc-profile-info:nth-child(3){background:#f0fbf5}
+    .mc-profile-info:nth-child(4){background:#fff8eb}
+    .mc-profile-label {font-size:.77rem;font-weight:750;color:#436182;margin-bottom:5px}
+    .mc-profile-value {font-size:1rem;font-weight:700;color:#17315d;overflow-wrap:anywhere}
+    .mc-profile-stats {width:100%;max-width:1120px;display:grid;
+       grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:9px 0}
+    .mc-profile-stat {min-width:0;border-radius:17px;padding:16px 12px 14px;
+       background:linear-gradient(145deg,#eaf5ff,#d4eaff);border:1px solid #bfddfd;
+       transition:transform .16s ease,box-shadow .16s ease}
+    .mc-profile-stat:nth-child(2){background:linear-gradient(145deg,#fff8e7,#ffe4b7);border-color:#f7ddaf}
+    .mc-profile-stat:nth-child(3){background:linear-gradient(145deg,#eafff0,#c8efd6);border-color:#b7e5c5}
+    .mc-profile-stat:nth-child(4){background:linear-gradient(145deg,#f8f0ff,#e6d6ff);border-color:#dfc9fb}
+    .mc-profile-stat .mc-profile-emoji{font-size:1.35rem;display:block;margin-bottom:5px}
+    .mc-profile-stat .mc-profile-number{font-size:clamp(1.2rem,2.4vw,1.85rem);
+       font-weight:850;color:#173365;line-height:1.3;font-variant-numeric:tabular-nums}
+    .mc-profile-stat .mc-profile-desc{font-size:.82rem;line-height:1.35;font-weight:750;
+       color:#355677;margin-top:4px}
+    .mc-profile-track{height:10px;border-radius:20px;background:#dfebfa;overflow:hidden;
+       margin-top:12px;max-width:1120px}
+    .mc-profile-track-fill{height:100%;background:linear-gradient(90deg,#3d9de8,#3860d5);
+       border-radius:20px;min-width:0}
+    .mc-profile-muted {font-size:.8rem;color:#627c99;margin-top:7px;line-height:1.5}
+    .mc-profile-avatar-heading {font-size:1.3rem;color:#174379;margin:15px 0 10px;font-weight:800}
+    [data-testid='stMainBlockContainer']:has(.mc-profile-hero) [data-testid='stExpander'] {
+       max-width:min(100%,520px)!important}
+    [data-testid='stMainBlockContainer']:has(.mc-profile-hero) [data-testid='stTextInput']{
+       max-width:100%!important}
+    @media(hover:hover){.mc-profile-stat:hover{transform:translateY(-2px);
+       box-shadow:0 5px 16px rgba(26,83,158,.10)}}
+    @media(max-width:850px){
+       .mc-profile-stats {grid-template-columns:repeat(2,minmax(0,1fr))}
+       .mc-profile-hero{min-height:140px;padding:17px 20px}
+    }
+    @media(max-width:520px){
+       .mc-profile-infos {grid-template-columns:1fr;gap:8px}
+       .mc-profile-stat {padding:13px 10px}
+       .mc-profile-stats{gap:9px}
+       .mc-profile-hero{padding:15px 13px;border-radius:18px;gap:12px;min-height:0}
+       .mc-profile-portrait{width:62px;height:62px;font-size:27px;border-width:3px}
+       .mc-profile-hero::after{font-size:17px;letter-spacing:3px;top:4px;right:4px}
+       .mc-profile-greeting{font-size:1.25rem}
+       .mc-profile-class{font-size:.76rem}
+       .mc-profile-gentle{font-size:.78rem;margin-top:6px}
+    }
+    @media(max-width:320px){.mc-profile-stats{grid-template-columns:1fr 1fr}
+       .mc-profile-stat .mc-profile-number{font-size:1.2rem}}
+    @media(prefers-reduced-motion:reduce){.mc-profile-stat{transition:none!important}}
+    </style>""")
+
 
     identifiant_eleve = st.session_state["eleve_id"]
     email_eleve = None
@@ -2427,25 +2499,52 @@ if est_connecte and st.query_params.get("vue") == "profil":
     else:
         date_affichee = "Information non disponible"
 
-    # Affichage homogène, sans lien e-mail cliquable
+    # Profil lisible, cartes s'adaptant à la largeur réelle du navigateur.
+    avatar_pastille = escape((pseudo_eleve or "M")[0].upper())
+    avatar_mode_profil = st.session_state.get("mathicap_avatar_type", "defaut")
+    avatar_choix_profil = st.session_state.get("mathicap_avatar_choix", "")
+    if avatar_mode_profil == "galerie" and avatar_choix_profil in AVATARS_MATHICAP:
+        avatar_pastille = escape(AVATARS_MATHICAP[avatar_choix_profil][0])
+    elif avatar_mode_profil == "photo":
+        image_privee = _mathicap_lire_avatar_prive(
+            identifiant_eleve, st.session_state.get("mathicap_avatar_fichier", "")
+        )
+        if image_privee.startswith("data:image/jpeg;base64,"):
+            avatar_pastille = ('<img alt="Avatar choisi" src="' + image_privee
+                               + '" style="width:100%;height:100%;object-fit:cover;'
+                               'border-radius:50%">')
+    elif avatar_mode_profil == "defaut" and not pseudo_eleve.strip():
+        image_defaut = _image_en_data_uri("mathicap_avatar.png")
+        if image_defaut.startswith("data:image/png;base64,"):
+            avatar_pastille = ('<img alt="Avatar MathiCap" src="' + image_defaut
+                               + '" style="width:100%;height:100%;object-fit:cover;'
+                               'border-radius:50%">')
+    classe_etiquette = escape(classe_eleve or "Non définie")
+    nom_affiche = escape(pseudo_eleve.strip() or "élève")
     st.html(
-        '<div style="line-height: 1.9;">'
-        f'<div><strong>Adresse e-mail :</strong> '
-        f'{escape(email_eleve or "Information non disponible")}</div>'
-        f'<div><strong>Pseudo :</strong> '
-        f'{escape(pseudo_eleve or "Non renseigné")}</div>'
-        f'<div><strong>Ma classe :</strong> '
-        f'{escape(classe_eleve or "Non définie")}</div>'
-        f'<div><strong>Date d’inscription :</strong> '
-        f'{escape(date_affichee)}</div>'
-        '</div>'
+        '<div class="mc-profile-shell">'
+        '<div class="mc-profile-title">Mon profil</div>'
+        '<div class="mc-profile-hero">'
+        f'<div class="mc-profile-portrait" aria-hidden="true">{avatar_pastille}</div>'
+        '<div><div class="mc-profile-greeting">Bonjour, ' + nom_affiche + ' !</div>'
+        f'<span class="mc-profile-class">Classe : {classe_etiquette}</span>'
+        '<div class="mc-profile-gentle">Ton espace pour progresser à ton rythme.</div>'
+        '</div></div>'
+        '<div class="mc-profile-section-title">Mes informations</div>'
+        '<div class="mc-profile-infos">'
+        '<div class="mc-profile-info"><div class="mc-profile-label">Pseudo</div>'
+        f'<div class="mc-profile-value">{nom_affiche}</div></div>'
+        '<div class="mc-profile-info"><div class="mc-profile-label">Adresse e-mail</div>'
+        f'<div class="mc-profile-value">{escape(email_eleve or "Information indisponible")}</div></div>'
+        '<div class="mc-profile-info"><div class="mc-profile-label">Ma classe</div>'
+        f'<div class="mc-profile-value">{classe_etiquette}</div></div>'
+        '<div class="mc-profile-info"><div class="mc-profile-label">Inscription</div>'
+        f'<div class="mc-profile-value">{escape(date_affichee)}</div></div>'
+        '</div></div>'
     )
 
-    if profil_charge:
-        _mathicap_formulaire_changement_mdp(email_eleve, identifiant_eleve)
-
     # Personnalisation de l'avatar, propre au compte de chaque élève.
-    st.markdown("### Mon avatar")
+    st.html('<div class="mc-profile-avatar-heading">Mon avatar</div>')
     if st.session_state.pop("mathicap_avatar_sauve", False):
         st.success("Avatar enregistré. Il sera retrouvé sur tes appareils.", width=500)
 
@@ -2456,7 +2555,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
         emoji_apercu, nom_apercu, fond_apercu = AVATARS_MATHICAP[avatar_choix]
         st.html(
             f'<div role="img" aria-label="Avatar {escape(nom_apercu)}" '
-            'style="width:80px;height:80px;border-radius:50%;'
+            'style="width:104px;height:104px;border-radius:50%;'
             f'background:{fond_apercu};display:flex;align-items:center;'
             'justify-content:center;font-size:48px;">'
             f'{emoji_apercu}</div>'
@@ -2470,7 +2569,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
             initiale = _mathicap_initiale_pseudo(pseudo_eleve)
             st.html(
                 '<div role="img" aria-label="Initiale du pseudo" '
-                'style="width:80px;height:80px;border-radius:50%;'
+                'style="width:104px;height:104px;border-radius:50%;'
                 'background:#dceafe;color:#2056a5;display:flex;'
                 'align-items:center;justify-content:center;font-size:43px;'
                 'font-weight:700;">'
@@ -2482,7 +2581,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
         if photo_apercu:
             st.html(
                 '<img alt="Mon avatar actuel" '
-                'style="width:80px;height:80px;border-radius:50%;'
+                'style="width:104px;height:104px;border-radius:50%;'
                 'object-fit:cover;object-position:center center;display:block;" '
                 f'src="{photo_apercu}">'
             )
@@ -2606,7 +2705,10 @@ if est_connecte and st.query_params.get("vue") == "profil":
                     except Exception:
                         st.error("Impossible d'enregistrer le pseudo.")
                         
-    st.markdown("### Mes activités")
+    if profil_charge:
+        _mathicap_formulaire_changement_mdp(email_eleve, identifiant_eleve)
+
+    # Statistiques existantes, affichées en cartes adaptées à chaque largeur.
     series_profil = None
 
     try:
@@ -2625,39 +2727,43 @@ if est_connecte and st.query_params.get("vue") == "profil":
             if serie.get("reponses")
         )
 
-        col_series, col_reponses, _ = st.columns([2, 2, 1], gap="small")
-
-        with col_series:
-            st.metric("Séries sauvegardées", total_series)
-
-        with col_reponses:
-            st.metric("Séries avec réponses", series_avec_reponses)
 
     except Exception:
         st.info("Impossible de charger les statistiques pour le moment.", width=500)
 
-    st.caption(
-        "Ces chiffres représentent les séries encore sauvegardées sur ton compte."
-    )
-
-    st.markdown("### Ma progression")
+    st.html('<div class="mc-profile-section-title">Mes statistiques et ma progression</div>')
     if series_profil is None:
         st.info("La progression est momentanément indisponible.", width=500)
     else:
         statistiques = _mathicap_statistiques_progression(series_profil)
-        col_exercices, col_saisies, _ = st.columns([2, 2, 1], gap="small")
-
-        with col_exercices:
-            st.metric(
-                "Exercices avec réponse",
-                f"{statistiques['exercices_avec_reponse']} "
-                f"/ {statistiques['exercices_total']}",
-            )
-        with col_saisies:
-            st.metric(
-                "Réponses renseignées",
-                statistiques["reponses_renseignees"],
-            )
+        nb_total = statistiques['exercices_total']
+        nb_renseignes = statistiques['exercices_avec_reponse']
+        nb_bonnes = statistiques['bonnes_verifiees']
+        nb_verifiees = statistiques['questions_verifiees']
+        taux_repondu = int(round(100 * nb_renseignes / nb_total)) if nb_total else 0
+        st.html(
+            '<div class="mc-profile-stats">'
+            '<div class="mc-profile-stat"><span class="mc-profile-emoji">📚</span>'
+            f'<div class="mc-profile-number">{total_series}</div>'
+            '<div class="mc-profile-desc">Séries enregistrées</div></div>'
+            '<div class="mc-profile-stat"><span class="mc-profile-emoji">✏️</span>'
+            f'<div class="mc-profile-number">{nb_renseignes} / {nb_total}</div>'
+            '<div class="mc-profile-desc">Exercices avec réponse</div></div>'
+            '<div class="mc-profile-stat"><span class="mc-profile-emoji">✅</span>'
+            f'<div class="mc-profile-number">{nb_bonnes} / {nb_verifiees}</div>'
+            '<div class="mc-profile-desc">Bonnes réponses vérifiées</div></div>'
+            '<div class="mc-profile-stat"><span class="mc-profile-emoji">📝</span>'
+            f'<div class="mc-profile-number">{statistiques["reponses_renseignees"]}</div>'
+            '<div class="mc-profile-desc">Réponses renseignées</div></div>'
+            '</div>'
+            '<div class="mc-profile-track" role="progressbar"'
+            f' aria-valuenow="{taux_repondu}" aria-valuemin="0" aria-valuemax="100"'
+            ' aria-label="Proportion d’exercices avec au moins une réponse">'
+            f'<div class="mc-profile-track-fill" style="width:{taux_repondu}%"></div></div>'
+            f'<div class="mc-profile-muted">{taux_repondu} % des exercices enregistrés ont au moins une réponse. '
+            'Cette barre ne mesure pas la réussite.</div>'
+        )
+        st.caption(f"Séries avec au moins une réponse : {series_avec_reponses} sur {total_series}.")
 
         st.caption(
             "Un exercice est compté dès qu'au moins une réponse est "
@@ -2665,12 +2771,6 @@ if est_connecte and st.query_params.get("vue") == "profil":
         )
 
         if statistiques["questions_verifiees"]:
-            with st.container(key="mathicap_score_corrections"):
-                st.metric(
-                    "Résultats des corrections enregistrées",
-                    f"{statistiques['bonnes_verifiees']} bonnes réponses "
-                    f"/ {statistiques['questions_verifiees']}",
-                )
             st.caption(
                 "Résultats calculés uniquement à partir des bilans "
                 "de vérification sauvegardés ; les exercices sans bilan "
