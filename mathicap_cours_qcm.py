@@ -142,6 +142,35 @@ def _style():
     .mc-quiz-box {max-width:850px;border-radius:20px;padding:16px 19px;
          background:linear-gradient(115deg,#eff7ff,#f8f3ff);margin:13px 0;}
     .mc-quiz-box h2 {font-size:1.32rem;color:#173969;line-height:1.35;}
+    /* Commandes QCM : mêmes dimensions et lisibilité sur PC et mobile. */
+    .st-key-mc_qcm_demarrer {max-width:850px;margin:15px 0 18px}
+    .st-key-mc_qcm_demarrer button {
+        min-height:48px;width:100%;border-radius:13px;
+        background:#e7f1ff;border:2px solid #85afe9;color:#163c72;
+        font-weight:800;font-size:1.06rem;
+    }
+    .st-key-mc_qcm_demarrer button:hover {background:#d9eaff;border-color:#518cda}
+    .st-key-mc_qcm_demarrer button p {font-size:1.06rem;font-weight:800}
+    .st-key-mc_qcm_reprise_zone {max-width:850px;margin:12px 0 18px}
+    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] {
+        border:1px solid #bad5f4;border-radius:13px;background:#f3f8ff;
+    }
+    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary {
+        min-height:48px;padding:11px 14px;color:#163c72;
+    }
+    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary p {
+        font-size:1.06rem;font-weight:800;color:#163c72;
+    }
+    .st-key-mc_qcm_reprise_zone [data-testid="stButton"] button {
+        min-height:40px;border-radius:10px;
+    }
+    @media(max-width:640px) {
+        .st-key-mc_qcm_demarrer button {min-height:46px}
+        .st-key-mc_qcm_demarrer button p,
+        .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary p {
+            font-size:1rem;
+        }
+    }
     @media (prefers-reduced-motion: reduce) { .mc-lecon-entete::before {animation:none !important} }
     @media (prefers-reduced-motion: no-preference) {
       .mc-lecon-entete {animation:mc-lesson-show .32s ease-out both}
@@ -512,6 +541,11 @@ def _demarrer(notion):
     _sauvegarder_partie_en_cours()
 
 
+def _demarrer_depuis_bouton(notion):
+    """Callback : une seule réexécution Streamlit après le clic."""
+    _demarrer(notion)
+
+
 def _sauvegarder_partie_en_cours():
     partie = st.session_state.get('mathicap_qcm_partie')
     if not partie or partie.get('terminee'):
@@ -556,6 +590,37 @@ def _memoriser_choix_qcm(ident, indice):
             _sauvegarder_partie_en_cours()
 
 
+def _changer_question_qcm(ident, direction):
+    """Navigation en callback : évite un rerun explicite supplémentaire."""
+    partie = st.session_state.get('mathicap_qcm_partie')
+    if not partie or partie.get('id') != ident or partie.get('terminee'):
+        return
+    questions = partie.get('questions', [])
+    i = partie.get('index', 0)
+    if not isinstance(i, int) or not (0 <= i < len(questions)):
+        return
+    if direction == -1:
+        if i > 0:
+            partie['index'] = i - 1
+            _sauvegarder_partie_en_cours()
+        return
+    if direction != 1:
+        return
+    _memoriser_choix_qcm(ident, i)
+    if i == len(questions) - 1:
+        if _qcm_complet(partie):
+            partie['terminee'] = True
+            partie['index'] = len(questions)
+            partie['sauvegarde_tentee'] = False
+        else:
+            st.session_state['mc_qcm_avertissement'] = (
+                'Réponds aux dix questions avant de terminer.'
+            )
+    else:
+        partie['index'] = i + 1
+        _sauvegarder_partie_en_cours()
+
+
 def _qcm_complet(partie):
     return (len(partie.get('questions', [])) == 10
             and all(q['id'] in partie.get('reponses', {})
@@ -584,12 +649,13 @@ def afficher_qcm(aller_vers=None):
         from mathicap_qcm_resultats import charger_parties
         parties_sauvees, erreur_sauvees = charger_parties(20)
         if parties_sauvees:
-            with st.expander('📚 Reprendre mon QCM en cours', expanded=True):
-                for p in parties_sauvees[:10]:
-                    st.button('▶️ Reprendre — ' + str(p.get('notion_label','QCM'))
-                              + ' · ' + str(p.get('nombre_reponses', 0)) + '/10 réponses',
-                              key='mc_reprise_' + p['partie_id'],
-                              on_click=_ouvrir_serie_qcm, args=(p['partie_id'],))
+            with st.container(key='mc_qcm_reprise_zone'):
+                with st.expander('📚 Reprendre mon QCM en cours', expanded=True):
+                    for p in parties_sauvees[:10]:
+                        st.button('▶️ Reprendre — ' + str(p.get('notion_label','QCM'))
+                                  + ' · ' + str(p.get('nombre_reponses', 0)) + '/10 réponses',
+                                  key='mc_reprise_' + p['partie_id'],
+                                  on_click=_ouvrir_serie_qcm, args=(p['partie_id'],))
         elif erreur_sauvees and st.session_state.get('eleve_id'):
             st.caption('Séries QCM indisponibles : ' + erreur_sauvees)
 
@@ -605,9 +671,8 @@ def afficher_qcm(aller_vers=None):
 
     if partie and partie['notion'] != select:
         st.info('Une partie est en cours dans une autre notion. Démarre un nouveau QCM pour changer.', width=850)
-    if st.button('🎯 Démarrer un nouveau QCM', key='mc_qcm_demarrer'):
-        _demarrer(select)
-        st.rerun()
+    st.button('🎯 Démarrer un nouveau QCM', key='mc_qcm_demarrer',
+              on_click=_demarrer_depuis_bouton, args=(select,))
     if not partie:
         st.info('Choisis une notion et commence. Réponds aux 10 questions : ton score et les corrections seront affichés seulement à la fin.', width=850)
         st.button('📖 Revoir le cours', key='mc_qcm_vers_cours',
@@ -703,25 +768,16 @@ def afficher_qcm(aller_vers=None):
                      key=champ, on_change=_memoriser_choix_qcm, args=(ident, i))
     if choix in q['options']:
         partie['reponses'][q['id']] = q['options'].index(choix)
+    avertissement = st.session_state.pop('mc_qcm_avertissement', None)
+    if avertissement:
+        st.warning(avertissement)
     gauche, droite = st.columns(2, gap='small')
     with gauche:
-        if i > 0 and st.button('← Question précédente', key='mc_qcm_precedente'):
-            partie['index'] = i - 1
-            _sauvegarder_partie_en_cours()
-            st.rerun()
+        if i > 0:
+            st.button('← Question précédente', key='mc_qcm_precedente',
+                      on_click=_changer_question_qcm, args=(ident, -1))
     with droite:
         dernier = i == len(questions) - 1
         libelle = '✅ Terminer mon QCM' if dernier else 'Question suivante →'
-        if st.button(libelle, key='mc_qcm_suivante', disabled=(choix is None)):
-            _memoriser_choix_qcm(ident, i)
-            if dernier:
-                if _qcm_complet(partie):
-                    partie['terminee'] = True
-                    partie['index'] = len(questions)
-                    partie['sauvegarde_tentee'] = False
-                else:
-                    st.warning('Réponds aux dix questions avant de terminer.')
-            else:
-                partie['index'] = i + 1
-                _sauvegarder_partie_en_cours()
-            st.rerun()
+        st.button(libelle, key='mc_qcm_suivante', disabled=(choix is None),
+                  on_click=_changer_question_qcm, args=(ident, 1))
