@@ -95,7 +95,9 @@ def _donnees(partie, utilisateur, terminee):
 def _message_erreur(exc):
     code = str(getattr(exc, 'code', '') or '')
     if code in ('PGRST205', '42P01', '42703', 'PGRST204'):
-        return 'Exécute la migration QCM dans Supabase (script SQL fourni).'
+        return ('Lecture QCM impossible (code ' + code + '). Vérifie que les colonnes '
+                'questions, reponses, statut, index_courant et modifie_le existent '
+                'dans le projet Supabase utilisé par MathiCap.')
     if code == '42501':
         return 'Accès au stockage refusé. Vérifie les droits de la table QCM.'
     return 'Sauvegarde indisponible. Tes réponses restent affichées sur cette page.'
@@ -265,7 +267,7 @@ def _ouvrir_depuis_profil(partie_id):
 
 def afficher_progression_qcm():
     """Profil : notes et éventuel QCM inachevé à reprendre."""
-    st.markdown('### Mes résultats QCM')
+    st.html('<div class="mc-profile-qcm-heading">Mes résultats QCM</div>')
     resultats, erreur = charger_resultats(50)
     if erreur:
         st.caption(erreur)
