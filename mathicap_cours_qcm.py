@@ -2,8 +2,8 @@
 
 Référence pédagogique : photos du manuel, chapitre Opérations, 18 pages.
 Programme complémentaire : mathématiques de 5e, BO du 5 mars 2026.
-Ce module n'effectue aucune écriture Supabase : validation pédagogique avant
-connexion des scores au compte élève.
+Les scores des QCM terminés sont enregistrés séparément dans Supabase,
+après vérification de la session de l'élève.
 """
 from __future__ import annotations
 import random
@@ -473,89 +473,167 @@ def _tirer_questions(notion):
     return resultat
 
 def _demarrer(notion):
-    st.session_state['mathicap_qcm_partie']={
-       'id':uuid4().hex[:10],'notion':notion,'questions':_tirer_questions(notion),
-       'index':0,'reponses':{},'validee':False,
+    """Lance 10 questions sans afficher leur correction pendant le QCM."""
+    st.session_state['mathicap_qcm_partie'] = {
+        'id': uuid4().hex[:10],
+        'notion': notion,
+        'questions': _tirer_questions(notion),
+        'index': 0,
+        'reponses': {},
+        'terminee': False,
+        'revoir': False,
+        'sauvegarde_tentee': False,
+        'sauvegarde_confirmee': False,
     }
+
+
+def _memoriser_choix_qcm(ident, indice):
+    """Mémorise le choix à chaque clic, même avant Changer de question."""
+    partie = st.session_state.get('mathicap_qcm_partie')
+    if not partie or partie.get('id') != ident or partie.get('terminee'):
+        return
+    questions = partie.get('questions', [])
+    if not (0 <= indice < len(questions)):
+        return
+    cle = f'mc_qcm_radio_{ident}_{indice}'
+    valeur = st.session_state.get(cle)
+    options = questions[indice]['options']
+    if valeur in options:
+        partie['reponses'][questions[indice]['id']] = options.index(valeur)
+
+
+def _qcm_complet(partie):
+    return (len(partie.get('questions', [])) == 10
+            and all(q['id'] in partie.get('reponses', {})
+                    for q in partie.get('questions', [])))
+
+
+def _score_qcm(partie):
+    return sum(partie.get('reponses', {}).get(q['id']) == q['answer']
+               for q in partie.get('questions', []))
 
 
 def afficher_qcm(aller_vers=None):
     _style()
     st.subheader('QCM rapides')
-    _chapitre_entete('QCM : 10 questions, une seule bonne réponse à chaque fois')
+    _chapitre_entete('QCM : 10 questions, une seule bonne réponse par question')
     with st.container(key='mc_choix_notion_qcm'):
-        select = _notion_selector('mathicap_qcm_notion',allow_all=True)
-    partie=st.session_state.get('mathicap_qcm_partie')
-    if partie and partie['notion']!=select:
-        st.info('Une partie est en cours dans une autre notion. Démarre un nouveau QCM pour changer.',width=850)
-    c1,c2=st.columns([1,3],gap='small')
-    with c1:
-        if st.button('🎯 Démarrer un QCM',key='mc_qcm_demarrer',width='stretch'):
-            _demarrer(select);st.rerun()
+        select = _notion_selector('mathicap_qcm_notion', allow_all=True)
+    partie = st.session_state.get('mathicap_qcm_partie')
+    if partie and partie['notion'] != select:
+        st.info('Une partie est en cours dans une autre notion. Démarre un nouveau QCM pour changer.', width=850)
+    if st.button('🎯 Démarrer un nouveau QCM', key='mc_qcm_demarrer'):
+        _demarrer(select)
+        st.rerun()
     if not partie:
-        st.info('Choisis une notion, puis démarre un QCM de 10 questions. Tu obtiendras une explication après chaque réponse.',width=850)
-        st.button(
-            '📖 Revoir le cours', key='mc_qcm_vers_cours',
-            on_click=_aller_du_qcm_au_cours, args=(select, aller_vers),
-        )
+        st.info('Choisis une notion et commence. Réponds aux 10 questions : ton score et les corrections seront affichés seulement à la fin.', width=850)
+        st.button('📖 Revoir le cours', key='mc_qcm_vers_cours',
+                  on_click=_aller_du_qcm_au_cours, args=(select, aller_vers))
         return
-    i=partie['index'];questions=partie['questions'];ident=partie['id']
-    if i>=len(questions):
-        bonnes=sum(1 for q in questions if partie['reponses'].get(q['id'])==q['answer'])
-        score=int(100*bonnes/len(questions))
-        st.markdown('### 🏅 Mission terminée !')
-        st.metric('Ton score',f'{bonnes} / 10')
-        st.progress(score/100,text=f'{score} % de bonnes réponses')
-        if bonnes>=8: st.success('Très bien ! Tu maîtrises l’essentiel de ces questions.',width=850)
-        elif bonnes>=5: st.info('Bon début ! Revois les erreurs puis retente ta chance.',width=850)
-        else: st.info('Continue à t’entraîner : relis le cours et réessaie.',width=850)
-        with st.expander('🔎 Revoir mes 10 réponses',expanded=False):
-            for idx,q in enumerate(questions,1):
-                bonne=q['options'][q['answer']]
-                rep=partie['reponses'].get(q['id'])
-                donne=q['options'][rep] if rep is not None else 'Non renseignée'
-                st.markdown(f'**{idx}. {q["question"]}**')
-                st.write(f'Ta réponse : {donne} · Bonne réponse : {bonne}')
-                st.caption(q['explain'])
-                st.divider()
-        # L'historique des QCM est distinct des séries d'exercices.
+
+    questions = partie['questions']
+    ident = partie['id']
+    terminee = bool(partie.get('terminee') or partie.get('index', 0) >= len(questions))
+
+    if terminee:
+        if not _qcm_complet(partie):
+            st.warning('Le QCM est incomplet. Reviens répondre aux questions restantes.')
+            if st.button('← Revenir aux questions', key='mc_qcm_revenir_questions'):
+                partie['terminee'] = False
+                partie['index'] = next((j for j, q in enumerate(questions)
+                                         if q['id'] not in partie['reponses']), 0)
+                st.rerun()
+            return
+
+        bonnes = _score_qcm(partie)
+        score = int(100 * bonnes / len(questions))
+        st.markdown('### 🏅 Ton QCM est terminé !')
+        st.metric('Ton score', f'{bonnes} / 10')
+        st.progress(score / 100, text=f'{score} % de bonnes réponses')
+        if bonnes >= 8:
+            st.success('Très bon travail !', width=850)
+        elif bonnes >= 5:
+            st.info('Bon début ! Tu peux revoir tes réponses et progresser.', width=850)
+        else:
+            st.info('Continue à t’entraîner : relis le cours, puis réessaie.', width=850)
+
+        # Ne confirmer l'enregistrement que si Supabase a renvoyé la ligne enregistrée.
         from mathicap_qcm_resultats import enregistrer_resultat, charger_resultats, LABELS
         if not partie.get('sauvegarde_confirmee') and not partie.get('sauvegarde_tentee'):
             partie['sauvegarde_tentee'] = True
-            partie['sauvegarde_confirmee'], partie['sauvegarde_message'] = enregistrer_resultat(partie)
+            (partie['sauvegarde_confirmee'],
+             partie['sauvegarde_message']) = enregistrer_resultat(partie)
         if partie.get('sauvegarde_confirmee'):
-            st.success('Résultat du QCM enregistré dans ton compte.', width=850)
+            st.success('Score enregistré et vérifié dans ton compte MathiCap.', width=850)
         else:
-            st.caption(partie.get('sauvegarde_message', 'Le score reste visible, mais n’a pas été enregistré.'))
+            st.warning(partie.get('sauvegarde_message',
+                                  'Score affiché, mais enregistrement non confirmé.'), width=850)
             if st.session_state.get('eleve_id'):
                 if st.button('Réessayer l’enregistrement', key='mc_qcm_retenter_sauvegarde'):
                     partie['sauvegarde_tentee'] = False
                     st.rerun()
-        resultats, _ = charger_resultats(5)
-        if resultats:
+
+        # Toujours accessible après la dixième question, y compris après sauvegarde.
+        if st.button('🔎 Revoir mes réponses', key='mc_qcm_revoir'):
+            partie['revoir'] = not partie.get('revoir', False)
+            st.rerun()
+        if partie.get('revoir', False):
+            st.markdown('#### Correction de tes 10 questions')
+            for no, q in enumerate(questions, 1):
+                choisie = partie['reponses'].get(q['id'])
+                juste = choisie == q['answer']
+                st.markdown(f"**Question {no} — {'✅ Bonne réponse' if juste else '❌ À revoir'}**")
+                st.write(q['question'])
+                st.write('**Ta réponse :** ' + (q['options'][choisie] if isinstance(choisie, int) and 0 <= choisie < len(q['options']) else 'Aucune'))
+                st.write('**Bonne réponse :** ' + q['options'][q['answer']])
+                st.caption('Explication : ' + q['explain'])
+                if no < len(questions):
+                    st.divider()
+
+        resultat_lignes, erreur_resultats = charger_resultats(5)
+        if resultat_lignes:
             with st.expander('📈 Mes derniers scores QCM'):
-                for ligne in resultats:
+                for ligne in resultat_lignes:
                     st.write(f"{LABELS.get(ligne['notion'], ligne['notion'])} : "
                              f"{ligne['bonnes']} / {ligne['total']}")
-        if st.button('↻ Nouveau QCM',key='mc_qcm_recommencer'):
-            _demarrer(select); st.rerun()
+        elif erreur_resultats:
+            st.caption(erreur_resultats)
+        st.button('📖 Revoir le cours', key='mc_qcm_cours_apres',
+                  on_click=_aller_du_qcm_au_cours,
+                  args=(partie.get('notion', select), aller_vers))
         return
-    q=questions[i]
-    st.progress(i/10,text=f'Question {i+1} sur 10')
-    st.html('<div class="mc-quiz-box"><div class="mc-kicker">QUESTION '+str(i+1)+'/10</div><h2>'+str(q['question'])+'</h2></div>')
-    champ='mc_qcm_radio_'+ident+'_'+str(i)
-    reponse=st.radio('Choisis une seule réponse',q['options'],index=None,key=champ,disabled=partie['validee'])
-    if not partie['validee']:
-        if st.button('Vérifier ma réponse',key='mc_qcm_valider',disabled=reponse is None):
-            partie['reponses'][q['id']]=q['options'].index(reponse)
-            partie['validee']=True
+
+    i = partie['index']
+    q = questions[i]
+    st.progress(i / 10, text=f'Question {i + 1} sur 10')
+    st.caption(f"Réponses renseignées : {len(partie.get('reponses', {}))} sur 10 — corrections à la fin")
+    st.html('<div class="mc-quiz-box"><div class="mc-kicker">QUESTION '
+            + str(i + 1) + '/10</div><h2>' + escape(str(q['question']))
+            + '</h2></div>')
+    champ = f'mc_qcm_radio_{ident}_{i}'
+    precedente = partie['reponses'].get(q['id'])
+    index_precedent = precedente if isinstance(precedente, int) and 0 <= precedente < len(q['options']) else None
+    choix = st.radio('Choisis une seule réponse', q['options'], index=index_precedent,
+                     key=champ, on_change=_memoriser_choix_qcm, args=(ident, i))
+    if choix in q['options']:
+        partie['reponses'][q['id']] = q['options'].index(choix)
+    gauche, droite = st.columns(2, gap='small')
+    with gauche:
+        if i > 0 and st.button('← Question précédente', key='mc_qcm_precedente'):
+            partie['index'] = i - 1
             st.rerun()
-    else:
-        correcte=partie['reponses'][q['id']]==q['answer']
-        if correcte: st.success('Bonne réponse !',width=850)
-        else: st.error('Réponse incorrecte. La bonne réponse est : '+q['options'][q['answer']],width=850)
-        st.markdown('**Explication :** '+q['explain'])
-        if st.button('Question suivante →' if i<9 else 'Voir mon résultat →',key='mc_qcm_suivante'):
-            partie['index']+=1
-            partie['validee']=False
+    with droite:
+        dernier = i == len(questions) - 1
+        libelle = '✅ Terminer mon QCM' if dernier else 'Question suivante →'
+        if st.button(libelle, key='mc_qcm_suivante', disabled=(choix is None)):
+            _memoriser_choix_qcm(ident, i)
+            if dernier:
+                if _qcm_complet(partie):
+                    partie['terminee'] = True
+                    partie['index'] = len(questions)
+                    partie['sauvegarde_tentee'] = False
+                else:
+                    st.warning('Réponds aux dix questions avant de terminer.')
+            else:
+                partie['index'] = i + 1
             st.rerun()
