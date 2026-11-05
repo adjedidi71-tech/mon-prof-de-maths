@@ -1466,6 +1466,105 @@ st.markdown("""
     padding: 5px 0 !important;
 }
 
+
+/* ==============================================================
+   MathiCap – correctif smartphone : loupe dans l'en-tête.
+   Seule la présentation change ; formulaire, validation et fermeture
+   au clic extérieur restent inchangés.
+   ============================================================== */
+@media (max-width: 620px) {
+    /* Logo | loupe | cloche et avatar : une ligne unique. */
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 36px auto !important;
+        grid-template-rows: auto !important;
+        gap: 8px !important;
+        align-items: start !important;
+        position: relative !important;
+        overflow: visible !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+    > [data-testid="stColumn"]:first-child {
+        grid-row: 1 !important;
+        grid-column: 1 !important;
+        min-width: 0 !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+    > [data-testid="stColumn"]:nth-child(2) {
+        grid-row: 1 !important;
+        grid-column: 2 !important;
+        align-self: start !important;
+        justify-self: center !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        margin: 0 !important;
+        position: static !important;
+        overflow: visible !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic)
+    > [data-testid="stColumn"]:nth-child(3) {
+        grid-row: 1 !important;
+        grid-column: 3 !important;
+        justify-self: end !important;
+    }
+    .st-key-mathicap_barre_recherche {
+        --mc-recherche-h: 36px;
+        --mc-recherche-bouton-w: 36px;
+        width: 36px !important;
+        max-width: 36px !important;
+        margin: 18px 0 0 !important;
+        padding: 0 !important;
+        position: static !important;
+        overflow: visible !important;
+    }
+    /* Les conteneurs ne doivent pas retenir le champ sous la loupe. */
+    .st-key-mathicap_barre_recherche form,
+    .st-key-mathicap_barre_recherche [data-testid="stForm"],
+    .st-key-mathicap_barre_recherche [data-testid="stVerticalBlock"],
+    .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"],
+    .st-key-mathicap_barre_recherche [data-testid="stElementContainer"] {
+        position: static !important;
+        overflow: visible !important;
+    }
+    .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: flex-end !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        gap: 0 !important;
+    }
+    .st-key-mathicap_barre_recherche [data-testid="stHorizontalBlock"]
+    > [data-testid="stColumn"]:last-child {
+        flex: 0 0 36px !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+    }
+    /* Champ dévoilé sous le bloc logo/profil, dans le flux visuel de la page.
+       Il ne recouvre ni le slogan ni les boutons du compte. */
+    .st-key-mathicap_barre_recherche.mc-recherche-ouverte
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+        display: block !important;
+        position: absolute !important;
+        top: calc(100% + 10px) !important;
+        left: 0 !important;
+        right: auto !important;
+        width: min(230px, 100%) !important;
+        min-width: 0 !important;
+        max-width: 230px !important;
+        height: auto !important;
+        z-index: 5 !important;
+    }
+    /* Réserver la place pour le champ uniquement lorsqu'il est ouvert. */
+    [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic):has(.mc-recherche-ouverte) {
+        margin-bottom: 50px !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
