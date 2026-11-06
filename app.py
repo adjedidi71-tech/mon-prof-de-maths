@@ -1124,24 +1124,56 @@ st.markdown("""
 .st-key-mathicap_reglages_exercices [data-testid="stProgress"] {
     max-width: 740px !important;
 }
-/* Action principale unique : visible à la fin des réglages, adaptée au mobile. */
+/* Exception au style global « boutons en texte » : action de génération. */
 .st-key-mathicap_action_generer {
     width: min(100%, 480px) !important;
-    margin: 16px 0 18px !important;
+    margin: 6px 0 10px !important;
 }
-.st-key-mathicap_action_generer button {
+.st-key-mathicap_action_generer [data-testid="stButton"] button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     width: 100% !important;
     min-height: 52px !important;
+    padding: 12px 18px !important;
+    border: 1px solid #1456b8 !important;
     border-radius: 12px !important;
+    background: #1456b8 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(20, 86, 184, .15) !important;
     font-size: 1.05rem !important;
     font-weight: 750 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+}
+.st-key-mathicap_action_generer [data-testid="stButton"] button p {
+    color: #fff !important;
+    font-size: 1.05rem !important;
+    font-weight: 750 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+}
+.st-key-mathicap_action_generer [data-testid="stButton"] button:hover {
+    background: #0b3d91 !important;
+    border-color: #0b3d91 !important;
+    color: #fff !important;
+    text-decoration: none !important;
+}
+.st-key-mathicap_action_generer [data-testid="stButton"] button:hover p {
+    color: #fff !important;
+    text-decoration: none !important;
+}
+.st-key-mathicap_action_generer [data-testid="stButton"] button:focus-visible {
+    outline: 3px solid #82b6ff !important;
+    outline-offset: 2px !important;
 }
 @media (max-width: 640px) {
     .st-key-mathicap_action_generer {
         width: 100% !important;
         max-width: 100% !important;
     }
-    .st-key-mathicap_action_generer button {
+    .st-key-mathicap_action_generer [data-testid="stButton"] button {
         min-height: 56px !important;
     }
 }
@@ -3216,6 +3248,8 @@ if _mc_nav_mesure and st.query_params.get("vue") != "profil":
 
 page_mathicap = afficher_interface_mathicap()
 
+# Hors de la rubrique Exercices, aucun clic de génération n'est possible.
+demande_generation = False
 if page_mathicap == "Exercices":
     with st.container(key="mathicap_reglages_exercices"):
         st.button(
