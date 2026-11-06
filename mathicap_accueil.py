@@ -776,7 +776,8 @@ def afficher_interface_mathicap() -> str:
     if page == "Mes séries":
         # Navigation compacte et adaptable au smartphone.
         # Revenir aux réglages sans effacer la série d'exercices en cours.
-        with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+        with st.container(horizontal=True, horizontal_alignment="left", gap="small",
+                          key="mathicap_series_navigation"):
             st.button(
                 "← Exercices",
                 key="mathicap_series_retour_exercices",
@@ -799,7 +800,12 @@ def afficher_interface_mathicap() -> str:
             )
     
         st.session_state["afficher_series"] = True
-        st.header("Mes séries d'exercices")
+        # Titre complet sur PC ; version courte et lisible sur smartphone.
+        st.html(
+            '<h2 class="mc-series-page-heading">'
+            'Mes séries<span class="mc-series-page-heading-extra"> d’exercices</span>'
+            '</h2>'
+        )
         if not st.session_state.get("eleve_id"):
             st.info("Connecte-toi pour accéder aux séries enregistrées.")
             st.stop()
