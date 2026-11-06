@@ -3709,8 +3709,11 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                 "ne sera effectuée."
                             )
 
+            # Numérotation d'affichage indépendante par chapitre (la plus récente = 1).
+            # L'identifiant Supabase de chaque série reste inchangé.
+            compteurs_chapitres = {}
             # Présentation des séries : mêmes données chargées, aucun appel Supabase en plus.
-            for numero_serie, serie in enumerate(series, start=1):
+            for serie in series:
                 bilan_serie = _mathicap_statistiques_progression([serie])
                 total = bilan_serie["exercices_total"]
                 renseignes = bilan_serie["exercices_avec_reponse"]
@@ -3743,6 +3746,10 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     else "Niveaux " + ", ".join(map(str, niveaux_serie))
                     if niveaux_serie else "Niveau non précisé"
                 )
+                # Les numéros sont propres au chapitre, sans être stockés en base.
+                # Les anciennes séries sans chapitre sont comptées séparément.
+                numero_serie = compteurs_chapitres.get(titre_chapitre, 0) + 1
+                compteurs_chapitres[titre_chapitre] = numero_serie
 
                 with st.container(border=True, key=f"mathicap_series_carte_{serie['id']}"):
                     colonne_selection, colonne_detail = st.columns(
