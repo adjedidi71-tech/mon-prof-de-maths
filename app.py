@@ -1799,70 +1799,98 @@ st.markdown("""
         min-height: 46px !important;
     }
 }
-/* Mes séries : titre visible à gauche ; taille de page alignée à droite. */
+/* Mes séries : trois filtres sur une ligne sur PC, même en demi-écran à 100 %.
+   Rester en une seule colonne sur smartphone. Aucun changement pour les autres pages. */
 .st-key-mathicap_series_filtres {
     width: min(100%, 940px) !important;
     max-width: 100% !important;
     min-width: 0 !important;
 }
-.st-key-mathicap_series_entete_filtres {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    margin: 0 0 10px !important;
-}
-.st-key-mathicap_series_entete_filtres .mc-series-filtres-titre {
-    margin: 0 !important;
+.st-key-mathicap_series_filtres .mc-series-filtres-titre {
+    margin: 0 0 12px !important;
     color: #173e79 !important;
     font-size: 1rem !important;
     font-weight: 750 !important;
     line-height: 1.3 !important;
-    white-space: nowrap !important;
 }
-/* Les colonnes de l'en-tête restent sur une ligne, y compris sur mobile. */
-.st-key-mathicap_series_entete_filtres [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) max-content !important;
-    align-items: center !important;
-    gap: 8px !important;
-}
-.st-key-mathicap_series_entete_filtres [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) > [data-testid="stColumn"] {
-    width: 100% !important;
+.st-key-mathicap_series_ligne_filtres,
+.st-key-mathicap_series_ligne_filtres [data-testid="stColumn"] {
     min-width: 0 !important;
     max-width: 100% !important;
-    flex: none !important;
 }
-.st-key-mathicap_series_taille_ligne {
-    width: auto !important;
+@media (min-width: 600px) {
+    .st-key-mathicap_series_ligne_filtres
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 1.3fr) !important;
+        align-items: start !important;
+        gap: 12px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .st-key-mathicap_series_ligne_filtres
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+}
+@media (max-width: 599px) {
+    .st-key-mathicap_series_ligne_filtres
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    .st-key-mathicap_series_ligne_filtres
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+}
+/* Choix du nombre de séries en bas à droite, sans cadre englobant.
+   Il reste hors de la barre de navigation Précédent / Suivant. */
+.st-key-mathicap_series_taille_bas {
+    box-sizing: border-box !important;
+    width: min(100%, 940px) !important;
+    max-width: 100% !important;
     min-width: 0 !important;
+    margin: 8px 0 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
-.st-key-mathicap_series_taille_ligne .mc-series-taille-label {
+.st-key-mathicap_series_taille_bas .mc-series-taille-label {
     color: #264363 !important;
-    font-size: .81rem !important;
+    font-size: .82rem !important;
     font-weight: 650 !important;
     white-space: nowrap !important;
 }
-.st-key-mathicap_series_taille_ligne [data-testid="stSelectbox"] {
+.st-key-mathicap_series_taille_bas [data-testid="stSelectbox"] {
     flex: 0 0 auto !important;
-    width: 72px !important;
-    min-width: 72px !important;
-    max-width: 72px !important;
+    width: 74px !important;
+    min-width: 74px !important;
+    max-width: 74px !important;
 }
-.st-key-mathicap_series_taille_ligne [data-baseweb="select"] > div {
+.st-key-mathicap_series_taille_bas [data-baseweb="select"] > div {
     min-height: 36px !important;
     border-radius: 8px !important;
-    padding-left: 2px !important;
-    border: 1px solid #cbdcf4 !important;
+    border: 1px solid #dce7f7 !important;
+    background: #f5f9ff !important;
 }
-/* Navigation sous les fiches : précédent gauche, numéro EXACTEMENT au centre,
-   suivant à droite, dans la même barre pleine largeur. */
+/* Barre de pagination existante : largeur des fiches, numéro centré. */
 .st-key-mathicap_series_pagination_bas {
     box-sizing: border-box !important;
     width: min(100%, 940px) !important;
     max-width: 100% !important;
     min-width: 0 !important;
     padding: 9px 12px !important;
-    margin: 14px 0 8px 0 !important;
+    margin: 7px 0 8px 0 !important;
     border-radius: 12px !important;
     border: 1px solid #dce7f7 !important;
     background: #f5f9ff !important;
@@ -1895,16 +1923,8 @@ st.markdown("""
     text-align: center !important;
 }
 @media (max-width: 640px) {
-    .st-key-mathicap_series_entete_filtres .mc-series-filtres-titre {
-        font-size: .90rem !important;
-    }
-    .st-key-mathicap_series_taille_ligne .mc-series-taille-label {
-        font-size: .72rem !important;
-    }
-    .st-key-mathicap_series_taille_ligne [data-testid="stSelectbox"] {
-        width: 66px !important;
-        min-width: 66px !important;
-        max-width: 66px !important;
+    .st-key-mathicap_series_taille_bas .mc-series-taille-label {
+        font-size: .76rem !important;
     }
     .st-key-mathicap_series_pagination_bas {
         padding: 7px 8px !important;
@@ -3925,56 +3945,38 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 if st.session_state.get(cle) not in choix_possibles:
                     st.session_state[cle] = choix_possibles[0]
 
-            # Conserver le même choix 5/10/20, mais l'intégrer au titre
-            # des filtres : pas de cadre de pagination séparé ni d'espace vide.
+            # Garder le choix 5/10/20, sans l'afficher au-dessus des filtres.
             if st.session_state.get(cle_taille_page) not in (5, 10, 20):
                 st.session_state[cle_taille_page] = 5
 
             with st.container(key="mathicap_series_filtres"):
-                # Deux colonnes explicites : titre à gauche et commande à droite.
-                # Évite que le titre soit masqué par l'alignement automatique horizontal.
-                with st.container(key="mathicap_series_entete_filtres"):
-                    colonne_titre, colonne_taille = st.columns(
-                        [2, 1], gap="small", vertical_alignment="center"
+                st.markdown(
+                    '<div class="mc-series-filtres-titre">Filtrer mes séries</div>',
+                    unsafe_allow_html=True,
+                )
+                # Un rang de 3 filtres à partir de 600 px, vertical sur smartphone.
+                with st.container(key="mathicap_series_ligne_filtres"):
+                    col_chapitre, col_niveau, col_etat = st.columns(
+                        [2, 1.1, 1.3], gap="small"
                     )
-                    with colonne_titre:
-                        st.markdown(
-                            '<div class="mc-series-filtres-titre">Filtrer mes séries</div>',
-                            unsafe_allow_html=True,
-                        )
-                    with colonne_taille:
-                        with st.container(
-                            horizontal=True,
-                            horizontal_alignment="right",
-                            vertical_alignment="center",
-                            gap="xsmall",
-                            key="mathicap_series_taille_ligne",
-                        ):
-                            st.html('<span class="mc-series-taille-label">Séries par page</span>')
-                            st.selectbox(
-                                "Séries par page", (5, 10, 20),
-                                key=cle_taille_page, on_change=changer_taille_page,
-                                label_visibility="collapsed", width=72,
+                    with col_chapitre:
+                        with st.container(key="mathicap_series_filtre_chapitre_couleur"):
+                            filtre_chapitre = st.selectbox(
+                                "Chapitre", options_chapitres, key=cle_chapitre,
+                                on_change=reinitialiser_selection_apres_filtre,
                             )
-                col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
-                with col_chapitre:
-                    with st.container(key="mathicap_series_filtre_chapitre_couleur"):
-                        filtre_chapitre = st.selectbox(
-                            "Chapitre", options_chapitres, key=cle_chapitre,
-                            on_change=reinitialiser_selection_apres_filtre,
-                        )
-                with col_niveau:
-                    with st.container(key="mathicap_series_filtre_niveau_couleur"):
-                        filtre_niveau = st.selectbox(
-                            "Niveau", options_niveaux, key=cle_niveau,
-                            on_change=reinitialiser_selection_apres_filtre,
-                        )
-                with col_etat:
-                    with st.container(key="mathicap_series_filtre_etat_couleur"):
-                        filtre_etat = st.selectbox(
-                            "Avancement", options_etats, key=cle_etat,
-                            on_change=reinitialiser_selection_apres_filtre,
-                        )
+                    with col_niveau:
+                        with st.container(key="mathicap_series_filtre_niveau_couleur"):
+                            filtre_niveau = st.selectbox(
+                                "Niveau", options_niveaux, key=cle_niveau,
+                                on_change=reinitialiser_selection_apres_filtre,
+                            )
+                    with col_etat:
+                        with st.container(key="mathicap_series_filtre_etat_couleur"):
+                            filtre_etat = st.selectbox(
+                                "Avancement", options_etats, key=cle_etat,
+                                on_change=reinitialiser_selection_apres_filtre,
+                            )
 
             fiches_visibles = [
                 fiche for fiche in fiches_series
@@ -4224,6 +4226,23 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                     "eleve_id": st.session_state["eleve_id"],
                                 }
                                 st.rerun()
+
+            # Taille de page hors du cadre de filtres et hors de la barre de navigation.
+            # Le sélecteur reste utilisable avec les mêmes clés/callbacks, sans
+            # ajouter de requête Supabase ni changer la sélection de séries.
+            with st.container(key="mathicap_series_taille_bas"):
+                with st.container(
+                    horizontal=True,
+                    horizontal_alignment="right",
+                    vertical_alignment="center",
+                    gap="xsmall",
+                ):
+                    st.html('<span class="mc-series-taille-label">Séries par page</span>')
+                    st.selectbox(
+                        "Séries par page", (5, 10, 20),
+                        key=cle_taille_page, on_change=changer_taille_page,
+                        label_visibility="collapsed", width=74,
+                    )
 
             # Barre de navigation pleine largeur, avec page centrée entre les boutons.
             # Aucun accès Supabase : seul l'index de la page change.
