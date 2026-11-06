@@ -289,7 +289,8 @@ if st.session_state.get("eleve_id"):
 
     if jeton:
         try:
-            eleve_id = verifier_session(supabase_privee, jeton)
+            # V7: verification recente reutilisee au plus 15 s, pour ce jeton uniquement.
+            eleve_id = verifier_session(supabase_privee, jeton, cache_seconds=15)
         except Exception:
             eleve_id = None
     else:
@@ -2830,12 +2831,22 @@ if est_connecte and st.query_params.get("vue") == "profil":
     try:
         resultat_series = (
             supabase_privee.table("series_exercices")
-            .select("id, exercices, reponses")
+            # Les memes colonnes que la liste « Mes series » : un seul chargement.
+            .select("id, code_reprise, exercices, reponses, progression, created_at")
             .eq("eleve_id", identifiant_eleve)
+            .order("created_at", desc=True)
             .execute()
         )
 
         series_profil = resultat_series.data or []
+        # Reutilisation courte pour le passage immediat Profil -> Mes series.
+        # Le cache sera consomme UNE FOIS ; il n'est jamais partage entre eleves.
+        st.session_state["_mathicap_nav_series_profil_v7"] = {
+            "eleve_id": identifiant_eleve,
+            "jeton": st.session_state.get("jeton_persistant"),
+            "charge_le": time.monotonic(),
+            "series": series_profil,
+        }
 
         total_series = len(series_profil)
         series_avec_reponses = sum(
@@ -3389,15 +3400,28 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
     try:
         _mc_nav_series_debut = time.perf_counter()
-        series = recuperer_exercices_eleve(
-            st.session_state["eleve_id"]
+        cache_profil = st.session_state.pop("_mathicap_nav_series_profil_v7", None)
+        valide_depuis_profil = (
+            isinstance(cache_profil, dict)
+            and cache_profil.get("eleve_id") == st.session_state["eleve_id"]
+            and cache_profil.get("jeton") == st.session_state.get("jeton_persistant")
+            and isinstance(cache_profil.get("series"), list)
+            and isinstance(cache_profil.get("charge_le"), (int, float))
+            and 0 <= time.monotonic() - cache_profil["charge_le"] <= 20
         )
+        if valide_depuis_profil:
+            # Evite une seconde requete quand on vient directement du profil.
+            series = cache_profil["series"]
+            _mc_nav_series_source = "reutilisees depuis le profil"
+        else:
+            series = recuperer_exercices_eleve(st.session_state["eleve_id"])
+            _mc_nav_series_source = "lecture Supabase"
         _mc_nav_series_ms = round((time.perf_counter() - _mc_nav_series_debut) * 1000)
         if _mc_nav_mesure:
             st.caption(
                 "Mesure navigation — préparation/en-tête : "
                 f"{_mc_nav_entete_ms} ms (dont session : {_mc_nav_auth_ms} ms) ; "
-                f"lecture des séries : {_mc_nav_series_ms} ms ; "
+                f"séries ({_mc_nav_series_source}) : {_mc_nav_series_ms} ms ; "
                 f"total avant affichage : {round((time.perf_counter()-_mc_nav_debut)*1000)} ms."
             )
 
