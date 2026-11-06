@@ -1870,7 +1870,7 @@ st.markdown("""
    sans dépendre de la largeur implicite de st.html (qui étirait le libellé). */
 .st-key-mathicap_series_taille_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
     display: grid !important;
-    grid-template-columns: max-content 54px !important;
+    grid-template-columns: max-content 80px !important;
     align-items: center !important;
     column-gap: 7px !important;
     width: 100% !important;
@@ -1891,9 +1891,9 @@ st.markdown("""
     white-space: nowrap !important;
 }
 .st-key-mathicap_series_taille_bas [data-testid="stSelectbox"] {
-    width: 54px !important;
-    min-width: 54px !important;
-    max-width: 54px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
 }
 .st-key-mathicap_series_taille_bas [data-baseweb="select"] > div {
     min-height: 40px !important;
@@ -1911,8 +1911,8 @@ st.markdown("""
     width: min(100%, 940px) !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    padding: 9px 12px !important;
-    margin: 7px 0 8px 0 !important;
+    padding: 4px 10px !important;
+    margin: 6px 0 8px 0 !important;
     border-radius: 12px !important;
     border: 1px solid #dce7f7 !important;
     background: #f5f9ff !important;
@@ -1921,6 +1921,7 @@ st.markdown("""
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr) !important;
     align-items: center !important;
+    min-height: 44px !important;
     gap: 6px !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -1932,6 +1933,10 @@ st.markdown("""
     min-width: 0 !important;
     max-width: 100% !important;
     flex: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-height: 44px !important;
 }
 .st-key-mathicap_series_pagination_bas [data-testid="stColumn"]:first-child {
     justify-self: start !important;
@@ -1962,11 +1967,19 @@ st.markdown("""
     max-width: 100% !important;
     margin-left: auto !important;
 }
-.st-key-mathicap_series_pagination_bas [data-testid="stCaptionContainer"] p {
+/* Etiquette au centre sans les marges verticales automatiques de st.caption. */
+.st-key-mathicap_series_pagination_bas .mc-series-numero-page {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
     margin: 0 !important;
+    padding: 0 !important;
     white-space: nowrap !important;
     text-align: center !important;
     font-size: .86rem !important;
+    line-height: 1 !important;
+    color: #7b8391 !important;
 }
 /* Contrairement à l'ancienne règle max-content, la largeur des boutons reste
    à l'intérieur de leur colonne, sans texte tronqué ni décalage latéral. */
@@ -1982,9 +1995,12 @@ st.markdown("""
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    padding-inline: 2px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 2px !important;
     text-align: left !important;
     justify-content: flex-start !important;
+    align-items: center !important;
 }
 .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) button {
     text-align: right !important;
@@ -2003,7 +2019,7 @@ st.markdown("""
 }
 @media (max-width: 599px) {
     .st-key-mathicap_series_pagination_bas {
-        padding: 8px 8px !important;
+        padding: 3px 8px !important;
     }
     .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
         grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr) !important;
@@ -2013,7 +2029,7 @@ st.markdown("""
         min-width: 0 !important;
     }
     .st-key-mathicap_series_pagination_bas button p,
-    .st-key-mathicap_series_pagination_bas [data-testid="stCaptionContainer"] p {
+    .st-key-mathicap_series_pagination_bas .mc-series-numero-page {
         font-size: clamp(.78rem, 3.3vw, .88rem) !important;
     }
 }
@@ -2217,9 +2233,9 @@ st.markdown("""
 /* 7. Un ensemble compact, ancré à droite, et non un libellé étiré sur la ligne. */
 .st-key-mathicap_series_taille_bas
 [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
-    grid-template-columns: max-content 54px !important;
+    grid-template-columns: max-content 80px !important;
     justify-content: end !important;
-    column-gap: 5px !important;
+    column-gap: 6px !important;
 }
 
 </style>
@@ -4461,7 +4477,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     st.selectbox(
                         "Séries par page", (5, 10, 20),
                         key=cle_taille_page, on_change=changer_taille_page,
-                        label_visibility="collapsed", width=54,
+                        label_visibility="collapsed", width=80,
                     )
 
             # Barre de navigation pleine largeur, avec page centrée entre les boutons.
@@ -4478,7 +4494,10 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                             on_click=naviguer_page, args=(-1,),
                         )
                     with nav_numero:
-                        st.caption(f"Page {page_actuelle} / {nombre_pages}")
+                        st.html(
+                            f'<span class="mc-series-numero-page">'
+                            f'Page {page_actuelle} / {nombre_pages}</span>'
+                        )
                     with nav_suivant:
                         st.button(
                             "Suivant →", key="mathicap_series_page_suivante",
