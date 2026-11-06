@@ -24,7 +24,15 @@ LABELS = {
 
 
 def _client_prive():
-    return create_client(st.secrets['SUPABASE_URL'], st.secrets['SUPABASE_SECRET_KEY'])
+    """Un client privé par session Streamlit, jamais partagé entre élèves."""
+    cle = '_mathicap_qcm_client_prive'
+    client = st.session_state.get(cle)
+    if client is None:
+        client = create_client(
+            st.secrets['SUPABASE_URL'], st.secrets['SUPABASE_SECRET_KEY']
+        )
+        st.session_state[cle] = client
+    return client
 
 
 def _compte_valide(client):
