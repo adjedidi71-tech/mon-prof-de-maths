@@ -774,7 +774,7 @@ st.markdown("""
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: clamp(112px, 36vw, 170px);
         --mc-ico: 32px;
-        --mc-avatar: 48px;
+        --mc-avatar: 40px;
         --mc-ico-gap: 8px;
         --mc-statut: 12px;
         --mc-btn-h: 28px;
@@ -788,7 +788,7 @@ st.markdown("""
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: 112px;
         --mc-ico: 28px;
-        --mc-avatar: 44px;
+        --mc-avatar: 38px;
         --mc-ico-gap: 6px;
         --mc-statut: 11px;
         --mc-btn-h: 26px;
@@ -1694,7 +1694,8 @@ st.markdown("""
         --mc-recherche-bouton-w: 36px;
         width: 36px !important;
         max-width: 36px !important;
-        margin: 18px 0 0 !important;
+        /* Rapproche son centre vertical de celui de la cloche. */
+        margin: 5px 0 0 !important;
         padding: 0 !important;
         position: static !important;
         overflow: visible !important;
@@ -1869,7 +1870,7 @@ st.markdown("""
    sans dépendre de la largeur implicite de st.html (qui étirait le libellé). */
 .st-key-mathicap_series_taille_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 66px !important;
+    grid-template-columns: max-content 54px !important;
     align-items: center !important;
     column-gap: 7px !important;
     width: 100% !important;
@@ -1890,15 +1891,17 @@ st.markdown("""
     white-space: nowrap !important;
 }
 .st-key-mathicap_series_taille_bas [data-testid="stSelectbox"] {
-    width: 66px !important;
-    min-width: 66px !important;
-    max-width: 66px !important;
+    width: 54px !important;
+    min-width: 54px !important;
+    max-width: 54px !important;
 }
 .st-key-mathicap_series_taille_bas [data-baseweb="select"] > div {
-    min-height: 36px !important;
+    min-height: 40px !important;
     border-radius: 8px !important;
     border: 1px solid #dce7f7 !important;
     background: #f5f9ff !important;
+    padding-left: 4px !important;
+    padding-right: 2px !important;
 }
 /* Mes séries : pagination sans débordement, même à 320px CSS.
    Trois zones flexibles : bouton gauche, numéro centré, bouton droit.
@@ -1916,7 +1919,7 @@ st.markdown("""
 }
 .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr) !important;
     align-items: center !important;
     gap: 6px !important;
     width: 100% !important;
@@ -1937,9 +1940,27 @@ st.markdown("""
     justify-self: center !important;
     text-align: center !important;
 }
-.st-key-mathicap_series_pagination_bas [data-testid="stColumn"]:last-child {
-    justify-self: end !important;
+.st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) {
+    justify-self: stretch !important;
     text-align: right !important;
+}
+/* Le widget Suivant et son wrapper doivent aller jusqu'à la droite de la 3e colonne.
+   Les règles générales des boutons Streamlit ne garantissent pas cet ancrage. */
+.st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) [data-testid="stButton"] {
+    display: flex !important;
+    justify-content: flex-end !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.st-key-mathicap_series_pagination_bas .st-key-mathicap_series_page_suivante {
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+}
+.st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) button {
+    width: auto !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
 }
 .st-key-mathicap_series_pagination_bas [data-testid="stCaptionContainer"] p {
     margin: 0 !important;
@@ -1965,7 +1986,7 @@ st.markdown("""
     text-align: left !important;
     justify-content: flex-start !important;
 }
-.st-key-mathicap_series_pagination_bas [data-testid="stColumn"]:last-child button {
+.st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) button {
     text-align: right !important;
     justify-content: flex-end !important;
 }
@@ -1985,8 +2006,11 @@ st.markdown("""
         padding: 8px 8px !important;
     }
     .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr) !important;
         gap: 3px !important;
+    }
+    .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) {
+        min-width: 0 !important;
     }
     .st-key-mathicap_series_pagination_bas button p,
     .st-key-mathicap_series_pagination_bas [data-testid="stCaptionContainer"] p {
@@ -2165,8 +2189,8 @@ st.markdown("""
     /* 4. Réduire l'espace entre l'en-tête et les liens de cette page seulement.
        Le décalage reste limité pour ne pas chevaucher les commandes du compte. */
     .st-key-mathicap_series_navigation {
-        margin-top: -26px !important;
-        margin-bottom: -16px !important;
+        margin-top: -34px !important;
+        margin-bottom: -20px !important;
         max-width: 100% !important;
         min-width: 0 !important;
     }
@@ -2193,9 +2217,9 @@ st.markdown("""
 /* 7. Un ensemble compact, ancré à droite, et non un libellé étiré sur la ligne. */
 .st-key-mathicap_series_taille_bas
 [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
-    grid-template-columns: max-content 66px !important;
+    grid-template-columns: max-content 54px !important;
     justify-content: end !important;
-    column-gap: 6px !important;
+    column-gap: 5px !important;
 }
 
 </style>
@@ -4437,7 +4461,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     st.selectbox(
                         "Séries par page", (5, 10, 20),
                         key=cle_taille_page, on_change=changer_taille_page,
-                        label_visibility="collapsed", width=66,
+                        label_visibility="collapsed", width=54,
                     )
 
             # Barre de navigation pleine largeur, avec page centrée entre les boutons.
