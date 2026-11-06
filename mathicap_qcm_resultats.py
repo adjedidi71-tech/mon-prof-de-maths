@@ -347,14 +347,22 @@ def afficher_progression_qcm():
             for nom, valeurs in groupes.items():
                 st.markdown(f'**{LABELS.get(nom, nom)}** — {len(valeurs)} QCM · '
                             f'dernier {valeurs[0]}/10 · meilleur {max(valeurs)}/10')
-    parties, erreur_parties = charger_parties(30)
-    if parties:
-        with st.expander('Mon QCM inachevé à reprendre', width=500):
-            for row in parties:
-                st.button('▶ Reprendre — ' + row['notion_label']
-                          + ' · ' + str(row.get('nombre_reponses', 0)) + '/10 réponses',
-                          key='profil_mc_qcm_' + row['partie_id'],
-                          on_click=_ouvrir_depuis_profil, args=(row['partie_id'],))
-    elif erreur_parties:
-        st.caption(erreur_parties)
+    # Chargement a la demande : un panneau FERME ne declenche plus la seconde
+    # lecture Supabase. L'ouverture du panneau declenche un rerun Streamlit,
+    # puis une lecture authentifiee des QCM inacheves.
+    cle_panneau = 'mc_profile_qcm_inacheve_v7'
+    with st.expander('Mon QCM inachevé à reprendre', width=500,
+                     key=cle_panneau, on_change='rerun'):
+        if st.session_state.get(cle_panneau, False):
+            parties, erreur_parties = charger_parties(30)
+            if parties:
+                for row in parties:
+                    st.button('▶ Reprendre — ' + row['notion_label']
+                              + ' · ' + str(row.get('nombre_reponses', 0)) + '/10 réponses',
+                              key='profil_mc_qcm_' + row['partie_id'],
+                              on_click=_ouvrir_depuis_profil, args=(row['partie_id'],))
+            elif erreur_parties:
+                st.caption(erreur_parties)
+            else:
+                st.caption('Aucun QCM en cours à reprendre.')
     st.caption('Affichage limité aux 50 derniers QCM terminés enregistrés.')
