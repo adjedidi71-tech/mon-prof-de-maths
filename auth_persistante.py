@@ -72,6 +72,8 @@ def session_eleve_active():
 
 
 def deconnecter_eleve():
+    # Une déconnexion ne doit jamais conserver l’autorisation QCM locale.
+    _vider_cache_verification_session()
     st.session_state.pop("eleve_id", None)
     st.session_state.pop("session_eleve", None)
     st.session_state.pop("exercices_actuels", None)
@@ -80,6 +82,7 @@ def deconnecter_eleve():
 import secrets
 import hashlib
 from datetime import datetime, timedelta, timezone
+from time import monotonic
 
 
 def creer_jeton():
@@ -108,31 +111,77 @@ def enregistrer_session(supabase_privee, eleve_id):
 
     return jeton
 
-def verifier_session(supabase_privee, jeton):
-    """Vérifie ET renouvelle un jeton encore valide en un seul aller-retour.
+# Cache strictement local à une session Streamlit, jamais partagé entre élèves.
+# Un appel ordinaire reste systématiquement vérifié dans Supabase.
+_CACHE_SESSION_KEY = '_mathicap_session_verifiee_qcm'
 
-    Une seule requête conditionnelle remplace l'ancienne lecture suivie d'une
-    écriture. Un jeton supprimé ou expiré n'est jamais recréé ni prolongé.
-    La durée reste de trente jours glissants à chaque vérification réussie.
+
+def _vider_cache_verification_session():
+    st.session_state.pop(_CACHE_SESSION_KEY, None)
+
+
+def verifier_session(supabase_privee, jeton, *, cache_seconds=0):
+    """Vérifie un jeton côté serveur et renouvelle son expiration de 30 jours.
+
+    Par défaut, aucune réponse mise en cache n'est acceptée (app.py et autres
+    fonctions d'authentification restent inchangés dans leur comportement).
+    Seules les opérations QCM peuvent demander de réutiliser une vérification
+    récente, durant 30 secondes au plus, dans CETTE session Streamlit.
+    Après cette période, un nouvel appel Supabase est impératif. Les jetons
+    expirés/supprimés ne sont jamais recréés.
     """
-    if not jeton:
+    if not isinstance(jeton, str) or not jeton:
+        _vider_cache_verification_session()
         return None
 
+    empreinte = empreinte_jeton(jeton)
+    maintenant_monotone = monotonic()
+    # Même si un appelant demande davantage, ne jamais dépasser 30 secondes.
+    delai_cache = max(0.0, min(float(cache_seconds), 30.0))
+    souvenir = st.session_state.get(_CACHE_SESSION_KEY)
+    eleve_courant = st.session_state.get('eleve_id')
+
+    if (delai_cache > 0 and isinstance(souvenir, dict)
+            and souvenir.get('empreinte') == empreinte
+            and isinstance(souvenir.get('eleve_id'), str)
+            and (eleve_courant is None or eleve_courant == souvenir['eleve_id'])
+            and isinstance(souvenir.get('verifie_le'), (float, int))
+            and 0 <= maintenant_monotone - souvenir['verifie_le'] < delai_cache):
+        return souvenir['eleve_id']
+
     maintenant = datetime.now(timezone.utc).isoformat()
-    resultat = (
-        supabase_privee
-        .table("sessions_persistantes")
-        .update({"expire_le": expiration_session()})
-        .eq("jeton_hash", empreinte_jeton(jeton))
-        .gt("expire_le", maintenant)
-        .select("eleve_id")
-        .execute()
-    )
+    try:
+        resultat = (
+            supabase_privee
+            .table('sessions_persistantes')
+            .update({'expire_le': expiration_session()})
+            .eq('jeton_hash', empreinte)
+            .gt('expire_le', maintenant)
+            .select('eleve_id')
+            .execute()
+        )
+    except Exception:
+        # Ne jamais utiliser une ancienne validation si Supabase a échoué.
+        _vider_cache_verification_session()
+        raise
+
     lignes = resultat.data or []
-    return lignes[0]["eleve_id"] if lignes else None
+    if not lignes or not isinstance(lignes[0].get('eleve_id'), str):
+        _vider_cache_verification_session()
+        return None
+
+    eleve_id = lignes[0]['eleve_id']
+    st.session_state[_CACHE_SESSION_KEY] = {
+        'empreinte': empreinte,
+        'eleve_id': eleve_id,
+        'verifie_le': monotonic(),
+    }
+    return eleve_id
 
 
 def supprimer_session(supabase_privee, jeton):
+    # Révocation locale immédiate, même si l'appel à Supabase échoue.
+    _vider_cache_verification_session()
     if not jeton:
         return
 
