@@ -774,8 +774,15 @@ def afficher_interface_mathicap() -> str:
         st.stop()
 
     if page == "Mes séries":
-        # Navigation compacte et adaptable au smartphone
+        # Navigation compacte et adaptable au smartphone.
+        # Revenir aux réglages sans effacer la série d'exercices en cours.
         with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+            st.button(
+                "← Exercices",
+                key="mathicap_series_retour_exercices",
+                on_click=_aller_vers,
+                args=("Exercices",),
+            )
             if st.button(
                 "← Mon profil",
                 key="mathicap_series_retour_profil",
