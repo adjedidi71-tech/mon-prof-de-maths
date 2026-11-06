@@ -741,7 +741,10 @@ def afficher_qcm(aller_vers=None):
             (partie['sauvegarde_confirmee'],
              partie['sauvegarde_message']) = enregistrer_resultat(partie)
         if partie.get('sauvegarde_confirmee'):
-            st.success('Score enregistré dans ton compte MathiCap.', width=850)
+            # Une seule notification par partie ; pas de répétition lors des reruns.
+            if not partie.get('_notification_score_affichee'):
+                st.toast('Score enregistré dans ton compte MathiCap.', icon='✅', duration=3)
+                partie['_notification_score_affichee'] = True
         else:
             st.warning(partie.get('sauvegarde_message',
                                   'Score affiché, mais enregistrement non confirmé.'), width=850)
