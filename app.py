@@ -30,6 +30,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Mesure facultative des opérations de navigation : ?mesure_nav=1
+# Cette instrumentation est désactivée en usage normal.
+_mc_nav_debut = time.perf_counter()
+_mc_nav_mesure = st.query_params.get("mesure_nav") == "1"
+
 
 def _mathicap_correction_division_euclidienne(dividende, diviseur, quotient, reste):
     """Présente le quotient, le reste et l'égalité euclidienne pour un collégien."""
@@ -294,7 +299,9 @@ if st.session_state.get("eleve_id"):
         st.session_state.pop("eleve_id", None)
         st.session_state.pop("jeton_persistant", None)
         st.session_state.pop("session_eleve", None)
-        
+
+_mc_nav_auth_ms = round((time.perf_counter() - _mc_nav_debut) * 1000)
+
 from pathlib import Path
 # EN-TÊTE MATHICAP + COMPTE ÉLÈVE
 # Remplacer l'ancien affichage du grand logo ET tout l'ancien bloc
@@ -1979,6 +1986,20 @@ def _mathicap_retour_accueil_logo():
     st.query_params["vue"] = "accueil"
 
 
+def _mathicap_ouvrir_profil_rapide():
+    """La navigation est préparée avant le rendu, sans double exécution."""
+    st.session_state["mathicap_recherche_popover"] = False
+    st.query_params["vue"] = "profil"
+
+
+def _mathicap_profil_ouvrir_series():
+    """Le bouton « Mes séries » du profil est une navigation, pas une sauvegarde."""
+    st.session_state["mathicap_recherche_popover"] = False
+    st.session_state["mathicap_page"] = "Mes séries"
+    st.session_state["afficher_series"] = True
+    st.query_params["vue"] = "series"
+
+
 def _mathicap_reprendre_series_depuis_exercices():
     """Ouvrir la liste enregistrée sans perdre la série courante."""
     st.session_state["mathicap_recherche_popover"] = False
@@ -2251,13 +2272,12 @@ with col_profil:
                 on_click=_mathicap_ouvrir_icone,
                 args=("notifications",),
             )
-            if st.button(
+            st.button(
                 "Ouvrir mon profil",
                 key="mathicap_avatar_clic",
                 disabled=not est_connecte,
-            ):
-                st.query_params["vue"] = "profil"
-                st.rerun()
+                on_click=_mathicap_ouvrir_profil_rapide,
+            )
         if est_connecte:
             st.markdown(
                 '<div class="mathicap-connecte">● Connecté</div>',
@@ -2447,6 +2467,8 @@ if recherche_active:
             on_click=_mathicap_fermer_recherche_entete,
         )
 
+_mc_nav_entete_ms = round((time.perf_counter() - _mc_nav_debut) * 1000)
+
 if est_connecte and st.query_params.get("vue") == "profil":
 
     st.html("""<style>
@@ -2572,6 +2594,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
     profil_charge = False
 
     # Récupérer les informations du compte existant
+    _mc_nav_profil_debut = time.perf_counter()
     try:
         resultat_profil = supabase_privee.auth.admin.get_user_by_id(
             identifiant_eleve
@@ -2601,6 +2624,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     except Exception:
         st.warning("Informations du compte momentanément indisponibles.")
+    _mc_nav_profil_ms = round((time.perf_counter() - _mc_nav_profil_debut) * 1000)
 
     # Classe et date d'inscription
     classe_eleve = st.session_state.get("mathicap_classe")
@@ -2801,6 +2825,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     # Statistiques existantes, affichées en cartes adaptées à chaque largeur.
     series_profil = None
+    _mc_nav_stat_debut = time.perf_counter()
 
     try:
         resultat_series = (
@@ -2821,6 +2846,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     except Exception:
         st.info("Impossible de charger les statistiques pour le moment.", width=500)
+    _mc_nav_stat_ms = round((time.perf_counter() - _mc_nav_stat_debut) * 1000)
 
     st.html('<div class="mc-profile-section-title">Mes statistiques et ma progression</div>')
     if series_profil is None:
@@ -2924,23 +2950,30 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     # Résultats QCM, indépendants des statistiques des séries d'exercices.
     from mathicap_qcm_resultats import afficher_progression_qcm
+    _mc_nav_qcm_debut = time.perf_counter()
     afficher_progression_qcm()
+    _mc_nav_qcm_ms = round((time.perf_counter() - _mc_nav_qcm_debut) * 1000)
 
-    if st.button(
+    if _mc_nav_mesure:
+        st.caption(
+            "Mesure navigation — préparation/en-tête : "
+            f"{_mc_nav_entete_ms} ms (dont session : {_mc_nav_auth_ms} ms) ; "
+            f"profil : {_mc_nav_profil_ms} ms ; "
+            f"statistiques : {_mc_nav_stat_ms} ms ; "
+            f"résultats QCM : {_mc_nav_qcm_ms} ms ; "
+            f"total serveur : {round((time.perf_counter()-_mc_nav_debut)*1000)} ms."
+        )
+
+    st.button(
         "Voir mes séries enregistrées",
-        key="mathicap_profil_mes_series"
-    ):
-        st.session_state["mathicap_page"] = "Mes séries"
-        st.session_state["afficher_series"] = True
-        st.query_params["vue"] = "accueil"
-        st.rerun()
-    if st.button(
+        key="mathicap_profil_mes_series",
+        on_click=_mathicap_profil_ouvrir_series,
+    )
+    st.button(
         "Retour à l'accueil",
-        key="mathicap_retour_accueil"
-    ):
-        st.session_state["mathicap_page"] = "Accueil"
-        st.query_params["vue"] = "accueil"
-        st.rerun()
+        key="mathicap_retour_accueil",
+        on_click=_mathicap_retour_accueil_logo,
+    )
 
 
 # Avant connexion seulement : formulaire compact, sous l'en-tête.
@@ -3142,6 +3175,13 @@ if est_connecte and st.session_state.get("mathicap_page", "Accueil") == "Accueil
 else:
     st.session_state.pop("_mathicap_dashboard_donnees", None)
 
+if _mc_nav_mesure and st.query_params.get("vue") != "profil":
+    st.caption(
+        "Mesure navigation (avant affichage de la rubrique) : "
+        f"{round((time.perf_counter()-_mc_nav_debut)*1000)} ms "
+        f"(dont session : {_mc_nav_auth_ms} ms)."
+    )
+
 page_mathicap = afficher_interface_mathicap()
 
 if page_mathicap == "Exercices":
@@ -3326,7 +3366,10 @@ def _mathicap_retablir_serie(serie, *, nouvelle_version=False):
     return True
 
 
-if st.session_state.get("eleve_id") and "exercices_actuels" not in st.session_state:
+# Réhydrater une série seulement quand l'élève consulte les exercices.
+# Les autres rubriques, notamment « Mes séries », n'en ont pas besoin.
+if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
+        and "exercices_actuels" not in st.session_state):
     try:
         series_auto = recuperer_exercices_eleve(st.session_state["eleve_id"])
         if series_auto:
@@ -3345,9 +3388,18 @@ if st.session_state.get("eleve_id") and "exercices_actuels" not in st.session_st
 if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
     try:
+        _mc_nav_series_debut = time.perf_counter()
         series = recuperer_exercices_eleve(
             st.session_state["eleve_id"]
         )
+        _mc_nav_series_ms = round((time.perf_counter() - _mc_nav_series_debut) * 1000)
+        if _mc_nav_mesure:
+            st.caption(
+                "Mesure navigation — préparation/en-tête : "
+                f"{_mc_nav_entete_ms} ms (dont session : {_mc_nav_auth_ms} ms) ; "
+                f"lecture des séries : {_mc_nav_series_ms} ms ; "
+                f"total avant affichage : {round((time.perf_counter()-_mc_nav_debut)*1000)} ms."
+            )
 
         if not series:
             st.info("Aucune série enregistrée pour ce compte.", width=500)
