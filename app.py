@@ -1815,6 +1815,70 @@ st.markdown("""
 }
 
 
+/* Mes séries — filtres et pagination côte à côte sur PC.
+   Sur smartphone, la pagination passe sous les filtres. CSS local à cette page. */
+.st-key-mathicap_series_controles {
+    width: min(100%, 940px) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 12px 0 14px !important;
+}
+.st-key-mathicap_series_controles [data-testid="stHorizontalBlock"]
+    :is([data-testid="stColumn"]) { min-width: 0 !important; }
+.st-key-mathicap_series_controles [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .st-key-mathicap_series_filtres):has(> [data-testid="stColumn"] .st-key-mathicap_series_pagination_haut) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 3fr) minmax(205px, 1fr) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+.st-key-mathicap_series_controles [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .st-key-mathicap_series_filtres):has(> [data-testid="stColumn"] .st-key-mathicap_series_pagination_haut)
+    > [data-testid="stColumn"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+}
+.st-key-mathicap_series_controles .st-key-mathicap_series_filtres,
+.st-key-mathicap_series_controles .st-key-mathicap_series_pagination_haut {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 174px !important;
+    margin: 0 !important;
+}
+/* Sur PC, les deux menus de pagination sont empilés. */
+.st-key-mathicap_series_pagination_haut [data-testid="stHorizontalBlock"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 2px !important;
+}
+.st-key-mathicap_series_pagination_haut [data-testid="stHorizontalBlock"]
+    > [data-testid="stColumn"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: none !important;
+}
+@media (max-width: 900px) {
+    .st-key-mathicap_series_controles [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .st-key-mathicap_series_filtres):has(> [data-testid="stColumn"] .st-key-mathicap_series_pagination_haut) {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+    }
+    /* Sous les filtres : Séries / page et Page sur une ligne. */
+    .st-key-mathicap_series_pagination_haut [data-testid="stHorizontalBlock"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+    .st-key-mathicap_series_controles .st-key-mathicap_series_filtres,
+    .st-key-mathicap_series_controles .st-key-mathicap_series_pagination_haut {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+}
+
 /* Mes séries — adaptation réelle des fiches sur petit écran.
    Cible uniquement les fiches de la page Mes séries : pas l'en-tête,
    pas les exercices, pas les autres pages. */
@@ -3829,29 +3893,34 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 if st.session_state.get(cle) not in choix_possibles:
                     st.session_state[cle] = choix_possibles[0]
 
-            # Zone de filtres commune, cohérente sur PC et smartphone.
-            # Les clés des filtres et leurs callbacks restent inchangés.
-            with st.container(key="mathicap_series_filtres"):
-                st.html('<div class="mc-series-filtres-titre">Filtrer mes séries</div>')
-                col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
-                with col_chapitre:
-                    with st.container(key="mathicap_series_filtre_chapitre_couleur"):
-                        filtre_chapitre = st.selectbox(
-                            "Chapitre", options_chapitres, key=cle_chapitre,
-                            on_change=reinitialiser_selection_apres_filtre,
-                        )
-                with col_niveau:
-                    with st.container(key="mathicap_series_filtre_niveau_couleur"):
-                        filtre_niveau = st.selectbox(
-                            "Niveau", options_niveaux, key=cle_niveau,
-                            on_change=reinitialiser_selection_apres_filtre,
-                        )
-                with col_etat:
-                    with st.container(key="mathicap_series_filtre_etat_couleur"):
-                        filtre_etat = st.selectbox(
-                            "Avancement", options_etats, key=cle_etat,
-                            on_change=reinitialiser_selection_apres_filtre,
-                        )
+            # Sur PC, filtres à gauche et pagination à droite, dans la même ligne.
+            # Sur smartphone, les deux blocs se superposent via le CSS.
+            # On réserve la colonne de droite dès maintenant ; les choix de page
+            # sont construits après le calcul des résultats filtrés.
+            with st.container(key="mathicap_series_controles"):
+                col_filtres, col_pagination = st.columns([3, 1], gap="small")
+                with col_filtres:
+                    with st.container(key="mathicap_series_filtres"):
+                        st.html('<div class="mc-series-filtres-titre">Filtrer mes séries</div>')
+                        col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
+                        with col_chapitre:
+                            with st.container(key="mathicap_series_filtre_chapitre_couleur"):
+                                filtre_chapitre = st.selectbox(
+                                    "Chapitre", options_chapitres, key=cle_chapitre,
+                                    on_change=reinitialiser_selection_apres_filtre,
+                                )
+                        with col_niveau:
+                            with st.container(key="mathicap_series_filtre_niveau_couleur"):
+                                filtre_niveau = st.selectbox(
+                                    "Niveau", options_niveaux, key=cle_niveau,
+                                    on_change=reinitialiser_selection_apres_filtre,
+                                )
+                        with col_etat:
+                            with st.container(key="mathicap_series_filtre_etat_couleur"):
+                                filtre_etat = st.selectbox(
+                                    "Avancement", options_etats, key=cle_etat,
+                                    on_change=reinitialiser_selection_apres_filtre,
+                                )
 
             fiches_visibles = [
                 fiche for fiche in fiches_series
@@ -3876,18 +3945,19 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     or not 1 <= st.session_state[cle_page] <= nombre_pages):
                 st.session_state[cle_page] = 1
 
-            with st.container(key="mathicap_series_pagination_haut"):
-                col_taille, col_page = st.columns([1, 1], gap="small")
-                with col_taille:
-                    st.selectbox(
-                        "Séries par page", (5, 10, 20),
-                        key=cle_taille_page, on_change=changer_taille_page,
-                    )
-                with col_page:
-                    st.selectbox(
-                        "Page", range(1, nombre_pages + 1),
-                        key=cle_page, on_change=changer_page,
-                    )
+            with col_pagination:
+                with st.container(key="mathicap_series_pagination_haut"):
+                    col_taille, col_page = st.columns([1, 1], gap="small")
+                    with col_taille:
+                        st.selectbox(
+                            "Séries par page", (5, 10, 20),
+                            key=cle_taille_page, on_change=changer_taille_page,
+                        )
+                    with col_page:
+                        st.selectbox(
+                            "Page", range(1, nombre_pages + 1),
+                            key=cle_page, on_change=changer_page,
+                        )
 
             # Recalcul après les éventuels callbacks Streamlit.
             taille_page = st.session_state[cle_taille_page]
