@@ -1746,6 +1746,60 @@ st.markdown("""
     }
 }
 
+
+/* Mes séries : panneau de filtres coloré, isolé des autres formulaires. */
+.st-key-mathicap_series_filtres {
+    width: min(100%, 940px) !important;
+    box-sizing: border-box !important;
+    padding: 16px 18px 14px !important;
+    margin: 12px 0 14px !important;
+    background: linear-gradient(115deg, #edf5ff 0%, #f5f0ff 55%, #edf9f6 100%) !important;
+    border: 1px solid #d2e2f6 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 3px 12px rgba(29, 78, 137, 0.055) !important;
+}
+.st-key-mathicap_series_filtres .mc-series-filtres-titre {
+    color: #173e79 !important;
+    font-size: 1rem !important;
+    font-weight: 750 !important;
+    margin: 0 0 10px !important;
+    line-height: 1.3 !important;
+}
+.st-key-mathicap_series_filtres [data-testid="stSelectbox"] label p {
+    color: #264363 !important;
+    font-size: .92rem !important;
+    font-weight: 700 !important;
+}
+.st-key-mathicap_series_filtres [data-baseweb="select"] > div {
+    background: #fff !important;
+    min-height: 43px !important;
+    border: 1px solid #cbdcf4 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(35, 67, 110, .04) !important;
+}
+.st-key-mathicap_series_filtre_chapitre_couleur [data-baseweb="select"] > div {
+    border-left: 4px solid #2b74d9 !important;
+}
+.st-key-mathicap_series_filtre_niveau_couleur [data-baseweb="select"] > div {
+    border-left: 4px solid #8256c9 !important;
+}
+.st-key-mathicap_series_filtre_etat_couleur [data-baseweb="select"] > div {
+    border-left: 4px solid #158567 !important;
+}
+.st-key-mathicap_series_filtres [data-baseweb="select"] > div:focus-within {
+    outline: 2px solid rgba(59, 130, 246, .40) !important;
+    outline-offset: 2px !important;
+}
+@media (max-width: 640px) {
+    .st-key-mathicap_series_filtres {
+        padding: 14px 12px 12px !important;
+        border-radius: 13px !important;
+    }
+    .st-key-mathicap_series_filtres [data-baseweb="select"] > div {
+        min-height: 46px !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -3617,11 +3671,10 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             }, key=str.casefold)
             if any(not fiche["chapitres"] for fiche in fiches_series):
                 chapitres_disponibles.append("Chapitre non précisé")
-            niveaux_disponibles = sorted({
-                n for fiche in fiches_series for n in fiche["niveaux"]
-            })
+            # Toujours montrer le parcours complet de 1 à 9 ; un niveau sans
+            # série affichera simplement un résultat vide (aucune requête en plus).
             options_chapitres = ["Tous les chapitres", *chapitres_disponibles]
-            options_niveaux = ["Tous les niveaux", *[f"Niveau {n}" for n in niveaux_disponibles]]
+            options_niveaux = ["Tous les niveaux", *[f"Niveau {n}" for n in range(1, 10)]]
             if any(not fiche["niveaux"] for fiche in fiches_series):
                 options_niveaux.append("Niveau non précisé")
             options_etats = ["Tous les avancements", "À commencer", "En cours", "Tous renseignés"]
@@ -3646,22 +3699,29 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 if st.session_state.get(cle) not in choix_possibles:
                     st.session_state[cle] = choix_possibles[0]
 
-            col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
-            with col_chapitre:
-                filtre_chapitre = st.selectbox(
-                    "Chapitre", options_chapitres, key=cle_chapitre,
-                    on_change=reinitialiser_selection_apres_filtre,
-                )
-            with col_niveau:
-                filtre_niveau = st.selectbox(
-                    "Niveau", options_niveaux, key=cle_niveau,
-                    on_change=reinitialiser_selection_apres_filtre,
-                )
-            with col_etat:
-                filtre_etat = st.selectbox(
-                    "Avancement", options_etats, key=cle_etat,
-                    on_change=reinitialiser_selection_apres_filtre,
-                )
+            # Zone de filtres commune, cohérente sur PC et smartphone.
+            # Les clés des filtres et leurs callbacks restent inchangés.
+            with st.container(key="mathicap_series_filtres"):
+                st.html('<div class="mc-series-filtres-titre">Filtrer mes séries</div>')
+                col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
+                with col_chapitre:
+                    with st.container(key="mathicap_series_filtre_chapitre_couleur"):
+                        filtre_chapitre = st.selectbox(
+                            "Chapitre", options_chapitres, key=cle_chapitre,
+                            on_change=reinitialiser_selection_apres_filtre,
+                        )
+                with col_niveau:
+                    with st.container(key="mathicap_series_filtre_niveau_couleur"):
+                        filtre_niveau = st.selectbox(
+                            "Niveau", options_niveaux, key=cle_niveau,
+                            on_change=reinitialiser_selection_apres_filtre,
+                        )
+                with col_etat:
+                    with st.container(key="mathicap_series_filtre_etat_couleur"):
+                        filtre_etat = st.selectbox(
+                            "Avancement", options_etats, key=cle_etat,
+                            on_change=reinitialiser_selection_apres_filtre,
+                        )
 
             fiches_visibles = [
                 fiche for fiche in fiches_series
@@ -3701,16 +3761,17 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 if st.session_state.get(f"cocher_serie_{identifiant}", False)
             ]
 
-            if st.button(
-                f"Supprimer la sélection ({len(selection)})",
-                key="mathicap_supprimer_series_cochees",
-                disabled=not selection
-            ):
-                st.session_state["suppression_en_attente"] = {
-                    "mode": "selection",
-                    "ids": list(selection),
-                    "eleve_id": st.session_state["eleve_id"]
-                }
+            # La commande destructive n'apparaît qu'après une sélection explicite.
+            if selection:
+                if st.button(
+                    f"Supprimer la sélection ({len(selection)})",
+                    key="mathicap_supprimer_series_cochees",
+                ):
+                    st.session_state["suppression_en_attente"] = {
+                        "mode": "selection",
+                        "ids": list(selection),
+                        "eleve_id": st.session_state["eleve_id"]
+                    }
 
             demande = st.session_state.get("suppression_en_attente")
 
