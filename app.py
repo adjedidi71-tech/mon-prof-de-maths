@@ -1865,17 +1865,34 @@ st.markdown("""
     border: none !important;
     box-shadow: none !important;
 }
+/* Alignement fiable : libellé et sélecteur regroupés à droite,
+   sans dépendre de la largeur implicite de st.html (qui étirait le libellé). */
+.st-key-mathicap_series_taille_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 66px !important;
+    align-items: center !important;
+    column-gap: 7px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+.st-key-mathicap_series_taille_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
 .st-key-mathicap_series_taille_bas .mc-series-taille-label {
+    display: block !important;
+    text-align: right !important;
     color: #264363 !important;
     font-size: .82rem !important;
     font-weight: 650 !important;
     white-space: nowrap !important;
 }
 .st-key-mathicap_series_taille_bas [data-testid="stSelectbox"] {
-    flex: 0 0 auto !important;
-    width: 74px !important;
-    min-width: 74px !important;
-    max-width: 74px !important;
+    width: 66px !important;
+    min-width: 66px !important;
+    max-width: 66px !important;
 }
 .st-key-mathicap_series_taille_bas [data-baseweb="select"] > div {
     min-height: 36px !important;
@@ -1922,6 +1939,23 @@ st.markdown("""
     white-space: nowrap !important;
     text-align: center !important;
 }
+/* Conserver « Précédent » en entier, même en demi-écran. */
+.st-key-mathicap_series_pagination_bas [data-testid="stButton"] {
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+}
+.st-key-mathicap_series_pagination_bas button,
+.st-key-mathicap_series_pagination_bas button p {
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+}
+.st-key-mathicap_series_pagination_bas button {
+    width: max-content !important;
+    min-width: max-content !important;
+    padding-inline: 6px !important;
+}
 @media (max-width: 640px) {
     .st-key-mathicap_series_taille_bas .mc-series-taille-label {
         font-size: .76rem !important;
@@ -1932,6 +1966,72 @@ st.markdown("""
     .st-key-mathicap_series_pagination_bas button {
         font-size: .80rem !important;
         padding-inline: 6px !important;
+    }
+}
+
+/* Mes séries / smartphone : intitulé du filtre à gauche et liste à droite.
+   La grille grandit librement en hauteur si un intitulé ou une valeur
+   sélectionnée est long. Aucune largeur fixe, aucune coupure artificielle. */
+@media (max-width: 599px) {
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] {
+        display: grid !important;
+        grid-template-columns: minmax(0, 36%) minmax(0, 1fr) !important;
+        column-gap: 10px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] > label {
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        white-space: normal !important;
+    }
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] > label p {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
+        line-height: 1.3 !important;
+        margin: 0 !important;
+    }
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] > [data-baseweb="select"] {
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        align-self: stretch !important;
+    }
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] > [data-baseweb="select"] > div {
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        min-height: 46px !important;
+        height: 100% !important;
+        padding-block: 7px !important;
+        align-items: center !important;
+    }
+    /* Une valeur longue (ex. titre de chapitre) peut occuper plusieurs lignes.
+       La flèche du sélecteur reste à droite. */
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] > [data-baseweb="select"]
+    > div > div:first-child {
+        min-width: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    .st-key-mathicap_series_filtres [data-testid="stSelectbox"] > [data-baseweb="select"]
+    > div > div:first-child > div {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        line-height: 1.25 !important;
     }
 }
 
@@ -4231,17 +4331,18 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             # Le sélecteur reste utilisable avec les mêmes clés/callbacks, sans
             # ajouter de requête Supabase ni changer la sélection de séries.
             with st.container(key="mathicap_series_taille_bas"):
-                with st.container(
-                    horizontal=True,
-                    horizontal_alignment="right",
-                    vertical_alignment="center",
-                    gap="xsmall",
-                ):
+                # Deux colonnes ciblées par le CSS : elles tiennent le libellé
+                # immédiatement à gauche du sélecteur, à l'extrémité droite.
+                col_taille_libelle, col_taille_choix = st.columns(
+                    [1, 1], gap="small", vertical_alignment="center"
+                )
+                with col_taille_libelle:
                     st.html('<span class="mc-series-taille-label">Séries par page</span>')
+                with col_taille_choix:
                     st.selectbox(
                         "Séries par page", (5, 10, 20),
                         key=cle_taille_page, on_change=changer_taille_page,
-                        label_visibility="collapsed", width=74,
+                        label_visibility="collapsed", width=66,
                     )
 
             # Barre de navigation pleine largeur, avec page centrée entre les boutons.
