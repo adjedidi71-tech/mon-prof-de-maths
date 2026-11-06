@@ -3555,33 +3555,150 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             st.caption(f"{len(series)} série(s) enregistrée(s) · plus récente(s) en premier.")
             ids_series = [s["id"] for s in series]
 
-            cle_tout = f"tout_selectionner_{st.session_state['eleve_id']}"
+            # Préparer une fois les informations déjà sauvegardées, sans appel
+            # Supabase supplémentaire. La numérotation utilise la liste complète
+            # (pas la liste filtrée) : elle reste stable pendant un filtrage.
+            compteurs_chapitres = {}
+            fiches_series = []
+            for serie in series:
+                bilan_serie = _mathicap_statistiques_progression([serie])
+                total = bilan_serie["exercices_total"]
+                renseignes = bilan_serie["exercices_avec_reponse"]
+                pourcentage = round(100 * renseignes / total) if total else 0
+
+                exercices_serie = serie.get("exercices") or []
+                chapitres_serie = sorted({
+                    exercice["mathicap_chapitre"].strip()
+                    for exercice in exercices_serie
+                    if isinstance(exercice, dict)
+                    and isinstance(exercice.get("mathicap_chapitre"), str)
+                    and exercice["mathicap_chapitre"].strip()
+                }) if isinstance(exercices_serie, list) else []
+                niveaux_serie = sorted({
+                    exercice["mathicap_niveau"]
+                    for exercice in exercices_serie
+                    if isinstance(exercice, dict)
+                    and type(exercice.get("mathicap_niveau")) is int
+                    and 1 <= exercice["mathicap_niveau"] <= 9
+                }) if isinstance(exercices_serie, list) else []
+
+                titre_chapitre = (
+                    chapitres_serie[0] if len(chapitres_serie) == 1
+                    else "Plusieurs chapitres" if chapitres_serie else "Chapitre non précisé"
+                )
+                titres_niveaux = (
+                    "Niveau " + str(niveaux_serie[0]) if len(niveaux_serie) == 1
+                    else "Niveaux " + ", ".join(map(str, niveaux_serie))
+                    if niveaux_serie else "Niveau non précisé"
+                )
+                numero_serie = compteurs_chapitres.get(titre_chapitre, 0) + 1
+                compteurs_chapitres[titre_chapitre] = numero_serie
+
+                etat_serie = (
+                    "À commencer" if renseignes == 0
+                    else "Tous renseignés" if total and renseignes == total
+                    else "En cours"
+                )
+                fiches_series.append({
+                    "serie": serie,
+                    "chapitres": chapitres_serie,
+                    "niveaux": niveaux_serie,
+                    "titre_chapitre": titre_chapitre,
+                    "titres_niveaux": titres_niveaux,
+                    "numero": numero_serie,
+                    "total": total,
+                    "renseignes": renseignes,
+                    "pourcentage": pourcentage,
+                    "etat": etat_serie,
+                })
+
+            chapitres_disponibles = sorted({
+                chap for fiche in fiches_series for chap in fiche["chapitres"]
+            }, key=str.casefold)
+            if any(not fiche["chapitres"] for fiche in fiches_series):
+                chapitres_disponibles.append("Chapitre non précisé")
+            niveaux_disponibles = sorted({
+                n for fiche in fiches_series for n in fiche["niveaux"]
+            })
+            options_chapitres = ["Tous les chapitres", *chapitres_disponibles]
+            options_niveaux = ["Tous les niveaux", *[f"Niveau {n}" for n in niveaux_disponibles]]
+            if any(not fiche["niveaux"] for fiche in fiches_series):
+                options_niveaux.append("Niveau non précisé")
+            options_etats = ["Tous les avancements", "À commencer", "En cours", "Tous renseignés"]
+
+            eleve_courant = st.session_state["eleve_id"]
+            cle_tout = f"tout_selectionner_{eleve_courant}"
+            cle_chapitre = f"mathicap_series_filtre_chapitre_{eleve_courant}"
+            cle_niveau = f"mathicap_series_filtre_niveau_{eleve_courant}"
+            cle_etat = f"mathicap_series_filtre_etat_{eleve_courant}"
+
+            def reinitialiser_selection_apres_filtre():
+                # Aucune sélection invisible ne doit être supprimée par accident.
+                st.session_state[cle_tout] = False
+                for identifiant in ids_series:
+                    st.session_state.pop(f"cocher_serie_{identifiant}", None)
+
+            for cle, choix_possibles in (
+                (cle_chapitre, options_chapitres),
+                (cle_niveau, options_niveaux),
+                (cle_etat, options_etats),
+            ):
+                if st.session_state.get(cle) not in choix_possibles:
+                    st.session_state[cle] = choix_possibles[0]
+
+            col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
+            with col_chapitre:
+                filtre_chapitre = st.selectbox(
+                    "Chapitre", options_chapitres, key=cle_chapitre,
+                    on_change=reinitialiser_selection_apres_filtre,
+                )
+            with col_niveau:
+                filtre_niveau = st.selectbox(
+                    "Niveau", options_niveaux, key=cle_niveau,
+                    on_change=reinitialiser_selection_apres_filtre,
+                )
+            with col_etat:
+                filtre_etat = st.selectbox(
+                    "Avancement", options_etats, key=cle_etat,
+                    on_change=reinitialiser_selection_apres_filtre,
+                )
+
+            fiches_visibles = [
+                fiche for fiche in fiches_series
+                if (filtre_chapitre == "Tous les chapitres"
+                    or (filtre_chapitre == "Chapitre non précisé" and not fiche["chapitres"])
+                    or filtre_chapitre in fiche["chapitres"])
+                and (filtre_niveau == "Tous les niveaux"
+                     or (filtre_niveau == "Niveau non précisé" and not fiche["niveaux"])
+                     or (filtre_niveau.startswith("Niveau ")
+                         and filtre_niveau[7:].isdigit()
+                         and int(filtre_niveau[7:]) in fiche["niveaux"]))
+                and (filtre_etat == "Tous les avancements" or fiche["etat"] == filtre_etat)
+            ]
+            ids_visibles = [fiche["serie"]["id"] for fiche in fiches_visibles]
+            st.caption(f"{len(fiches_visibles)} série(s) affichée(s) sur {len(series)}.")
 
             def cocher_toutes_series():
                 etat = st.session_state[cle_tout]
-                for identifiant in ids_series:
+                for identifiant in ids_visibles:
                     st.session_state[f"cocher_serie_{identifiant}"] = etat
 
             def synchroniser_selection():
-                st.session_state[cle_tout] = all(
-                    st.session_state.get(
-                        f"cocher_serie_{identifiant}", False
-                    )
-                    for identifiant in ids_series
+                st.session_state[cle_tout] = bool(ids_visibles) and all(
+                    st.session_state.get(f"cocher_serie_{identifiant}", False)
+                    for identifiant in ids_visibles
                 )
 
             st.checkbox(
-                "Tout sélectionner",
+                "Tout sélectionner les séries affichées",
                 key=cle_tout,
-                on_change=cocher_toutes_series
+                on_change=cocher_toutes_series,
+                disabled=not ids_visibles,
             )
 
             selection = [
-                identifiant
-                for identifiant in ids_series
-                if st.session_state.get(
-                    f"cocher_serie_{identifiant}", False
-                )
+                identifiant for identifiant in ids_visibles
+                if st.session_state.get(f"cocher_serie_{identifiant}", False)
             ]
 
             if st.button(
@@ -3709,47 +3826,19 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                 "ne sera effectuée."
                             )
 
-            # Numérotation d'affichage indépendante par chapitre (la plus récente = 1).
-            # L'identifiant Supabase de chaque série reste inchangé.
-            compteurs_chapitres = {}
-            # Présentation des séries : mêmes données chargées, aucun appel Supabase en plus.
-            for serie in series:
-                bilan_serie = _mathicap_statistiques_progression([serie])
-                total = bilan_serie["exercices_total"]
-                renseignes = bilan_serie["exercices_avec_reponse"]
-                pourcentage = round(100 * renseignes / total) if total else 0
+            if not fiches_visibles:
+                st.info("Aucune série ne correspond aux filtres choisis.", width=500)
 
-                # Les métadonnées viennent des exercices réellement enregistrés.
-                # Ne pas attribuer un chapitre ou un niveau fictif aux anciennes séries.
-                exercices_serie = serie.get("exercices") or []
-                chapitres_serie = sorted({
-                    exercice["mathicap_chapitre"].strip()
-                    for exercice in exercices_serie
-                    if isinstance(exercice, dict)
-                    and isinstance(exercice.get("mathicap_chapitre"), str)
-                    and exercice["mathicap_chapitre"].strip()
-                }) if isinstance(exercices_serie, list) else []
-                niveaux_serie = sorted({
-                    exercice["mathicap_niveau"]
-                    for exercice in exercices_serie
-                    if isinstance(exercice, dict)
-                    and type(exercice.get("mathicap_niveau")) is int
-                    and 1 <= exercice["mathicap_niveau"] <= 9
-                }) if isinstance(exercices_serie, list) else []
-
-                titre_chapitre = (
-                    chapitres_serie[0] if len(chapitres_serie) == 1
-                    else "Plusieurs chapitres" if chapitres_serie else "Chapitre non précisé"
-                )
-                titres_niveaux = (
-                    "Niveau " + str(niveaux_serie[0]) if len(niveaux_serie) == 1
-                    else "Niveaux " + ", ".join(map(str, niveaux_serie))
-                    if niveaux_serie else "Niveau non précisé"
-                )
-                # Les numéros sont propres au chapitre, sans être stockés en base.
-                # Les anciennes séries sans chapitre sont comptées séparément.
-                numero_serie = compteurs_chapitres.get(titre_chapitre, 0) + 1
-                compteurs_chapitres[titre_chapitre] = numero_serie
+            # Les numéros ont été calculés sur toutes les séries du chapitre.
+            # Les filtres ne renumérotent jamais les séries affichées.
+            for fiche in fiches_visibles:
+                serie = fiche["serie"]
+                numero_serie = fiche["numero"]
+                titre_chapitre = fiche["titre_chapitre"]
+                titres_niveaux = fiche["titres_niveaux"]
+                total = fiche["total"]
+                renseignes = fiche["renseignes"]
+                pourcentage = fiche["pourcentage"]
 
                 with st.container(border=True, key=f"mathicap_series_carte_{serie['id']}"):
                     colonne_selection, colonne_detail = st.columns(
@@ -3764,7 +3853,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                         )
                     with colonne_detail:
                         st.markdown(f"**Série {numero_serie}** · {titre_chapitre}")
-                        st.caption(f"{titres_niveaux} · {total} exercice(s)")
+                        st.caption(f"{titres_niveaux} · {total} exercice(s) · {fiche['etat']}")
                         st.progress(
                             pourcentage,
                             text=(f"{renseignes}/{total} exercices avec réponse "
