@@ -109,33 +109,28 @@ def enregistrer_session(supabase_privee, eleve_id):
     return jeton
 
 def verifier_session(supabase_privee, jeton):
+    """Vérifie ET renouvelle un jeton encore valide en un seul aller-retour.
+
+    Une seule requête conditionnelle remplace l'ancienne lecture suivie d'une
+    écriture. Un jeton supprimé ou expiré n'est jamais recréé ni prolongé.
+    La durée reste de trente jours glissants à chaque vérification réussie.
+    """
     if not jeton:
         return None
 
+    maintenant = datetime.now(timezone.utc).isoformat()
     resultat = (
         supabase_privee
         .table("sessions_persistantes")
-        .select("eleve_id, expire_le")
+        .update({"expire_le": expiration_session()})
         .eq("jeton_hash", empreinte_jeton(jeton))
-        .gt("expire_le", datetime.now(timezone.utc).isoformat())
-        .limit(1)
+        .gt("expire_le", maintenant)
+        .select("eleve_id")
         .execute()
     )
+    lignes = resultat.data or []
+    return lignes[0]["eleve_id"] if lignes else None
 
-    
-    if resultat.data:
-        (
-            supabase_privee
-            .table("sessions_persistantes")
-            .update({"expire_le": expiration_session()})
-            .eq("jeton_hash", empreinte_jeton(jeton))
-            .gt("expire_le", datetime.now(timezone.utc).isoformat())
-            .execute()
-        )
-
-        return resultat.data[0]["eleve_id"]
-
-    return None
 
 def supprimer_session(supabase_privee, jeton):
     if not jeton:
