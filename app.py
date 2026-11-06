@@ -1814,6 +1814,76 @@ st.markdown("""
     font-weight: 650 !important;
 }
 
+
+/* Mes séries — adaptation réelle des fiches sur petit écran.
+   Cible uniquement les fiches de la page Mes séries : pas l'en-tête,
+   pas les exercices, pas les autres pages. */
+@media (max-width: 640px) {
+    [class*="st-key-mathicap_series_carte_"] {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+    /* Case de sélection étroite + détail flexible, au lieu des colonnes
+       Streamlit pouvant conserver une largeur minimale trop grande. */
+    [class*="st-key-mathicap_series_carte_"]
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] [data-testid="stCheckbox"]) {
+        display: grid !important;
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: start !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+    [class*="st-key-mathicap_series_carte_"]
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] [data-testid="stCheckbox"])
+    > [data-testid="stColumn"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stColumn"],
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stVerticalBlock"],
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stElementContainer"],
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stProgress"] {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+    /* Libellés longs : retour à la ligne sans agrandir la page. */
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stMarkdownContainer"],
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stMarkdownContainer"] p,
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stCaptionContainer"] p {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+    }
+    [class*="st-key-mathicap_series_carte_"] [data-testid="stProgress"] > div {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+    [class*="st-key-mathicap_series_actions_"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+    [class*="st-key-mathicap_series_actions_"] [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+    .st-key-mathicap_series_filtres,
+    .st-key-mathicap_series_pagination_haut,
+    .st-key-mathicap_series_pagination_bas {
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -3826,14 +3896,6 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             fin_page = min(debut_page + taille_page, nombre_filtre)
             fiches_visibles = fiches_visibles[debut_page:fin_page]
             ids_visibles = [fiche["serie"]["id"] for fiche in fiches_visibles]
-            if nombre_filtre:
-                st.caption(
-                    f"{nombre_filtre} série(s) correspondant aux filtres sur {len(series)} · "
-                    f"affichage de {debut_page + 1} à {fin_page} · "
-                    f"page {page_actuelle}/{nombre_pages}."
-                )
-            else:
-                st.caption(f"Aucune série correspondante sur {len(series)}.")
 
             def cocher_toutes_series():
                 etat = st.session_state[cle_tout]
