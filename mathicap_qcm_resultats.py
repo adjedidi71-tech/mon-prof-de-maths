@@ -7,6 +7,7 @@ passe dans les composants de la page.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from time import perf_counter
 import uuid
 import streamlit as st
 from supabase import create_client
@@ -112,45 +113,71 @@ def _message_erreur(exc):
 
 
 def enregistrer_partie(partie):
-    """Sauvegarde progressive avec une écriture conditionnelle et sans lecture répétée.
+    """Sauvegarde immédiate ; petites mises à jour une fois les questions créées.
 
-    La première écriture vérifie la situation en base. Les suivantes ne peuvent
-    modifier qu'une ligne du même élève dont le statut est encore « en_cours ».
+    Chaque action garde la vérification serveur de la session et la condition
+    « statut = en_cours ». Les dix questions ne sont envoyées qu'à la création.
     """
     erreur = _verifier_partie(partie)
     if erreur:
         return False, erreur
     if partie.get('terminee'):
         return enregistrer_resultat(partie)
+
+    debut = perf_counter()
+    apres_session = None
+
+    def rapport(action):
+        """Uniquement des durées : aucune donnée d'élève ou secret dans l'UI."""
+        fin = perf_counter()
+        st.session_state['mc_qcm_temps'] = {
+            'action': action,
+            'session_ms': round(1000 * ((apres_session or fin) - debut)),
+            'base_ms': round(1000 * (fin - (apres_session or fin))),
+            'total_ms': round(1000 * (fin - debut)),
+        }
+
     try:
         client = _client_prive()
         eleve = _compte_valide(client)
+        apres_session = perf_counter()
         if not eleve:
+            rapport('session invalide')
             return False, 'Connecte-toi pour conserver tes séries QCM.'
-        donnees = _donnees(partie, eleve, False)
-        # Une lecture uniquement à la création ou à la première reprise non confirmée.
+
+        identifiant = _numero_ligne(eleve, partie['id'])
         if not partie.get('_qcm_ligne_confirmee'):
+            # Première création : conserver en base les dix questions et leur ordre.
             ancien = (client.table(TABLE).select('statut')
                       .eq('eleve_id', eleve).eq('partie_id', partie['id'])
                       .limit(1).execute())
             lignes = ancien.data or []
             if lignes and lignes[0].get('statut') == 'termine':
+                rapport('lecture statut')
                 return False, 'Ce QCM est déjà terminé, impossible de le modifier.'
             if not lignes:
-                client.table(TABLE).insert(donnees).execute()
+                client.table(TABLE).insert(_donnees(partie, eleve, False)).execute()
                 partie['_qcm_ligne_confirmee'] = True
+                rapport('création QCM')
                 return True, 'Série QCM sauvegardée.'
-        # Une seule requête : modification uniquement tant que la série est en cours.
-        mise_a_jour = (client.table(TABLE)
-                       .update({k: v for k, v in donnees.items() if k != 'id'})
-                       .eq('id', donnees['id']).eq('eleve_id', eleve)
+
+        # Mises à jour suivantes : réponses + position seulement.
+        # Ne pas transmettre à répétition questions/options/corrections déjà stockées.
+        modification = {
+            'reponses': dict(partie['reponses']),
+            'index_courant': max(0, min(int(partie.get('index', 0)), 10)),
+            'modifie_le': datetime.now(timezone.utc).isoformat(),
+        }
+        mise_a_jour = (client.table(TABLE).update(modification)
+                       .eq('id', identifiant).eq('eleve_id', eleve)
                        .eq('statut', 'en_cours').select('id').execute())
+        rapport('mise à jour QCM')
         if not (mise_a_jour.data or []):
             return False, 'Le QCM est introuvable ou déjà terminé : sauvegarde refusée.'
         partie['_qcm_ligne_confirmee'] = True
         return True, 'Série QCM sauvegardée.'
     except Exception as exc:
-        # Ne pas déclarer un succès quand Supabase ne l'a pas confirmé.
+        rapport('échec sauvegarde')
         return False, _message_erreur(exc)
 
 
