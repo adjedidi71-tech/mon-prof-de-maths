@@ -210,7 +210,7 @@ def _mathicap_formulaire_changement_mdp(email_compte, identifiant):
         st.session_state["mathicap_mdp_profil_ouvert"] = False
 
     if st.session_state.pop("mathicap_mdp_profil_succes", False):
-        st.success("Mot de passe modifié. Utilise-le lors de ta prochaine connexion.", width=500)
+        st.toast("Mot de passe modifié. Utilise-le lors de ta prochaine connexion.", icon="✅", duration=3)
 
     with st.expander(
         "Changer mon mot de passe",
@@ -2715,7 +2715,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
     # Personnalisation de l'avatar, propre au compte de chaque élève.
     st.html('<div class="mc-profile-avatar-heading">Mon avatar</div>')
     if st.session_state.pop("mathicap_avatar_sauve", False):
-        st.success("Avatar enregistré. Il sera retrouvé sur tes appareils.", width=500)
+        st.toast("Avatar enregistré. Il sera retrouvé sur tes appareils.", icon="✅", duration=3)
 
     avatar_type = st.session_state.get("mathicap_avatar_type", "defaut")
     avatar_choix = st.session_state.get("mathicap_avatar_choix", "")
@@ -2825,7 +2825,7 @@ if est_connecte and st.query_params.get("vue") == "profil":
 
     # Confirmation après enregistrement
     if st.session_state.pop("mathicap_pseudo_sauve", False):
-        st.success("Pseudo enregistré avec succès.", width=500)
+        st.toast("Pseudo enregistré avec succès.", icon="✅", duration=3)
 
     # Modifier le pseudo sans toucher aux autres informations
     if profil_charge:
@@ -5200,7 +5200,7 @@ if demande_generation:
                     st.session_state.code_actuel = code
                     if st.session_state.get("serie_id_actuel") is not None:
                         st.query_params["serie_id"] = str(st.session_state["serie_id_actuel"])
-                    st.success("Exercices générés et sauvegardés !", width=500)
+                    st.toast("Exercices générés et sauvegardés !", icon="✅", duration=3)
                 else:
                     st.error("Sauvegarde impossible.")
             except Exception:
@@ -5553,7 +5553,7 @@ def _mathicap_afficher_serie_et_reponses():
                         if code and st.session_state.get("eleve_id"):
                             try:
                                 if sauvegarder_reponse(code, numero, st.session_state.get(cle_texte, "")):
-                                    st.success("Réponse enregistrée.", width=500)
+                                    st.toast("Réponse enregistrée.", icon="✅", duration=3)
                                 else:
                                     st.error("Impossible d'enregistrer cette réponse.")
                             except Exception:
