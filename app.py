@@ -1431,6 +1431,75 @@ st.markdown("""
 }
 
 
+/* QCM — exceptions explicites aux boutons sans cadre de MathiCap.
+   Uniquement les clés du questionnaire : ne change ni l'en-tête ni les exercices. */
+[class*="st-key-mc_qcm_demarrer"] button {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 54px !important;
+    height: auto !important;
+    padding: 12px 18px !important;
+    border: 2px solid #3b78d2 !important;
+    border-radius: 14px !important;
+    background: #dcecff !important;
+    background-color: #dcecff !important;
+    color: #153a70 !important;
+    font-size: 1.16rem !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    box-shadow: 0 3px 9px rgba(26, 78, 154, .12) !important;
+}
+[class*="st-key-mc_qcm_demarrer"] button p {
+    font-size: 1.16rem !important;
+    font-weight: 800 !important;
+    color: #153a70 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+}
+[class*="st-key-mc_qcm_demarrer"] button:hover {
+    background: #c8e0ff !important;
+    border-color: #245daa !important;
+    text-decoration: none !important;
+}
+[class*="st-key-mc_qcm_reprise_zone"] [data-testid="stExpander"] summary {
+    min-height: 48px !important;
+    padding: 10px 15px !important;
+    border: 1px solid #b0ccef !important;
+    border-radius: 12px !important;
+    background: #eff6ff !important;
+    text-decoration: none !important;
+}
+[class*="st-key-mc_qcm_reprise_zone"] [data-testid="stExpander"] summary p {
+    font-size: 1.04rem !important;
+    font-weight: 750 !important;
+    color: #153a70 !important;
+}
+[class*="st-key-mc_qcm_reprise_zone"] button {
+    min-height: 43px !important;
+    padding: 10px 13px !important;
+    border: 1px solid #c4d8f4 !important;
+    border-radius: 10px !important;
+    background: #f7fbff !important;
+    color: #154680 !important;
+    text-align: left !important;
+    text-decoration: none !important;
+}
+[class*="st-key-mc_qcm_reprise_zone"] button p {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #154680 !important;
+    text-decoration: none !important;
+}
+@media (max-width: 640px) {
+    [class*="st-key-mc_qcm_demarrer"] button,
+    [class*="st-key-mc_qcm_demarrer"] button p {
+        font-size: 1.04rem !important;
+    }
+}
+
 /* MathiCap : logo cliquable sans soulignement, même au survol. */
 .st-key-mathicap_logo_clic button,
 .st-key-mathicap_logo_clic button:hover,
