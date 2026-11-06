@@ -1318,6 +1318,42 @@ st.markdown("""
 }
 
 
+/* MathiCap — liens de déplacement : cibles tactiles sur PC et smartphone.
+   Ne s'applique ni au bouton de génération ni aux actions sur les réponses. */
+:is(.st-key-mathicap_exercices_retour_accueil,
+    .st-key-mathicap_exercices_mes_series,
+    .st-key-mathicap_series_retour_exercices,
+    .st-key-mathicap_series_retour_profil,
+    .st-key-mathicap_series_retour_accueil) button {
+    min-height: 40px !important;
+    height: auto !important;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+    color: #0b3d91 !important;
+    background: transparent !important;
+    white-space: normal !important;
+    text-decoration: none !important;
+}
+:is(.st-key-mathicap_exercices_retour_accueil,
+    .st-key-mathicap_exercices_mes_series,
+    .st-key-mathicap_series_retour_exercices,
+    .st-key-mathicap_series_retour_profil,
+    .st-key-mathicap_series_retour_accueil) button:hover {
+    background: #edf4ff !important;
+    text-decoration: underline !important;
+}
+@media (max-width: 640px) {
+    :is(.st-key-mathicap_exercices_retour_accueil,
+        .st-key-mathicap_exercices_mes_series,
+        .st-key-mathicap_series_retour_exercices,
+        .st-key-mathicap_series_retour_profil,
+        .st-key-mathicap_series_retour_accueil) button {
+        min-height: 44px !important;
+        padding: 8px 6px !important;
+        font-size: 0.88rem !important;
+    }
+}
+
 /* =========================================================
    MATHICAP — PRÉSENTATION COMMUNE : TITRES ET ACTIONS SANS CADRE
    Les contrôles gardent leur sémantique native (clavier, état, clic).
@@ -3252,11 +3288,19 @@ page_mathicap = afficher_interface_mathicap()
 demande_generation = False
 if page_mathicap == "Exercices":
     with st.container(key="mathicap_reglages_exercices"):
-        st.button(
-            "Reprendre mes séries",
-            key="mathicap_exercices_mes_series",
-            on_click=_mathicap_reprendre_series_depuis_exercices,
-        )
+        # Deux raccourcis utiles, sans perdre la série en cours ni refaire de requête.
+        # La navigation s'adapte automatiquement à la largeur smartphone.
+        with st.container(horizontal=True, horizontal_alignment="left", gap="small"):
+            st.button(
+                "← Accueil",
+                key="mathicap_exercices_retour_accueil",
+                on_click=_mathicap_retour_accueil_logo,
+            )
+            st.button(
+                "Mes séries enregistrées →",
+                key="mathicap_exercices_mes_series",
+                on_click=_mathicap_reprendre_series_depuis_exercices,
+            )
         # Réserver les sélecteurs et la génération à la rubrique Exercices.
         chapitres = CHAPITRES_MATHICAP
 
