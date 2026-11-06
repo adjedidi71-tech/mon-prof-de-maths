@@ -774,7 +774,7 @@ st.markdown("""
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: clamp(112px, 36vw, 170px);
         --mc-ico: 32px;
-        --mc-avatar: 52px;
+        --mc-avatar: 48px;
         --mc-ico-gap: 8px;
         --mc-statut: 12px;
         --mc-btn-h: 28px;
@@ -1900,7 +1900,9 @@ st.markdown("""
     border: 1px solid #dce7f7 !important;
     background: #f5f9ff !important;
 }
-/* Barre de pagination existante : largeur des fiches, numéro centré. */
+/* Mes séries : pagination sans débordement, même à 320px CSS.
+   Trois zones flexibles : bouton gauche, numéro centré, bouton droit.
+   Ne jamais imposer max-content aux boutons, sinon « Suivant » dépasse. */
 .st-key-mathicap_series_pagination_bas {
     box-sizing: border-box !important;
     width: min(100%, 940px) !important;
@@ -1914,11 +1916,16 @@ st.markdown("""
 }
 .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr) !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
 }
 .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     flex: none !important;
@@ -1938,34 +1945,70 @@ st.markdown("""
     margin: 0 !important;
     white-space: nowrap !important;
     text-align: center !important;
+    font-size: .86rem !important;
 }
-/* Conserver « Précédent » en entier, même en demi-écran. */
+/* Contrairement à l'ancienne règle max-content, la largeur des boutons reste
+   à l'intérieur de leur colonne, sans texte tronqué ni décalage latéral. */
 .st-key-mathicap_series_pagination_bas [data-testid="stButton"] {
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-}
-.st-key-mathicap_series_pagination_bas button,
-.st-key-mathicap_series_pagination_bas button p {
-    white-space: nowrap !important;
-    text-overflow: clip !important;
-    overflow: visible !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
 }
 .st-key-mathicap_series_pagination_bas button {
-    width: max-content !important;
-    min-width: max-content !important;
-    padding-inline: 6px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding-inline: 2px !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
 }
-@media (max-width: 640px) {
-    .st-key-mathicap_series_taille_bas .mc-series-taille-label {
-        font-size: .76rem !important;
-    }
+.st-key-mathicap_series_pagination_bas [data-testid="stColumn"]:last-child button {
+    text-align: right !important;
+    justify-content: flex-end !important;
+}
+.st-key-mathicap_series_pagination_bas button p {
+    font-size: .86rem !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+.st-key-mathicap_series_pagination_bas button [data-testid="stMarkdownContainer"] {
+    min-width: 0 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+@media (max-width: 599px) {
     .st-key-mathicap_series_pagination_bas {
-        padding: 7px 8px !important;
+        padding: 8px 8px !important;
     }
-    .st-key-mathicap_series_pagination_bas button {
-        font-size: .80rem !important;
-        padding-inline: 6px !important;
+    .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        gap: 3px !important;
+    }
+    .st-key-mathicap_series_pagination_bas button p,
+    .st-key-mathicap_series_pagination_bas [data-testid="stCaptionContainer"] p {
+        font-size: clamp(.78rem, 3.3vw, .88rem) !important;
+    }
+}
+/* Titre accessible, réduit sur mobile et complet sur PC. */
+.mc-series-page-heading {
+    margin: 1.25rem 0 .85rem !important;
+    color: inherit !important;
+    font-weight: 750 !important;
+    font-size: 2rem !important;
+    line-height: 1.22 !important;
+}
+@media (max-width: 599px) {
+    .mc-series-page-heading {
+        margin: .75rem 0 .65rem !important;
+        font-size: clamp(1.8rem, 8vw, 2rem) !important;
+        line-height: 1.18 !important;
+    }
+    .mc-series-page-heading-extra {
+        display: none !important;
     }
 }
 
@@ -2032,6 +2075,17 @@ st.markdown("""
         white-space: normal !important;
         overflow-wrap: anywhere !important;
         line-height: 1.25 !important;
+    }
+    /* Le libellé sélectionné ne doit pas être réduit à une ligne avec des points de suspension. */
+    .st-key-mathicap_series_filtre_chapitre_couleur [data-baseweb="select"]
+    [role="combobox"] > div:first-child,
+    .st-key-mathicap_series_filtre_chapitre_couleur [data-baseweb="select"]
+    [role="combobox"] > div:first-child * {
+        white-space: normal !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere !important;
+        max-height: none !important;
+        height: auto !important;
     }
 }
 
@@ -2101,6 +2155,47 @@ st.markdown("""
         min-width: 0 !important;
         max-width: 100% !important;
     }
+}
+
+
+/* LOT RESPONSIVE MES SÉRIES — correctifs complémentaires, exclusivement mobile.
+   Le titre, l'avatar et la pagination ont été ajustés dans les blocs antérieurs.
+   Ces règles ferment les trois écarts restants : navigation, espacement, filtres. */
+@media (max-width: 599px) {
+    /* 4. Réduire l'espace entre l'en-tête et les liens de cette page seulement.
+       Le décalage reste limité pour ne pas chevaucher les commandes du compte. */
+    .st-key-mathicap_series_navigation {
+        margin-top: -26px !important;
+        margin-bottom: -16px !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+    /* 5. Titre proche des liens, sans modifier les autres pages. */
+    .mc-series-page-heading {
+        margin-top: .35rem !important;
+        margin-bottom: .55rem !important;
+    }
+    /* 6. Resserrement des trois lignes de filtres, sans sacrifier la cible tactile. */
+    .st-key-mathicap_series_filtres {
+        padding: 12px 12px 10px !important;
+    }
+    .st-key-mathicap_series_filtres .mc-series-filtres-titre {
+        margin-bottom: 8px !important;
+    }
+    .st-key-mathicap_series_ligne_filtres
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+        row-gap: 4px !important;
+    }
+    .st-key-mathicap_series_filtres [data-baseweb="select"] > div {
+        min-height: 44px !important;
+    }
+}
+/* 7. Un ensemble compact, ancré à droite, et non un libellé étiré sur la ligne. */
+.st-key-mathicap_series_taille_bas
+[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+    grid-template-columns: max-content 66px !important;
+    justify-content: end !important;
+    column-gap: 6px !important;
 }
 
 </style>
