@@ -142,55 +142,7 @@ def _style():
     .mc-quiz-box {max-width:850px;border-radius:20px;padding:16px 19px;
          background:linear-gradient(115deg,#eff7ff,#f8f3ff);margin:13px 0;}
     .mc-quiz-box h2 {font-size:1.32rem;color:#173969;line-height:1.35;}
-    /* Commandes QCM : styles localisés, prioritaires sur les CSS globaux. */
-    .st-key-mc_qcm_reprise_zone,
-    .st-key-mc_qcm_demarrer_zone {max-width:850px!important;margin:12px 0 18px!important}
-    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary,
-    .st-key-mc_qcm_reprise_zone details > summary {
-        min-height:54px!important;padding:12px 16px!important;
-        border-radius:13px!important;background:#eaf3ff!important;
-        border-left:5px solid #3878d9!important;
-        color:#173b70!important;
-    }
-    .st-key-mc_qcm_reprise_zone [data-testid="stExpander"] summary p,
-    .st-key-mc_qcm_reprise_zone details > summary p,
-    .st-key-mc_qcm_reprise_zone details > summary span {
-        font-size:clamp(1.05rem,2.4vw,1.23rem)!important;
-        font-weight:850!important;color:#173b70!important;
-        line-height:1.35!important;
-    }
-    .st-key-mc_qcm_reprise_zone [data-testid="stButton"] button {
-        min-height:43px!important;border-radius:11px!important;
-        font-size:1rem!important;font-weight:700!important;
-        border:1px solid #a9c7f3!important;
-        background:#f7faff!important;color:#153d73!important;
-    }
-    .st-key-mc_qcm_reprise_zone [data-testid="stButton"] button p {
-        font-size:1rem!important;font-weight:700!important;color:#153d73!important;
-    }
-    .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button,
-    .st-key-mc_qcm_demarrer button {
-        width:100%!important;min-height:54px!important;
-        padding:11px 16px!important;border-radius:13px!important;
-        background:#dcecff!important;border:2px solid #7da9ea!important;
-        color:#173b70!important;font-size:1.15rem!important;
-        font-weight:800!important;box-shadow:0 2px 9px #3573bd1c!important;
-    }
-    .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button p,
-    .st-key-mc_qcm_demarrer button p {
-        font-size:1.15rem!important;font-weight:800!important;
-        color:#173b70!important;
-    }
-    .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button:hover,
-    .st-key-mc_qcm_demarrer button:hover {
-        background:#cde3ff!important;border-color:#4c88d4!important;
-    }
-    @media(max-width:640px) {
-        .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button,
-        .st-key-mc_qcm_demarrer button {min-height:50px!important}
-        .st-key-mc_qcm_demarrer_zone [data-testid="stButton"] button p,
-        .st-key-mc_qcm_demarrer button p {font-size:1.04rem!important}
-    }
+    /* Les commandes QCM sont stylisées une seule fois dans app.py. */
     @media (prefers-reduced-motion: reduce) { .mc-lecon-entete::before {animation:none !important} }
     @media (prefers-reduced-motion: no-preference) {
       .mc-lecon-entete {animation:mc-lesson-show .32s ease-out both}
@@ -713,7 +665,8 @@ def afficher_qcm(aller_vers=None):
         parties_sauvees, erreur_sauvees = charger_parties(20)
         if parties_sauvees:
             with st.container(key='mc_qcm_reprise_zone'):
-                with st.expander('📚 Reprendre mon QCM en cours', expanded=True):
+                st.markdown('### 📚 Reprendre mon QCM en cours')
+                with st.expander('Afficher les QCM à reprendre', expanded=True):
                     for p in parties_sauvees[:10]:
                         st.button('▶️ Reprendre — ' + str(p.get('notion_label','QCM'))
                                   + ' · ' + str(p.get('nombre_reponses', 0)) + '/10 réponses',
