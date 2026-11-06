@@ -42,7 +42,7 @@ def _compte_valide(client):
     if not isinstance(utilisateur, str) or not isinstance(jeton, str) or not jeton:
         return None
     try:
-        return utilisateur if verifier_session(client, jeton) == utilisateur else None
+        return utilisateur if verifier_session(client, jeton, cache_seconds=30) == utilisateur else None
     except Exception:
         return None
 
