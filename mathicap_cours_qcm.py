@@ -622,6 +622,17 @@ def _afficher_question_interactive():
     etat_sauvegarde = st.session_state.get('mc_qcm_etat_sauvegarde')
     if etat_sauvegarde and not etat_sauvegarde[0]:
         st.caption('⚠️ ' + etat_sauvegarde[1])
+    # Diagnostic facultatif pour comparer la durée de sauvegarde sur l'app réelle.
+    # Ajouter ?mesure_qcm=1 (ou &mesure_qcm=1 si URL avec paramètres).
+    if st.query_params.get('mesure_qcm') == '1':
+        mesure = st.session_state.get('mc_qcm_temps')
+        if mesure:
+            st.caption(
+                "Mesure sauvegarde — vérification session : "
+                f"{mesure['session_ms']} ms ; écriture/lecture QCM : "
+                f"{mesure['base_ms']} ms ; total : {mesure['total_ms']} ms "
+                f"({mesure['action']})."
+            )
     st.html('<div class="mc-quiz-box"><div class="mc-kicker">QUESTION '
             + str(i + 1) + '/10</div><h2>' + escape(str(q['question']))
             + '</h2></div>')
