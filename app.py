@@ -1799,41 +1799,60 @@ st.markdown("""
         min-height: 46px !important;
     }
 }
-/* Mes séries : les filtres retrouvent leur largeur entière.
-   Le choix du nombre de séries est discret et aligné à droite.
-   La navigation précédente/suivante figure uniquement après les fiches. */
+/* Mes séries : filtres pleine largeur avec pagination compacte dans le titre. */
 .st-key-mathicap_series_filtres {
     width: min(100%, 940px) !important;
     max-width: 100% !important;
     min-width: 0 !important;
 }
-.st-key-mathicap_series_pagination_haut {
-    box-sizing: border-box !important;
-    width: min(210px, 100%) !important;
-    max-width: 100% !important;
+.st-key-mathicap_series_entete_filtres {
+    width: 100% !important;
     min-width: 0 !important;
-    padding: 8px 12px !important;
-    margin: 0 0 14px auto !important;
-    border-radius: 12px !important;
-    border: 1px solid #dce7f7 !important;
-    background: #f5f9ff !important;
+    max-width: 100% !important;
+    margin: 0 0 10px !important;
 }
-.st-key-mathicap_series_pagination_haut [data-testid="stSelectbox"] label p {
+.st-key-mathicap_series_entete_filtres .mc-series-filtres-titre {
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+/* Le titre occupe l'espace disponible, le label et la petite liste
+   restent ensemble à l'extrémité droite du panneau. */
+.st-key-mathicap_series_entete_filtres
+[data-testid="stElementContainer"]:has(.mc-series-filtres-titre) {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin-right: auto !important;
+}
+.st-key-mathicap_series_entete_filtres .mc-series-taille-label {
     color: #264363 !important;
+    font-size: .81rem !important;
     font-weight: 650 !important;
+    white-space: nowrap !important;
 }
+.st-key-mathicap_series_entete_filtres [data-testid="stSelectbox"] {
+    flex: 0 0 auto !important;
+    width: 82px !important;
+    min-width: 76px !important;
+    max-width: 82px !important;
+}
+.st-key-mathicap_series_entete_filtres [data-baseweb="select"] > div {
+    min-height: 36px !important;
+    border-radius: 8px !important;
+    padding-left: 2px !important;
+    border: 1px solid #cbdcf4 !important;
+}
+/* Une barre sur la largeur des filtres et des fiches, navigation à droite. */
 .st-key-mathicap_series_pagination_bas {
     box-sizing: border-box !important;
-    width: fit-content !important;
+    width: min(100%, 940px) !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    padding: 8px 10px !important;
-    margin: 14px 0 8px auto !important;
+    padding: 9px 12px !important;
+    margin: 14px 0 8px 0 !important;
     border-radius: 12px !important;
     border: 1px solid #dce7f7 !important;
     background: #f5f9ff !important;
 }
-/* Éviter que les boutons de page ne débordent sur smartphone. */
 .st-key-mathicap_series_pagination_bas [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -1846,11 +1865,18 @@ st.markdown("""
     white-space: nowrap !important;
 }
 @media (max-width: 640px) {
-    .st-key-mathicap_series_pagination_haut {
-        width: min(190px, 100%) !important;
+    .st-key-mathicap_series_entete_filtres .mc-series-filtres-titre {
+        font-size: .90rem !important;
+    }
+    .st-key-mathicap_series_entete_filtres .mc-series-taille-label {
+        font-size: .74rem !important;
+    }
+    .st-key-mathicap_series_entete_filtres [data-testid="stSelectbox"] {
+        width: 76px !important;
+        min-width: 70px !important;
     }
     .st-key-mathicap_series_pagination_bas {
-        padding: 6px 8px !important;
+        padding: 7px 8px !important;
     }
     .st-key-mathicap_series_pagination_bas button {
         font-size: .85rem !important;
@@ -1919,7 +1945,6 @@ st.markdown("""
         min-width: 0 !important;
     }
     .st-key-mathicap_series_filtres,
-    .st-key-mathicap_series_pagination_haut,
     .st-key-mathicap_series_pagination_bas {
         box-sizing: border-box !important;
         min-width: 0 !important;
@@ -3869,9 +3894,26 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 if st.session_state.get(cle) not in choix_possibles:
                     st.session_state[cle] = choix_possibles[0]
 
-            # Filtres sur toute la largeur, comme dans la version validée.
+            # Conserver le même choix 5/10/20, mais l'intégrer au titre
+            # des filtres : pas de cadre de pagination séparé ni d'espace vide.
+            if st.session_state.get(cle_taille_page) not in (5, 10, 20):
+                st.session_state[cle_taille_page] = 5
+
             with st.container(key="mathicap_series_filtres"):
-                st.html('<div class="mc-series-filtres-titre">Filtrer mes séries</div>')
+                with st.container(
+                    horizontal=True,
+                    horizontal_alignment="right",
+                    vertical_alignment="center",
+                    gap="xsmall",
+                    key="mathicap_series_entete_filtres",
+                ):
+                    st.html('<div class="mc-series-filtres-titre">Filtrer mes séries</div>')
+                    st.html('<span class="mc-series-taille-label">Séries par page</span>')
+                    st.selectbox(
+                        "Séries par page", (5, 10, 20),
+                        key=cle_taille_page, on_change=changer_taille_page,
+                        label_visibility="collapsed", width=82,
+                    )
                 col_chapitre, col_niveau, col_etat = st.columns([2, 1.1, 1.3], gap="small")
                 with col_chapitre:
                     with st.container(key="mathicap_series_filtre_chapitre_couleur"):
@@ -3907,20 +3949,11 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             # Les filtres portent sur la liste complète. La pagination porte
             # uniquement sur l'affichage ; numéros et données restent inchangés.
             nombre_filtre = len(fiches_visibles)
-            if st.session_state.get(cle_taille_page) not in (5, 10, 20):
-                st.session_state[cle_taille_page] = 5
             taille_page = st.session_state[cle_taille_page]
             nombre_pages = max(1, (nombre_filtre + taille_page - 1) // taille_page)
             if (type(st.session_state.get(cle_page)) is not int
                     or not 1 <= st.session_state[cle_page] <= nombre_pages):
                 st.session_state[cle_page] = 1
-
-            # Un seul sélecteur compact à droite ; plus de menu déroulant « Page ».
-            with st.container(key="mathicap_series_pagination_haut"):
-                st.selectbox(
-                    "Séries par page", (5, 10, 20),
-                    key=cle_taille_page, on_change=changer_taille_page,
-                )
 
             # Recalcul après les éventuels callbacks Streamlit.
             taille_page = st.session_state[cle_taille_page]
@@ -4150,7 +4183,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                 }
                                 st.rerun()
 
-            # Navigation uniquement sous la dernière fiche, alignée à droite.
+            # Barre de navigation pleine largeur, boutons à droite et sous les fiches.
             # Aucun accès Supabase : seul l'index de la page change.
             if nombre_pages > 1:
                 with st.container(
