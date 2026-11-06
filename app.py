@@ -1318,6 +1318,21 @@ st.markdown("""
 }
 
 
+/* MathiCap — fiches Mes séries, sans impact sur les autres pages. */
+[class*="st-key-mathicap_series_carte_"] {
+    max-width: 900px !important;
+}
+[class*="st-key-mathicap_series_actions_"] button {
+    min-height: 40px !important;
+    padding-inline: 14px !important;
+}
+@media (max-width: 640px) {
+    [class*="st-key-mathicap_series_actions_"] button {
+        min-height: 44px !important;
+        padding-inline: 12px !important;
+    }
+}
+
 /* MathiCap — liens de déplacement : cibles tactiles sur PC et smartphone.
    Ne s'applique ni au bouton de génération ni aux actions sur les réponses. */
 :is(.st-key-mathicap_exercices_retour_accueil,
@@ -3537,7 +3552,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
         if not series:
             st.info("Aucune série enregistrée pour ce compte.", width=500)
         else:
-            st.success(f"{len(series)} série(s) retrouvée(s).", width=500)
+            st.caption(f"{len(series)} série(s) enregistrée(s) · plus récente(s) en premier.")
             ids_series = [s["id"] for s in series]
 
             cle_tout = f"tout_selectionner_{st.session_state['eleve_id']}"
@@ -3570,7 +3585,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             ]
 
             if st.button(
-                "Supprimer les séries cochées",
+                f"Supprimer la sélection ({len(selection)})",
                 key="mathicap_supprimer_series_cochees",
                 disabled=not selection
             ):
@@ -3694,33 +3709,93 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                 "ne sera effectuée."
                             )
 
-            for serie in series:
-                col_coche, col_contenu = st.columns(
-                    [1.5, 8.5],
-                    gap="small",
-                    vertical_alignment="center"
+            # Présentation des séries : mêmes données chargées, aucun appel Supabase en plus.
+            for numero_serie, serie in enumerate(series, start=1):
+                bilan_serie = _mathicap_statistiques_progression([serie])
+                total = bilan_serie["exercices_total"]
+                renseignes = bilan_serie["exercices_avec_reponse"]
+                pourcentage = round(100 * renseignes / total) if total else 0
+
+                # Les métadonnées viennent des exercices réellement enregistrés.
+                # Ne pas attribuer un chapitre ou un niveau fictif aux anciennes séries.
+                exercices_serie = serie.get("exercices") or []
+                chapitres_serie = sorted({
+                    exercice["mathicap_chapitre"].strip()
+                    for exercice in exercices_serie
+                    if isinstance(exercice, dict)
+                    and isinstance(exercice.get("mathicap_chapitre"), str)
+                    and exercice["mathicap_chapitre"].strip()
+                }) if isinstance(exercices_serie, list) else []
+                niveaux_serie = sorted({
+                    exercice["mathicap_niveau"]
+                    for exercice in exercices_serie
+                    if isinstance(exercice, dict)
+                    and type(exercice.get("mathicap_niveau")) is int
+                    and 1 <= exercice["mathicap_niveau"] <= 9
+                }) if isinstance(exercices_serie, list) else []
+
+                titre_chapitre = (
+                    chapitres_serie[0] if len(chapitres_serie) == 1
+                    else "Plusieurs chapitres" if chapitres_serie else "Chapitre non précisé"
+                )
+                titres_niveaux = (
+                    "Niveau " + str(niveaux_serie[0]) if len(niveaux_serie) == 1
+                    else "Niveaux " + ", ".join(map(str, niveaux_serie))
+                    if niveaux_serie else "Niveau non précisé"
                 )
 
-                with col_coche:
-                    st.checkbox(
-                        f"Série n° {serie['id']}",
-                        key=f"cocher_serie_{serie['id']}",
-                        on_change=synchroniser_selection
+                with st.container(border=True, key=f"mathicap_series_carte_{serie['id']}"):
+                    colonne_selection, colonne_detail = st.columns(
+                        [1, 9], gap="small", vertical_alignment="top"
                     )
+                    with colonne_selection:
+                        st.checkbox(
+                            f"Sélectionner la série {numero_serie}",
+                            key=f"cocher_serie_{serie['id']}",
+                            label_visibility="collapsed",
+                            on_change=synchroniser_selection,
+                        )
+                    with colonne_detail:
+                        st.markdown(f"**Série {numero_serie}** · {titre_chapitre}")
+                        st.caption(f"{titres_niveaux} · {total} exercice(s)")
+                        st.progress(
+                            pourcentage,
+                            text=(f"{renseignes}/{total} exercices avec réponse "
+                                  f"({pourcentage} %)")
+                        )
+                        with st.container(
+                            horizontal=True,
+                            horizontal_alignment="left",
+                            gap="small",
+                            key=f"mathicap_series_actions_{serie['id']}",
+                        ):
+                            if st.button(
+                                "Ouvrir",
+                                key=f"reprendre_serie_{serie['id']}",
+                                type="primary",
+                            ):
+                                if _mathicap_retablir_serie(serie, nouvelle_version=True):
+                                    st.session_state["afficher_series"] = False
+                                    st.session_state["_mathicap_ouvrir_serie"] = True
+                                    st.query_params["vue"] = "exercices"
+                                    st.query_params["serie_id"] = str(serie["id"])
+                                    st.rerun()
+                                else:
+                                    st.error("Cette série ne peut pas être restaurée.")
 
-                with col_contenu:
-                   if st.button(
-                     "Ouvrir",
-                     key=f"reprendre_serie_{serie['id']}"
-                  ):
-                     if _mathicap_retablir_serie(serie, nouvelle_version=True):
-                         st.session_state["afficher_series"] = False
-                         st.session_state["_mathicap_ouvrir_serie"] = True
-                         st.query_params["vue"] = "exercices"
-                         st.query_params["serie_id"] = str(serie["id"])
-                         st.rerun()
-                     else:
-                         st.error("Cette série ne peut pas être restaurée.")
+                            if st.button(
+                                "Supprimer",
+                                key=f"supprimer_serie_{serie['id']}",
+                                type="secondary",
+                            ):
+                                # Réutiliser le même dialogue de confirmation
+                                # et le même traitement Supabase que la sélection multiple.
+                                st.session_state["suppression_en_attente"] = {
+                                    "mode": "selection",
+                                    "ids": [serie["id"]],
+                                    "eleve_id": st.session_state["eleve_id"],
+                                }
+                                st.rerun()
 
     except Exception:
         st.error("Impossible de récupérer tes exercices.")
