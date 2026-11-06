@@ -1799,6 +1799,20 @@ st.markdown("""
         min-height: 46px !important;
     }
 }
+/* Pagination des séries : panneau léger propre à cette page. */
+.st-key-mathicap_series_pagination_haut,
+.st-key-mathicap_series_pagination_bas {
+    width: min(100%, 940px) !important;
+    padding: 10px 12px !important;
+    margin: 10px 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid #dce7f7 !important;
+    background: #f5f9ff !important;
+}
+.st-key-mathicap_series_pagination_haut [data-testid="stSelectbox"] label p {
+    color: #264363 !important;
+    font-weight: 650 !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -3574,10 +3588,25 @@ if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
     except Exception:
         st.session_state["erreur_reprise_series"] = True
 
+# Ne garder les séries en cache que pendant la consultation de cette rubrique.
+# Une visite sur les Exercices supprimera la copie, pour relire les réponses
+# modifiées lors du prochain retour sur la liste.
+if page_mathicap != "Mes séries":
+    st.session_state.pop("_mathicap_series_pagination_cache", None)
+
 if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
     try:
         _mc_nav_series_debut = time.perf_counter()
+        cache_page = st.session_state.get("_mathicap_series_pagination_cache")
+        valide_page = (
+            isinstance(cache_page, dict)
+            and cache_page.get("eleve_id") == st.session_state["eleve_id"]
+            and cache_page.get("jeton") == st.session_state.get("jeton_persistant")
+            and isinstance(cache_page.get("series"), list)
+            and isinstance(cache_page.get("charge_le"), (int, float))
+            and 0 <= time.monotonic() - cache_page["charge_le"] <= 60
+        )
         cache_profil = st.session_state.pop("_mathicap_nav_series_profil_v7", None)
         valide_depuis_profil = (
             isinstance(cache_profil, dict)
@@ -3587,13 +3616,25 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             and isinstance(cache_profil.get("charge_le"), (int, float))
             and 0 <= time.monotonic() - cache_profil["charge_le"] <= 20
         )
-        if valide_depuis_profil:
+        if valide_page:
+            # Les boutons et filtres ne déclenchent pas une nouvelle lecture.
+            series = cache_page["series"]
+            _mc_nav_series_source = "cache de la liste"
+        elif valide_depuis_profil:
             # Evite une seconde requete quand on vient directement du profil.
             series = cache_profil["series"]
             _mc_nav_series_source = "reutilisees depuis le profil"
         else:
             series = recuperer_exercices_eleve(st.session_state["eleve_id"])
             _mc_nav_series_source = "lecture Supabase"
+        if not valide_page:
+            # Cache réservé à cette session Streamlit et au jeton de cet élève.
+            st.session_state["_mathicap_series_pagination_cache"] = {
+                "eleve_id": st.session_state["eleve_id"],
+                "jeton": st.session_state.get("jeton_persistant"),
+                "charge_le": time.monotonic(),
+                "series": series,
+            }
         _mc_nav_series_ms = round((time.perf_counter() - _mc_nav_series_debut) * 1000)
         if _mc_nav_mesure:
             st.caption(
@@ -3684,12 +3725,31 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             cle_chapitre = f"mathicap_series_filtre_chapitre_{eleve_courant}"
             cle_niveau = f"mathicap_series_filtre_niveau_{eleve_courant}"
             cle_etat = f"mathicap_series_filtre_etat_{eleve_courant}"
+            cle_taille_page = f"mathicap_series_taille_page_{eleve_courant}"
+            cle_page = f"mathicap_series_page_{eleve_courant}"
 
-            def reinitialiser_selection_apres_filtre():
-                # Aucune sélection invisible ne doit être supprimée par accident.
+            def effacer_selection_series():
+                # Ne jamais conserver une sélection cachée sur une autre page.
                 st.session_state[cle_tout] = False
                 for identifiant in ids_series:
                     st.session_state.pop(f"cocher_serie_{identifiant}", None)
+                st.session_state.pop("suppression_en_attente", None)
+
+            def reinitialiser_selection_apres_filtre():
+                effacer_selection_series()
+                st.session_state[cle_page] = 1
+
+            def changer_taille_page():
+                effacer_selection_series()
+                st.session_state[cle_page] = 1
+
+            def changer_page():
+                effacer_selection_series()
+
+            def naviguer_page(decalage):
+                # Callback : exécuté avant la création du sélecteur de page.
+                st.session_state[cle_page] += decalage
+                effacer_selection_series()
 
             for cle, choix_possibles in (
                 (cle_chapitre, options_chapitres),
@@ -3735,8 +3795,45 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                          and int(filtre_niveau[7:]) in fiche["niveaux"]))
                 and (filtre_etat == "Tous les avancements" or fiche["etat"] == filtre_etat)
             ]
+            # Les filtres portent sur la liste complète. La pagination porte
+            # uniquement sur l'affichage ; numéros et données restent inchangés.
+            nombre_filtre = len(fiches_visibles)
+            if st.session_state.get(cle_taille_page) not in (5, 10, 20):
+                st.session_state[cle_taille_page] = 5
+            taille_page = st.session_state[cle_taille_page]
+            nombre_pages = max(1, (nombre_filtre + taille_page - 1) // taille_page)
+            if (type(st.session_state.get(cle_page)) is not int
+                    or not 1 <= st.session_state[cle_page] <= nombre_pages):
+                st.session_state[cle_page] = 1
+
+            with st.container(key="mathicap_series_pagination_haut"):
+                col_taille, col_page = st.columns([1, 1], gap="small")
+                with col_taille:
+                    st.selectbox(
+                        "Séries par page", (5, 10, 20),
+                        key=cle_taille_page, on_change=changer_taille_page,
+                    )
+                with col_page:
+                    st.selectbox(
+                        "Page", range(1, nombre_pages + 1),
+                        key=cle_page, on_change=changer_page,
+                    )
+
+            # Recalcul après les éventuels callbacks Streamlit.
+            taille_page = st.session_state[cle_taille_page]
+            page_actuelle = st.session_state[cle_page]
+            debut_page = (page_actuelle - 1) * taille_page
+            fin_page = min(debut_page + taille_page, nombre_filtre)
+            fiches_visibles = fiches_visibles[debut_page:fin_page]
             ids_visibles = [fiche["serie"]["id"] for fiche in fiches_visibles]
-            st.caption(f"{len(fiches_visibles)} série(s) affichée(s) sur {len(series)}.")
+            if nombre_filtre:
+                st.caption(
+                    f"{nombre_filtre} série(s) correspondant aux filtres sur {len(series)} · "
+                    f"affichage de {debut_page + 1} à {fin_page} · "
+                    f"page {page_actuelle}/{nombre_pages}."
+                )
+            else:
+                st.caption(f"Aucune série correspondante sur {len(series)}.")
 
             def cocher_toutes_series():
                 etat = st.session_state[cle_tout]
@@ -3750,7 +3847,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 )
 
             st.checkbox(
-                "Tout sélectionner les séries affichées",
+                "Tout sélectionner les séries de cette page",
                 key=cle_tout,
                 on_change=cocher_toutes_series,
                 disabled=not ids_visibles,
@@ -3877,6 +3974,10 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                 st.session_state.pop(
                                     "suppression_en_attente", None
                                 )
+                                # Une suppression confirmée invalide la copie locale.
+                                st.session_state.pop(
+                                    "_mathicap_series_pagination_cache", None
+                                )
                                 st.session_state["afficher_series"] = True
                                 st.rerun()
 
@@ -3953,6 +4054,27 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                     "eleve_id": st.session_state["eleve_id"],
                                 }
                                 st.rerun()
+
+            # Navigation après les fiches, sans relecture Supabase.
+            if nombre_pages > 1:
+                with st.container(key="mathicap_series_pagination_bas"):
+                    col_precedent, col_indicateur, col_suivant = st.columns(
+                        [1, 1, 1], gap="small", vertical_alignment="center"
+                    )
+                    with col_precedent:
+                        st.button(
+                            "← Précédent", key="mathicap_series_page_precedente",
+                            disabled=page_actuelle <= 1,
+                            on_click=naviguer_page, args=(-1,),
+                        )
+                    with col_indicateur:
+                        st.caption(f"Page {page_actuelle} / {nombre_pages}")
+                    with col_suivant:
+                        st.button(
+                            "Suivant →", key="mathicap_series_page_suivante",
+                            disabled=page_actuelle >= nombre_pages,
+                            on_click=naviguer_page, args=(1,),
+                        )
 
     except Exception:
         st.error("Impossible de récupérer tes exercices.")
