@@ -1124,6 +1124,27 @@ st.markdown("""
 .st-key-mathicap_reglages_exercices [data-testid="stProgress"] {
     max-width: 740px !important;
 }
+/* Action principale unique : visible à la fin des réglages, adaptée au mobile. */
+.st-key-mathicap_action_generer {
+    width: min(100%, 480px) !important;
+    margin: 16px 0 18px !important;
+}
+.st-key-mathicap_action_generer button {
+    width: 100% !important;
+    min-height: 52px !important;
+    border-radius: 12px !important;
+    font-size: 1.05rem !important;
+    font-weight: 750 !important;
+}
+@media (max-width: 640px) {
+    .st-key-mathicap_action_generer {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .st-key-mathicap_action_generer button {
+        min-height: 56px !important;
+    }
+}
 /* Exercices : aucune hauteur fixe et aucun défilement propre aux questions.
    Garder la disposition native de Streamlit pour les rangées courtes. */
 .st-key-mathicap_zone_exercices_affichage [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
@@ -3305,6 +3326,16 @@ if page_mathicap == "Exercices":
             index=2
         )
 
+        # Une seule action pour les niveaux 1 à 9 : aucun générateur n'est déplacé.
+        # Le clic est récupéré plus bas, après les fonctions de sauvegarde.
+        with st.container(key="mathicap_action_generer"):
+            demande_generation = st.button(
+                "Générer mes exercices",
+                key="mathicap_generer_exercices",
+                type="primary",
+                width="stretch",
+            )
+
 import secrets
 import string
 
@@ -5060,7 +5091,7 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
    
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
-if st.button("Générer mes exercices"):
+if demande_generation:
         if (
             chapitre == "1. Opérations"
             and type_exercice == "Je résous des problèmes"
