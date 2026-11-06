@@ -3731,8 +3731,14 @@ if vue_icone == "notifications":
 # Ne pas écraser la page choisie au menu lorsque la session est déjà active.
 _vue_mathicap = st.query_params.get("vue")
 _page_en_memoire = st.session_state.get("mathicap_page")
-if _page_en_memoire is None and _vue_mathicap == "exercices":
-    st.session_state["mathicap_page"] = "Exercices"
+if _page_en_memoire is None and _vue_mathicap in ("exercices", "series"):
+    # Une actualisation complète remet session_state à zéro.
+    # L'URL sert alors à rétablir la rubrique affichée avant F5.
+    if _vue_mathicap == "series":
+        st.session_state["mathicap_page"] = "Mes séries"
+        st.session_state["afficher_series"] = True
+    else:
+        st.session_state["mathicap_page"] = "Exercices"
 elif _page_en_memoire is not None and _vue_mathicap != "profil":
     if _page_en_memoire == "Exercices" and _vue_mathicap != "exercices":
         st.query_params["vue"] = "exercices"
