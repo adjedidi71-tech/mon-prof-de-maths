@@ -2454,6 +2454,53 @@ st.markdown("""
     }
     .mc-exos-serie-meta { margin: 10px 0 6px; padding: 10px 11px; }
 }
+
+/* Famille d'un exercice : un SEUL cadre pour l'original et ses variantes.
+   Resserre l'affichage sur PC et smartphone, sans toucher aux autres pages. */
+[class*="st-key-mc_exercice_famille_"] {
+    max-width: 920px;
+    min-width: 0;
+    border-color: #d8e5f4 !important;
+    border-radius: 14px !important;
+    padding: 14px 16px !important;
+}
+[class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
+    gap: .65rem !important;
+}
+/* Les lignes de saisie des variantes suivent la même largeur que les lignes initiales. */
+[class*="st-key-mathicap_similaire_carte_"] [data-testid="stHorizontalBlock"]:has([class*="st-key-mc_sim_"]) {
+    max-width: min(100%, 640px) !important;
+    width: 100% !important;
+    align-items: flex-start !important;
+    margin-bottom: 6px !important;
+    overflow: visible !important;
+}
+[class*="st-key-mathicap_similaire_carte_"] {
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 3px 0 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+[class*="st-key-mathicap_similaires_bloc_"] {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+[class*="st-key-mc_exercice_famille_"] [data-testid="stAlert"] {
+    margin-block: 0 !important;
+}
+[class*="st-key-mc_exercice_famille_"] [data-testid="stExpander"] {
+    margin-block: 0 !important;
+}
+@media (max-width: 640px) {
+    [class*="st-key-mc_exercice_famille_"] {
+        padding: 11px 12px !important;
+    }
+    [class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
+        gap: .55rem !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -5218,50 +5265,102 @@ def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
     identifiant = variante["identifiant"]
     exercice = variante["exercice"]
     reponse = variante.get("reponse") if isinstance(variante.get("reponse"), dict) else {}
-    with st.container(border=True, key=f"mathicap_similaire_carte_{numero}_{identifiant}"):
+    with st.container(border=False, key=f"mathicap_similaire_carte_{numero}_{identifiant}"):
         st.markdown(f"**Exercice {identifiant}** · Entraînement supplémentaire")
-        st.write(exercice.get("enonce", ""))
+        est_distributivite = (
+            exercice.get("enonce", "").startswith("Utilise la distributivité pour calculer :")
+            and bool(exercice.get("champs_reponse"))
+            and all(c.get("id", "").startswith("calcul_") for c in exercice["champs_reponse"])
+        )
+        if est_distributivite:
+            lignes_calcul = exercice["enonce"].split("\n\n")[1:]
+            st.write("Utilise la distributivité pour calculer :")
+        else:
+            st.write(exercice.get("enonce", ""))
         if exercice.get("reponse_attendue") is not None:
             cle = _mc_sim_cle_widget(identifiant, "nombre")
             if cle not in st.session_state:
                 valeur = reponse.get("valeur") if reponse.get("type") == "simple" else None
                 st.session_state[cle] = valeur if type(valeur) in (int, float) else None
-            st.number_input(
-                "Ta réponse", value=None,
-                step=0.01 if isinstance(exercice["reponse_attendue"], float) else 1,
-                key=cle, on_change=_mc_sim_mettre_a_jour_reponse,
-                args=(numero, identifiant),
+            col_texte, col_saisie = st.columns(
+                [1.4, 1], gap="small", vertical_alignment="top", wrap=False
             )
+            with col_texte:
+                st.write("Ta réponse :")
+            with col_saisie:
+                st.number_input(
+                    "Ta réponse :", label_visibility="collapsed", value=None,
+                    step=0.01 if isinstance(exercice["reponse_attendue"], float) else 1,
+                    key=cle, on_change=_mc_sim_mettre_a_jour_reponse,
+                    args=(numero, identifiant),
+                )
         elif exercice.get("champs_reponse"):
+            champs = exercice["champs_reponse"]
             valeurs = reponse.get("champs") if reponse.get("type") == "banque" else {}
             if not isinstance(valeurs, dict):
                 valeurs = {}
-            for champ in exercice["champs_reponse"]:
+            division_euclidienne = (
+                len(champs) == 2
+                and all(c.get("type") == "nombre" for c in champs)
+                and {str(c.get("libelle", "")).strip().lower() for c in champs}
+                == {"quotient", "reste"}
+            )
+            if division_euclidienne:
+                colonnes_division = st.columns([1.0, 1.0], gap="small", wrap=False)
+
+            for index, champ in enumerate(champs):
                 cle = _mc_sim_cle_widget(identifiant, champ["id"])
                 if cle not in st.session_state:
                     valeur = valeurs.get(champ["id"], "")
-                    if champ.get("type") == "choix" and valeur not in (["Choisir..."] + champ.get("options", [])):
+                    if champ.get("type") == "choix" and valeur not in (
+                        ["Choisir..."] + champ.get("options", [])
+                    ):
                         valeur = "Choisir..."
                     st.session_state[cle] = valeur
                 etiquette = f"Question {champ.get('question', '')} — {champ.get('libelle', 'Réponse')}"
-                if champ.get("type") == "choix":
-                    st.selectbox(
-                        etiquette, ["Choisir..."] + champ.get("options", []),
-                        key=cle, on_change=_mc_sim_mettre_a_jour_reponse,
-                        args=(numero, identifiant),
-                    )
+                callback = _mc_sim_mettre_a_jour_reponse
+                arguments = (numero, identifiant)
+                if champ.get("type") == "nombre":
+                    if est_distributivite and index < len(lignes_calcul):
+                        col_calcul, col_reponse = st.columns(
+                            [1.4, 1], gap="small", vertical_alignment="top", wrap=False
+                        )
+                        with col_calcul:
+                            st.write(lignes_calcul[index])
+                        with col_reponse:
+                            st.text_input(
+                                etiquette, label_visibility="collapsed", placeholder="Réponse",
+                                key=cle, on_change=callback, args=arguments,
+                            )
+                    elif division_euclidienne:
+                        with colonnes_division[index]:
+                            st.text_input(
+                                champ["libelle"], placeholder="Réponse",
+                                key=cle, on_change=callback, args=arguments,
+                            )
+                    else:
+                        with st.container(key=f"mathicap_question_{identifiant}_{index}"):
+                            st.write(etiquette)
+                        with st.container(key=f"mathicap_champ_reponse_{identifiant}_{index}"):
+                            st.text_input(
+                                etiquette, label_visibility="collapsed", placeholder="Réponse",
+                                key=cle, on_change=callback, args=arguments,
+                            )
+                elif champ.get("type") == "choix":
+                    with st.container(key=f"mathicap_question_{identifiant}_{index}"):
+                        st.write(etiquette)
+                    with st.container(key=f"mathicap_champ_reponse_{identifiant}_{index}"):
+                        st.selectbox(
+                            etiquette, ["Choisir..."] + champ.get("options", []),
+                            label_visibility="collapsed", key=cle,
+                            on_change=callback, args=arguments,
+                        )
                 elif champ.get("type") == "texte_libre":
-                    st.text_area(
-                        etiquette, key=cle, height=90,
-                        on_change=_mc_sim_mettre_a_jour_reponse,
-                        args=(numero, identifiant),
-                    )
-                else:
-                    st.text_input(
-                        etiquette, key=cle, placeholder="Ta réponse",
-                        on_change=_mc_sim_mettre_a_jour_reponse,
-                        args=(numero, identifiant),
-                    )
+                    with st.container(key=f"mathicap_reponse_texte_{identifiant}_{index}"):
+                        st.text_area(
+                            etiquette, height=90, key=cle,
+                            on_change=callback, args=arguments,
+                        )
         else:
             cle = _mc_sim_cle_widget(identifiant, "texte")
             if cle not in st.session_state:
@@ -5368,7 +5467,6 @@ def _mc_sim_bloc(numero, exercice):
     if not isinstance(existantes, list):
         existantes = []
     with st.container(key=f"mathicap_similaires_bloc_{numero}"):
-        st.markdown("---")
         # Toujours conserver les variantes déjà créées ; leur affichage précède
         # l'invitation suivante, même après un rechargement de la page.
         for indice, variante in enumerate(existantes):
@@ -6959,390 +7057,391 @@ def _mathicap_afficher_serie_et_reponses():
                 '</section>'
             )
             for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
-                st.subheader(f"Exercice {numero}")           
-                est_distributivite = (
-                    exercice["enonce"].startswith(
-                        "Utilise la distributivité pour calculer :"
+                with st.container(border=True, key=f"mc_exercice_famille_{numero}"):
+                    st.subheader(f"Exercice {numero}")           
+                    est_distributivite = (
+                        exercice["enonce"].startswith(
+                            "Utilise la distributivité pour calculer :"
+                        )
+                        and bool(exercice.get("champs_reponse"))
+                        and all(
+                            c["id"].startswith("calcul_")
+                            for c in exercice["champs_reponse"]
+                        )
                     )
-                    and bool(exercice.get("champs_reponse"))
-                    and all(
-                        c["id"].startswith("calcul_")
-                        for c in exercice["champs_reponse"]
-                    )
-                )
 
-                if est_distributivite:
-                    lignes_calcul = exercice["enonce"].split("\n\n")[1:]
-                    st.write("Utilise la distributivité pour calculer :")
-                else:
-                    with st.container(key=f"mathicap_enonce_{numero}"):
-                        st.write(exercice["enonce"])
+                    if est_distributivite:
+                        lignes_calcul = exercice["enonce"].split("\n\n")[1:]
+                        st.write("Utilise la distributivité pour calculer :")
+                    else:
+                        with st.container(key=f"mathicap_enonce_{numero}"):
+                            st.write(exercice["enonce"])
 
     
-                if exercice.get("reponse_attendue") is not None:  
-                    col_texte, col_saisie = st.columns(
-                        [1.4, 1],
-                        gap="small",
-                        vertical_alignment="top",
-                        wrap=False
-                    )
-
-                    with col_texte:
-                        st.write("Ta réponse :")
-
-                    with col_saisie:
-                        reponse_eleve = st.number_input(
-                            "Ta réponse :",
-                            label_visibility="collapsed",
-                            value=None,
-                            step=0.01 if isinstance(
-                                exercice.get("reponse_attendue"), float
-                            ) else 1,
-                            key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
-                            on_change=enregistrer_reponse_auto,
-                            args=(numero,)
-                        )    
-                    cle_bilan_simple = (
-                        f"bilan_simple_{st.session_state.get('serie_version', 0)}_{numero}"
-                    )
-                    if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
-                        if reponse_eleve is None:
-                            st.warning("Saisis d'abord ta réponse.")
-                        else:
-                            correcte = reponse_eleve == exercice["reponse_attendue"]
-                            bilan_simple = {"bonnes": int(correcte), "total": 1}
-                            st.session_state[cle_bilan_simple] = bilan_simple
-                            code = st.session_state.get("code_actuel")
-                            if code and st.session_state.get("eleve_id"):
-                                try:
-                                    confirme = sauvegarder_reponse(code, numero, {
-                                        "type": "simple",
-                                        "valeur": reponse_eleve,
-                                        "bilan": bilan_simple,
-                                    })
-                                    if not confirme:
-                                        st.error("Le résultat n'a pas pu être enregistré.")
-                                except Exception:
-                                    st.error("Le résultat n'a pas pu être enregistré.")
-                            if correcte:
-                                st.success("Bonne réponse !", width=500)
-                            else:
-                                st.error("Réponse incorrecte. Essaie encore.")
-                    elif isinstance(st.session_state.get(cle_bilan_simple), dict):
-                        dernier = st.session_state[cle_bilan_simple]
-                        st.caption(
-                            "Dernière vérification : "
-                            + ("Bonne réponse" if dernier.get("bonnes") else "Réponse incorrecte")
-                        )
-                elif exercice.get("champs_reponse"):        
-                    champs = exercice["champs_reponse"]
-                    division_euclidienne = (
-                        len(champs) == 2
-                        and all(c["type"] == "nombre" for c in champs)
-                        and {
-                            c["libelle"].strip().lower()
-                            for c in champs
-                        } == {"quotient", "reste"}
-                    )
-
-                    if division_euclidienne:
-                        colonnes_division = st.columns(
-                            [1.0, 1.0],
+                    if exercice.get("reponse_attendue") is not None:  
+                        col_texte, col_saisie = st.columns(
+                            [1.4, 1],
                             gap="small",
+                            vertical_alignment="top",
                             wrap=False
                         )
 
-                    for index, champ in enumerate(champs):
-                        etiquette = (
-                            f"Question {champ['question']} — "
-                            f"{champ['libelle']}"
+                        with col_texte:
+                            st.write("Ta réponse :")
+
+                        with col_saisie:
+                            reponse_eleve = st.number_input(
+                                "Ta réponse :",
+                                label_visibility="collapsed",
+                                value=None,
+                                step=0.01 if isinstance(
+                                    exercice.get("reponse_attendue"), float
+                                ) else 1,
+                                key=f"reponse_{st.session_state.get('serie_version', 0)}_{numero}",
+                                on_change=enregistrer_reponse_auto,
+                                args=(numero,)
+                            )    
+                        cle_bilan_simple = (
+                            f"bilan_simple_{st.session_state.get('serie_version', 0)}_{numero}"
                         )
-                        cle = (
-                            f"banque_{st.session_state.get('serie_version', 0)}"
-                            f"_{numero}_{champ['id']}"
-                        )
-                    
-                        if champ["type"] == "nombre":
-                            if est_distributivite:
-                                col_calcul, col_reponse = st.columns(
-                                    [1.4, 1],
-                                    gap="small",
-                                    vertical_alignment="top",
-                                    wrap=False
-                                )
-
-                                with col_calcul:
-                                    st.write(lignes_calcul[index])
-
-                                with col_reponse:
-                                    st.text_input(
-                                        etiquette,
-                                        label_visibility="collapsed",
-                                        placeholder="Réponse",
-                                        key=cle,
-                                        on_change=enregistrer_reponses_banque_auto,
-                                        args=(numero,)
-                                    )
-
-                            elif division_euclidienne:
-
-                                with colonnes_division[index]:
-                                    st.text_input(
-                                        champ["libelle"],
-                                        placeholder="Réponse",
-                                        key=cle,
-                                        on_change=enregistrer_reponses_banque_auto,
-                                        args=(numero,)
-                                    )
+                        if st.button("Vérifier ma réponse", key=f"verifier_{numero}"):
+                            if reponse_eleve is None:
+                                st.warning("Saisis d'abord ta réponse.")
                             else:
-                                # Le libellé est écrit directement sur la page.
-                                # Aucune colonne de hauteur fixe ne peut le tronquer.
+                                correcte = reponse_eleve == exercice["reponse_attendue"]
+                                bilan_simple = {"bonnes": int(correcte), "total": 1}
+                                st.session_state[cle_bilan_simple] = bilan_simple
+                                code = st.session_state.get("code_actuel")
+                                if code and st.session_state.get("eleve_id"):
+                                    try:
+                                        confirme = sauvegarder_reponse(code, numero, {
+                                            "type": "simple",
+                                            "valeur": reponse_eleve,
+                                            "bilan": bilan_simple,
+                                        })
+                                        if not confirme:
+                                            st.error("Le résultat n'a pas pu être enregistré.")
+                                    except Exception:
+                                        st.error("Le résultat n'a pas pu être enregistré.")
+                                if correcte:
+                                    st.success("Bonne réponse !", width=500)
+                                else:
+                                    st.error("Réponse incorrecte. Essaie encore.")
+                        elif isinstance(st.session_state.get(cle_bilan_simple), dict):
+                            dernier = st.session_state[cle_bilan_simple]
+                            st.caption(
+                                "Dernière vérification : "
+                                + ("Bonne réponse" if dernier.get("bonnes") else "Réponse incorrecte")
+                            )
+                    elif exercice.get("champs_reponse"):        
+                        champs = exercice["champs_reponse"]
+                        division_euclidienne = (
+                            len(champs) == 2
+                            and all(c["type"] == "nombre" for c in champs)
+                            and {
+                                c["libelle"].strip().lower()
+                                for c in champs
+                            } == {"quotient", "reste"}
+                        )
+
+                        if division_euclidienne:
+                            colonnes_division = st.columns(
+                                [1.0, 1.0],
+                                gap="small",
+                                wrap=False
+                            )
+
+                        for index, champ in enumerate(champs):
+                            etiquette = (
+                                f"Question {champ['question']} — "
+                                f"{champ['libelle']}"
+                            )
+                            cle = (
+                                f"banque_{st.session_state.get('serie_version', 0)}"
+                                f"_{numero}_{champ['id']}"
+                            )
+                    
+                            if champ["type"] == "nombre":
+                                if est_distributivite:
+                                    col_calcul, col_reponse = st.columns(
+                                        [1.4, 1],
+                                        gap="small",
+                                        vertical_alignment="top",
+                                        wrap=False
+                                    )
+
+                                    with col_calcul:
+                                        st.write(lignes_calcul[index])
+
+                                    with col_reponse:
+                                        st.text_input(
+                                            etiquette,
+                                            label_visibility="collapsed",
+                                            placeholder="Réponse",
+                                            key=cle,
+                                            on_change=enregistrer_reponses_banque_auto,
+                                            args=(numero,)
+                                        )
+
+                                elif division_euclidienne:
+
+                                    with colonnes_division[index]:
+                                        st.text_input(
+                                            champ["libelle"],
+                                            placeholder="Réponse",
+                                            key=cle,
+                                            on_change=enregistrer_reponses_banque_auto,
+                                            args=(numero,)
+                                        )
+                                else:
+                                    # Le libellé est écrit directement sur la page.
+                                    # Aucune colonne de hauteur fixe ne peut le tronquer.
+                                    with st.container(key=f"mathicap_question_{numero}_{index}"):
+                                        st.write(etiquette)
+                                    with st.container(
+                                        key=f"mathicap_champ_reponse_{numero}_{index}"
+                                    ):
+                                        st.text_input(
+                                            etiquette,
+                                            label_visibility="collapsed",
+                                            placeholder="Réponse",
+                                            key=cle,
+                                            on_change=enregistrer_reponses_banque_auto,
+                                            args=(numero,)
+                                        )
+
+                            elif champ["type"] == "choix":
                                 with st.container(key=f"mathicap_question_{numero}_{index}"):
                                     st.write(etiquette)
                                 with st.container(
                                     key=f"mathicap_champ_reponse_{numero}_{index}"
                                 ):
-                                    st.text_input(
+                                    st.selectbox(
                                         etiquette,
+                                        ["Choisir..."] + champ["options"],
                                         label_visibility="collapsed",
-                                        placeholder="Réponse",
                                         key=cle,
                                         on_change=enregistrer_reponses_banque_auto,
                                         args=(numero,)
                                     )
 
-                        elif champ["type"] == "choix":
-                            with st.container(key=f"mathicap_question_{numero}_{index}"):
-                                st.write(etiquette)
-                            with st.container(
-                                key=f"mathicap_champ_reponse_{numero}_{index}"
-                            ):
-                                st.selectbox(
-                                    etiquette,
-                                    ["Choisir..."] + champ["options"],
-                                    label_visibility="collapsed",
-                                    key=cle,
-                                    on_change=enregistrer_reponses_banque_auto,
-                                    args=(numero,)
-                                )
+                            elif champ["type"] == "texte_libre":
+                                with st.container(
+                                    key=f"mathicap_reponse_texte_{numero}_{index}"
+                                ):
+                                    st.text_area(
+                                        etiquette,
+                                        height=90,
+                                        key=cle,
+                                        on_change=enregistrer_reponses_banque_auto,
+                                        args=(numero,)
+                                    )
 
-                        elif champ["type"] == "texte_libre":
-                            with st.container(
-                                key=f"mathicap_reponse_texte_{numero}_{index}"
-                            ):
-                                st.text_area(
-                                    etiquette,
-                                    height=90,
-                                    key=cle,
-                                    on_change=enregistrer_reponses_banque_auto,
-                                    args=(numero,)
-                                )
-
-                    if st.button(
-                        "Vérifier mes réponses",
-                        key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
-                    ):
-                        bonnes_reponses = 0
-                        total_reponses = sum(
-                            1 for champ in exercice["champs_reponse"]
-                            if champ["type"] != "texte_libre"
-                        )
-                        for champ in exercice["champs_reponse"]:
-                            if champ["type"] == "texte_libre":
-                                continue
-    
-                            cle = (
-                                f"banque_{st.session_state.get('serie_version', 0)}"
-                                f"_{numero}_{champ['id']}"
+                        if st.button(
+                            "Vérifier mes réponses",
+                            key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+                        ):
+                            bonnes_reponses = 0
+                            total_reponses = sum(
+                                1 for champ in exercice["champs_reponse"]
+                                if champ["type"] != "texte_libre"
                             )
-                            saisie = st.session_state.get(cle, "")
-    
-                            if saisie in ("", "Choisir..."):
-                                st.warning(f"{champ['libelle']} : réponse manquante.")
-                                continue
-    
-                            if champ["type"] == "nombre":
-                                try:
-                                    correcte = (
-                                        float(str(saisie).replace(",", "."))
-                                        == float(champ["attendu"])
-                                    )
-                                except (ValueError, TypeError):
-                                    correcte = False
-                            else:
-                                correcte = saisie == champ["attendu"]
-    
-                            if correcte and champ["type"] == "choix":
-                                calculs_corrects = True
-                                dependances = champ.get("dependances", [])
-
-                                for autre in exercice["champs_reponse"]:
-                                    if autre["id"] not in dependances:
-                                        continue
-        
-                                    if autre["type"] != "nombre":
-                                        continue
-        
-                                    autre_cle = (
-                                        f"banque_{st.session_state.get('serie_version', 0)}"
-                                        f"_{numero}_{autre['id']}"
-                                    )
-        
-                                    valeur = st.session_state.get(autre_cle, "")
-        
-                                    try:
-                                        valeur_saisie = float(
-                                            str(valeur).replace(",", ".")
-                                        )
-                                        valeur_attendue = float(autre["attendu"])
-        
-                                        if abs(valeur_saisie - valeur_attendue) > 1e-6:
-                                            calculs_corrects = False
-        
-                                    except (ValueError, TypeError):
-                                        calculs_corrects = False
-
-    
-                                if calculs_corrects:
-                                    bonnes_reponses += 1
-                                    st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
-                                else:
-                                    st.markdown(
-                                        ":orange[⚠ Bon choix, mais certains calculs sont faux "
-                                        "ou incomplets. Vérifie-les.]"
-                                    )
-    
-                            elif correcte:
-                                bonnes_reponses += 1
-                                st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
-    
-                            else:
-                                st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
-                        st.markdown("---")
-                        texte_score = (
-                            "bonne réponse" if bonnes_reponses == 1
-                            else "bonnes réponses"
-                        )
-                        st.markdown(
-                            f"**Résultat : {bonnes_reponses} "
-                            f"{texte_score} sur {total_reponses}**"
-                        )
-                        code = st.session_state.get("code_actuel")
-    
-                        if code and st.session_state.get("eleve_id"):
-                            reponses_banque = {}
-    
                             for champ in exercice["champs_reponse"]:
+                                if champ["type"] == "texte_libre":
+                                    continue
+    
                                 cle = (
                                     f"banque_{st.session_state.get('serie_version', 0)}"
                                     f"_{numero}_{champ['id']}"
                                 )
-                                reponses_banque[champ["id"]] = st.session_state.get(cle, "")
+                                saisie = st.session_state.get(cle, "")
     
-                            bilan_verifie = {
-                                "bonnes": bonnes_reponses,
-                                "total": total_reponses,
-                            }
-                            try:
-                                confirme = sauvegarder_reponse(
-                                    code,
-                                    numero,
-                                    {
-                                        "type": "banque",
-                                        "champs": reponses_banque,
-                                        "bilan": bilan_verifie,
-                                    }
-                                )
-                                if confirme:
-                                    st.session_state[
-                                        f"bilan_banque_{st.session_state.get('serie_version', 0)}_{numero}"
-                                    ] = bilan_verifie
+                                if saisie in ("", "Choisir..."):
+                                    st.warning(f"{champ['libelle']} : réponse manquante.")
+                                    continue
+    
+                                if champ["type"] == "nombre":
+                                    try:
+                                        correcte = (
+                                            float(str(saisie).replace(",", "."))
+                                            == float(champ["attendu"])
+                                        )
+                                    except (ValueError, TypeError):
+                                        correcte = False
                                 else:
+                                    correcte = saisie == champ["attendu"]
+    
+                                if correcte and champ["type"] == "choix":
+                                    calculs_corrects = True
+                                    dependances = champ.get("dependances", [])
+
+                                    for autre in exercice["champs_reponse"]:
+                                        if autre["id"] not in dependances:
+                                            continue
+        
+                                        if autre["type"] != "nombre":
+                                            continue
+        
+                                        autre_cle = (
+                                            f"banque_{st.session_state.get('serie_version', 0)}"
+                                            f"_{numero}_{autre['id']}"
+                                        )
+        
+                                        valeur = st.session_state.get(autre_cle, "")
+        
+                                        try:
+                                            valeur_saisie = float(
+                                                str(valeur).replace(",", ".")
+                                            )
+                                            valeur_attendue = float(autre["attendu"])
+        
+                                            if abs(valeur_saisie - valeur_attendue) > 1e-6:
+                                                calculs_corrects = False
+        
+                                        except (ValueError, TypeError):
+                                            calculs_corrects = False
+
+    
+                                    if calculs_corrects:
+                                        bonnes_reponses += 1
+                                        st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+                                    else:
+                                        st.markdown(
+                                            ":orange[⚠ Bon choix, mais certains calculs sont faux "
+                                            "ou incomplets. Vérifie-les.]"
+                                        )
+    
+                                elif correcte:
+                                    bonnes_reponses += 1
+                                    st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+    
+                                else:
+                                    st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
+                            st.markdown("---")
+                            texte_score = (
+                                "bonne réponse" if bonnes_reponses == 1
+                                else "bonnes réponses"
+                            )
+                            st.markdown(
+                                f"**Résultat : {bonnes_reponses} "
+                                f"{texte_score} sur {total_reponses}**"
+                            )
+                            code = st.session_state.get("code_actuel")
+    
+                            if code and st.session_state.get("eleve_id"):
+                                reponses_banque = {}
+    
+                                for champ in exercice["champs_reponse"]:
+                                    cle = (
+                                        f"banque_{st.session_state.get('serie_version', 0)}"
+                                        f"_{numero}_{champ['id']}"
+                                    )
+                                    reponses_banque[champ["id"]] = st.session_state.get(cle, "")
+    
+                                bilan_verifie = {
+                                    "bonnes": bonnes_reponses,
+                                    "total": total_reponses,
+                                }
+                                try:
+                                    confirme = sauvegarder_reponse(
+                                        code,
+                                        numero,
+                                        {
+                                            "type": "banque",
+                                            "champs": reponses_banque,
+                                            "bilan": bilan_verifie,
+                                        }
+                                    )
+                                    if confirme:
+                                        st.session_state[
+                                            f"bilan_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+                                        ] = bilan_verifie
+                                    else:
+                                        st.error("Le bilan n'a pas pu être enregistré.")
+                                except Exception:
                                     st.error("Le bilan n'a pas pu être enregistré.")
-                            except Exception:
-                                st.error("Le bilan n'a pas pu être enregistré.")
-                    cle_bilan = (
-                        f"bilan_banque_{st.session_state.get('serie_version', 0)}"
-                        f"_{numero}"
-                    )
+                        cle_bilan = (
+                            f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+                            f"_{numero}"
+                        )
     
-                    bilan = st.session_state.get(cle_bilan)
+                        bilan = st.session_state.get(cle_bilan)
     
-                    if isinstance(bilan, dict):
-                        st.markdown(
-                            f"**Dernier bilan enregistré : "
-                            f"{bilan['bonnes']} bonnes réponses "
-                            f"sur {bilan['total']}**"
-                        )    
-                else:
-                    with st.container(key=f"mathicap_reponse_texte_libre_{numero}"):
-                        st.text_area(
-                            "Ta réponse :",
-                            placeholder="Écris ici tes réponses aux questions de l'exercice.",
-                            height=150,
-                            key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}",
-                            on_change=enregistrer_reponse_texte_auto,
-                            args=(numero,),
-                        )
-                    if st.button(
-                        "Enregistrer ma réponse",
-                        key=f"enregistrer_texte_{st.session_state.get('serie_version', 0)}_{numero}",
-                    ):
-                        code = st.session_state.get("code_actuel")
-                        cle_texte = f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
-                        if code and st.session_state.get("eleve_id"):
-                            try:
-                                if sauvegarder_reponse(code, numero, st.session_state.get(cle_texte, "")):
-                                    st.toast("Réponse enregistrée.", icon="✅", duration=3)
-                                else:
-                                    st.error("Impossible d'enregistrer cette réponse.")
-                            except Exception:
-                                st.error("Impossible d'enregistrer cette réponse.")
-                        else:
-                            st.warning("Connecte-toi pour sauvegarder ta réponse.")
-
-                with st.expander(
-                    f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
-                    expanded=False
-                ):
-                    texte_correction = exercice["correction"]
-                    # Rendre explicites le quotient et le reste, y compris
-                    # pour les séries créées avant cette mise à jour.
-                    champs_division = exercice.get("champs_reponse") or []
-                    if (
-                        exercice.get("enonce", "").startswith(
-                            "Effectue la division euclidienne de "
-                        )
-                        and {champ.get("id") for champ in champs_division}
-                        == {"quotient", "reste"}
-                    ):
-                        donnees_division = {
-                            champ["id"]: champ.get("attendu")
-                            for champ in champs_division
-                        }
-                        match_division = re.search(
-                            r"division euclidienne de (\d+) par (\d+)",
-                            exercice.get("enonce", ""),
-                            flags=re.IGNORECASE,
-                        )
-                        if (
-                            match_division
-                            and all(
-                                donnees_division.get(cle) is not None
-                                for cle in ("quotient", "reste")
+                        if isinstance(bilan, dict):
+                            st.markdown(
+                                f"**Dernier bilan enregistré : "
+                                f"{bilan['bonnes']} bonnes réponses "
+                                f"sur {bilan['total']}**"
+                            )    
+                    else:
+                        with st.container(key=f"mathicap_reponse_texte_libre_{numero}"):
+                            st.text_area(
+                                "Ta réponse :",
+                                placeholder="Écris ici tes réponses aux questions de l'exercice.",
+                                height=150,
+                                key=f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}",
+                                on_change=enregistrer_reponse_texte_auto,
+                                args=(numero,),
                             )
+                        if st.button(
+                            "Enregistrer ma réponse",
+                            key=f"enregistrer_texte_{st.session_state.get('serie_version', 0)}_{numero}",
                         ):
-                            dividende, diviseur = map(int, match_division.groups())
-                            quotient = int(donnees_division["quotient"])
-                            reste = int(donnees_division["reste"])
-                            texte_correction = _mathicap_correction_division_euclidienne(
-                                dividende, diviseur, quotient, reste
-                            )
-                    st.markdown(texte_correction.replace("\n", "  \n"))
+                            code = st.session_state.get("code_actuel")
+                            cle_texte = f"reponse_texte_{st.session_state.get('serie_version', 0)}_{numero}"
+                            if code and st.session_state.get("eleve_id"):
+                                try:
+                                    if sauvegarder_reponse(code, numero, st.session_state.get(cle_texte, "")):
+                                        st.toast("Réponse enregistrée.", icon="✅", duration=3)
+                                    else:
+                                        st.error("Impossible d'enregistrer cette réponse.")
+                                except Exception:
+                                    st.error("Impossible d'enregistrer cette réponse.")
+                            else:
+                                st.warning("Connecte-toi pour sauvegarder ta réponse.")
 
-                # Variantes indépendantes : 2a, 2b…, conservées dans la même
-                # série Supabase sans gonfler les scores ni la pagination.
-                _mc_sim_bloc(numero, exercice)
+                    with st.expander(
+                        f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
+                        expanded=False
+                    ):
+                        texte_correction = exercice["correction"]
+                        # Rendre explicites le quotient et le reste, y compris
+                        # pour les séries créées avant cette mise à jour.
+                        champs_division = exercice.get("champs_reponse") or []
+                        if (
+                            exercice.get("enonce", "").startswith(
+                                "Effectue la division euclidienne de "
+                            )
+                            and {champ.get("id") for champ in champs_division}
+                            == {"quotient", "reste"}
+                        ):
+                            donnees_division = {
+                                champ["id"]: champ.get("attendu")
+                                for champ in champs_division
+                            }
+                            match_division = re.search(
+                                r"division euclidienne de (\d+) par (\d+)",
+                                exercice.get("enonce", ""),
+                                flags=re.IGNORECASE,
+                            )
+                            if (
+                                match_division
+                                and all(
+                                    donnees_division.get(cle) is not None
+                                    for cle in ("quotient", "reste")
+                                )
+                            ):
+                                dividende, diviseur = map(int, match_division.groups())
+                                quotient = int(donnees_division["quotient"])
+                                reste = int(donnees_division["reste"])
+                                texte_correction = _mathicap_correction_division_euclidienne(
+                                    dividende, diviseur, quotient, reste
+                                )
+                        st.markdown(texte_correction.replace("\n", "  \n"))
+
+                    # Variantes indépendantes : 2a, 2b…, conservées dans la même
+                    # série Supabase sans gonfler les scores ni la pagination.
+                    _mc_sim_bloc(numero, exercice)
 
 _mathicap_afficher_serie_et_reponses()
 
