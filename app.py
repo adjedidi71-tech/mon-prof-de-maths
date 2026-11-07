@@ -2455,30 +2455,59 @@ st.markdown("""
     .mc-exos-serie-meta { margin: 10px 0 6px; padding: 10px 11px; }
 }
 
-/* Famille d'un exercice : un SEUL cadre pour l'original et ses variantes.
-   Resserre l'affichage sur PC et smartphone, sans toucher aux autres pages. */
+/* MathiCap — rythme vertical UNIQUE dans chaque famille d'exercices.
+   Évite l'addition des marges Streamlit, des lignes de réponses et des boutons.
+   Ne s'applique ni aux pages Accueil/Profil/Mes séries, ni aux générateurs. */
 [class*="st-key-mc_exercice_famille_"] {
+    --mc-exercice-espacement: 8px;
     max-width: 920px;
     min-width: 0;
     border-color: #d8e5f4 !important;
     border-radius: 14px !important;
-    padding: 14px 16px !important;
+    padding: 13px 15px !important;
 }
-[class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
-    gap: .35rem !important;
+/* Une seule valeur commune pour les éléments successifs, même à l'intérieur
+   des variantes, des colonnes de réponse et des panneaux de résultat. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
+    gap: var(--mc-exercice-espacement) !important;
+    row-gap: var(--mc-exercice-espacement) !important;
 }
-/* Les lignes de saisie des variantes suivent la même largeur que les lignes initiales. */
-[class*="st-key-mathicap_similaire_carte_"] [data-testid="stHorizontalBlock"]:has([class*="st-key-mc_sim_"]) {
-    max-width: min(100%, 640px) !important;
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stElementContainer"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+/* Les paragraphes de st.write/st.markdown ne rajoutent plus de vide variable.
+   Un petit interligne est conservé pour les corrections en plusieurs étapes. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stMarkdownContainer"] p {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    line-height: 1.42 !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stMarkdownContainer"] p + p {
+    margin-top: 5px !important;
+}
+/* Annule les anciennes marges additionnelles de 12px sur les colonnes de
+   réponses, tout en gardant leurs dimensions et leurs alignements validés. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stHorizontalBlock"]:has([class*="st-key-banque_"]),
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stHorizontalBlock"]:has([class*="st-key-reponse_"]),
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stHorizontalBlock"]:has([class*="st-key-mc_sim_"]) {
     width: 100% !important;
+    max-width: min(100%, 640px) !important;
+    margin-block: 0 !important;
     align-items: flex-start !important;
-    margin-bottom: 6px !important;
     overflow: visible !important;
 }
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="st-key-mathicap_champ_reponse_"],
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="st-key-mathicap_reponse_texte_"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+/* Un cadre continu, sans séparateur et sans marges artificielles entre
+   l'exercice initial, les anciens essais repliés et le dernier essai ouvert. */
 [class*="st-key-mathicap_similaire_carte_"] {
     border: 0 !important;
     box-shadow: none !important;
-    padding: 3px 0 0 !important;
+    padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
 }
@@ -2486,35 +2515,25 @@ st.markdown("""
     margin: 0 !important;
     padding: 0 !important;
 }
-[class*="st-key-mc_exercice_famille_"] [data-testid="stAlert"] {
-    margin-block: 0 !important;
-}
-[class*="st-key-mc_exercice_famille_"] [data-testid="stExpander"] {
-    margin-block: 0 !important;
-}
-/* Vérification, résultat, lien de correction : lisibles mais plus rapprochés.
-   La taille des champs et des zones tactiles reste inchangée. */
-[class*="st-key-mc_exercice_famille_"] [data-testid="stAlert"] {
+/* Résultats et actions : les espaces viennent de la grille, non de marges
+   propres à chaque composant. Conserver des cibles tactiles utilisables. */
+[class*="st-key-mc_exercice_famille_"] [data-testid="stAlert"],
+[class*="st-key-mc_exercice_famille_"] [data-testid="stExpander"],
+[class*="st-key-mc_exercice_famille_"] [data-testid="stButton"] {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
 [class*="st-key-mc_exercice_famille_"] [data-testid="stButton"] button[kind="tertiary"] {
-    padding-top: .15rem !important;
-    padding-bottom: .15rem !important;
     min-height: 34px !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
+    height: auto !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    margin-block: 0 !important;
     justify-content: flex-start !important;
-}
-[class*="st-key-mathicap_similaire_carte_"] [data-testid="stVerticalBlock"] {
-    gap: .28rem !important;
 }
 @media (max-width: 640px) {
     [class*="st-key-mc_exercice_famille_"] {
         padding: 11px 12px !important;
-    }
-    [class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
-        gap: .32rem !important;
     }
 }
 
