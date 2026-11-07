@@ -5272,14 +5272,15 @@ def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
                 args=(numero, identifiant),
             )
 
-        bilan = variante.get("bilan")
-        if isinstance(bilan, dict) and bilan.get("total", 0) > 0:
-            if bilan.get("bonnes") == bilan.get("total"):
-                st.success("Toutes les réponses sont correctes.")
-            else:
-                st.info(f"{bilan.get('bonnes', 0)} réponse(s) correcte(s) sur {bilan['total']}. Tu peux réessayer.")
+        # L'étiquette du bouton suit le nombre de questions évaluables.
+        attendu_unique = exercice.get("reponse_attendue") is not None
+        questions_evaluables = sum(
+            1 for champ in (exercice.get("champs_reponse") or [])
+            if isinstance(champ, dict) and champ.get("type") != "texte_libre"
+        )
+        une_seule_reponse = attendu_unique or questions_evaluables == 1
         cle_btn = _mc_sim_cle_widget(identifiant, "verifier")
-        if st.button("Vérifier mes réponses", key=cle_btn):
+        if st.button("Vérifier ma réponse" if une_seule_reponse else "Vérifier mes réponses", key=cle_btn):
             donnees = _mc_sim_saisies(identifiant, exercice)
             valeurs = ([donnees.get("valeur")]
                       if donnees.get("type") != "banque" else
@@ -5303,6 +5304,19 @@ def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
                     st.rerun(scope="fragment")
                 else:
                     st.error("Vérification non sauvegardée. Réessaie.")
+
+        # Résultat après le bouton de vérification, au singulier si nécessaire.
+        bilan = variante.get("bilan")
+        if isinstance(bilan, dict) and bilan.get("total", 0) > 0:
+            total = bilan["total"]
+            bonnes = bilan.get("bonnes", 0)
+            if bonnes == total:
+                st.success("Bonne réponse !" if total == 1 else "Toutes les réponses sont correctes.")
+            elif total == 1:
+                st.info("Réponse incorrecte. Tu peux réessayer.")
+            else:
+                mot = "bonne réponse" if bonnes == 1 else "bonnes réponses"
+                st.info(f"{bonnes} {mot} sur {total}. Tu peux réessayer.")
         if correction_inline:
             st.markdown("**Correction**")
             st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
@@ -5361,7 +5375,23 @@ def _mc_sim_bloc(numero, exercice):
             if not isinstance(variante, dict) or not isinstance(variante.get("exercice"), dict):
                 continue
             if indice < len(existantes) - 1:
-                with st.expander(f"Exercice {variante.get('identifiant', '')} — précédent entraînement"):
+                # Garder les anciennes variantes consultables sans allonger
+                # exagérément la page mobile : elles sont repliées par défaut.
+                ancien_bilan = variante.get("bilan")
+                etat = "À consulter"
+                if isinstance(ancien_bilan, dict) and ancien_bilan.get("total", 0) > 0:
+                    n_total = ancien_bilan["total"]
+                    n_bonnes = ancien_bilan.get("bonnes", 0)
+                    if n_bonnes == n_total:
+                        etat = "Réussi"
+                    elif n_total == 1:
+                        etat = "À retravailler"
+                    else:
+                        etat = f"{n_bonnes}/{n_total} bonnes réponses"
+                with st.expander(
+                    f"Exercice {variante.get('identifiant', '')} — {etat} · Appuyer pour revoir",
+                    expanded=False,
+                ):
                     _mc_sim_afficher_variante(numero, variante, correction_inline=True)
             else:
                 _mc_sim_afficher_variante(numero, variante)
