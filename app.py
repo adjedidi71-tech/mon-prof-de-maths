@@ -2362,6 +2362,42 @@ st.markdown("""
 }
 
 
+/* Répartition harmonisée loupe – cloche – avatar, sans déplacer la zone profil. */
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
+    transform: translateX(-7px) !important;
+}
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
+        transform: translateX(-4px) !important;
+    }
+}
+
+/* Chapitre et Sous-chapitre : deux colonnes seulement lorsqu'il y a un choix
+   de sous-chapitre. Portée limitée à cette ligne de la page Exercices. */
+.st-key-mathicap_ligne_chapitres [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    min-width: 0 !important;
+}
+.st-key-mathicap_ligne_chapitres [data-testid="stSelectbox"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+@media (max-width: 767px) {
+    .st-key-mathicap_ligne_chapitres [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]) {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+    .st-key-mathicap_ligne_chapitres [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+}
+
 /* Ajustements ergonomiques limités aux Exercices : PC et smartphone. */
 .st-key-mathicap_reglages_exercices [data-testid="stVerticalBlock"] {
     gap: .82rem !important;
@@ -4020,27 +4056,41 @@ if page_mathicap == "Exercices":
         if chapitre_recherche in chapitres:
             st.session_state["mathicap_choix_chapitre"] = chapitre_recherche
             _mathicap_changement_chapitre_exercices()
-        chapitre = st.selectbox(
-            "Chapitre",
-            list(chapitres.keys()),
-            key="mathicap_choix_chapitre",
-            on_change=_mathicap_changement_chapitre_exercices,
-        )
+        # PC : les deux choix partagent une ligne quand un sous-chapitre
+        # existe. Smartphone : CSS dédié les empile pour éviter les coupures.
+        # Chapitre 1 reste seul et conserve toute la largeur disponible.
+        with st.container(key="mathicap_ligne_chapitres"):
+            if st.session_state["mathicap_choix_chapitre"] == "1. Opérations":
+                zone_chapitre = st.container()
+                zone_sous_chapitre = None
+            else:
+                zone_chapitre, zone_sous_chapitre = st.columns(
+                    [1, 1], gap="small", vertical_alignment="bottom"
+                )
 
-        if chapitre == "1. Opérations":
-            partie = chapitres[chapitre][0]
-        else:
-            _mathicap_retablir_reglage_exercices(
-                "mathicap_choix_sous_chapitre", "ex_partie",
-                chapitres[chapitre], chapitres[chapitre][0],
-            )
-            partie = st.selectbox(
-                "Sous-chapitre",
-                chapitres[chapitre],
-                key="mathicap_choix_sous_chapitre",
-                on_change=_mathicap_sauver_reglage_exercices,
-                args=("mathicap_choix_sous_chapitre", "ex_partie"),
-            )
+            with zone_chapitre:
+                chapitre = st.selectbox(
+                    "Chapitre",
+                    list(chapitres.keys()),
+                    key="mathicap_choix_chapitre",
+                    on_change=_mathicap_changement_chapitre_exercices,
+                )
+
+            if chapitre == "1. Opérations":
+                partie = chapitres[chapitre][0]
+            else:
+                with zone_sous_chapitre:
+                    _mathicap_retablir_reglage_exercices(
+                        "mathicap_choix_sous_chapitre", "ex_partie",
+                        chapitres[chapitre], chapitres[chapitre][0],
+                    )
+                    partie = st.selectbox(
+                        "Sous-chapitre",
+                        chapitres[chapitre],
+                        key="mathicap_choix_sous_chapitre",
+                        on_change=_mathicap_sauver_reglage_exercices,
+                        args=("mathicap_choix_sous_chapitre", "ex_partie"),
+                    )
 
         st.write("**Type d'exercice**")
 
