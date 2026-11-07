@@ -1198,12 +1198,19 @@ st.markdown("""
     position: absolute;
     inset: 0;
     width: 100%;
-    background: linear-gradient(to right,
-        #d9edff 0%, #85bdf3 17%, #2478d4 33.33%,
-        #78a4d1 36%, #d9daca 41%, #fff0cc 45%,
-        #ebbc60 58%, #d99416 66.67%,
-        #d8a962 70%, #dfc6c7 75%, #f0e7ff 78%,
-        #b68be8 90%, #8956d8 100%);
+    background: linear-gradient(
+      90deg,
+      #d9ecff 0%,
+      #2f80ed 30%,
+      #2f80ed 32%,
+      #f4d58d 36%,
+      #f4d58d 38%,
+      #e3a11a 63%,
+      #e3a11a 65%,
+      #d9c2f3 69%,
+      #d9c2f3 71%,
+      #8e56d8 100%
+    );
     clip-path: inset(0 calc(100% - var(--mc-progress)) 0 0);
     transition: clip-path .25s ease;
 }
