@@ -1115,7 +1115,7 @@ st.markdown("""
 
 /* ===== MathiCap : présentation de la page Exercices (07/11/2026) ===== */
 .mc-exos-hero {
-    width: min(100%, 920px);
+    width: min(100%, 820px);
     padding: 19px 24px 17px;
     border: 1px solid #dbe8fa;
     border-radius: 18px;
@@ -1145,8 +1145,8 @@ st.markdown("""
 }
 .mc-exos-hero p { color: #527092; font-size: .92rem; line-height: 1.5; margin: 0; }
 .st-key-mathicap_reglages_exercices {
-    max-width: 920px !important;
-    padding: 21px 23px 22px !important;
+    max-width: 820px !important;
+    padding: 19px 22px 20px !important;
     background: linear-gradient(145deg, #fff 32%, #f9fbff 100%) !important;
     border: 1px solid #e0e9f7 !important;
     border-radius: 18px !important;
@@ -1164,8 +1164,8 @@ st.markdown("""
     border-left: 5px solid var(--mc-accent);
     border-radius: 12px;
     padding: 14px 17px;
-    margin: 11px 0 12px;
-    max-width: 740px;
+    margin: 8px 0 9px;
+    max-width: 600px;
     box-sizing: border-box;
 }
 .mc-exos-category strong { display: block; color: #263a60; font-size: 1rem; margin: 0 0 4px; }
@@ -1176,23 +1176,23 @@ st.markdown("""
     align-items: center;
     flex-wrap: wrap;
     gap: 5px 12px;
-    max-width: 740px;
+    max-width: 600px;
     color: #29466c;
     font-weight: 650;
     font-size: .92rem;
-    margin: 18px 0 9px;
+    margin: 12px 0 7px;
 }
 .mc-exos-progress-heading strong { color: #123f79; font-weight: 800; }
 .mc-exos-progress-track {
     position: relative;
     width: 100%;
-    max-width: 740px;
+    max-width: 600px;
     height: 15px;
     background: #e8eef6;
     overflow: hidden;
     border-radius: 100px;
     box-shadow: inset 0 1px 2px rgba(28,55,95,.07);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 .mc-exos-progress-fill {
     position: absolute;
@@ -1228,7 +1228,7 @@ st.markdown("""
     .mc-exos-hero { padding: 15px 17px; margin: 5px 0 12px; }
     .mc-exos-hero h1 { font-size: 1.42rem; }
     .mc-exos-hero p { font-size: .86rem; }
-    .st-key-mathicap_reglages_exercices { padding: 16px 14px 18px !important; border-radius: 15px !important; }
+    .st-key-mathicap_reglages_exercices { padding: 15px 14px 17px !important; border-radius: 15px !important; }
     .mc-exos-category { padding: 12px 13px; }
     .mc-exos-progress-track { height: 14px; }
 }
@@ -1238,19 +1238,19 @@ st.markdown("""
 
 /* ===== MathiCap : page exercices, disposition harmonisée ===== */
 @media (min-width: 768px) {
-    .st-key-mathicap_reglages_exercices { max-width: 920px !important; }
+    .st-key-mathicap_reglages_exercices { max-width: 820px !important; }
 }
 .st-key-mathicap_reglages_exercices [data-testid="stSelectbox"] {
-    width: min(480px, 100%) !important;
+    width: min(600px, 100%) !important;
     max-width: 100% !important;
 }
 .st-key-mathicap_reglages_exercices [data-testid="stProgress"] {
-    max-width: 740px !important;
+    max-width: 600px !important;
 }
 /* Exception au style global « boutons en texte » : action de génération. */
 .st-key-mathicap_action_generer {
-    width: min(100%, 480px) !important;
-    margin: 6px 0 10px !important;
+    width: min(100%, 600px) !important;
+    margin: 5px 0 8px !important;
 }
 .st-key-mathicap_action_generer [data-testid="stButton"] button {
     display: flex !important;
@@ -2361,6 +2361,61 @@ st.markdown("""
     column-gap: 6px !important;
 }
 
+
+/* Ajustements ergonomiques limités aux Exercices : PC et smartphone. */
+.st-key-mathicap_reglages_exercices [data-testid="stVerticalBlock"] {
+    gap: .82rem !important;
+}
+:is(.st-key-mathicap_exercices_retour_accueil,
+    .st-key-mathicap_exercices_mes_series) button {
+    color: #1553a0 !important;
+    font-weight: 700 !important;
+    font-size: .94rem !important;
+    text-underline-offset: 3px;
+}
+:is(.st-key-mathicap_exercices_retour_accueil,
+    .st-key-mathicap_exercices_mes_series) button:hover {
+    color: #0a3772 !important;
+    background: #eef5ff !important;
+}
+.mc-exos-serie-meta {
+    max-width: 820px;
+    margin: 14px 0 8px;
+    border: 1px solid #dbe7f6;
+    border-radius: 12px;
+    background: #f6f9ff;
+    padding: 10px 14px;
+    box-sizing: border-box;
+}
+.mc-exos-serie-meta strong {
+    display: block;
+    color: #174776;
+    font-size: .9rem;
+    margin-bottom: 6px;
+}
+.mc-exos-serie-meta-items {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 9px;
+}
+.mc-exos-serie-meta-items span {
+    display: inline-block;
+    background: #fff;
+    color: #355473;
+    border: 1px solid #dde8f6;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: .84rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+    .st-key-mathicap_reglages_exercices [data-testid="stVerticalBlock"] {
+        gap: .72rem !important;
+    }
+    .mc-exos-serie-meta { margin: 10px 0 6px; padding: 10px 11px; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -4079,7 +4134,6 @@ if page_mathicap == "Exercices":
         nombre = st.selectbox(
             "Nombre d'exercices",
             [1, 2, 3, 4, 5],
-            index=None,
             key="mathicap_nombre_exercices",
             on_change=_mathicap_sauver_reglage_exercices,
             args=("mathicap_nombre_exercices", "ex_nombre"),
@@ -6282,6 +6336,55 @@ def _mathicap_afficher_serie_et_reponses():
         if st.session_state.pop("erreur_reprise_series", False):
             st.warning("Impossible de récupérer automatiquement la dernière série enregistrée.")
         if st.session_state.exercices_actuels:
+            # Renseignements issus de la série visible, jamais des filtres
+            # actuels (qui peuvent avoir changé depuis sa génération).
+            exercices_ouverts = st.session_state.exercices_actuels
+            chapitres_ouverts = sorted({
+                ex["mathicap_chapitre"].strip()
+                for ex in exercices_ouverts
+                if isinstance(ex, dict)
+                and isinstance(ex.get("mathicap_chapitre"), str)
+                and ex["mathicap_chapitre"].strip()
+            })
+            niveaux_ouverts = sorted({
+                ex["mathicap_niveau"]
+                for ex in exercices_ouverts
+                if isinstance(ex, dict)
+                and type(ex.get("mathicap_niveau")) is int
+                and 1 <= ex["mathicap_niveau"] <= 9
+            })
+            titre_chapitre_ouvert = (
+                chapitres_ouverts[0] if len(chapitres_ouverts) == 1
+                else "Plusieurs chapitres" if chapitres_ouverts
+                else "Chapitre non précisé"
+            )
+            etiquette_niveau = (
+                f"Niveau {niveaux_ouverts[0]}" if len(niveaux_ouverts) == 1
+                else "Niveaux " + ", ".join(map(str, niveaux_ouverts))
+                if niveaux_ouverts else "Niveau non précisé"
+            )
+            # Catégorie déduite du niveau seulement si tous les exercices
+            # appartiennent au même groupe (sinon ne pas l'inventer).
+            groupes = {
+                ("Mes automatismes" if n <= 3
+                 else "Je m'entraîne" if n <= 6
+                 else "Je résous des problèmes")
+                for n in niveaux_ouverts
+            }
+            categorie_ouverte = next(iter(groupes)) if len(groupes) == 1 else None
+            etiquettes = [titre_chapitre_ouvert, etiquette_niveau]
+            if categorie_ouverte:
+                etiquettes.append(categorie_ouverte)
+            etiquettes.append(f"{len(exercices_ouverts)} exercice(s)")
+            etiquettes_html = "".join(
+                f"<span>{escape(etiquette)}</span>" for etiquette in etiquettes
+            )
+            st.html(
+                '<section class="mc-exos-serie-meta" aria-label="Série affichée">'
+                '<strong>Série affichée</strong>'
+                f'<div class="mc-exos-serie-meta-items">{etiquettes_html}</div>'
+                '</section>'
+            )
             for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
                 st.subheader(f"Exercice {numero}")           
                 est_distributivite = (
