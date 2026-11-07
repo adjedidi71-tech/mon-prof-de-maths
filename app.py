@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="MathiCap Collège",
     page_icon="📐",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",  # Ouvert sur PC, replié sur mobile au chargement.
 )
 
 # Mesure facultative des opérations de navigation : ?mesure_nav=1
@@ -2618,7 +2618,7 @@ def _mathicap_ouvrir_chapitre_recherche(chapitre):
     st.session_state["_mathicap_chapitre_a_ouvrir"] = chapitre
     st.session_state["mathicap_page"] = "Exercices"
     st.session_state["afficher_series"] = False
-    st.query_params["vue"] = "accueil"
+    st.query_params["vue"] = "exercices"
 
 
 def _mathicap_texte_recherche(texte):
@@ -3726,26 +3726,15 @@ if vue_icone == "notifications":
     )
     st.stop()
 
-# Nouvelle interface MathiCap Collège
-# Synchroniser le menu avec l'URL, y compris lors d'une véritable actualisation.
-# Ne pas écraser la page choisie au menu lorsque la session est déjà active.
+# Navigation : l'URL est la source de vérité pour les deux rubriques persistantes.
+# Les actions du menu et des boutons mettent déjà à jour ?vue=... AVANT le rerun.
+# Ne jamais réécrire l'URL depuis une ancienne valeur de session_state :
+# c'était la source des retours aléatoires à l'accueil et de la page désynchronisée.
 _vue_mathicap = st.query_params.get("vue")
-_page_en_memoire = st.session_state.get("mathicap_page")
-if _page_en_memoire is None and _vue_mathicap in ("exercices", "series"):
-    # Une actualisation complète remet session_state à zéro.
-    # L'URL sert alors à rétablir la rubrique affichée avant F5.
-    if _vue_mathicap == "series":
-        st.session_state["mathicap_page"] = "Mes séries"
-        st.session_state["afficher_series"] = True
-    else:
-        st.session_state["mathicap_page"] = "Exercices"
-elif _page_en_memoire is not None and _vue_mathicap != "profil":
-    if _page_en_memoire == "Exercices" and _vue_mathicap != "exercices":
-        st.query_params["vue"] = "exercices"
-    elif _page_en_memoire == "Mes séries" and _vue_mathicap != "series":
-        st.query_params["vue"] = "series"
-    elif _page_en_memoire not in ("Exercices", "Mes séries") and _vue_mathicap in ("exercices", "series"):
-        st.query_params["vue"] = "accueil"
+_page_depuis_url = {"series": "Mes séries", "exercices": "Exercices"}.get(_vue_mathicap)
+if _page_depuis_url:
+    st.session_state["mathicap_page"] = _page_depuis_url
+    st.session_state["afficher_series"] = (_page_depuis_url == "Mes séries")
 
 if est_connecte and st.query_params.get("vue") == "profil":
     st.stop()
@@ -4012,9 +4001,14 @@ if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
                 (serie for serie in series_auto if str(serie.get("id")) == str(identifiant_url)),
                 None,
             ) if identifiant_url else None
-            if cible is None:
-                cible = series_auto[0]
-            _mathicap_retablir_serie(cible)
+            if cible is None and identifiant_url:
+                # An explicit ID must never silently open somebody else's
+                # (or merely another) series. Report a missing saved series.
+                st.session_state["erreur_reprise_series"] = True
+            else:
+                if cible is None:
+                    cible = series_auto[0]
+                _mathicap_retablir_serie(cible)
     except Exception:
         st.session_state["erreur_reprise_series"] = True
 
