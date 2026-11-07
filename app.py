@@ -10,6 +10,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from google import genai
 from groq import Groq
 from banque_priorites import generer_exercices_priorites
+import banque_priorites as _mc_banque_priorites
+from copy import deepcopy
 from supabase import create_client
 from mathicap_accueil import afficher_interface_mathicap, _styles as styles_mathicap_communs
 from auth_persistante import (
@@ -4939,6 +4941,465 @@ def sauvegarder_reponse(code, numero, reponse):
     cache[cle] = reponses
     return True
     
+# Projet pédagogique 1 : entraînement supplémentaire lié à l'exercice initial.
+# Stockage sous une clé réservée du JSON « reponses » de la série : aucune
+# nouvelle table Supabase, et aucune modification des scores initiaux.
+_MC_SIM_CLE = "__mathicap_similaires_v1"
+_MC_SIM_MODELES = {
+    'P7-01': 'generer_modele_p7_fete',
+    'P7-02': 'generer_modele_p7_cartes',
+    'P7-03': 'generer_modele_p7_badminton',
+    'P7-04': 'generer_modele_p7_jeu_video',
+    'P7-05': 'generer_modele_p7_dessin',
+    'P7-M01': 'generer_modele_p7_sciences',
+    'P7-M02': 'generer_modele_p7_patisserie',
+    'P7-M03': 'generer_modele_p7_enigmes',
+    'P7-M04': 'generer_modele_p7_photos',
+    'P7-M05': 'generer_modele_p7_velo',
+    'P7-M06': 'generer_modele_p7_fete',
+    'P7-M07': 'generer_modele_p7_cartes',
+    'P7-M08': 'generer_modele_p7_badminton',
+    'P7-M09': 'generer_modele_p7_jeu_video',
+    'P7-M10': 'generer_modele_p7_dessin',
+    'P7-M11': 'generer_modele_p7_tables_dessin',
+    'P8-01': 'generer_modele_p8_clubs',
+    'P8-02': 'generer_modele_p8_manga',
+    'P8-03': 'generer_modele_p8_jeu_video',
+    'P8-04': 'generer_modele_p8_robotique',
+    'P8-05': 'generer_modele_p8_jeu_piste',
+    'P8-M01': 'generer_modele_p8_clubs',
+    'P8-M02': 'generer_modele_p8_manga',
+    'P8-M03': 'generer_modele_p8_jeu_video',
+    'P8-M04': 'generer_modele_p8_robotique',
+    'P8-M05': 'generer_modele_p8_jeu_piste',
+    'P8-M06': 'generer_modele_p8_kits',
+    'P8-M07': 'generer_modele_p8_eau',
+    'P8-M08': 'generer_modele_p8_parcours',
+    'P8-M09': 'generer_modele_p8_boissons',
+    'P8-M10': 'generer_modele_p8_transport',
+    'P9-01': 'generer_modele_p9_potager',
+    'P9-02': 'generer_modele_p9_tournoi',
+    'P9-03': 'generer_modele_p9_festival',
+    'P9-04': 'generer_modele_p9_cristaux',
+    'P9-05': 'generer_modele_p9_bibliotheque',
+    'P9-M01': 'generer_modele_p9_potager',
+    'P9-M02': 'generer_modele_p9_tournoi',
+    'P9-M03': 'generer_modele_p9_festival',
+    'P9-M04': 'generer_modele_p9_cristaux',
+    'P9-M05': 'generer_modele_p9_bibliotheque',
+    'P9-M06': 'generer_modele_p9_spectacle',
+    'P9-M07': 'generer_modele_p9_recyclage',
+    'P9-M08': 'generer_modele_p9_salles',
+    'P9-M09': 'generer_modele_p9_drones',
+    'P9-M10': 'generer_modele_p9_mosaique',
+}
+
+
+def _mc_sim_suffixe(indice):
+    """0 → a, 25 → z, 26 → aa ; pas de limite arbitraire d'entraînement."""
+    if type(indice) is not int or indice < 0:
+        raise ValueError("Indice de variante invalide")
+    lettres = ""
+    indice += 1
+    while indice:
+        indice, reste = divmod(indice - 1, 26)
+        lettres = chr(ord("a") + reste) + lettres
+    return lettres
+
+
+def _mc_sim_cache_reponses():
+    """Cache déjà chargé lors de l'ouverture de la série ; lecture de secours unique."""
+    code = st.session_state.get("code_actuel")
+    eleve_id = st.session_state.get("eleve_id")
+    if not eleve_id or not isinstance(code, str) or not code.strip():
+        return None
+    cache = st.session_state.setdefault("_mathicap_reponses_cache", {})
+    cle = (eleve_id, code.strip().upper())
+    if cle not in cache:
+        try:
+            serie = recuperer_serie(code)
+            if not serie:
+                return None
+            cache[cle] = dict(serie.get("reponses") or {})
+        except Exception:
+            return None
+    return cache[cle]
+
+
+def _mc_sim_variantes():
+    sauvegardes = _mc_sim_cache_reponses()
+    if not isinstance(sauvegardes, dict):
+        return {}
+    variantes = sauvegardes.get(_MC_SIM_CLE)
+    return variantes if isinstance(variantes, dict) else {}
+
+
+def _mc_sim_ecrire_variantes(variantes):
+    code = st.session_state.get("code_actuel")
+    if not isinstance(variantes, dict) or not code:
+        return False
+    try:
+        ok = sauvegarder_reponse(code, _MC_SIM_CLE, variantes)
+    except Exception:
+        ok = False
+    if not ok:
+        st.session_state["erreur_sauvegarde"] = True
+    return ok
+
+
+def _mc_sim_modele_supporte(exercice):
+    """Pas d'inférence hasardeuse pour les séries sans métadonnées de notion."""
+    if not isinstance(exercice, dict):
+        return False
+    chapitre = exercice.get("mathicap_chapitre")
+    niveau = exercice.get("mathicap_niveau")
+    if not isinstance(chapitre, str) or type(niveau) is not int or not 1 <= niveau <= 9:
+        return False
+    # Déploiement initial limité au chapitre 1 dont les modèles sont vérifiés.
+    if chapitre != "1. Opérations":
+        return False
+    if niveau >= 7:
+        return chapitre == "1. Opérations" and exercice.get("id") in _MC_SIM_MODELES
+    partie = exercice.get("mathicap_partie")
+    return bool(
+        isinstance(partie, str)
+        and partie in CHAPITRES_MATHICAP.get(chapitre, ())
+    )
+
+
+def _mc_sim_generer_meme_notion(exercice, enonces_a_eviter):
+    """Même chapitre, sous-notion et niveau, sans IA ni résultat non vérifiable."""
+    if not _mc_sim_modele_supporte(exercice):
+        return None
+    chapitre = exercice["mathicap_chapitre"]
+    niveau = exercice["mathicap_niveau"]
+    niveau_local = (niveau - 1) % 3 + 1
+    categorie = (
+        "Mes automatismes" if niveau <= 3 else
+        "Je m'entraîne" if niveau <= 6 else "Je résous des problèmes"
+    )
+    for _ in range(10):
+        try:
+            if niveau <= 6:
+                partie = exercice["mathicap_partie"]
+                nouvelle = generer_exercice(chapitre, partie, niveau_local, categorie)
+            else:
+                nom_modele = _MC_SIM_MODELES[exercice["id"]]
+                nouvelle = getattr(_mc_banque_priorites, nom_modele)()
+                partie = exercice.get("mathicap_partie", "Priorités opératoires")
+            if not isinstance(nouvelle, dict):
+                continue
+            enonce = nouvelle.get("enonce")
+            correction = nouvelle.get("correction")
+            champs = nouvelle.get("champs_reponse") or []
+            if not isinstance(enonce, str) or not enonce.strip():
+                continue
+            if not isinstance(correction, str) or not correction.strip():
+                continue
+            if "Exercices à développer" in enonce or "Correction non disponible" in correction:
+                continue
+            if nouvelle.get("reponse_attendue") is None and not champs:
+                # Certains problèmes ouverts sont valides : correction manuelle.
+                if niveau <= 6:
+                    continue
+            if enonce.strip() in enonces_a_eviter:
+                continue
+            nouvelle["mathicap_chapitre"] = chapitre
+            nouvelle["mathicap_partie"] = partie
+            nouvelle["mathicap_niveau"] = niveau
+            return nouvelle
+        except (ValueError, TypeError, KeyError, AttributeError):
+            continue
+    return None
+
+
+def _mc_sim_cle_widget(identifiant, fin=""):
+    """Identité de la série ET de la variante : éviter les collisions entre élèves."""
+    code = st.session_state.get("code_actuel") or "sans_serie"
+    version = st.session_state.get("serie_version", 0)
+    return f"mc_sim_{code}_{version}_{identifiant}_{fin}"
+
+
+def _mc_sim_saisies(identifiant, exercice):
+    if exercice.get("reponse_attendue") is not None:
+        return {"type": "simple", "valeur": st.session_state.get(_mc_sim_cle_widget(identifiant, "nombre"))}
+    champs = exercice.get("champs_reponse") or []
+    if champs:
+        return {
+            "type": "banque",
+            "champs": {
+                champ["id"]: st.session_state.get(_mc_sim_cle_widget(identifiant, champ["id"]), "")
+                for champ in champs if isinstance(champ, dict) and champ.get("id")
+            },
+        }
+    return {"type": "texte", "valeur": st.session_state.get(_mc_sim_cle_widget(identifiant, "texte"), "")}
+
+
+def _mc_sim_mettre_a_jour_reponse(numero, identifiant, bilan=None):
+    variantes = deepcopy(_mc_sim_variantes())
+    groupe = variantes.get(str(numero), [])
+    if not isinstance(groupe, list):
+        return False
+    ligne = next((v for v in groupe if isinstance(v, dict) and v.get("identifiant") == identifiant), None)
+    if ligne is None:
+        return False
+    reponse = _mc_sim_saisies(identifiant, ligne["exercice"])
+    ligne["reponse"] = reponse
+    if bilan is not None:
+        ligne["bilan"] = bilan
+        if not isinstance(ligne.get("premiere_verification"), dict):
+            ligne["premiere_verification"] = deepcopy(bilan)
+    else:
+        # Modifier la saisie invalide la DERNIÈRE vérification, mais pas la première.
+        ligne["bilan"] = None
+    return _mc_sim_ecrire_variantes(variantes)
+
+
+def _mc_sim_evaluer(exercice, reponse):
+    attendu = exercice.get("reponse_attendue")
+    if attendu is not None:
+        valeur = reponse.get("valeur") if isinstance(reponse, dict) else None
+        if valeur is None:
+            return None
+        return {"bonnes": int(valeur == attendu), "total": 1}
+    champs = exercice.get("champs_reponse") or []
+    if not champs or not isinstance(reponse, dict):
+        return None
+    saisies = reponse.get("champs") or {}
+    if not isinstance(saisies, dict):
+        return None
+    bonnes = 0
+    total = 0
+    for champ in champs:
+        if not isinstance(champ, dict) or champ.get("type") == "texte_libre":
+            continue
+        total += 1
+        saisie = saisies.get(champ.get("id"))
+        if saisie is None or str(saisie).strip() in ("", "Choisir..."):
+            continue
+        if champ.get("type") == "nombre":
+            try:
+                correcte = abs(float(str(saisie).replace(",", ".")) - float(champ["attendu"])) < 1e-6
+            except (TypeError, ValueError):
+                correcte = False
+        elif champ.get("type") == "choix":
+            correcte = saisie == champ.get("attendu")
+            if correcte:
+                for dep in champ.get("dependances", []):
+                    autre = next((c for c in champs if c.get("id") == dep), None)
+                    if autre and autre.get("type") == "nombre":
+                        try:
+                            correcte = abs(float(str(saisies.get(dep)).replace(",", ".")) - float(autre["attendu"])) < 1e-6
+                        except (TypeError, ValueError):
+                            correcte = False
+                    if not correcte:
+                        break
+        else:
+            correcte = saisie == champ.get("attendu")
+        bonnes += int(correcte)
+    return {"bonnes": bonnes, "total": total} if total else None
+
+
+def _mc_sim_premier_bilan_original(numero):
+    """Adaptation du message sans altérer le score initial."""
+    version = st.session_state.get("serie_version", 0)
+    bilan = st.session_state.get(f"bilan_simple_{version}_{numero}")
+    if not isinstance(bilan, dict):
+        bilan = st.session_state.get(f"bilan_banque_{version}_{numero}")
+    if not isinstance(bilan, dict):
+        cache = _mc_sim_cache_reponses() or {}
+        reponse = cache.get(str(numero)) if isinstance(cache, dict) else None
+        if isinstance(reponse, dict):
+            bilan = reponse.get("bilan")
+    return bilan if isinstance(bilan, dict) else None
+
+
+def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
+    identifiant = variante["identifiant"]
+    exercice = variante["exercice"]
+    reponse = variante.get("reponse") if isinstance(variante.get("reponse"), dict) else {}
+    with st.container(border=True, key=f"mathicap_similaire_carte_{numero}_{identifiant}"):
+        st.markdown(f"**Exercice {identifiant}** · Entraînement supplémentaire")
+        st.write(exercice.get("enonce", ""))
+        if exercice.get("reponse_attendue") is not None:
+            cle = _mc_sim_cle_widget(identifiant, "nombre")
+            if cle not in st.session_state:
+                valeur = reponse.get("valeur") if reponse.get("type") == "simple" else None
+                st.session_state[cle] = valeur if type(valeur) in (int, float) else None
+            st.number_input(
+                "Ta réponse", value=None,
+                step=0.01 if isinstance(exercice["reponse_attendue"], float) else 1,
+                key=cle, on_change=_mc_sim_mettre_a_jour_reponse,
+                args=(numero, identifiant),
+            )
+        elif exercice.get("champs_reponse"):
+            valeurs = reponse.get("champs") if reponse.get("type") == "banque" else {}
+            if not isinstance(valeurs, dict):
+                valeurs = {}
+            for champ in exercice["champs_reponse"]:
+                cle = _mc_sim_cle_widget(identifiant, champ["id"])
+                if cle not in st.session_state:
+                    valeur = valeurs.get(champ["id"], "")
+                    if champ.get("type") == "choix" and valeur not in (["Choisir..."] + champ.get("options", [])):
+                        valeur = "Choisir..."
+                    st.session_state[cle] = valeur
+                etiquette = f"Question {champ.get('question', '')} — {champ.get('libelle', 'Réponse')}"
+                if champ.get("type") == "choix":
+                    st.selectbox(
+                        etiquette, ["Choisir..."] + champ.get("options", []),
+                        key=cle, on_change=_mc_sim_mettre_a_jour_reponse,
+                        args=(numero, identifiant),
+                    )
+                elif champ.get("type") == "texte_libre":
+                    st.text_area(
+                        etiquette, key=cle, height=90,
+                        on_change=_mc_sim_mettre_a_jour_reponse,
+                        args=(numero, identifiant),
+                    )
+                else:
+                    st.text_input(
+                        etiquette, key=cle, placeholder="Ta réponse",
+                        on_change=_mc_sim_mettre_a_jour_reponse,
+                        args=(numero, identifiant),
+                    )
+        else:
+            cle = _mc_sim_cle_widget(identifiant, "texte")
+            if cle not in st.session_state:
+                st.session_state[cle] = reponse.get("valeur", "") if reponse.get("type") == "texte" else ""
+            st.text_area(
+                "Ta réponse", key=cle, height=130,
+                on_change=_mc_sim_mettre_a_jour_reponse,
+                args=(numero, identifiant),
+            )
+
+        bilan = variante.get("bilan")
+        if isinstance(bilan, dict) and bilan.get("total", 0) > 0:
+            if bilan.get("bonnes") == bilan.get("total"):
+                st.success("Toutes les réponses sont correctes.")
+            else:
+                st.info(f"{bilan.get('bonnes', 0)} réponse(s) correcte(s) sur {bilan['total']}. Tu peux réessayer.")
+        cle_btn = _mc_sim_cle_widget(identifiant, "verifier")
+        if st.button("Vérifier mes réponses", key=cle_btn):
+            donnees = _mc_sim_saisies(identifiant, exercice)
+            valeurs = ([donnees.get("valeur")]
+                      if donnees.get("type") != "banque" else
+                      list((donnees.get("champs") or {}).values()))
+            if not any(v is not None and str(v).strip() not in ("", "Choisir...") for v in valeurs):
+                st.warning("Saisis d'abord au moins une réponse.")
+            else:
+                nouveau_bilan = _mc_sim_evaluer(exercice, donnees)
+                if nouveau_bilan is None:
+                    # Réponse rédigée, corrigée manuellement : conserver la saisie.
+                    if _mc_sim_mettre_a_jour_reponse(numero, identifiant):
+                        st.info("Réponse enregistrée. Compare-la à la correction quand tu le souhaites.")
+                    else:
+                        st.error("Réponse non sauvegardée.")
+                elif _mc_sim_mettre_a_jour_reponse(numero, identifiant, nouveau_bilan):
+                    if nouveau_bilan["bonnes"] == nouveau_bilan["total"]:
+                        st.success("Bonne réponse !" if nouveau_bilan["total"] == 1 else "Toutes les réponses sont correctes !")
+                    else:
+                        st.warning("Pas encore tout à fait. Tu peux réessayer ou consulter la correction.")
+                else:
+                    st.error("Vérification non sauvegardée. Réessaie.")
+        if correction_inline:
+            st.markdown("**Correction**")
+            st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
+        else:
+            with st.expander("Voir la correction", expanded=False):
+                st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
+
+
+def _mc_sim_termine(variante):
+    """Ne propose pas 2b tant que 2a n'a pas reçu ses réponses et sa vérification."""
+    if not isinstance(variante, dict):
+        return False
+    reponse = variante.get("reponse")
+    if not isinstance(reponse, dict):
+        return False
+    if reponse.get("type") in ("simple", "texte"):
+        valeur = reponse.get("valeur")
+        rempli = valeur is not None and str(valeur).strip() != ""
+    elif reponse.get("type") == "banque":
+        champs = variante.get("exercice", {}).get("champs_reponse") or []
+        valeurs = reponse.get("champs") or {}
+        rempli = bool(champs) and all(
+            str(valeurs.get(c.get("id"), "")).strip() not in ("", "Choisir...")
+            for c in champs if isinstance(c, dict)
+        )
+    else:
+        return False
+    return bool(rempli and (
+        isinstance(variante.get("bilan"), dict)
+        or (reponse.get("type") == "texte")
+        or (reponse.get("type") == "banque"
+            and not any(c.get("type") != "texte_libre"
+                        for c in variante.get("exercice", {}).get("champs_reponse", [])
+                        if isinstance(c, dict)))
+    ))
+
+
+def _mc_sim_bloc(numero, exercice):
+    """Un bouton après chaque exercice, sans modifier la série principale."""
+    if not st.session_state.get("eleve_id") or not st.session_state.get("code_actuel"):
+        return
+    disponibles = _mc_sim_modele_supporte(exercice)
+    variantes = _mc_sim_variantes()
+    existantes = variantes.get(str(numero), [])
+    if not isinstance(existantes, list):
+        existantes = []
+    with st.container(key=f"mathicap_similaires_bloc_{numero}"):
+        st.markdown("---")
+        bilan_initial = _mc_sim_premier_bilan_original(numero)
+        if isinstance(bilan_initial, dict) and bilan_initial.get("total", 0) > bilan_initial.get("bonnes", 0):
+            st.caption("Tu as rencontré une difficulté ? Entraîne-toi avec un exercice du même type et du même niveau.")
+        else:
+            st.caption("Tu veux t'entraîner davantage ? Essaie un nouvel exercice utilisant la même méthode.")
+        dernier_termine = not existantes or _mc_sim_termine(existantes[-1])
+        if st.button(
+            "↻ Essayer un exercice similaire",
+            key=_mc_sim_cle_widget(f"origine_{numero}", "generer"),
+            type="secondary",
+            disabled=(not disponibles or not dernier_termine),
+        ):
+            if _mc_sim_cache_reponses() is None:
+                st.error("Connexion à la série indisponible. Actualise la page.")
+            else:
+                enonces = {str(exercice.get("enonce", "")).strip()}
+                enonces.update(
+                    str(v.get("exercice", {}).get("enonce", "")).strip()
+                    for v in existantes if isinstance(v, dict)
+                )
+                nouvel = _mc_sim_generer_meme_notion(exercice, enonces)
+                if nouvel is None:
+                    st.info("Impossible de produire une variante suffisamment différente pour le moment.")
+                else:
+                    identifiant = f"{numero}{_mc_sim_suffixe(len(existantes))}"
+                    copie = deepcopy(variantes)
+                    copie.setdefault(str(numero), []).append({
+                        "identifiant": identifiant,
+                        "exercice": nouvel,
+                        "reponse": None,
+                        "bilan": None,
+                        "premiere_verification": None,
+                    })
+                    if _mc_sim_ecrire_variantes(copie):
+                        st.toast(f"Exercice {identifiant} ajouté et sauvegardé.", duration=3)
+                        st.rerun(scope="fragment")
+                    else:
+                        st.error("La variante n'a pas pu être enregistrée : aucune création non sauvegardée.")
+        if not disponibles:
+            st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
+        elif existantes and not dernier_termine:
+            st.caption("Termine d'abord l'exercice similaire ouvert pour en demander un autre.")
+        for indice, variante in enumerate(existantes):
+            if not isinstance(variante, dict) or not isinstance(variante.get("exercice"), dict):
+                continue
+            if indice < len(existantes) - 1:
+                with st.expander(f"Exercice {variante.get('identifiant', '')} — précédent entraînement"):
+                    _mc_sim_afficher_variante(numero, variante, correction_inline=True)
+            else:
+                _mc_sim_afficher_variante(numero, variante)
+
 def enregistrer_reponse_auto(numero):
     code = st.session_state.get("code_actuel")
     version = st.session_state.get("serie_version", 0)
@@ -6348,12 +6809,18 @@ if demande_generation:
                     )
                     for _ in range(nombre)
                 ]
-        # Mémoriser le chapitre et le niveau pour les nouveaux suivis.
-        # Les anciennes séries restent lisibles sans ces métadonnées.
-        for exercice in exercices:
+        # Métadonnées d'origine : nécessaires pour les variantes au MÊME niveau
+        # et sous-chapitre, sans modifier les générateurs ni les anciennes séries.
+        for indice_exercice, exercice in enumerate(exercices):
             if isinstance(exercice, dict):
                 exercice.setdefault("mathicap_chapitre", chapitre)
                 exercice.setdefault("mathicap_niveau", niveau_reel)
+                partie_originale = (
+                    notions[indice_exercice]
+                    if (chapitre == "1. Opérations" and niveau_reel <= 6)
+                    else partie
+                )
+                exercice.setdefault("mathicap_partie", partie_originale)
 
         st.session_state.exercices_actuels = exercices
         st.session_state["serie_ouverte_depuis_liste"] = False
@@ -6816,7 +7283,10 @@ def _mathicap_afficher_serie_et_reponses():
                                 dividende, diviseur, quotient, reste
                             )
                     st.markdown(texte_correction.replace("\n", "  \n"))
-            
+
+                # Variantes indépendantes : 2a, 2b…, conservées dans la même
+                # série Supabase sans gonfler les scores ni la pagination.
+                _mc_sim_bloc(numero, exercice)
 
 _mathicap_afficher_serie_et_reponses()
 
