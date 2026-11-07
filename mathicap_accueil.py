@@ -684,8 +684,8 @@ def afficher_interface_mathicap() -> str:
 
         st.session_state["_mathicap_page_precedente"] = page
 
-    if page != "Mes séries":
-        # Bandeau des classes
+    if page == "Accueil":
+        # Choix de classe conservé sur l’accueil (et synchronisé avec le profil).
         st.markdown("**Ma classe**")
 
         couleurs = {
@@ -766,8 +766,10 @@ def afficher_interface_mathicap() -> str:
                         args=(nom,),
                     )
 
+    # Ne jamais lancer les exercices 5e pour une autre classe.
+    # Ce contrôle est conservé même si le bandeau de sélection a été déplacé.
+    if page != "Mes séries":
         classe = st.session_state["mathicap_classe"]
-
         if classe != "5e":
             st.title(f"MathiCap Collège — {classe}")
             st.info(
@@ -821,6 +823,13 @@ def afficher_interface_mathicap() -> str:
             st.info("Connecte-toi pour accéder aux séries enregistrées.")
             st.stop()
     else:
-        st.header("Exercices de mathématiques")
+        # En-tête éditorial uniquement : aucun changement de navigation ou de génération.
+        st.html(
+            '<section class="mc-exos-hero" aria-label="Exercices de mathématiques">'
+            '<span class="mc-exos-hero-tag">Parcours · 5e</span>'
+            '<h1>Exercices de mathématiques</h1>'
+            '<p>Choisis un chapitre, progresse à ton rythme et retrouve tes séries à tout moment.</p>'
+            '</section>'
+        )
 
     return page
