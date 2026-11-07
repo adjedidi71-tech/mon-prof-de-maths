@@ -2465,7 +2465,7 @@ st.markdown("""
     padding: 14px 16px !important;
 }
 [class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
-    gap: .65rem !important;
+    gap: .35rem !important;
 }
 /* Les lignes de saisie des variantes suivent la même largeur que les lignes initiales. */
 [class*="st-key-mathicap_similaire_carte_"] [data-testid="stHorizontalBlock"]:has([class*="st-key-mc_sim_"]) {
@@ -2492,12 +2492,29 @@ st.markdown("""
 [class*="st-key-mc_exercice_famille_"] [data-testid="stExpander"] {
     margin-block: 0 !important;
 }
+/* Vérification, résultat, lien de correction : lisibles mais plus rapprochés.
+   La taille des champs et des zones tactiles reste inchangée. */
+[class*="st-key-mc_exercice_famille_"] [data-testid="stAlert"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+[class*="st-key-mc_exercice_famille_"] [data-testid="stButton"] button[kind="tertiary"] {
+    padding-top: .15rem !important;
+    padding-bottom: .15rem !important;
+    min-height: 34px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    justify-content: flex-start !important;
+}
+[class*="st-key-mathicap_similaire_carte_"] [data-testid="stVerticalBlock"] {
+    gap: .28rem !important;
+}
 @media (max-width: 640px) {
     [class*="st-key-mc_exercice_famille_"] {
         padding: 11px 12px !important;
     }
     [class*="st-key-mc_exercice_famille_"] [data-testid="stVerticalBlock"] {
-        gap: .55rem !important;
+        gap: .32rem !important;
     }
 }
 
@@ -5261,7 +5278,30 @@ def _mc_sim_premier_bilan_original(numero):
     return bilan if isinstance(bilan, dict) else None
 
 
-def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
+# Bouton commun aux exercices initiaux et aux variantes : même comportement
+# « Voir / Masquer la correction » dans tout MathiCap. Le simple affichage d'une
+# ancienne variante ne doit JAMAIS dévoiler sa correction automatiquement.
+def _mc_correction_basculer(cle):
+    st.session_state[cle] = not bool(st.session_state.get(cle, False))
+
+
+def _mc_correction_deployable(identifiant):
+    code = st.session_state.get("code_actuel") or "sans_serie"
+    version = st.session_state.get("serie_version", 0)
+    cle = f"mc_correction_visible_{code}_{version}_{identifiant}"
+    visible = bool(st.session_state.get(cle, False))
+    etiquette = "▾ Masquer la correction" if visible else "▸ Voir la correction"
+    st.button(
+        etiquette,
+        key=f"mc_correction_bouton_{code}_{version}_{identifiant}",
+        type="tertiary",
+        on_click=_mc_correction_basculer,
+        args=(cle,),
+    )
+    return visible
+
+
+def _mc_sim_afficher_variante(numero, variante):
     identifiant = variante["identifiant"]
     exercice = variante["exercice"]
     reponse = variante.get("reponse") if isinstance(variante.get("reponse"), dict) else {}
@@ -5416,12 +5456,10 @@ def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
             else:
                 mot = "bonne réponse" if bonnes == 1 else "bonnes réponses"
                 st.info(f"{bonnes} {mot} sur {total}. Tu peux réessayer.")
-        if correction_inline:
-            st.markdown("**Correction**")
+        # Une correction reste masquée, y compris quand la variante devient
+        # un exercice antérieur replié après la création de 2b/3b…
+        if _mc_correction_deployable(identifiant):
             st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
-        else:
-            with st.expander("Voir la correction", expanded=False):
-                st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
 
 
 def _mc_sim_termine(variante):
@@ -5490,7 +5528,7 @@ def _mc_sim_bloc(numero, exercice):
                     f"Exercice {variante.get('identifiant', '')} — {etat} · Appuyer pour revoir",
                     expanded=False,
                 ):
-                    _mc_sim_afficher_variante(numero, variante, correction_inline=True)
+                    _mc_sim_afficher_variante(numero, variante)
             else:
                 _mc_sim_afficher_variante(numero, variante)
 
@@ -7400,10 +7438,7 @@ def _mathicap_afficher_serie_et_reponses():
                             else:
                                 st.warning("Connecte-toi pour sauvegarder ta réponse.")
 
-                    with st.expander(
-                        f"Voir la correction{'​' * (st.session_state.get('serie_version', 0) + 1)}",
-                        expanded=False
-                    ):
+                    if _mc_correction_deployable(f"origine_{numero}"):
                         texte_correction = exercice["correction"]
                         # Rendre explicites le quotient et le reste, y compris
                         # pour les séries créées avant cette mise à jour.
