@@ -3909,6 +3909,32 @@ if _mc_nav_mesure and st.query_params.get("vue") != "profil":
 
 page_mathicap = afficher_interface_mathicap()
 
+# Préférences d'affichage des Exercices : l'URL les conserve lors d'un
+# rechargement complet (nouvelle session Streamlit) sur PC et smartphone.
+# Aucune réponse d'élève, information personnelle ou donnée d'authentification
+# n'est enregistrée dans l'URL.
+def _mathicap_retablir_reglage_exercices(cle, parametre, options, defaut):
+    if cle not in st.session_state:
+        depuis_url = st.query_params.get(parametre)
+        choix = {str(option): option for option in options}
+        st.session_state[cle] = choix.get(str(depuis_url), defaut)
+    elif st.session_state[cle] not in options:
+        st.session_state[cle] = defaut
+
+
+def _mathicap_sauver_reglage_exercices(cle, parametre):
+    # Exécuté par on_change avant le rendu des widgets.
+    st.query_params[parametre] = str(st.session_state[cle])
+    st.query_params["vue"] = "exercices"
+
+
+def _mathicap_changement_chapitre_exercices():
+    _mathicap_sauver_reglage_exercices("mathicap_choix_chapitre", "ex_chapitre")
+    # Le sous-chapitre d'un autre chapitre ne doit pas rester sélectionné.
+    st.session_state.pop("mathicap_choix_sous_chapitre", None)
+    st.query_params.pop("ex_partie", None)
+
+
 # Hors de la rubrique Exercices, aucun clic de génération n'est possible.
 demande_generation = False
 if page_mathicap == "Exercices":
@@ -3931,21 +3957,34 @@ if page_mathicap == "Exercices":
 
         # Lorsqu'on vient de la loupe, le bon chapitre est présélectionné.
         # Le choix reste modifiable normalement dans la page Exercices.
+        _mathicap_retablir_reglage_exercices(
+            "mathicap_choix_chapitre", "ex_chapitre",
+            list(chapitres), next(iter(chapitres)),
+        )
         chapitre_recherche = st.session_state.pop("_mathicap_chapitre_a_ouvrir", None)
         if chapitre_recherche in chapitres:
             st.session_state["mathicap_choix_chapitre"] = chapitre_recherche
+            _mathicap_changement_chapitre_exercices()
         chapitre = st.selectbox(
             "Chapitre",
             list(chapitres.keys()),
             key="mathicap_choix_chapitre",
+            on_change=_mathicap_changement_chapitre_exercices,
         )
 
         if chapitre == "1. Opérations":
             partie = chapitres[chapitre][0]
         else:
+            _mathicap_retablir_reglage_exercices(
+                "mathicap_choix_sous_chapitre", "ex_partie",
+                chapitres[chapitre], chapitres[chapitre][0],
+            )
             partie = st.selectbox(
                 "Sous-chapitre",
-                chapitres[chapitre]
+                chapitres[chapitre],
+                key="mathicap_choix_sous_chapitre",
+                on_change=_mathicap_sauver_reglage_exercices,
+                args=("mathicap_choix_sous_chapitre", "ex_partie"),
             )
 
         st.write("**Type d'exercice**")
@@ -3956,12 +3995,17 @@ if page_mathicap == "Exercices":
             "Je résous des problèmes"
         ]
 
+        _mathicap_retablir_reglage_exercices(
+            "categorie_exercice", "ex_type", categories, categories[0],
+        )
         type_exercice = st.radio(
             "Choisis une catégorie",
             categories,
             horizontal=True,
             label_visibility="collapsed",
-            key="categorie_exercice"
+            key="categorie_exercice",
+            on_change=_mathicap_sauver_reglage_exercices,
+            args=("categorie_exercice", "ex_type"),
         )
 
         couleurs_categories = {
@@ -3989,10 +4033,16 @@ if page_mathicap == "Exercices":
 
         col2 = st.container()
         with col2:
+            _mathicap_retablir_reglage_exercices(
+                "mathicap_difficulte_exercice", "ex_difficulte", [1, 2, 3], 2,
+            )
             difficulte = st.radio(
                 "Difficulté",
                 [1, 2, 3],
-                index=1,
+                index=None,
+                key="mathicap_difficulte_exercice",
+                on_change=_mathicap_sauver_reglage_exercices,
+                args=("mathicap_difficulte_exercice", "ex_difficulte"),
                 horizontal=True,
                 format_func=lambda x: {
                     1: "1 - Facile",
@@ -4023,10 +4073,16 @@ if page_mathicap == "Exercices":
             f'<div class="mc-exos-progress-fill" style="--mc-progress:{pourcentage_parcours:.4f}%"></div>'
             '</div>'
         )
+        _mathicap_retablir_reglage_exercices(
+            "mathicap_nombre_exercices", "ex_nombre", [1, 2, 3, 4, 5], 3,
+        )
         nombre = st.selectbox(
             "Nombre d'exercices",
             [1, 2, 3, 4, 5],
-            index=2
+            index=None,
+            key="mathicap_nombre_exercices",
+            on_change=_mathicap_sauver_reglage_exercices,
+            args=("mathicap_nombre_exercices", "ex_nombre"),
         )
 
         # Une seule action pour les niveaux 1 à 9 : aucun générateur n'est déplacé.
