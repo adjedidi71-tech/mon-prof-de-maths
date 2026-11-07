@@ -1201,14 +1201,14 @@ st.markdown("""
     background: linear-gradient(
       90deg,
       #d9ecff 0%,
-      #2f80ed 31%,
-      #2f80ed 31%,
-      #f4d58d 37%,
-      #f4d58d 37%,
-      #e3a11a 64%,
-      #e3a11a 64%,
-      #d9c2f3 70%,
-      #d9c2f3 70%,
+      #2f80ed 30%,
+      #2f80ed 32%,
+      #f4d58d 36%,
+      #f4d58d 38%,
+      #e3a11a 63%,
+      #e3a11a 65%,
+      #d9c2f3 69%,
+      #d9c2f3 71%,
       #8e56d8 100%
     );
     clip-path: inset(0 calc(100% - var(--mc-progress)) 0 0);
