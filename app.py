@@ -1113,9 +1113,129 @@ st.markdown("""
     }
 }
 
+/* ===== MathiCap : présentation de la page Exercices (07/11/2026) ===== */
+.mc-exos-hero {
+    width: min(100%, 920px);
+    padding: 19px 24px 17px;
+    border: 1px solid #dbe8fa;
+    border-radius: 18px;
+    background: linear-gradient(110deg, #eff6ff 0%, #f7faff 62%, #fff7e9 100%);
+    box-sizing: border-box;
+    margin: 7px 0 14px;
+}
+.mc-exos-hero-tag {
+    display: inline-block;
+    font-size: .79rem;
+    font-weight: 750;
+    letter-spacing: .02em;
+    color: #1555a3;
+    background: rgba(255,255,255,.84);
+    border: 1px solid #d9e8fb;
+    border-radius: 999px;
+    padding: 4px 11px;
+    margin-bottom: 8px;
+}
+.mc-exos-hero h1 {
+    font-size: clamp(1.35rem, 2.1vw, 1.88rem);
+    line-height: 1.22;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #183d70;
+    margin: 0 0 6px;
+}
+.mc-exos-hero p { color: #527092; font-size: .92rem; line-height: 1.5; margin: 0; }
+.st-key-mathicap_reglages_exercices {
+    max-width: 920px !important;
+    padding: 21px 23px 22px !important;
+    background: linear-gradient(145deg, #fff 32%, #f9fbff 100%) !important;
+    border: 1px solid #e0e9f7 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 6px 24px rgba(24, 66, 116, .045) !important;
+    box-sizing: border-box !important;
+}
+.st-key-mathicap_reglages_exercices [data-testid="stSelectbox"] label p,
+.st-key-mathicap_reglages_exercices [data-testid="stRadio"] > label p {
+    color: #23446d !important;
+    font-weight: 650 !important;
+}
+.mc-exos-category {
+    background: var(--mc-fond);
+    border: 1px solid color-mix(in srgb, var(--mc-accent) 45%, white);
+    border-left: 5px solid var(--mc-accent);
+    border-radius: 12px;
+    padding: 14px 17px;
+    margin: 11px 0 12px;
+    max-width: 740px;
+    box-sizing: border-box;
+}
+.mc-exos-category strong { display: block; color: #263a60; font-size: 1rem; margin: 0 0 4px; }
+.mc-exos-category span { color: #3c5673; font-size: .9rem; line-height: 1.45; }
+.mc-exos-progress-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    max-width: 740px;
+    color: #29466c;
+    font-weight: 650;
+    font-size: .92rem;
+    margin: 18px 0 9px;
+}
+.mc-exos-progress-heading strong { color: #123f79; font-weight: 800; }
+.mc-exos-progress-track {
+    position: relative;
+    width: 100%;
+    max-width: 740px;
+    height: 15px;
+    background: #e8eef6;
+    overflow: hidden;
+    border-radius: 100px;
+    box-shadow: inset 0 1px 2px rgba(28,55,95,.07);
+    margin-bottom: 16px;
+}
+.mc-exos-progress-fill {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: linear-gradient(to right,
+        #d9edff 0%, #85bdf3 17%, #2478d4 33.33%,
+        #78a4d1 36%, #d9daca 41%, #fff0cc 45%,
+        #ebbc60 58%, #d99416 66.67%,
+        #d8a962 70%, #dfc6c7 75%, #f0e7ff 78%,
+        #b68be8 90%, #8956d8 100%);
+    clip-path: inset(0 calc(100% - var(--mc-progress)) 0 0);
+    transition: clip-path .25s ease;
+}
+.st-key-mathicap_zone_exercices_affichage {
+    max-width: 920px !important;
+    width: 100% !important;
+    padding-top: 12px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [data-testid="stHeading"] h3 {
+    color: #174776 !important;
+    font-size: clamp(1.2rem, 2vw, 1.45rem) !important;
+    border-left: 4px solid #5c9be9;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #eef6ff 0%, rgba(255,255,255,0) 88%);
+    padding: 10px 15px;
+    margin: 18px 0 10px;
+}
+@media (max-width: 640px) {
+    .mc-exos-hero { padding: 15px 17px; margin: 5px 0 12px; }
+    .mc-exos-hero h1 { font-size: 1.42rem; }
+    .mc-exos-hero p { font-size: .86rem; }
+    .st-key-mathicap_reglages_exercices { padding: 16px 14px 18px !important; border-radius: 15px !important; }
+    .mc-exos-category { padding: 12px 13px; }
+    .mc-exos-progress-track { height: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .mc-exos-progress-fill { transition: none; }
+}
+
 /* ===== MathiCap : page exercices, disposition harmonisée ===== */
 @media (min-width: 768px) {
-    .st-key-mathicap_reglages_exercices { max-width: 880px !important; }
+    .st-key-mathicap_reglages_exercices { max-width: 920px !important; }
 }
 .st-key-mathicap_reglages_exercices [data-testid="stSelectbox"] {
     width: min(480px, 100%) !important;
@@ -3855,25 +3975,13 @@ if page_mathicap == "Exercices":
 
         fond, couleur = couleurs_categories[type_exercice]
 
-        st.markdown(
-            f"""
-            <div style="
-                background-color: {fond};
-                border: 2px solid {couleur};
-                border-radius: 12px;
-                padding: 18px;
-                margin: 12px 0;
-                color: #202B45;
-                max-width: 740px;
-                box-sizing: border-box;
-            ">
-                <strong>{type_exercice}</strong>
-                <p style="margin-bottom:0">
-                    {descriptions[type_exercice]}
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True
+        # Bandeau de catégorie à couleur variable ; aucune incidence sur les exercices.
+        st.html(
+            f'<div class="mc-exos-category" '
+            f'style="--mc-fond:{fond};--mc-accent:{couleur}">'
+            f'<strong>{type_exercice}</strong>'
+            f'<span>{descriptions[type_exercice]}</span>'
+            '</div>'
         )
 
         col2 = st.container()
@@ -3898,8 +4006,20 @@ if page_mathicap == "Exercices":
 
         niveau_reel = debut_niveau[type_exercice] + difficulte
 
-        st.write(f"**Progression : niveau {niveau_reel} sur 9**")
-        st.progress(niveau_reel / 9)
+        # Gradient continu sur toute l'échelle : les couleurs ne se réinitialisent
+        # pas au changement de catégorie. Le pourcentage suit le niveau 1 à 9.
+        pourcentage_parcours = 100 * niveau_reel / 9
+        st.html(
+            '<div class="mc-exos-progress-heading">'
+            '<span>Progression du parcours</span>'
+            f'<strong>Niveau {niveau_reel} / 9</strong>'
+            '</div>'
+            '<div class="mc-exos-progress-track" role="progressbar" '
+            'aria-label="Progression du parcours de 1 à 9" '
+            f'aria-valuemin="0" aria-valuemax="9" aria-valuenow="{niveau_reel}">'
+            f'<div class="mc-exos-progress-fill" style="--mc-progress:{pourcentage_parcours:.4f}%"></div>'
+            '</div>'
+        )
         nombre = st.selectbox(
             "Nombre d'exercices",
             [1, 2, 3, 4, 5],
