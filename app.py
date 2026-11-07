@@ -3988,27 +3988,43 @@ def _mathicap_retablir_serie(serie, *, nouvelle_version=False):
     return True
 
 
-# Réhydrater une série seulement quand l'élève consulte les exercices.
-# Les autres rubriques, notamment « Mes séries », n'en ont pas besoin.
+# Une actualisation complète peut restaurer la connexion en plusieurs passages :
+# "exercices_actuels" peut donc déjà exister, mais valoir []. Vérifier son
+# CONTENU et l'identifiant demandé, pas seulement la présence de la clé.
+# Une série ouverte par son URL est relue exactement pour l'élève connecté.
+_id_serie_url = st.query_params.get("serie_id")
+_reprise_a_effectuer = (
+    not st.session_state.get("exercices_actuels")
+    or (_id_serie_url is not None
+        and str(st.session_state.get("serie_id_actuel")) != str(_id_serie_url))
+)
 if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
-        and "exercices_actuels" not in st.session_state):
+        and _reprise_a_effectuer):
     try:
-        series_auto = recuperer_exercices_eleve(st.session_state["eleve_id"])
-        if series_auto:
-            # Priorité à la série exacte ouverte avant actualisation.
-            identifiant_url = st.query_params.get("serie_id")
-            cible = next(
-                (serie for serie in series_auto if str(serie.get("id")) == str(identifiant_url)),
-                None,
-            ) if identifiant_url else None
-            if cible is None and identifiant_url:
-                # An explicit ID must never silently open somebody else's
-                # (or merely another) series. Report a missing saved series.
+        cible = None
+        if _id_serie_url is not None:
+            identifiant = str(_id_serie_url)
+            # IDs de la table series_exercices : BIGINT, sans accepter
+            # un identifiant invalide ni sélectionner une autre série.
+            if identifiant.isascii() and identifiant.isdigit() and 1 <= len(identifiant) <= 19:
+                resultat = (
+                    supabase_privee.table("series_exercices")
+                    .select("id, code_reprise, exercices, reponses, progression")
+                    .eq("eleve_id", st.session_state["eleve_id"])
+                    .eq("id", int(identifiant))
+                    .limit(1).execute()
+                )
+                cible = (resultat.data or [None])[0]
+        else:
+            # Conserver le comportement ancien lorsqu'aucune série n'est ciblée.
+            lignes = recuperer_exercices_eleve(st.session_state["eleve_id"])
+            cible = lignes[0] if lignes else None
+        if cible is not None:
+            if not _mathicap_retablir_serie(cible):
                 st.session_state["erreur_reprise_series"] = True
-            else:
-                if cible is None:
-                    cible = series_auto[0]
-                _mathicap_retablir_serie(cible)
+        elif _id_serie_url is not None:
+            # Ne jamais ouvrir une autre série si l'ID demandé est absent.
+            st.session_state["erreur_reprise_series"] = True
     except Exception:
         st.session_state["erreur_reprise_series"] = True
 
@@ -4152,6 +4168,39 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             cle_taille_page = f"mathicap_series_taille_page_{eleve_courant}"
             cle_page = f"mathicap_series_page_{eleve_courant}"
 
+            # Les widgets Streamlit sont recréés lors d'une actualisation complète.
+            # Ne conserver dans l'URL que les préférences d'affichage ; jamais
+            # d'identifiants de connexion, réponses ou données personnelles.
+            parametres_series = (
+                (cle_chapitre, "ms_chapitre", options_chapitres),
+                (cle_niveau, "ms_niveau", options_niveaux),
+                (cle_etat, "ms_avancement", options_etats),
+            )
+            for cle, parametre, valeurs_possibles in parametres_series:
+                if cle not in st.session_state:
+                    candidat = st.query_params.get(parametre)
+                    st.session_state[cle] = (
+                        candidat if candidat in valeurs_possibles else valeurs_possibles[0]
+                    )
+
+            if cle_taille_page not in st.session_state:
+                try:
+                    _taille_url = int(st.query_params.get("ms_taille", "5"))
+                except (ValueError, TypeError):
+                    _taille_url = 5
+                st.session_state[cle_taille_page] = (
+                    _taille_url if _taille_url in (5, 10, 20) else 5
+                )
+            if cle_page not in st.session_state:
+                try:
+                    st.session_state[cle_page] = max(1, int(st.query_params.get("ms_page", "1")))
+                except (ValueError, TypeError):
+                    st.session_state[cle_page] = 1
+
+            def memoriser_filtres_dans_url():
+                for cle, parametre, _ in parametres_series:
+                    st.query_params[parametre] = st.session_state[cle]
+
             def effacer_selection_series():
                 # Ne jamais conserver une sélection cachée sur une autre page.
                 st.session_state[cle_tout] = False
@@ -4162,14 +4211,22 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             def reinitialiser_selection_apres_filtre():
                 effacer_selection_series()
                 st.session_state[cle_page] = 1
+                memoriser_filtres_dans_url()
+                st.query_params["ms_page"] = "1"
+                st.query_params["vue"] = "series"
 
             def changer_taille_page():
                 effacer_selection_series()
                 st.session_state[cle_page] = 1
+                st.query_params["ms_taille"] = str(st.session_state[cle_taille_page])
+                st.query_params["ms_page"] = "1"
+                st.query_params["vue"] = "series"
 
             def naviguer_page(decalage):
                 # Callback : exécuté avant la création du sélecteur de page.
                 st.session_state[cle_page] += decalage
+                st.query_params["ms_page"] = str(st.session_state[cle_page])
+                st.query_params["vue"] = "series"
                 effacer_selection_series()
 
             for cle, choix_possibles in (
@@ -4233,6 +4290,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             if (type(st.session_state.get(cle_page)) is not int
                     or not 1 <= st.session_state[cle_page] <= nombre_pages):
                 st.session_state[cle_page] = 1
+                st.query_params["ms_page"] = "1"
 
             # Recalcul après les éventuels callbacks Streamlit.
             taille_page = st.session_state[cle_taille_page]
