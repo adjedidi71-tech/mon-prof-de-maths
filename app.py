@@ -5291,14 +5291,16 @@ def _mc_sim_afficher_variante(numero, variante, correction_inline=False):
                 if nouveau_bilan is None:
                     # Réponse rédigée, corrigée manuellement : conserver la saisie.
                     if _mc_sim_mettre_a_jour_reponse(numero, identifiant):
-                        st.info("Réponse enregistrée. Compare-la à la correction quand tu le souhaites.")
+                        # Le bouton de variante suivante est rendu AVANT cette vérification.
+                        # Relancer seulement le fragment pour réévaluer son état dès la
+                        # sauvegarde, sans réinitialiser la page ni ses réponses.
+                        st.rerun(scope="fragment")
                     else:
                         st.error("Réponse non sauvegardée.")
                 elif _mc_sim_mettre_a_jour_reponse(numero, identifiant, nouveau_bilan):
-                    if nouveau_bilan["bonnes"] == nouveau_bilan["total"]:
-                        st.success("Bonne réponse !" if nouveau_bilan["total"] == 1 else "Toutes les réponses sont correctes !")
-                    else:
-                        st.warning("Pas encore tout à fait. Tu peux réessayer ou consulter la correction.")
+                    # Afficher immédiatement le bilan sauvegardé et débloquer 1b/2b...
+                    # même si la première réponse vérifiée était incorrecte.
+                    st.rerun(scope="fragment")
                 else:
                     st.error("Vérification non sauvegardée. Réessaie.")
         if correction_inline:
@@ -5339,7 +5341,11 @@ def _mc_sim_termine(variante):
 
 
 def _mc_sim_bloc(numero, exercice):
-    """Un bouton après chaque exercice, sans modifier la série principale."""
+    """Exercices similaires et invitation unique après le dernier exercice.
+
+    Sans variante, l'invitation suit l'exercice principal. Dès que 1a/2a existe,
+    elle se déplace sous la variante la plus récente, sans doublon.
+    """
     if not st.session_state.get("eleve_id") or not st.session_state.get("code_actuel"):
         return
     disponibles = _mc_sim_modele_supporte(exercice)
@@ -5349,17 +5355,49 @@ def _mc_sim_bloc(numero, exercice):
         existantes = []
     with st.container(key=f"mathicap_similaires_bloc_{numero}"):
         st.markdown("---")
-        bilan_initial = _mc_sim_premier_bilan_original(numero)
-        if isinstance(bilan_initial, dict) and bilan_initial.get("total", 0) > bilan_initial.get("bonnes", 0):
-            st.caption("Tu as rencontré une difficulté ? Entraîne-toi avec un exercice du même type et du même niveau.")
+        # Toujours conserver les variantes déjà créées ; leur affichage précède
+        # l'invitation suivante, même après un rechargement de la page.
+        for indice, variante in enumerate(existantes):
+            if not isinstance(variante, dict) or not isinstance(variante.get("exercice"), dict):
+                continue
+            if indice < len(existantes) - 1:
+                with st.expander(f"Exercice {variante.get('identifiant', '')} — précédent entraînement"):
+                    _mc_sim_afficher_variante(numero, variante, correction_inline=True)
+            else:
+                _mc_sim_afficher_variante(numero, variante)
+
+        if not disponibles:
+            st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
+            return
+
+        dernier_termine = not existantes or _mc_sim_termine(existantes[-1])
+        if existantes and not dernier_termine:
+            # Ne pas proposer 1b tant que 1a n'a pas été vérifié.
+            st.caption("Termine d'abord cet exercice similaire pour en demander un autre.")
+            return
+
+        # Message adapté au dernier travail vérifié : exercice principal s'il
+        # n'existe aucune variante, sinon la dernière variante (1a, 1b...).
+        bilan = (
+            existantes[-1].get("bilan")
+            if existantes else _mc_sim_premier_bilan_original(numero)
+        )
+        if (isinstance(bilan, dict)
+                and bilan.get("total", 0) > bilan.get("bonnes", 0)):
+            st.caption("Tu as rencontré une difficulté ? Essaie un autre exercice du même type et du même niveau.")
+        elif existantes:
+            st.caption("Tu veux encore t'entraîner ? Essaie un autre exercice du même niveau.")
         else:
             st.caption("Tu veux t'entraîner davantage ? Essaie un nouvel exercice utilisant la même méthode.")
-        dernier_termine = not existantes or _mc_sim_termine(existantes[-1])
+
+        etiquette_bouton = (
+            "↻ Essayer un autre exercice similaire"
+            if existantes else "↻ Essayer un exercice similaire"
+        )
         if st.button(
-            "↻ Essayer un exercice similaire",
+            etiquette_bouton,
             key=_mc_sim_cle_widget(f"origine_{numero}", "generer"),
             type="secondary",
-            disabled=(not disponibles or not dernier_termine),
         ):
             if _mc_sim_cache_reponses() is None:
                 st.error("Connexion à la série indisponible. Actualise la page.")
@@ -5387,18 +5425,6 @@ def _mc_sim_bloc(numero, exercice):
                         st.rerun(scope="fragment")
                     else:
                         st.error("La variante n'a pas pu être enregistrée : aucune création non sauvegardée.")
-        if not disponibles:
-            st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
-        elif existantes and not dernier_termine:
-            st.caption("Termine d'abord l'exercice similaire ouvert pour en demander un autre.")
-        for indice, variante in enumerate(existantes):
-            if not isinstance(variante, dict) or not isinstance(variante.get("exercice"), dict):
-                continue
-            if indice < len(existantes) - 1:
-                with st.expander(f"Exercice {variante.get('identifiant', '')} — précédent entraînement"):
-                    _mc_sim_afficher_variante(numero, variante, correction_inline=True)
-            else:
-                _mc_sim_afficher_variante(numero, variante)
 
 def enregistrer_reponse_auto(numero):
     code = st.session_state.get("code_actuel")
