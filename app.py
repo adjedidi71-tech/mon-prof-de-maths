@@ -2529,6 +2529,41 @@ st.markdown("""
     gap: var(--mc-gap-section) !important;
     row-gap: var(--mc-gap-section) !important;
 }
+/* Mise au point des variantes : hiérarchie visuelle sans cadres supplémentaires.
+   Le titre est une seule ligne de HTML, sans la marge imposée aux paragraphes.
+   Une variante = titre, énoncé, saisie, vérification, correction.
+   Les anciennes variantes ouvertes n'ont pas de titre dupliqué. */
+.st-key-mathicap_zone_exercices_affichage .mc-sim-heading {
+    display: block;
+    margin: 11px 0 5px !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+    color: #213a58 !important;
+    font-size: .92rem !important;
+    overflow-wrap: anywhere;
+}
+.st-key-mathicap_zone_exercices_affichage .mc-sim-heading strong {
+    font-weight: 720 !important;
+}
+.st-key-mathicap_zone_exercices_affichage .mc-sim-heading span {
+    font-weight: 400 !important;
+    color: #536479 !important;
+}
+/* Petite respiration entre un ancien essai repliable et la variante active.
+   Ne toucher ni à la grille des réponses, ni aux autres composants. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mathicap_similaire_carte_"] {
+    padding-top: 3px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_entete_"] {
+    padding-bottom: 2px !important;
+}
+@media (max-width: 640px) {
+    .st-key-mathicap_zone_exercices_affichage .mc-sim-heading {
+        margin-top: 9px !important;
+        margin-bottom: 5px !important;
+        font-size: .94rem !important;
+    }
+}
 /* Priorité à l'espacement réduit au sein de l'intitulé/énoncé. */
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_entete_"] [data-testid="stVerticalBlock"] {
     gap: var(--mc-gap-detail) !important;
@@ -5347,7 +5382,7 @@ def _mc_correction_deployable(identifiant):
     return visible
 
 
-def _mc_sim_afficher_variante(numero, variante):
+def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
     identifiant = variante["identifiant"]
     exercice = variante["exercice"]
     reponse = variante.get("reponse") if isinstance(variante.get("reponse"), dict) else {}
@@ -5360,7 +5395,16 @@ def _mc_sim_afficher_variante(numero, variante):
         # Titre et consigne forment une unité visuelle à espacement maîtrisé.
         # Les champs et actions restent en dehors : aucune clé Streamlit modifiée.
         with st.container(border=False, key=f"mc_sim_entete_{identifiant}"):
-            st.markdown(f"**Exercice {identifiant}** · Entraînement supplémentaire")
+            # Ne répéter aucun titre lorsque l'expander affiche déjà
+            # « Exercice 1a — résultat · Appuyer pour revoir ».
+            if afficher_titre:
+                st.markdown(
+                    '<div class="mc-sim-heading">'
+                    f'<strong>Exercice {escape(str(identifiant))}</strong>'
+                    '<span> · Entraînement supplémentaire</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
             if est_distributivite:
                 lignes_calcul = exercice["enonce"].split("\n\n")[1:]
                 st.write("Utilise la distributivité pour calculer :")
@@ -5577,7 +5621,7 @@ def _mc_sim_bloc(numero, exercice):
                     f"Exercice {variante.get('identifiant', '')} — {etat} · Appuyer pour revoir",
                     expanded=False,
                 ):
-                    _mc_sim_afficher_variante(numero, variante)
+                    _mc_sim_afficher_variante(numero, variante, afficher_titre=False)
             else:
                 _mc_sim_afficher_variante(numero, variante)
 
