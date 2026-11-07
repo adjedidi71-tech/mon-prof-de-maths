@@ -27,14 +27,25 @@ PAGES = (
 LOGO = Path(__file__).with_name("mathicap_logo.png")
 
 
+def _mathicap_url_pour_page(page: str) -> None:
+    """Une seule correspondance entre le menu et l'URL persistante."""
+    st.query_params["vue"] = {
+        "Mes séries": "series",
+        "Exercices": "exercices",
+    }.get(page, "accueil")
+
+
 def _mathicap_demander_fermeture_volet() -> None:
-    """Referme le volet après un choix dans le menu latéral."""
+    """Après un clic menu, synchronise l'URL et demande la fermeture."""
+    page = st.session_state.get("mathicap_page", "Accueil")
+    _mathicap_url_pour_page(page)
     st.session_state["_mathicap_fermer_volet_navigation"] = True
 
 
 def _aller_vers(page: str) -> None:
     """Callback exécuté avant le prochain rendu des widgets Streamlit."""
     st.session_state["mathicap_page"] = page
+    _mathicap_url_pour_page(page)
     if page == "Mes séries":
         st.session_state["afficher_series"] = True
     elif page == "Exercices":
@@ -631,33 +642,33 @@ def afficher_interface_mathicap() -> str:
         st.divider()
         st.caption("MathiCap Collège · Programme en développement")
 
-    # Après le choix d'une rubrique, cliquer sur le bouton natif de
-    # fermeture de Streamlit. Ne pas masquer le volet par CSS : l'élève
-    # doit pouvoir le rouvrir avec la flèche habituelle.
+    # La fermeture visuelle du volet exige un clic navigateur sur le vrai bouton
+    # Streamlit. Le script reste idempotent : ne pas rouvrir un volet déjà fermé.
     if st.session_state.pop("_mathicap_fermer_volet_navigation", False):
         st.html(
             """<script>
             (() => {
-                let attempts = 0;
-                const collapse = () => {
-                    const sidebar = document.querySelector('[data-testid="stSidebar"]');
-                    if (!sidebar) {
-                        if (attempts++ < 12) setTimeout(collapse, 80);
-                        return;
-                    }
-                    // Ne jamais rebasculer un volet déjà fermé.
-                    if (sidebar.getAttribute('data-collapsed') === 'true' ||
-                        sidebar.getAttribute('aria-expanded') === 'false') return;
-                    const button = sidebar.querySelector(
+                let tentatives = 0;
+                const fermer = () => {
+                    const volet = document.querySelector('[data-testid="stSidebar"]');
+                    if (!volet) return false;
+                    if (volet.getAttribute('aria-expanded') === 'false' ||
+                        volet.getAttribute('data-collapsed') === 'true') return true;
+                    const bouton = volet.querySelector(
+                        '[data-testid="stSidebarCollapseButton"] button'
+                    ) || document.querySelector(
                         '[data-testid="stSidebarCollapseButton"] button'
                     );
-                    if (button) {
-                        button.click();
-                    } else if (attempts++ < 12) {
-                        setTimeout(collapse, 80);
+                    if (!bouton) return false;
+                    bouton.click();
+                    return true;
+                };
+                const essayer = () => {
+                    if (!fermer() && tentatives++ < 25) {
+                        setTimeout(essayer, 100);
                     }
                 };
-                requestAnimationFrame(collapse);
+                requestAnimationFrame(essayer);
             })();
             </script>""",
             unsafe_allow_javascript=True,
