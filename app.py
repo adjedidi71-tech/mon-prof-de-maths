@@ -2796,6 +2796,51 @@ st.markdown("""
     padding: 3px 5px !important;
     white-space: nowrap !important;
 }
+
+/* MathiCap — densite douce des reponses, limitee aux familles d'exercices.
+   Ne modifie ni les clefs de widgets, ni les zones redigees, ni les actions. */
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    min-height: 36px !important;
+    height: 36px !important;
+    box-sizing: border-box !important;
+}
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
+    min-height: 0 !important;
+    height: 34px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    box-sizing: border-box !important;
+}
+/* Les lignes question/reponse gardent leurs deux colonnes, mais prennent
+   moins de place entre deux questions successives. */
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
+    margin-top: -3px !important;
+    margin-bottom: -3px !important;
+}
+/* Eviter de reduire excessivement la zone tactile sur smartphone. */
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_exercices_affichage
+    [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
+    .st-key-mathicap_zone_exercices_affichage
+    [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+        min-height: 42px !important;
+        height: 42px !important;
+    }
+    .st-key-mathicap_zone_exercices_affichage
+    [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
+        height: 40px !important;
+    }
+    .st-key-mathicap_zone_exercices_affichage
+    [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
+        margin-top: -2px !important;
+        margin-bottom: -2px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
