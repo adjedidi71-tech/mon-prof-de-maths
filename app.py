@@ -2733,6 +2733,69 @@ st.markdown("""
         font-size: .94rem;
     }
 }
+
+/* MathiCap : sous-questions à réponse courte en une rangée.
+   La même fonction Python construit le champ de l'exercice initial et
+   celui de ses variantes ; aucune clé de sauvegarde n'est modifiée. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] {
+    width: 100% !important;
+    max-width: min(100%, 620px) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: none !important;
+    align-self: center !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stTextInput"],
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stSelectbox"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stMarkdownContainer"] p {
+    overflow-wrap: anywhere !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+}
+@media (max-width: 767px) {
+    .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] {
+        grid-template-columns: minmax(0, 1fr) minmax(106px, 43%) !important;
+        gap: 8px !important;
+    }
+}
+/* La commande de suppression concerne seulement la dernière variante.
+   Sur mobile, garder une étiquette courte sans débordement horizontal. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_titre_actions_"] [data-testid="stHorizontalBlock"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_titre_actions_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_titre_actions_"] button {
+    font-size: .8rem !important;
+    padding: 3px 5px !important;
+    white-space: nowrap !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -5593,7 +5656,75 @@ def _mc_correction_deployable(identifiant):
     return visible
 
 
-def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
+def _mc_reponse_courte_sur_ligne(etiquette, cle, rappel, on_change, args,
+                                   type_champ="nombre", options=None):
+    """Une seule rangée label/réponse, responsive, sans changer la clé du widget."""
+    with st.container(key=f"mc_reponse_ligne_{rappel}"):
+        col_question, col_reponse = st.columns(
+            [1.8, 1], gap="small", vertical_alignment="center", wrap=False
+        )
+        with col_question:
+            st.write(etiquette)
+        with col_reponse:
+            if type_champ == "choix":
+                st.selectbox(
+                    etiquette, ["Choisir..."] + list(options or []),
+                    label_visibility="collapsed", key=cle,
+                    on_change=on_change, args=args,
+                )
+            else:
+                st.text_input(
+                    etiquette, label_visibility="collapsed", placeholder="Réponse",
+                    key=cle, on_change=on_change, args=args,
+                )
+
+
+def _mc_sim_commande_supprimer_en_haut(numero, identifiant):
+    """Suppression de la dernière variante seulement, avec confirmation et sauvegarde."""
+    cle_confirmation = _mc_sim_cle_widget(f"origine_{numero}", "confirmation_suppression")
+    if st.button(
+        f"Supprimer {identifiant}",
+        key=_mc_sim_cle_widget(identifiant, "demander_suppression"),
+        type="tertiary",
+        help=f"Supprimer l'exercice supplémentaire {identifiant}",
+    ):
+        st.session_state[cle_confirmation] = identifiant
+        st.rerun(scope="fragment")
+
+
+def _mc_sim_confirmation_supprimer(numero, identifiant):
+    """Formulaire de confirmation sur pleine largeur, sous la ligne de titre."""
+    cle_confirmation = _mc_sim_cle_widget(f"origine_{numero}", "confirmation_suppression")
+    if st.session_state.get(cle_confirmation) == identifiant:
+        st.caption(
+            f"Supprimer définitivement l'exercice {identifiant} et ses réponses ? "
+            "Les exercices précédents seront conservés."
+        )
+        col_oui, col_non = st.columns([1, 1], gap="small")
+        with col_oui:
+            confirmer = st.button(
+                "Oui, supprimer",
+                key=_mc_sim_cle_widget(identifiant, "confirmer_suppression"),
+            )
+        with col_non:
+            annuler = st.button(
+                "Annuler",
+                key=_mc_sim_cle_widget(identifiant, "annuler_suppression"),
+            )
+        if annuler:
+            st.session_state.pop(cle_confirmation, None)
+            st.rerun(scope="fragment")
+        if confirmer:
+            if _mc_sim_supprimer_derniere(numero, identifiant):
+                st.session_state.pop(cle_confirmation, None)
+                st.session_state["_mc_sim_widget_a_nettoyer"] = _mc_sim_cle_widget(identifiant)
+                st.toast(f"Exercice {identifiant} supprimé.", duration=3)
+                st.rerun(scope="fragment")
+            else:
+                st.error("Suppression non enregistrée. Rien n'a été retiré.")
+
+
+def _mc_sim_afficher_variante(numero, variante, afficher_titre=True, derniere=False):
     identifiant = variante["identifiant"]
     exercice = variante["exercice"]
     reponse = variante.get("reponse") if isinstance(variante.get("reponse"), dict) else {}
@@ -5609,13 +5740,31 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
             # Ne répéter aucun titre lorsque l'expander affiche déjà
             # « Exercice 1a — résultat · Appuyer pour revoir ».
             if afficher_titre:
-                st.markdown(
-                    '<div class="mc-sim-heading">'
-                    f'<strong>Exercice {escape(str(identifiant))}</strong>'
-                    '<span> · Entraînement supplémentaire</span>'
-                    '</div>',
-                    unsafe_allow_html=True,
-                )
+                if derniere:
+                    with st.container(key=f"mc_sim_titre_actions_{identifiant}"):
+                        col_titre, col_action = st.columns(
+                            [3, 1], gap="small", vertical_alignment="center", wrap=False
+                        )
+                        with col_titre:
+                            st.markdown(
+                                '<div class="mc-sim-heading">'
+                                f'<strong>Exercice {escape(str(identifiant))}</strong>'
+                                '<span> · Entraînement supplémentaire</span>'
+                                '</div>',
+                                unsafe_allow_html=True,
+                            )
+                        with col_action:
+                            _mc_sim_commande_supprimer_en_haut(numero, identifiant)
+                        # Confirmation toujours hors de la colonne étroite du bouton.
+                        _mc_sim_confirmation_supprimer(numero, identifiant)
+                else:
+                    st.markdown(
+                        '<div class="mc-sim-heading">'
+                        f'<strong>Exercice {escape(str(identifiant))}</strong>'
+                        '<span> · Entraînement supplémentaire</span>'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
             if est_distributivite:
                 lignes_calcul = exercice["enonce"].split("\n\n")[1:]
                 st.write("Utilise la distributivité pour calculer :")
@@ -5701,29 +5850,23 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
                                 key=cle, on_change=callback, args=arguments,
                             )
                     else:
-                        with st.container(key=f"mathicap_question_{identifiant}_{index}"):
-                            st.write(etiquette)
-                        with st.container(key=f"mathicap_champ_reponse_{identifiant}_{index}"):
-                            st.text_input(
-                                etiquette, label_visibility="collapsed", placeholder="Réponse",
-                                key=cle, on_change=callback, args=arguments,
-                            )
-                elif champ.get("type") == "choix":
-                    with st.container(key=f"mathicap_question_{identifiant}_{index}"):
-                        st.write(etiquette)
-                    with st.container(key=f"mathicap_champ_reponse_{identifiant}_{index}"):
-                        st.selectbox(
-                            etiquette, ["Choisir..."] + champ.get("options", []),
-                            label_visibility="collapsed", key=cle,
-                            on_change=callback, args=arguments,
+                        _mc_reponse_courte_sur_ligne(
+                            etiquette, cle, f"variante_{identifiant}_{index}",
+                            callback, arguments,
                         )
+                elif champ.get("type") == "choix":
+                    _mc_reponse_courte_sur_ligne(
+                        etiquette, cle, f"variante_{identifiant}_{index}",
+                        callback, arguments, type_champ="choix",
+                        options=champ.get("options", []),
+                    )
                 elif champ.get("type") == "texte_libre":
                     with st.container(key=f"mathicap_reponse_texte_{identifiant}_{index}"):
                         st.text_area(
                             etiquette, height=90, key=cle,
+                            placeholder="Réponse rédigée · non notée automatiquement",
                             on_change=callback, args=arguments,
                         )
-                    st.caption("Réponse rédigée · non notée automatiquement")
         else:
             cle = _mc_sim_cle_widget(identifiant, "texte")
             if cle not in st.session_state:
@@ -5972,47 +6115,7 @@ def _mc_sim_bloc(numero, exercice):
                 if ouvert:
                     _mc_sim_afficher_variante(numero, variante, afficher_titre=False)
             else:
-                _mc_sim_afficher_variante(numero, variante)
-
-        # Suppression sûre : seulement le dernier exercice supplémentaire,
-        # sans renuméroter les précédents ni toucher au score initial.
-        if existantes and isinstance(existantes[-1], dict):
-            dernier_id = str(existantes[-1].get("identifiant", ""))
-            cle_confirmation = _mc_sim_cle_widget(f"origine_{numero}", "confirmation_suppression")
-            if st.button(
-                f"Supprimer l'exercice {dernier_id}",
-                key=_mc_sim_cle_widget(dernier_id, "demander_suppression"),
-                type="tertiary",
-            ):
-                st.session_state[cle_confirmation] = dernier_id
-                st.rerun(scope="fragment")
-            if st.session_state.get(cle_confirmation) == dernier_id:
-                st.caption(
-                    f"Supprimer définitivement l'exercice {dernier_id} et ses réponses ? "
-                    "Les exercices précédents seront conservés."
-                )
-                col_oui, col_non = st.columns([1, 1], gap="small")
-                with col_oui:
-                    confirmer = st.button(
-                        "Oui, supprimer",
-                        key=_mc_sim_cle_widget(dernier_id, "confirmer_suppression"),
-                    )
-                with col_non:
-                    annuler = st.button(
-                        "Annuler",
-                        key=_mc_sim_cle_widget(dernier_id, "annuler_suppression"),
-                    )
-                if annuler:
-                    st.session_state.pop(cle_confirmation, None)
-                    st.rerun(scope="fragment")
-                if confirmer:
-                    if _mc_sim_supprimer_derniere(numero, dernier_id):
-                        st.session_state.pop(cle_confirmation, None)
-                        st.session_state["_mc_sim_widget_a_nettoyer"] = _mc_sim_cle_widget(dernier_id)
-                        st.toast(f"Exercice {dernier_id} supprimé.", duration=3)
-                        st.rerun(scope="fragment")
-                    else:
-                        st.error("Suppression non enregistrée. Rien n'a été retiré.")
+                _mc_sim_afficher_variante(numero, variante, derniere=True)
 
         if not disponibles:
             st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
@@ -7752,36 +7855,17 @@ def _mathicap_afficher_serie_et_reponses():
                                             args=(numero,)
                                         )
                                 else:
-                                    # Le libellé est écrit directement sur la page.
-                                    # Aucune colonne de hauteur fixe ne peut le tronquer.
-                                    with st.container(key=f"mathicap_question_{numero}_{index}"):
-                                        st.write(etiquette)
-                                    with st.container(
-                                        key=f"mathicap_champ_reponse_{numero}_{index}"
-                                    ):
-                                        st.text_input(
-                                            etiquette,
-                                            label_visibility="collapsed",
-                                            placeholder="Réponse",
-                                            key=cle,
-                                            on_change=enregistrer_reponses_banque_auto,
-                                            args=(numero,)
-                                        )
+                                    _mc_reponse_courte_sur_ligne(
+                                        etiquette, cle, f"origine_{numero}_{index}",
+                                        enregistrer_reponses_banque_auto, (numero,),
+                                    )
 
                             elif champ["type"] == "choix":
-                                with st.container(key=f"mathicap_question_{numero}_{index}"):
-                                    st.write(etiquette)
-                                with st.container(
-                                    key=f"mathicap_champ_reponse_{numero}_{index}"
-                                ):
-                                    st.selectbox(
-                                        etiquette,
-                                        ["Choisir..."] + champ["options"],
-                                        label_visibility="collapsed",
-                                        key=cle,
-                                        on_change=enregistrer_reponses_banque_auto,
-                                        args=(numero,)
-                                    )
+                                _mc_reponse_courte_sur_ligne(
+                                    etiquette, cle, f"origine_{numero}_{index}",
+                                    enregistrer_reponses_banque_auto, (numero,),
+                                    type_champ="choix", options=champ["options"],
+                                )
 
                             elif champ["type"] == "texte_libre":
                                 with st.container(
@@ -7791,10 +7875,10 @@ def _mathicap_afficher_serie_et_reponses():
                                         etiquette,
                                         height=90,
                                         key=cle,
+                                        placeholder="Réponse rédigée · non notée automatiquement",
                                         on_change=enregistrer_reponses_banque_auto,
                                         args=(numero,)
                                     )
-                                st.caption("Réponse rédigée · non notée automatiquement")
 
                         with st.container(key=f"mc_original_controle_{numero}"):
                             version_banque = st.session_state.get('serie_version', 0)
