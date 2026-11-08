@@ -2666,6 +2666,37 @@ st.markdown("""
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stDivider"] {
     display: none !important;
 }
+
+/* Retours pédagogiques des exercices initiaux et des variantes :
+   légers, lisibles, non gras, un espacement modéré entre les huit lignes. */
+.st-key-mathicap_zone_exercices_affichage .mc-retour-question {
+    display: block;
+    font-size: .92rem;
+    font-weight: 400 !important;
+    line-height: 1.45;
+    margin: 0 0 5px !important;
+    padding: 0 !important;
+    overflow-wrap: anywhere;
+    color: inherit;
+}
+.st-key-mathicap_zone_exercices_affichage .mc-retour-question span {
+    font-weight: 400 !important;
+}
+.st-key-mathicap_zone_exercices_affichage .mc-retour-juste { color: #16803b; }
+.st-key-mathicap_zone_exercices_affichage .mc-retour-faux { color: #c33c3c; }
+.st-key-mathicap_zone_exercices_affichage .mc-retour-manquant,
+.st-key-mathicap_zone_exercices_affichage .mc-retour-partiel { color: #a86708; }
+.st-key-mathicap_zone_exercices_affichage .mc-retour-symbole {
+    display: inline-block;
+    min-width: 1em;
+}
+@media (max-width: 640px) {
+    .st-key-mathicap_zone_exercices_affichage .mc-retour-question {
+        font-size: .9rem;
+        line-height: 1.48;
+        margin-bottom: 6px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -5427,6 +5458,7 @@ def _mc_sim_statuts_par_question(exercice, reponse):
         if not isinstance(champ, dict) or champ.get("type") == "texte_libre":
             continue
         libelle = champ.get("libelle", "Question")
+        justification_a_revoir = False
         saisie = saisies.get(champ.get("id"))
         if saisie is None or str(saisie).strip() in ("", "Choisir..."):
             details.append((libelle, None))
@@ -5450,11 +5482,41 @@ def _mc_sim_statuts_par_question(exercice, reponse):
                         except (TypeError, ValueError):
                             correcte = False
                     if not correcte:
+                        justification_a_revoir = True
                         break
         else:
             correcte = saisie == champ.get("attendu")
-        details.append((libelle, correcte))
+        details.append((
+            libelle,
+            "choix_justification" if justification_a_revoir else correcte,
+        ))
     return details
+
+
+def _mc_afficher_retour_question(libelle, statut):
+    """Une ligne aérée, cohérente pour l'exercice initial et ses variantes.
+
+    Le retour orange conserve la règle de correction existante : bon choix
+    d'offre mais calculs justificatifs incorrects. Aucun score n'est modifié.
+    """
+    rendus = {
+        True: ("✓", "Bonne réponse !", "juste"),
+        False: ("✗", "Essaie encore.", "faux"),
+        None: ("–", "Réponse manquante.", "manquant"),
+        "choix_justification": (
+            "⚠", "Bon choix, mais certains calculs sont faux ou incomplets. Vérifie-les.",
+            "partiel",
+        ),
+    }
+    symbole, message, css = rendus[statut]
+    st.markdown(
+        f'<div class="mc-retour-question">'
+        f'<span class="mc-retour-symbole">{symbole}</span> '
+        f'{escape(str(libelle))} : '
+        f'<span class="mc-retour-{css}">{escape(message)}</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def _mc_sim_premier_bilan_original(numero):
@@ -5663,12 +5725,7 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
                 if total > 1:
                     with st.container(key=f"mc_sim_details_{identifiant}"):
                         for libelle, correcte in _mc_sim_statuts_par_question(exercice, reponse):
-                            if correcte is True:
-                                st.markdown(f"✓ {libelle} : :green[Bonne réponse !]")
-                            elif correcte is False:
-                                st.markdown(f"✗ {libelle} : :red[Essaie encore.]")
-                            else:
-                                st.markdown(f"– {libelle} : :orange[Réponse manquante.]")
+                            _mc_afficher_retour_question(libelle, correcte)
                 if bonnes == total:
                     champs_libres = [
                         c for c in (exercice.get("champs_reponse") or [])
@@ -5691,6 +5748,24 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
                 st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
 
 
+def _mc_sim_supprimer_derniere(numero, identifiant):
+    """Supprime uniquement la dernière variante après confirmation utilisateur.
+
+    Ne modifie pas les exercices principaux, leurs réponses ou leur score.
+    Si Supabase échoue, les données sauvegardées et le cache restent inchangés.
+    """
+    variantes = deepcopy(_mc_sim_variantes())
+    groupe = variantes.get(str(numero))
+    if (not isinstance(groupe, list) or not groupe
+            or not isinstance(groupe[-1], dict)
+            or groupe[-1].get("identifiant") != identifiant):
+        return False
+    groupe.pop()
+    if not groupe:
+        variantes.pop(str(numero), None)
+    return _mc_sim_ecrire_variantes(variantes)
+
+
 def _mc_sim_termine(variante):
     """Ne propose pas 2b tant que 2a n'a pas reçu ses réponses et sa vérification."""
     if not isinstance(variante, dict):
@@ -5704,19 +5779,9 @@ def _mc_sim_termine(variante):
     elif reponse.get("type") == "banque":
         champs = variante.get("exercice", {}).get("champs_reponse") or []
         valeurs = reponse.get("champs") or {}
-        # Une réponse rédigée ne possède pas de note automatique. Pour les
-        # problèmes mixtes, elle ne doit pas bloquer un nouvel entraînement
-        # lorsque toutes les questions évaluables ont été vérifiées.
-        evaluables = [
-            c for c in champs
-            if isinstance(c, dict) and c.get("type") != "texte_libre"
-        ]
-        a_renseigner = evaluables if evaluables else [
-            c for c in champs if isinstance(c, dict)
-        ]
-        rempli = bool(a_renseigner) and all(
+        rempli = bool(champs) and all(
             str(valeurs.get(c.get("id"), "")).strip() not in ("", "Choisir...")
-            for c in a_renseigner
+            for c in champs if isinstance(c, dict)
         )
     else:
         return False
@@ -5738,6 +5803,11 @@ def _mc_sim_bloc(numero, exercice):
     """
     if not st.session_state.get("eleve_id") or not st.session_state.get("code_actuel"):
         return
+    a_nettoyer = st.session_state.pop("_mc_sim_widget_a_nettoyer", None)
+    if isinstance(a_nettoyer, str) and a_nettoyer.startswith("mc_sim_"):
+        for cle in list(st.session_state):
+            if isinstance(cle, str) and cle.startswith(a_nettoyer):
+                del st.session_state[cle]
     disponibles = _mc_sim_modele_supporte(exercice)
     variantes = _mc_sim_variantes()
     existantes = variantes.get(str(numero), [])
@@ -5783,6 +5853,46 @@ def _mc_sim_bloc(numero, exercice):
             else:
                 _mc_sim_afficher_variante(numero, variante)
 
+        # Suppression sûre : seulement le dernier exercice supplémentaire,
+        # sans renuméroter les précédents ni toucher au score initial.
+        if existantes and isinstance(existantes[-1], dict):
+            dernier_id = str(existantes[-1].get("identifiant", ""))
+            cle_confirmation = _mc_sim_cle_widget(f"origine_{numero}", "confirmation_suppression")
+            if st.button(
+                f"Supprimer l'exercice {dernier_id}",
+                key=_mc_sim_cle_widget(dernier_id, "demander_suppression"),
+                type="tertiary",
+            ):
+                st.session_state[cle_confirmation] = dernier_id
+                st.rerun(scope="fragment")
+            if st.session_state.get(cle_confirmation) == dernier_id:
+                st.caption(
+                    f"Supprimer définitivement l'exercice {dernier_id} et ses réponses ? "
+                    "Les exercices précédents seront conservés."
+                )
+                col_oui, col_non = st.columns([1, 1], gap="small")
+                with col_oui:
+                    confirmer = st.button(
+                        "Oui, supprimer",
+                        key=_mc_sim_cle_widget(dernier_id, "confirmer_suppression"),
+                    )
+                with col_non:
+                    annuler = st.button(
+                        "Annuler",
+                        key=_mc_sim_cle_widget(dernier_id, "annuler_suppression"),
+                    )
+                if annuler:
+                    st.session_state.pop(cle_confirmation, None)
+                    st.rerun(scope="fragment")
+                if confirmer:
+                    if _mc_sim_supprimer_derniere(numero, dernier_id):
+                        st.session_state.pop(cle_confirmation, None)
+                        st.session_state["_mc_sim_widget_a_nettoyer"] = _mc_sim_cle_widget(dernier_id)
+                        st.toast(f"Exercice {dernier_id} supprimé.", duration=3)
+                        st.rerun(scope="fragment")
+                    else:
+                        st.error("Suppression non enregistrée. Rien n'a été retiré.")
+
         if not disponibles:
             st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
             return
@@ -5807,25 +5917,6 @@ def _mc_sim_bloc(numero, exercice):
             else:
                 st.caption("Termine d'abord cet exercice similaire pour en demander un autre.")
             return
-
-        # Un problème peut comprendre une expression libre non notée.
-        # Informer l'élève sans bloquer le nouvel exercice similaire :
-        # la réussite automatique ne vaut pas validation de cette expression.
-        if existantes:
-            dernier = existantes[-1]
-            champs_libres = [
-                c for c in (dernier.get("exercice", {}).get("champs_reponse") or [])
-                if isinstance(c, dict) and c.get("type") == "texte_libre"
-            ]
-            saisies = (dernier.get("reponse") or {}).get("champs") or {}
-            if champs_libres and any(
-                not str(saisies.get(c.get("id"), "")).strip()
-                for c in champs_libres
-            ):
-                st.caption(
-                    "La réponse rédigée reste à compléter ou à comparer à la "
-                    "correction : elle n'est pas notée automatiquement."
-                )
 
         # Message adapté au dernier travail vérifié : exercice principal s'il
         # n'existe aucune variante, sinon la dernière variante (1a, 1b...).
@@ -7582,7 +7673,7 @@ def _mathicap_afficher_serie_et_reponses():
                                     saisie = st.session_state.get(cle, "")
     
                                     if saisie in ("", "Choisir..."):
-                                        st.warning(f"{champ['libelle']} : réponse manquante.")
+                                        _mc_afficher_retour_question(champ['libelle'], None)
                                         continue
     
                                     if champ["type"] == "nombre":
@@ -7629,19 +7720,18 @@ def _mathicap_afficher_serie_et_reponses():
     
                                         if calculs_corrects:
                                             bonnes_reponses += 1
-                                            st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+                                            _mc_afficher_retour_question(champ['libelle'], True)
                                         else:
-                                            st.markdown(
-                                                ":orange[⚠ Bon choix, mais certains calculs sont faux "
-                                                "ou incomplets. Vérifie-les.]"
+                                            _mc_afficher_retour_question(
+                                                champ['libelle'], "choix_justification"
                                             )
     
                                     elif correcte:
                                         bonnes_reponses += 1
-                                        st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+                                        _mc_afficher_retour_question(champ['libelle'], True)
     
                                     else:
-                                        st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
+                                        _mc_afficher_retour_question(champ['libelle'], False)
                                 code = st.session_state.get("code_actuel")
     
                                 if code and st.session_state.get("eleve_id"):
@@ -7694,8 +7784,8 @@ def _mathicap_afficher_serie_et_reponses():
                                 nb_bonnes = bilan.get("bonnes", 0)
                                 accord = "bonne réponse" if nb_bonnes == 1 else "bonnes réponses"
                                 st.markdown(
-                                    f"**{intitulé} : {nb_bonnes} {accord} "
-                                    f"sur {bilan.get('total', 0)}**"
+                                    f"{intitulé} : {nb_bonnes} {accord} "
+                                    f"sur {bilan.get('total', 0)}"
                                 )    
                     else:
                         with st.container(key=f"mathicap_reponse_texte_libre_{numero}"):
