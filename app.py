@@ -2803,14 +2803,14 @@ st.markdown("""
 [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
 .st-key-mathicap_zone_exercices_affichage
 [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-    min-height: 12px !important;
-    height: 12px !important;
+    min-height: 34px !important;
+    height: 34px !important;
     box-sizing: border-box !important;
 }
 .st-key-mathicap_zone_exercices_affichage
 [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
     min-height: 0 !important;
-    height: 10px !important;
+    height: 32px !important;
     padding-top: 4px !important;
     padding-bottom: 4px !important;
     box-sizing: border-box !important;
@@ -2828,12 +2828,12 @@ st.markdown("""
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-        min-height: 32px !important;
+        min-height: 40px !important;
         height: 32px !important;
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
-        height: 30px !important;
+        height: 38px !important;
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
