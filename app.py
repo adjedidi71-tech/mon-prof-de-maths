@@ -2802,7 +2802,7 @@ st.markdown("""
 .st-key-mathicap_zone_exercices_affichage
 [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
 .st-key-mathicap_zone_exercices_affichage
-[class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+[class*="st-key-mc_exercice_famille_"] [data-testid="stTextInputRootElement"] > div {
     min-height: 34px !important;
     height: 34px !important;
     box-sizing: border-box !important;
@@ -2825,7 +2825,7 @@ st.markdown("""
 /* Eviter de reduire excessivement la zone tactile sur smartphone. */
 @media (max-width: 767px) {
     .st-key-mathicap_zone_exercices_affichage
-    [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
+    [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInputRootElement"],
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
         min-height: 40px !important;
