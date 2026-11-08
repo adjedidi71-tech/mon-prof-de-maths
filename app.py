@@ -5782,6 +5782,49 @@ def _mc_sim_supprimer_derniere(numero, identifiant):
     return _mc_sim_ecrire_variantes(variantes)
 
 
+def _mc_sim_valeur_renseignee(valeur):
+    """Une réponse numérique 0 est valide ; un choix non effectué ne l'est pas."""
+    return (valeur is not None
+            and str(valeur).strip() not in ("", "Choisir...", "Choisir…"))
+
+
+def _mc_sim_original_termine(numero, exercice):
+    """Autoriser 1a uniquement après saisie COMPLÈTE et vérification de 1.
+
+    La rédaction libre n'entre pas dans les questions corrigées automatiquement.
+    Le résultat peut être faux : l'entraînement similaire sert aussi à progresser.
+    """
+    if not isinstance(exercice, dict):
+        return False
+    version = st.session_state.get("serie_version", 0)
+    champs = exercice.get("champs_reponse") or []
+    evaluables = [
+        champ for champ in champs
+        if isinstance(champ, dict) and champ.get("type") != "texte_libre"
+    ]
+    if exercice.get("reponse_attendue") is not None:
+        rempli = _mc_sim_valeur_renseignee(
+            st.session_state.get(f"reponse_{version}_{numero}")
+        )
+        questions_attendues = 1
+    elif evaluables:
+        rempli = all(
+            _mc_sim_valeur_renseignee(st.session_state.get(
+                f"banque_{version}_{numero}_{champ['id']}"
+            ))
+            for champ in evaluables
+        )
+        questions_attendues = len(evaluables)
+    else:
+        # Aucun champ évaluable : une rédaction libre ne peut pas être vérifiée
+        # automatiquement. Ne pas la faire passer pour une réponse corrigée.
+        return False
+
+    bilan = _mc_sim_premier_bilan_original(numero)
+    return bool(rempli and isinstance(bilan, dict)
+                and bilan.get("total") == questions_attendues)
+
+
 def _mc_sim_termine(variante):
     """Ne propose pas 2b tant que 2a n'a pas reçu ses réponses et sa vérification."""
     if not isinstance(variante, dict):
@@ -5791,7 +5834,7 @@ def _mc_sim_termine(variante):
         return False
     if reponse.get("type") in ("simple", "texte"):
         valeur = reponse.get("valeur")
-        rempli = valeur is not None and str(valeur).strip() != ""
+        rempli = _mc_sim_valeur_renseignee(valeur)
     elif reponse.get("type") == "banque":
         champs = variante.get("exercice", {}).get("champs_reponse") or []
         valeurs = reponse.get("champs") or {}
@@ -5803,7 +5846,7 @@ def _mc_sim_termine(variante):
         ]
         controles = evaluables or [c for c in champs if isinstance(c, dict)]
         rempli = bool(controles) and all(
-            str(valeurs.get(c.get("id"), "")).strip() not in ("", "Choisir...")
+            _mc_sim_valeur_renseignee(valeurs.get(c.get("id")))
             for c in controles
         )
     else:
@@ -5920,25 +5963,24 @@ def _mc_sim_bloc(numero, exercice):
             st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
             return
 
-        dernier_termine = not existantes or _mc_sim_termine(existantes[-1])
+        dernier_termine = (
+            _mc_sim_termine(existantes[-1])
+            if existantes else _mc_sim_original_termine(numero, exercice)
+        )
+        if not existantes and not dernier_termine:
+            st.caption(
+                "Renseigne toutes les réponses et vérifie cet exercice "
+                "avant de demander un exercice similaire. "
+                "Les réponses rédigées ne sont pas obligatoires pour le moment."
+            )
+            return
         if existantes and not dernier_termine:
-            # Lors d'un problème long, les réponses numériques peuvent être
-            # vérifiées tandis qu'une expression rédigée reste vide.
-            dernier = existantes[-1]
-            champs = dernier.get("exercice", {}).get("champs_reponse") or []
-            saisies = (dernier.get("reponse") or {}).get("champs") or {}
-            libres_manquants = [
-                c.get("libelle", "Réponse rédigée") for c in champs
-                if isinstance(c, dict) and c.get("type") == "texte_libre"
-                and not str(saisies.get(c.get("id"), "")).strip()
-            ]
-            if libres_manquants:
-                st.caption(
-                    "Complète aussi la réponse rédigée avant de demander "
-                    "un autre exercice similaire."
-                )
-            else:
-                st.caption("Termine d'abord cet exercice similaire pour en demander un autre.")
+            # Le texte libre reste facultatif ; la vérification de toutes les
+            # réponses évaluables détermine seule le déblocage de la suite.
+            st.caption(
+                "Renseigne toutes les réponses évaluables et vérifie cet "
+                "exercice similaire avant d'en demander un autre."
+            )
             return
 
         # Message adapté au dernier travail vérifié : exercice principal s'il
@@ -5964,7 +6006,12 @@ def _mc_sim_bloc(numero, exercice):
             key=_mc_sim_cle_widget(f"origine_{numero}", "generer"),
             type="secondary",
         ):
-            if _mc_sim_cache_reponses() is None:
+            # Recontrôler juste avant l'écriture : aucun exercice similaire ne
+            # peut être créé si la dernière étape n'est pas réellement finie.
+            if not (_mc_sim_termine(existantes[-1]) if existantes
+                    else _mc_sim_original_termine(numero, exercice)):
+                st.warning("Termine et vérifie toutes les réponses évaluables d'abord.")
+            elif _mc_sim_cache_reponses() is None:
                 st.error("Connexion à la série indisponible. Actualise la page.")
             else:
                 enonces = {str(exercice.get("enonce", "")).strip()}
