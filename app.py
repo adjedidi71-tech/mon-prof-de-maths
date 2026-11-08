@@ -5685,6 +5685,33 @@ def _mc_afficher_retour_question(libelle, statut):
     )
 
 
+
+def _mc_afficher_bilan_uniforme(bilan, *, reponse_redigee=False):
+    """Affichage unique du bilan, pour exercice initial et variantes.
+
+    Ne recalcule ni ne modifie les réponses, le score ou leur sauvegarde.
+    """
+    if not isinstance(bilan, dict):
+        return
+    try:
+        bonnes = int(bilan.get("bonnes", 0))
+        total = int(bilan.get("total", 0))
+    except (TypeError, ValueError):
+        return
+    if total <= 0:
+        return
+    accord = "bonne réponse" if bonnes == 1 else "bonnes réponses"
+    message = f"Résultat : {bonnes} {accord} sur {total}"
+    if bonnes < total:
+        message += ". Tu peux réessayer."
+    couleur = "#16803c" if bonnes == total else "#17609c"
+    st.markdown(
+        f'<span style="color:{couleur};font-weight:500">{message}</span>',
+        unsafe_allow_html=True,
+    )
+    if reponse_redigee:
+        st.caption("La réponse rédigée n'est pas évaluée automatiquement.")
+
 def _mc_sim_premier_bilan_original(numero):
     """Adaptation du message sans altérer le score initial."""
     version = st.session_state.get("serie_version", 0)
@@ -6006,21 +6033,13 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True, derniere=Fa
                     with st.container(key=f"mc_sim_details_{identifiant}"):
                         for libelle, correcte in _mc_sim_statuts_par_question(exercice, reponse):
                             _mc_afficher_retour_question(libelle, correcte)
-                if bonnes == total:
-                    champs_libres = [
-                        c for c in (exercice.get("champs_reponse") or [])
-                        if isinstance(c, dict) and c.get("type") == "texte_libre"
-                    ]
-                    if champs_libres:
-                        st.success(f"{bonnes} réponses corrigées automatiquement sur {total} : toutes correctes.")
-                        st.caption("La réponse rédigée reste à comparer à la correction : elle n'est pas notée automatiquement.")
-                    else:
-                        st.success("Bonne réponse !" if total == 1 else "Toutes les réponses sont correctes.")
-                elif total == 1:
-                    st.info("Réponse incorrecte. Tu peux réessayer.")
-                else:
-                    mot = "bonne réponse" if bonnes == 1 else "bonnes réponses"
-                    st.info(f"{bonnes} {mot} sur {total}. Tu peux réessayer.")
+                _mc_afficher_bilan_uniforme(
+                    bilan,
+                    reponse_redigee=any(
+                        isinstance(c, dict) and c.get("type") == "texte_libre"
+                        for c in (exercice.get("champs_reponse") or [])
+                    ),
+                )
         # Une correction reste masquée, y compris quand la variante devient
         # un exercice antérieur replié après la création de 2b/3b…
         if _mc_correction_deployable(identifiant):
@@ -7854,16 +7873,9 @@ def _mathicap_afficher_serie_et_reponses():
                                             st.error("Le résultat n'a pas pu être enregistré.")
                                     except Exception:
                                         st.error("Le résultat n'a pas pu être enregistré.")
-                                if correcte:
-                                    st.success("Bonne réponse !", width=500)
-                                else:
-                                    st.error("Réponse incorrecte. Essaie encore.")
+                                _mc_afficher_bilan_uniforme(bilan_simple)
                         elif isinstance(st.session_state.get(cle_bilan_simple), dict):
-                            dernier = st.session_state[cle_bilan_simple]
-                            st.caption(
-                                "Dernière vérification : "
-                                + ("Bonne réponse" if dernier.get("bonnes") else "Réponse incorrecte")
-                            )
+                            _mc_afficher_bilan_uniforme(st.session_state[cle_bilan_simple])
                     elif exercice.get("champs_reponse"):        
                         champs = exercice["champs_reponse"]
                         division_euclidienne = (
@@ -8122,16 +8134,13 @@ def _mathicap_afficher_serie_et_reponses():
                                         exercice, reponses_visibles
                                     ):
                                         _mc_afficher_retour_question(libelle, statut)
-                                intitulé = (
-                                    "Résultat" if verification_effectuee
-                                    else "Dernier bilan enregistré"
+                                _mc_afficher_bilan_uniforme(
+                                    bilan,
+                                    reponse_redigee=any(
+                                        isinstance(c, dict) and c.get("type") == "texte_libre"
+                                        for c in exercice["champs_reponse"]
+                                    ),
                                 )
-                                nb_bonnes = bilan.get("bonnes", 0)
-                                accord = "bonne réponse" if nb_bonnes == 1 else "bonnes réponses"
-                                st.markdown(
-                                    f"{intitulé} : {nb_bonnes} {accord} "
-                                    f"sur {bilan.get('total', 0)}"
-                                )    
                     else:
                         with st.container(key=f"mathicap_reponse_texte_libre_{numero}"):
                             st.text_area(
