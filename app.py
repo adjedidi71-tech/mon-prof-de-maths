@@ -5391,8 +5391,20 @@ _MC_SIM_MODELES = {
 }
 
 
+def _mc_sim_limite(exercice):
+    """Limite par exercice initial, fondée sur son niveau ENREGISTRÉ.
+
+    Indépendante des réglages du formulaire qui préparent la prochaine série.
+    Une métadonnée absente ou invalide n'autorise aucune nouvelle variante.
+    """
+    niveau = exercice.get("mathicap_niveau") if isinstance(exercice, dict) else None
+    if type(niveau) is not int or not 1 <= niveau <= 9:
+        return 0
+    return 4 if niveau <= 6 else 2
+
+
 def _mc_sim_suffixe(indice):
-    """0 → a, 25 → z, 26 → aa ; pas de limite arbitraire d'entraînement."""
+    """0 → a, 25 → z, 26 → aa ; les limites sont contrôlées à la génération."""
     if type(indice) is not int or indice < 0:
         raise ValueError("Indice de variante invalide")
     lettres = ""
@@ -6175,6 +6187,17 @@ def _mc_sim_bloc(numero, exercice):
             st.caption("Exercices similaires disponibles pour les modèles vérifiés du chapitre 1. Les séries anciennes sans notion identifiée restent inchangées.")
             return
 
+        limite = _mc_sim_limite(exercice)
+        if len(existantes) >= limite:
+            # Ne pas masquer ni supprimer les variantes historiques dépassant
+            # éventuellement la nouvelle limite : elles restent consultables.
+            st.caption(
+                f"Limite atteinte : {limite} exercices similaires maximum "
+                "pour cet exercice. Tu peux passer à la suite ou supprimer "
+                "la dernière variante pour en essayer une autre."
+            )
+            return
+
         dernier_termine = (
             _mc_sim_termine(existantes[-1])
             if existantes else _mc_sim_original_termine(numero, exercice)
@@ -6220,8 +6243,14 @@ def _mc_sim_bloc(numero, exercice):
         ):
             # Recontrôler juste avant l'écriture : aucun exercice similaire ne
             # peut être créé si la dernière étape n'est pas réellement finie.
-            if not (_mc_sim_termine(existantes[-1]) if existantes
-                    else _mc_sim_original_termine(numero, exercice)):
+            variantes_actuelles = _mc_sim_variantes()
+            groupe_actuel = variantes_actuelles.get(str(numero), [])
+            if not isinstance(groupe_actuel, list):
+                st.error("Historique des exercices similaires invalide : aucune création.")
+            elif len(groupe_actuel) >= _mc_sim_limite(exercice):
+                st.info("Limite d'exercices similaires atteinte pour ce niveau.")
+            elif not (_mc_sim_termine(existantes[-1]) if existantes
+                      else _mc_sim_original_termine(numero, exercice)):
                 st.warning("Termine et vérifie toutes les réponses évaluables d'abord.")
             elif _mc_sim_cache_reponses() is None:
                 st.error("Connexion à la série indisponible. Actualise la page.")
@@ -6236,7 +6265,7 @@ def _mc_sim_bloc(numero, exercice):
                     st.info("Impossible de produire une variante suffisamment différente pour le moment.")
                 else:
                     identifiant = f"{numero}{_mc_sim_suffixe(len(existantes))}"
-                    copie = deepcopy(variantes)
+                    copie = deepcopy(variantes_actuelles)
                     copie.setdefault(str(numero), []).append({
                         "identifiant": identifiant,
                         "exercice": nouvel,
