@@ -2697,6 +2697,42 @@ st.markdown("""
         margin-bottom: 6px !important;
     }
 }
+
+/* Finitions PC/mobile : largeur unique des réglages, bandeau et exercices. */
+@media (min-width: 768px) {
+    .mc-exos-hero,
+    .st-key-mathicap_reglages_exercices,
+    .st-key-mathicap_zone_exercices_affichage {
+        width: 100% !important;
+        max-width: 820px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+    }
+}
+@media (max-width: 767px) {
+    .mc-exos-hero,
+    .st-key-mathicap_reglages_exercices,
+    .st-key-mathicap_zone_exercices_affichage {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+}
+/* Les sous-réponses sont regroupées par numéro de question, sans modifier les widgets. */
+.st-key-mathicap_zone_exercices_affichage .mc-sous-question-titre {
+    color: #244a76;
+    font-size: .96rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 12px 0 3px !important;
+    padding: 0;
+}
+@media (max-width: 640px) {
+    .st-key-mathicap_zone_exercices_affichage .mc-sous-question-titre {
+        margin-top: 11px !important;
+        font-size: .94rem;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -5616,6 +5652,15 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
             if division_euclidienne:
                 colonnes_division = st.columns([1.0, 1.0], gap="small", wrap=False)
 
+            # Regrouper visuellement les sous-réponses d'une même question
+            # sans changer leur clé ni leur mode d'enregistrement.
+            comptes_questions = {}
+            for element in champs:
+                numero_question = str(element.get("question", ""))
+                comptes_questions[numero_question] = comptes_questions.get(numero_question, 0) + 1
+            questions_groupees = {
+                q for q, n in comptes_questions.items() if n > 1 and q
+            }
             for index, champ in enumerate(champs):
                 cle = _mc_sim_cle_widget(identifiant, champ["id"])
                 if cle not in st.session_state:
@@ -5625,7 +5670,16 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
                     ):
                         valeur = "Choisir..."
                     st.session_state[cle] = valeur
-                etiquette = f"Question {champ.get('question', '')} — {champ.get('libelle', 'Réponse')}"
+                numero_question = str(champ.get("question", ""))
+                if not est_distributivite and not division_euclidienne and numero_question in questions_groupees:
+                    if index == 0 or str(champs[index - 1].get("question", "")) != numero_question:
+                        st.markdown(
+                            f'<div class="mc-sous-question-titre">Question {escape(numero_question)}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    etiquette = str(champ.get("libelle", "Réponse"))
+                else:
+                    etiquette = f"Question {champ.get('question', '')} — {champ.get('libelle', 'Réponse')}"
                 callback = _mc_sim_mettre_a_jour_reponse
                 arguments = (numero, identifiant)
                 if champ.get("type") == "nombre":
@@ -5669,6 +5723,7 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
                             etiquette, height=90, key=cle,
                             on_change=callback, args=arguments,
                         )
+                    st.caption("Réponse rédigée · non notée automatiquement")
         else:
             cle = _mc_sim_cle_widget(identifiant, "texte")
             if cle not in st.session_state:
@@ -7641,11 +7696,24 @@ def _mathicap_afficher_serie_et_reponses():
                                 wrap=False
                             )
 
+                        comptes_questions = {}
+                        for element in champs:
+                            numero_question = str(element.get("question", ""))
+                            comptes_questions[numero_question] = comptes_questions.get(numero_question, 0) + 1
+                        questions_groupees = {
+                            q for q, n in comptes_questions.items() if n > 1 and q
+                        }
                         for index, champ in enumerate(champs):
-                            etiquette = (
-                                f"Question {champ['question']} — "
-                                f"{champ['libelle']}"
-                            )
+                            numero_question = str(champ.get("question", ""))
+                            if not est_distributivite and not division_euclidienne and numero_question in questions_groupees:
+                                if index == 0 or str(champs[index - 1].get("question", "")) != numero_question:
+                                    st.markdown(
+                                        f'<div class="mc-sous-question-titre">Question {escape(numero_question)}</div>',
+                                        unsafe_allow_html=True,
+                                    )
+                                etiquette = str(champ["libelle"])
+                            else:
+                                etiquette = f"Question {champ['question']} — {champ['libelle']}"
                             cle = (
                                 f"banque_{st.session_state.get('serie_version', 0)}"
                                 f"_{numero}_{champ['id']}"
@@ -7726,6 +7794,7 @@ def _mathicap_afficher_serie_et_reponses():
                                         on_change=enregistrer_reponses_banque_auto,
                                         args=(numero,)
                                     )
+                                st.caption("Réponse rédigée · non notée automatiquement")
 
                         with st.container(key=f"mc_original_controle_{numero}"):
                             version_banque = st.session_state.get('serie_version', 0)
