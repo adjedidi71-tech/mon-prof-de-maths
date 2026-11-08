@@ -400,7 +400,8 @@ st.markdown("""
 /* En-tête : les trois boutons ont de vraies zones de clic. */
 .st-key-mathicap_zone_profil {
     position: relative !important;
-    transform: translateY(-30px) !important;
+    /* Plus de décalage vertical indépendant : le profil suit la grille d'en-tête. */
+    transform: none !important;
     width: calc(var(--mc-avatar) + var(--mc-ico) + var(--mc-ico-gap)) !important;
     min-width: calc(var(--mc-avatar) + var(--mc-ico) + var(--mc-ico-gap)) !important;
 }
@@ -459,6 +460,8 @@ st.markdown("""
     --mc-ico: 40px;
     --mc-avatar: 52px;
     --mc-ico-gap: 18px;
+    /* Écart entre la loupe et la cloche : centres équilibrés avec l'avatar. */
+    --mc-header-icon-gap: 24px;
     --mc-statut: 14px;
     --mc-btn-h: 32px;
     --mc-btn-fs: 13px;
@@ -471,7 +474,7 @@ st.markdown("""
         minmax(0, clamp(180px, calc(100vw - 430px), 320px))
         auto !important;
     align-items: start !important;
-    column-gap: 12px !important;
+    column-gap: var(--mc-header-icon-gap) !important;
     row-gap: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -589,14 +592,17 @@ st.markdown("""
 }
 
 /* Zone compte : tout aligné à droite */
+/* Les blocs CSS invisibles précédant les boutons ne doivent pas
+   introduire une hauteur variable avec le zoom de Chrome. */
 .st-key-mathicap_zone_profil [data-testid="stVerticalBlock"] {
-    gap: 12px !important;
+    gap: 0 !important;
     align-items: flex-end !important;
 }
 
 .st-key-mathicap_zone_profil .mathicap-connecte {
     display: block !important;
     padding-bottom: 6px !important;
+    margin-top: 6px !important;
 }
 
 .st-key-mathicap_zone_profil [data-testid="stElementContainer"] {
@@ -651,6 +657,16 @@ st.markdown("""
     min-width: var(--mc-ico) !important;
     height: var(--mc-ico) !important;
     margin: 0 !important;
+}
+/* Priorité sur la règle générique des boutons du compte plus bas. */
+.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic [data-testid="stButton"] button {
+    width: var(--mc-ico) !important;
+    min-width: var(--mc-ico) !important;
+    max-width: var(--mc-ico) !important;
+    height: var(--mc-ico) !important;
+    min-height: var(--mc-ico) !important;
+    max-height: var(--mc-ico) !important;
+    padding: 0 !important;
 }
 .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic button {
     position: relative !important;
@@ -768,6 +784,7 @@ st.markdown("""
         --mc-ico: 38px;
         --mc-avatar: 48px;
         --mc-ico-gap: 14px;
+        --mc-header-icon-gap: 19px;
     }
 }
 
@@ -778,10 +795,11 @@ st.markdown("""
         --mc-ico: 32px;
         --mc-avatar: 40px;
         --mc-ico-gap: 8px;
+        --mc-header-icon-gap: 12px;
         --mc-statut: 12px;
         --mc-btn-h: 28px;
         --mc-btn-fs: 11px;
-        column-gap: 8px !important;
+        column-gap: var(--mc-header-icon-gap) !important;
     }
 }
 
@@ -792,6 +810,7 @@ st.markdown("""
         --mc-ico: 28px;
         --mc-avatar: 38px;
         --mc-ico-gap: 6px;
+        --mc-header-icon-gap: 11px;
         --mc-statut: 11px;
         --mc-btn-h: 26px;
         --mc-btn-fs: 10.5px;
@@ -891,7 +910,8 @@ st.markdown("""
     width: min(320px, 100%) !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    margin: 9px 0 0 !important;
+    /* Loupe de 40px centrée verticalement sur l'avatar de 52px. */
+    margin: 6px 0 0 !important;
     padding: 0 !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stForm"] {
@@ -1046,18 +1066,13 @@ st.markdown("""
         font-size: 13px !important;
     }
 }
-/* Position du profil : réglable indépendamment selon la largeur.
-   Sur mobile, -30px remplace l'ancien -50px demandé. */
-@media (max-width: 767px) {
-    .st-key-mathicap_zone_profil {
-        transform: translateY(-30px) !important;
-    }
+/* Même axe vertical, calculé selon le diamètre des boutons et non
+   selon le niveau de zoom ou le type d'appareil. */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .st-key-mathicap_barre_recherche { margin-top: 4px !important; }
 }
-/* En demi-écran PC, conserver la position du profil validee. */
-@media (min-width: 768px) and (max-width: 1100px) {
-    .st-key-mathicap_zone_profil {
-        transform: translateY(-30px) !important;
-    }
+@media (min-width: 621px) and (max-width: 767px) {
+    .st-key-mathicap_barre_recherche { margin-top: 0 !important; }
 }
 /* Profil : lisibilite du score de correction sur smartphone uniquement */
 @media (max-width: 767px) {
@@ -1784,7 +1799,8 @@ st.markdown("""
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) 36px auto !important;
         grid-template-rows: auto !important;
-        gap: 8px !important;
+        column-gap: var(--mc-header-icon-gap) !important;
+        row-gap: 8px !important;
         align-items: start !important;
         position: relative !important;
         overflow: visible !important;
@@ -1819,8 +1835,8 @@ st.markdown("""
         --mc-recherche-bouton-w: 36px;
         width: 36px !important;
         max-width: 36px !important;
-        /* Rapproche son centre vertical de celui de la cloche. */
-        margin: 5px 0 0 !important;
+        /* Centre la loupe 36px sur l'avatar 40px (ou 38px). */
+        margin: 2px 0 0 !important;
         padding: 0 !important;
         position: static !important;
         overflow: visible !important;
@@ -2364,23 +2380,8 @@ st.markdown("""
 }
 
 
-/* Répartition harmonisée loupe – cloche – avatar, sans déplacer la zone profil. */
-.st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
-    transform: translateX(-7px) !important;
-}
-@media (max-width: 767px) {
-    .st-key-mathicap_zone_profil .st-key-mathicap_notifications_clic {
-        transform: translateX(-4px) !important;
-    }
-}
-
-/* Alignement de la loupe sur la cloche en demi-écran PC.
-   Ne modifie ni la position de l'avatar ni la version smartphone. */
-@media (min-width: 768px) and (max-width: 1100px) {
-    .st-key-mathicap_barre_recherche {
-        transform: translateY(-8px) !important;
-    }
-}
+/* Les trois icônes sont alignées par la grille et le même axe vertical.
+   Aucun translateX/translateY lié au zoom n'est nécessaire. */
 
 /* Chapitre et Sous-chapitre : deux colonnes seulement lorsqu'il y a un choix
    de sous-chapitre. Portée limitée à cette ligne de la page Exercices. */
