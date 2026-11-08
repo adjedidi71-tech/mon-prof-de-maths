@@ -2803,8 +2803,8 @@ st.markdown("""
 [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
 .st-key-mathicap_zone_exercices_affichage
 [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-    min-height: 36px !important;
-    height: 36px !important;
+    min-height: 32px !important;
+    height: 30px !important;
     box-sizing: border-box !important;
 }
 .st-key-mathicap_zone_exercices_affichage
@@ -2828,12 +2828,12 @@ st.markdown("""
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-        min-height: 42px !important;
-        height: 42px !important;
+        min-height: 38px !important;
+        height: 38px !important;
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
-        height: 40px !important;
+        height: 36px !important;
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
