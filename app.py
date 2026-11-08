@@ -2625,6 +2625,47 @@ st.markdown("""
         padding: 12px 12px !important;
     }
 }
+
+/* Bilan des problèmes : sans trait ni grand vide entre la vérification
+   et le résultat ; même rythme pour l'exercice initial et les variantes. */
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"]
+[class*="st-key-mc_sim_verification_"] {
+    margin-bottom: -5px !important;
+}
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"]
+[class*="st-key-mc_sim_verification_"] + [data-testid="stElementContainer"] {
+    margin-top: 0 !important;
+}
+/* Pas de ligne horizontale dans les bilans de vérification de problèmes. */
+.st-key-mathicap_zone_exercices_affichage
+[class*="st-key-mc_exercice_famille_"] [data-testid="stDivider"] {
+    display: none !important;
+}
+
+/* Vérification des exercices : espacement par bloc. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_original_controle_"],
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_controle_"] {
+    margin-top: -3px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_original_controle_"] [data-testid="stVerticalBlock"],
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_controle_"] [data-testid="stVerticalBlock"] {
+    gap: 5px !important;
+    row-gap: 5px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_details_"] [data-testid="stVerticalBlock"] {
+    gap: 3px !important;
+    row-gap: 3px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_original_controle_"] [data-testid="stMarkdownContainer"] p,
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_sim_controle_"] [data-testid="stMarkdownContainer"] p {
+    margin: 0 !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] hr,
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stDivider"] {
+    display: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -5371,6 +5412,51 @@ def _mc_sim_evaluer(exercice, reponse):
     return {"bonnes": bonnes, "total": total} if total else None
 
 
+def _mc_sim_statuts_par_question(exercice, reponse):
+    """Détail visuel des questions évaluables, sans changer le calcul du score.
+
+    Restitue la vérification à partir des réponses sauvegardées, y compris
+    après actualisation. Les réponses rédigées sont volontairement exclues.
+    """
+    champs = exercice.get("champs_reponse") or []
+    saisies = reponse.get("champs") if isinstance(reponse, dict) else None
+    if not isinstance(saisies, dict):
+        return []
+    details = []
+    for champ in champs:
+        if not isinstance(champ, dict) or champ.get("type") == "texte_libre":
+            continue
+        libelle = champ.get("libelle", "Question")
+        saisie = saisies.get(champ.get("id"))
+        if saisie is None or str(saisie).strip() in ("", "Choisir..."):
+            details.append((libelle, None))
+            continue
+        if champ.get("type") == "nombre":
+            try:
+                correcte = abs(float(str(saisie).replace(",", ".")) - float(champ["attendu"])) < 1e-6
+            except (TypeError, ValueError):
+                correcte = False
+        elif champ.get("type") == "choix":
+            correcte = saisie == champ.get("attendu")
+            if correcte:
+                for dep in champ.get("dependances", []):
+                    autre = next((c for c in champs if c.get("id") == dep), None)
+                    if autre and autre.get("type") == "nombre":
+                        try:
+                            correcte = abs(
+                                float(str(saisies.get(dep)).replace(",", "."))
+                                - float(autre["attendu"])
+                            ) < 1e-6
+                        except (TypeError, ValueError):
+                            correcte = False
+                    if not correcte:
+                        break
+        else:
+            correcte = saisie == champ.get("attendu")
+        details.append((libelle, correcte))
+    return details
+
+
 def _mc_sim_premier_bilan_original(numero):
     """Adaptation du message sans altérer le score initial."""
     version = st.session_state.get("serie_version", 0)
@@ -5537,52 +5623,67 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
             if isinstance(champ, dict) and champ.get("type") != "texte_libre"
         )
         une_seule_reponse = attendu_unique or questions_evaluables == 1
-        cle_btn = _mc_sim_cle_widget(identifiant, "verifier")
-        if st.button("Vérifier ma réponse" if une_seule_reponse else "Vérifier mes réponses", key=cle_btn):
-            donnees = _mc_sim_saisies(identifiant, exercice)
-            valeurs = ([donnees.get("valeur")]
-                      if donnees.get("type") != "banque" else
-                      list((donnees.get("champs") or {}).values()))
-            if not any(v is not None and str(v).strip() not in ("", "Choisir...") for v in valeurs):
-                st.warning("Saisis d'abord au moins une réponse.")
-            else:
-                nouveau_bilan = _mc_sim_evaluer(exercice, donnees)
-                if nouveau_bilan is None:
-                    # Réponse rédigée, corrigée manuellement : conserver la saisie.
-                    if _mc_sim_mettre_a_jour_reponse(numero, identifiant):
-                        # Le bouton de variante suivante est rendu AVANT cette vérification.
-                        # Relancer seulement le fragment pour réévaluer son état dès la
-                        # sauvegarde, sans réinitialiser la page ni ses réponses.
+        with st.container(key=f"mc_sim_controle_{identifiant}"):
+            cle_btn = _mc_sim_cle_widget(identifiant, "verifier")
+            with st.container(key=f"mc_sim_verification_{identifiant}"):
+                verifier_clique = st.button(
+                    "Vérifier ma réponse" if une_seule_reponse else "Vérifier mes réponses",
+                    key=cle_btn,
+                )
+            if verifier_clique:
+                donnees = _mc_sim_saisies(identifiant, exercice)
+                valeurs = ([donnees.get("valeur")]
+                          if donnees.get("type") != "banque" else
+                          list((donnees.get("champs") or {}).values()))
+                if not any(v is not None and str(v).strip() not in ("", "Choisir...") for v in valeurs):
+                    st.warning("Saisis d'abord au moins une réponse.")
+                else:
+                    nouveau_bilan = _mc_sim_evaluer(exercice, donnees)
+                    if nouveau_bilan is None:
+                        # Réponse rédigée, corrigée manuellement : conserver la saisie.
+                        if _mc_sim_mettre_a_jour_reponse(numero, identifiant):
+                            # Le bouton de variante suivante est rendu AVANT cette vérification.
+                            # Relancer seulement le fragment pour réévaluer son état dès la
+                            # sauvegarde, sans réinitialiser la page ni ses réponses.
+                            st.rerun(scope="fragment")
+                        else:
+                            st.error("Réponse non sauvegardée.")
+                    elif _mc_sim_mettre_a_jour_reponse(numero, identifiant, nouveau_bilan):
+                        # Retour visible même lorsque le fragment est relancé.
+                        st.toast("Réponses vérifiées et bilan enregistré.", duration=3)
                         st.rerun(scope="fragment")
                     else:
-                        st.error("Réponse non sauvegardée.")
-                elif _mc_sim_mettre_a_jour_reponse(numero, identifiant, nouveau_bilan):
-                    # Afficher immédiatement le bilan sauvegardé et débloquer 1b/2b...
-                    # même si la première réponse vérifiée était incorrecte.
-                    st.rerun(scope="fragment")
-                else:
-                    st.error("Vérification non sauvegardée. Réessaie.")
+                        st.error("Vérification non sauvegardée. Réessaie.")
 
-        # Résultat après le bouton de vérification, au singulier si nécessaire.
-        bilan = variante.get("bilan")
-        if isinstance(bilan, dict) and bilan.get("total", 0) > 0:
-            total = bilan["total"]
-            bonnes = bilan.get("bonnes", 0)
-            if bonnes == total:
-                champs_libres = [
-                    c for c in (exercice.get("champs_reponse") or [])
-                    if isinstance(c, dict) and c.get("type") == "texte_libre"
-                ]
-                if champs_libres:
-                    st.success(f"{bonnes} réponses corrigées automatiquement sur {total} : toutes correctes.")
-                    st.caption("La réponse rédigée reste à comparer à la correction : elle n'est pas notée automatiquement.")
+            # Le résultat reste visible après rerun et après actualisation.
+            bilan = variante.get("bilan")
+            if isinstance(bilan, dict) and bilan.get("total", 0) > 0:
+                total = bilan["total"]
+                bonnes = bilan.get("bonnes", 0)
+                if total > 1:
+                    with st.container(key=f"mc_sim_details_{identifiant}"):
+                        for libelle, correcte in _mc_sim_statuts_par_question(exercice, reponse):
+                            if correcte is True:
+                                st.markdown(f"✓ {libelle} : :green[Bonne réponse !]")
+                            elif correcte is False:
+                                st.markdown(f"✗ {libelle} : :red[Essaie encore.]")
+                            else:
+                                st.markdown(f"– {libelle} : :orange[Réponse manquante.]")
+                if bonnes == total:
+                    champs_libres = [
+                        c for c in (exercice.get("champs_reponse") or [])
+                        if isinstance(c, dict) and c.get("type") == "texte_libre"
+                    ]
+                    if champs_libres:
+                        st.success(f"{bonnes} réponses corrigées automatiquement sur {total} : toutes correctes.")
+                        st.caption("La réponse rédigée reste à comparer à la correction : elle n'est pas notée automatiquement.")
+                    else:
+                        st.success("Bonne réponse !" if total == 1 else "Toutes les réponses sont correctes.")
+                elif total == 1:
+                    st.info("Réponse incorrecte. Tu peux réessayer.")
                 else:
-                    st.success("Bonne réponse !" if total == 1 else "Toutes les réponses sont correctes.")
-            elif total == 1:
-                st.info("Réponse incorrecte. Tu peux réessayer.")
-            else:
-                mot = "bonne réponse" if bonnes == 1 else "bonnes réponses"
-                st.info(f"{bonnes} {mot} sur {total}. Tu peux réessayer.")
+                    mot = "bonne réponse" if bonnes == 1 else "bonnes réponses"
+                    st.info(f"{bonnes} {mot} sur {total}. Tu peux réessayer.")
         # Une correction reste masquée, y compris quand la variante devient
         # un exercice antérieur replié après la création de 2b/3b…
         if _mc_correction_deployable(identifiant):
@@ -7430,142 +7531,143 @@ def _mathicap_afficher_serie_et_reponses():
                                         args=(numero,)
                                     )
 
-                        if st.button(
-                            "Vérifier mes réponses",
-                            key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
-                        ):
-                            bonnes_reponses = 0
-                            total_reponses = sum(
-                                1 for champ in exercice["champs_reponse"]
-                                if champ["type"] != "texte_libre"
+                        with st.container(key=f"mc_original_controle_{numero}"):
+                            verification_effectuee = st.button(
+                                "Vérifier mes réponses",
+                                key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
                             )
-                            for champ in exercice["champs_reponse"]:
-                                if champ["type"] == "texte_libre":
-                                    continue
-    
-                                cle = (
-                                    f"banque_{st.session_state.get('serie_version', 0)}"
-                                    f"_{numero}_{champ['id']}"
+                            if verification_effectuee:
+                                bonnes_reponses = 0
+                                total_reponses = sum(
+                                    1 for champ in exercice["champs_reponse"]
+                                    if champ["type"] != "texte_libre"
                                 )
-                                saisie = st.session_state.get(cle, "")
-    
-                                if saisie in ("", "Choisir..."):
-                                    st.warning(f"{champ['libelle']} : réponse manquante.")
-                                    continue
-    
-                                if champ["type"] == "nombre":
-                                    try:
-                                        correcte = (
-                                            float(str(saisie).replace(",", "."))
-                                            == float(champ["attendu"])
-                                        )
-                                    except (ValueError, TypeError):
-                                        correcte = False
-                                else:
-                                    correcte = saisie == champ["attendu"]
-    
-                                if correcte and champ["type"] == "choix":
-                                    calculs_corrects = True
-                                    dependances = champ.get("dependances", [])
-
-                                    for autre in exercice["champs_reponse"]:
-                                        if autre["id"] not in dependances:
-                                            continue
-        
-                                        if autre["type"] != "nombre":
-                                            continue
-        
-                                        autre_cle = (
-                                            f"banque_{st.session_state.get('serie_version', 0)}"
-                                            f"_{numero}_{autre['id']}"
-                                        )
-        
-                                        valeur = st.session_state.get(autre_cle, "")
-        
-                                        try:
-                                            valeur_saisie = float(
-                                                str(valeur).replace(",", ".")
-                                            )
-                                            valeur_attendue = float(autre["attendu"])
-        
-                                            if abs(valeur_saisie - valeur_attendue) > 1e-6:
-                                                calculs_corrects = False
-        
-                                        except (ValueError, TypeError):
-                                            calculs_corrects = False
-
-    
-                                    if calculs_corrects:
-                                        bonnes_reponses += 1
-                                        st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
-                                    else:
-                                        st.markdown(
-                                            ":orange[⚠ Bon choix, mais certains calculs sont faux "
-                                            "ou incomplets. Vérifie-les.]"
-                                        )
-    
-                                elif correcte:
-                                    bonnes_reponses += 1
-                                    st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
-    
-                                else:
-                                    st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
-                            st.markdown("---")
-                            texte_score = (
-                                "bonne réponse" if bonnes_reponses == 1
-                                else "bonnes réponses"
-                            )
-                            st.markdown(
-                                f"**Résultat : {bonnes_reponses} "
-                                f"{texte_score} sur {total_reponses}**"
-                            )
-                            code = st.session_state.get("code_actuel")
-    
-                            if code and st.session_state.get("eleve_id"):
-                                reponses_banque = {}
-    
                                 for champ in exercice["champs_reponse"]:
+                                    if champ["type"] == "texte_libre":
+                                        continue
+    
                                     cle = (
                                         f"banque_{st.session_state.get('serie_version', 0)}"
                                         f"_{numero}_{champ['id']}"
                                     )
-                                    reponses_banque[champ["id"]] = st.session_state.get(cle, "")
+                                    saisie = st.session_state.get(cle, "")
     
-                                bilan_verifie = {
-                                    "bonnes": bonnes_reponses,
-                                    "total": total_reponses,
-                                }
-                                try:
-                                    confirme = sauvegarder_reponse(
-                                        code,
-                                        numero,
-                                        {
-                                            "type": "banque",
-                                            "champs": reponses_banque,
-                                            "bilan": bilan_verifie,
-                                        }
-                                    )
-                                    if confirme:
-                                        st.session_state[
-                                            f"bilan_banque_{st.session_state.get('serie_version', 0)}_{numero}"
-                                        ] = bilan_verifie
+                                    if saisie in ("", "Choisir..."):
+                                        st.warning(f"{champ['libelle']} : réponse manquante.")
+                                        continue
+    
+                                    if champ["type"] == "nombre":
+                                        try:
+                                            correcte = (
+                                                float(str(saisie).replace(",", "."))
+                                                == float(champ["attendu"])
+                                            )
+                                        except (ValueError, TypeError):
+                                            correcte = False
                                     else:
+                                        correcte = saisie == champ["attendu"]
+    
+                                    if correcte and champ["type"] == "choix":
+                                        calculs_corrects = True
+                                        dependances = champ.get("dependances", [])
+
+                                        for autre in exercice["champs_reponse"]:
+                                            if autre["id"] not in dependances:
+                                                continue
+        
+                                            if autre["type"] != "nombre":
+                                                continue
+        
+                                            autre_cle = (
+                                                f"banque_{st.session_state.get('serie_version', 0)}"
+                                                f"_{numero}_{autre['id']}"
+                                            )
+        
+                                            valeur = st.session_state.get(autre_cle, "")
+        
+                                            try:
+                                                valeur_saisie = float(
+                                                    str(valeur).replace(",", ".")
+                                                )
+                                                valeur_attendue = float(autre["attendu"])
+        
+                                                if abs(valeur_saisie - valeur_attendue) > 1e-6:
+                                                    calculs_corrects = False
+        
+                                            except (ValueError, TypeError):
+                                                calculs_corrects = False
+
+    
+                                        if calculs_corrects:
+                                            bonnes_reponses += 1
+                                            st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+                                        else:
+                                            st.markdown(
+                                                ":orange[⚠ Bon choix, mais certains calculs sont faux "
+                                                "ou incomplets. Vérifie-les.]"
+                                            )
+    
+                                    elif correcte:
+                                        bonnes_reponses += 1
+                                        st.markdown(f"✓ {champ['libelle']} : :green[Bonne réponse !]")
+    
+                                    else:
+                                        st.markdown(f"✗ {champ['libelle']} : :red[Essaie encore.]")
+                                code = st.session_state.get("code_actuel")
+    
+                                if code and st.session_state.get("eleve_id"):
+                                    reponses_banque = {}
+    
+                                    for champ in exercice["champs_reponse"]:
+                                        cle = (
+                                            f"banque_{st.session_state.get('serie_version', 0)}"
+                                            f"_{numero}_{champ['id']}"
+                                        )
+                                        reponses_banque[champ["id"]] = st.session_state.get(cle, "")
+    
+                                    bilan_verifie = {
+                                        "bonnes": bonnes_reponses,
+                                        "total": total_reponses,
+                                    }
+                                    try:
+                                        confirme = sauvegarder_reponse(
+                                            code,
+                                            numero,
+                                            {
+                                                "type": "banque",
+                                                "champs": reponses_banque,
+                                                "bilan": bilan_verifie,
+                                            }
+                                        )
+                                        if confirme:
+                                            st.session_state[
+                                                f"bilan_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+                                            ] = bilan_verifie
+                                        else:
+                                            st.error("Le bilan n'a pas pu être enregistré.")
+                                    except Exception:
                                         st.error("Le bilan n'a pas pu être enregistré.")
-                                except Exception:
-                                    st.error("Le bilan n'a pas pu être enregistré.")
-                        cle_bilan = (
-                            f"bilan_banque_{st.session_state.get('serie_version', 0)}"
-                            f"_{numero}"
-                        )
+                            cle_bilan = (
+                                f"bilan_banque_{st.session_state.get('serie_version', 0)}"
+                                f"_{numero}"
+                            )
     
-                        bilan = st.session_state.get(cle_bilan)
-    
-                        if isinstance(bilan, dict):
-                            st.markdown(
-                                f"**Dernier bilan enregistré : "
-                                f"{bilan['bonnes']} bonnes réponses "
-                                f"sur {bilan['total']}**"
-                            )    
+                            bilan = st.session_state.get(cle_bilan)
+                            if verification_effectuee:
+                                # Résultat visible même en cas d'échec de sauvegarde.
+                                bilan = {"bonnes": bonnes_reponses, "total": total_reponses}
+
+                            if isinstance(bilan, dict):
+                                intitulé = (
+                                    "Résultat" if verification_effectuee
+                                    else "Dernier bilan enregistré"
+                                )
+                                nb_bonnes = bilan.get("bonnes", 0)
+                                accord = "bonne réponse" if nb_bonnes == 1 else "bonnes réponses"
+                                st.markdown(
+                                    f"**{intitulé} : {nb_bonnes} {accord} "
+                                    f"sur {bilan.get('total', 0)}**"
+                                )    
                     else:
                         with st.container(key=f"mathicap_reponse_texte_libre_{numero}"):
                             st.text_area(
