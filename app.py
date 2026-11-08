@@ -459,7 +459,7 @@ st.markdown("""
     --mc-slogan: calc(var(--mc-brand-w) * 0.078);
     --mc-ico: 40px;
     --mc-avatar: 52px;
-    --mc-ico-gap: 18px;
+    --mc-ico-gap: 23px;
     /* Écart entre la loupe et la cloche : centres équilibrés avec l'avatar. */
     --mc-header-icon-gap: 24px;
     --mc-statut: 14px;
@@ -623,6 +623,14 @@ st.markdown("""
     min-width: 0 !important;
     overflow: visible !important;
 }
+/* Finition PC / demi-écran : faire coïncider les centres visuels de la
+   cloche et de l'avatar avec la loupe, sans déplacer le statut Connecté.
+   Le gap élargi ci-dessus déplace seulement la cloche vers la gauche. */
+@media (min-width: 768px) {
+    .st-key-mathicap_zone_profil .st-key-mathicap_icones_actions {
+        transform: translateY(-3px) !important;
+    }
+}
 .st-key-mathicap_zone_profil .st-key-mathicap_icones_actions [data-testid="stElementContainer"] {
     flex: 0 0 auto !important;
     width: auto !important;
@@ -783,7 +791,7 @@ st.markdown("""
         --mc-brand-w: 210px;
         --mc-ico: 38px;
         --mc-avatar: 48px;
-        --mc-ico-gap: 14px;
+        --mc-ico-gap: 19px;
         --mc-header-icon-gap: 19px;
     }
 }
