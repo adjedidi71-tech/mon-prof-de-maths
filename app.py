@@ -2374,6 +2374,14 @@ st.markdown("""
     }
 }
 
+/* Alignement de la loupe sur la cloche en demi-écran PC.
+   Ne modifie ni la position de l'avatar ni la version smartphone. */
+@media (min-width: 768px) and (max-width: 1100px) {
+    .st-key-mathicap_barre_recherche {
+        transform: translateY(-8px) !important;
+    }
+}
+
 /* Chapitre et Sous-chapitre : deux colonnes seulement lorsqu'il y a un choix
    de sous-chapitre. Portée limitée à cette ligne de la page Exercices. */
 .st-key-mathicap_ligne_chapitres [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
@@ -2535,7 +2543,7 @@ st.markdown("""
    Les anciennes variantes ouvertes n'ont pas de titre dupliqué. */
 .st-key-mathicap_zone_exercices_affichage .mc-sim-heading {
     display: block;
-    margin: 11px 0 5px !important;
+    margin: 8px 0 5px !important;
     padding: 0 !important;
     line-height: 1.4 !important;
     color: #213a58 !important;
@@ -2559,7 +2567,7 @@ st.markdown("""
 }
 @media (max-width: 640px) {
     .st-key-mathicap_zone_exercices_affichage .mc-sim-heading {
-        margin-top: 9px !important;
+        margin-top: 7px !important;
         margin-bottom: 5px !important;
         font-size: .94rem !important;
     }
@@ -2585,11 +2593,22 @@ st.markdown("""
     margin-block: 0 !important;
     justify-content: flex-start !important;
 }
-/* Les anciens essais restent repliables ; leur en-tête n'est pas collé
-   à l'exercice suivant. */
-.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [data-testid="stExpander"] summary {
-    min-height: 34px !important;
-    padding-block: 7px !important;
+/* Correctifs ciblés : rapprocher les commandes sans comprimer les
+   énoncés ou les champs. Concerne les familles d'exercices seulement. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_correction_bouton_"] {
+    margin-top: -7px !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_sim_"][class*="_historique_commande"] {
+    margin-top: -8px !important;
+}
+/* L'historique est maintenant un bouton natif à état explicite ; il reste
+   compact et consultable au clavier, sans bordure supplémentaire. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="_historique_commande"] button {
+    min-height: 31px !important;
+    padding: 3px 2px !important;
+    line-height: 1.3 !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
 }
 @media (max-width: 640px) {
     .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] {
@@ -5617,10 +5636,22 @@ def _mc_sim_bloc(numero, exercice):
                         etat = "À retravailler"
                     else:
                         etat = f"{n_bonnes}/{n_total} bonnes réponses"
-                with st.expander(
-                    f"Exercice {variante.get('identifiant', '')} — {etat} · Appuyer pour revoir",
-                    expanded=False,
-                ):
+                # Bouton à état explicite : contrairement à st.expander,
+                # le libellé reflète l'ouverture réelle après chaque clic.
+                # L'état est propre à la série et à la variante, sans
+                # incidence sur la sauvegarde ni le score de l'exercice.
+                cle_ouvert = _mc_sim_cle_widget(variante["identifiant"], "historique_ouvert")
+                ouvert = bool(st.session_state.get(cle_ouvert, False))
+                action = "Appuyer pour masquer" if ouvert else "Appuyer pour revoir"
+                fleche = "▾" if ouvert else "▸"
+                st.button(
+                    f"{fleche} Exercice {variante.get('identifiant', '')} — {etat} · {action}",
+                    key=_mc_sim_cle_widget(variante["identifiant"], "historique_commande"),
+                    type="tertiary",
+                    on_click=_mc_correction_basculer,
+                    args=(cle_ouvert,),
+                )
+                if ouvert:
                     _mc_sim_afficher_variante(numero, variante, afficher_titre=False)
             else:
                 _mc_sim_afficher_variante(numero, variante)
