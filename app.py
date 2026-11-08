@@ -21,7 +21,7 @@ from auth_persistante import (
     enregistrer_jeton_navigateur,
     lire_jeton_navigateur,
     verifier_session
-))
+)
 
 
 # Configuration avant l'affichage du composant navigateur (Streamlit v2).
