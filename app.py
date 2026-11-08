@@ -457,8 +457,9 @@ st.markdown("""
     --mc-brand-w: 250px;
     --mc-logo-w: var(--mc-brand-w);
     --mc-slogan: calc(var(--mc-brand-w) * 0.078);
+    /* Taille stable sur PC, même lorsque le zoom franchit 1024 px CSS. */
     --mc-ico: 40px;
-    --mc-avatar: 52px;
+    --mc-avatar: 48px;
     --mc-ico-gap: 23px;
     /* Écart entre la loupe et la cloche : centres équilibrés avec l'avatar. */
     --mc-header-icon-gap: 24px;
@@ -623,14 +624,8 @@ st.markdown("""
     min-width: 0 !important;
     overflow: visible !important;
 }
-/* Finition PC / demi-écran : faire coïncider les centres visuels de la
-   cloche et de l'avatar avec la loupe, sans déplacer le statut Connecté.
-   Le gap élargi ci-dessus déplace seulement la cloche vers la gauche. */
-@media (min-width: 768px) {
-    .st-key-mathicap_zone_profil .st-key-mathicap_icones_actions {
-        transform: translateY(-3px) !important;
-    }
-}
+/* Les boutons utilisent le même axe vertical : pas de translation
+   susceptible de créer un désalignement lors des changements de zoom. */
 .st-key-mathicap_zone_profil .st-key-mathicap_icones_actions [data-testid="stElementContainer"] {
     flex: 0 0 auto !important;
     width: auto !important;
@@ -789,7 +784,7 @@ st.markdown("""
 @media (max-width: 1024px) {
     [data-testid="stHorizontalBlock"]:has(.st-key-mathicap_logo_clic) {
         --mc-brand-w: 210px;
-        --mc-ico: 38px;
+        --mc-ico: 40px;
         --mc-avatar: 48px;
         --mc-ico-gap: 19px;
         --mc-header-icon-gap: 19px;
@@ -918,8 +913,8 @@ st.markdown("""
     width: min(320px, 100%) !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    /* Loupe de 40px centrée verticalement sur l'avatar de 52px. */
-    margin: 6px 0 0 !important;
+    /* Loupe 40px : (48 - 40) / 2 = 4px, alignée sur l'avatar PC. */
+    margin: 4px 0 0 !important;
     padding: 0 !important;
 }
 .st-key-mathicap_barre_recherche [data-testid="stForm"] {
