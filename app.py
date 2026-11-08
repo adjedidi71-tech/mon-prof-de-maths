@@ -3384,17 +3384,16 @@ with col_profil:
         _notifications_b64 = base64.b64encode(_svg_notifications.encode()).decode()
         # Image de fond directement sur le vrai bouton : meme approche
         # que le bouton-avatar, deja valide sur PC et smartphone.
-        st.markdown(
+        st.html(
             f"""<style>
             .st-key-mathicap_zone_profil
             .st-key-mathicap_notifications_clic button {{
                 background-image: url("data:image/svg+xml;base64,{_notifications_b64}") !important;
             }}
             </style>""",
-            unsafe_allow_html=True,
         )
         if _avatar_uri:
-            st.markdown(
+            st.html(
                 f"""
                 <style>
                 .st-key-mathicap_zone_profil
@@ -3406,12 +3405,11 @@ with col_profil:
                 }}
                 </style>
                 """,
-                unsafe_allow_html=True,
             )
         elif _avatar_mode == "galerie" and _avatar_choix in AVATARS_MATHICAP:
             _emoji, _, _couleur_fond = AVATARS_MATHICAP[_avatar_choix]
             # Emoji et couleur issus de la liste interne, non de texte libre.
-            st.markdown(
+            st.html(
                 f"""
                 <style>
                 .st-key-mathicap_zone_profil
@@ -3435,10 +3433,9 @@ with col_profil:
                 }}
                 </style>
                 """,
-                unsafe_allow_html=True,
             )
         elif _avatar_mode == "defaut" and _avatar_initiale:
-            st.markdown(
+            st.html(
                 f"""
                 <style>
                 .st-key-mathicap_zone_profil
@@ -3463,7 +3460,6 @@ with col_profil:
                 }}
                 </style>
                 """,
-                unsafe_allow_html=True,
             )
         # Deux véritables boutons voisins, dans le flux du document.
         # Résout la disparition de la cloche sur les écrans étroits.
