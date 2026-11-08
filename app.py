@@ -5704,9 +5704,19 @@ def _mc_sim_termine(variante):
     elif reponse.get("type") == "banque":
         champs = variante.get("exercice", {}).get("champs_reponse") or []
         valeurs = reponse.get("champs") or {}
-        rempli = bool(champs) and all(
+        # Une réponse rédigée ne possède pas de note automatique. Pour les
+        # problèmes mixtes, elle ne doit pas bloquer un nouvel entraînement
+        # lorsque toutes les questions évaluables ont été vérifiées.
+        evaluables = [
+            c for c in champs
+            if isinstance(c, dict) and c.get("type") != "texte_libre"
+        ]
+        a_renseigner = evaluables if evaluables else [
+            c for c in champs if isinstance(c, dict)
+        ]
+        rempli = bool(a_renseigner) and all(
             str(valeurs.get(c.get("id"), "")).strip() not in ("", "Choisir...")
-            for c in champs if isinstance(c, dict)
+            for c in a_renseigner
         )
     else:
         return False
@@ -5797,6 +5807,25 @@ def _mc_sim_bloc(numero, exercice):
             else:
                 st.caption("Termine d'abord cet exercice similaire pour en demander un autre.")
             return
+
+        # Un problème peut comprendre une expression libre non notée.
+        # Informer l'élève sans bloquer le nouvel exercice similaire :
+        # la réussite automatique ne vaut pas validation de cette expression.
+        if existantes:
+            dernier = existantes[-1]
+            champs_libres = [
+                c for c in (dernier.get("exercice", {}).get("champs_reponse") or [])
+                if isinstance(c, dict) and c.get("type") == "texte_libre"
+            ]
+            saisies = (dernier.get("reponse") or {}).get("champs") or {}
+            if champs_libres and any(
+                not str(saisies.get(c.get("id"), "")).strip()
+                for c in champs_libres
+            ):
+                st.caption(
+                    "La réponse rédigée reste à compléter ou à comparer à la "
+                    "correction : elle n'est pas notée automatiquement."
+                )
 
         # Message adapté au dernier travail vérifié : exercice principal s'il
         # n'existe aucune variante, sinon la dernière variante (1a, 1b...).
