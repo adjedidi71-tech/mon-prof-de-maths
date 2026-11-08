@@ -306,6 +306,7 @@ if st.session_state.get("eleve_id"):
 _mc_nav_auth_ms = round((time.perf_counter() - _mc_nav_debut) * 1000)
 
 from pathlib import Path
+from mathicap_diagnostic import MARQUEUR as _MC_DIAG_MARQUEUR, enregistrer_premier_evenement
 # EN-TÊTE MATHICAP + COMPTE ÉLÈVE
 # Remplacer l'ancien affichage du grand logo ET tout l'ancien bloc
 # « Mon compte élève » par ce code.
@@ -5267,7 +5268,7 @@ def sauvegarder_serie(exercices):
             "eleve_id": st.session_state.get("eleve_id"),
             "code_reprise": code,
             "exercices": exercices,
-            "reponses": {},
+            "reponses": {_MC_DIAG_MARQUEUR: True},
             "progression": 0
         }).execute()
         donnees = resultat.data or []
@@ -5276,7 +5277,7 @@ def sauvegarder_serie(exercices):
         st.session_state["serie_id_actuel"] = donnees[0].get("id")
         st.session_state.setdefault("_mathicap_reponses_cache", {})[(
             st.session_state["eleve_id"], code.upper()
-        )] = {}
+        )] = {_MC_DIAG_MARQUEUR: True}
         return code
     except Exception as e:
         raise RuntimeError(
@@ -5432,6 +5433,60 @@ def _mc_sim_cache_reponses():
         except Exception:
             return None
     return cache[cle]
+
+
+def _mc_diag_enregistrer(numero, evenement, exercice, reponses=None):
+    """Première action avant toute aide ; échec fermé pour les nouvelles séries.
+
+    Ne modifie JAMAIS le dernier bilan, les réponses ou les scores de MathiCap.
+    Les séries historiques ne sont pas requalifiées rétroactivement.
+    """
+    cache = _mc_sim_cache_reponses()
+    if cache is None and st.session_state.get("eleve_id") and st.session_state.get("code_actuel"):
+        st.session_state["mc_diag_erreur_premier_evenement"] = True
+        return False  # Impossible de savoir si la série est suivie : échec fermé.
+    if not isinstance(cache, dict) or cache.get(_MC_DIAG_MARQUEUR) is not True:
+        return True
+    try:
+        resultat = enregistrer_premier_evenement(
+            supabase_privee,
+            st.session_state.get("eleve_id"),
+            st.session_state.get("code_actuel"),
+            numero, evenement, exercice, reponses,
+        )
+        if isinstance(resultat, dict) and resultat.get("nouveau"):
+            if resultat.get("autonome"):
+                st.session_state["mc_diag_message_dernier"] = (
+                    "Premier résultat autonome conservé pour le futur diagnostic."
+                )
+            elif resultat.get("statut") == "correction":
+                st.session_state["mc_diag_message_dernier"] = (
+                    "Correction consultée : cette tentative ne sera pas comptée "
+                    "comme autonome."
+                )
+            else:
+                st.session_state["mc_diag_message_dernier"] = (
+                    "Vérification partielle : cette tentative ne sera pas "
+                    "comptée comme autonome."
+                )
+        return True
+    except Exception:
+        st.session_state["mc_diag_erreur_premier_evenement"] = True
+        return False
+
+
+def _mc_diag_bascule_correction(cle, identifiant):
+    """N'ouvre pas une correction neuve si sa consultation ne peut être tracée."""
+    if not st.session_state.get(cle, False) and identifiant.startswith("origine_"):
+        try:
+            numero = int(identifiant.split("_", 1)[1])
+            exercice = st.session_state.get("exercices_actuels", [])[numero - 1]
+        except (ValueError, IndexError, TypeError):
+            st.session_state["mc_diag_erreur_premier_evenement"] = True
+            return
+        if not _mc_diag_enregistrer(numero, "correction", exercice):
+            return
+    _mc_correction_basculer(cle)
 
 
 def _mc_sim_variantes():
@@ -5743,8 +5798,8 @@ def _mc_correction_deployable(identifiant):
         etiquette,
         key=f"mc_correction_bouton_{code}_{version}_{identifiant}",
         type="tertiary",
-        on_click=_mc_correction_basculer,
-        args=(cle,),
+        on_click=_mc_diag_bascule_correction,
+        args=(cle, identifiant),
     )
     return visible
 
@@ -7752,6 +7807,16 @@ if demande_generation:
 @st.fragment
 def _mathicap_afficher_serie_et_reponses():
     with st.container(key="mathicap_zone_exercices_affichage"):
+        if st.session_state.pop("mc_diag_erreur_premier_evenement", False):
+            st.error(
+                "Suivi pédagogique momentanément indisponible. "
+                "Pour protéger le premier résultat autonome, la vérification "
+                "ou l'ouverture de la correction n'a pas été effectuée. "
+                "Vérifie d'abord que le script SQL du projet 2 est installé."
+            )
+        message_diagnostic = st.session_state.pop("mc_diag_message_dernier", None)
+        if isinstance(message_diagnostic, str):
+            st.toast(message_diagnostic, duration=3)
         if st.session_state.pop("erreur_sauvegarde", False):
             st.error("Une réponse n'a pas pu être enregistrée. Vérifie ta connexion avant de quitter cette page.")
         if st.session_state.pop("erreur_reprise_series", False):
@@ -7858,6 +7923,12 @@ def _mathicap_afficher_serie_et_reponses():
                             if reponse_eleve is None:
                                 st.warning("Saisis d'abord ta réponse.")
                             else:
+                                if not _mc_diag_enregistrer(
+                                    numero, "verification", exercice,
+                                    {"valeur": reponse_eleve},
+                                ):
+                                    st.error("Diagnostic indisponible : vérification reportée.")
+                                    st.stop()
                                 correcte = reponse_eleve == exercice["reponse_attendue"]
                                 bilan_simple = {"bonnes": int(correcte), "total": 1}
                                 st.session_state[cle_bilan_simple] = bilan_simple
@@ -7995,6 +8066,19 @@ def _mathicap_afficher_serie_et_reponses():
                                 st.session_state[cle_visible] = False
                             verification_effectuee = clic_verifier and not masquer_resultats
                             if verification_effectuee:
+                                saisies_premier_clic = {
+                                    champ["id"]: st.session_state.get(
+                                        f"banque_{version_banque}_{numero}_{champ['id']}", ""
+                                    )
+                                    for champ in exercice["champs_reponse"]
+                                    if isinstance(champ, dict) and champ.get("id")
+                                }
+                                if not _mc_diag_enregistrer(
+                                    numero, "verification", exercice,
+                                    {"type": "banque", "champs": saisies_premier_clic},
+                                ):
+                                    st.error("Diagnostic indisponible : vérification reportée.")
+                                    st.stop()
                                 st.session_state[cle_visible] = True
                                 bonnes_reponses = 0
                                 total_reponses = sum(
