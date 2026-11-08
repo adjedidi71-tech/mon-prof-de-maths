@@ -2734,9 +2734,9 @@ st.markdown("""
     }
 }
 
-/* MathiCap : sous-questions à réponse courte en une rangée.
-   La même fonction Python construit le champ de l'exercice initial et
-   celui de ses variantes ; aucune clé de sauvegarde n'est modifiée. */
+/* Réponses courtes : même grille pour l'exercice principal et ses variantes.
+   Chaque colonne occupe la hauteur de la rangée, avec contenu centré
+   verticalement, y compris lorsque l'intitulé revient sur deux lignes. */
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] {
     width: 100% !important;
     max-width: min(100%, 620px) !important;
@@ -2746,18 +2746,27 @@ st.markdown("""
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] {
     display: grid !important;
     grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) !important;
-    gap: 12px !important;
-    align-items: center !important;
+    column-gap: 12px !important;
+    row-gap: 0 !important;
+    align-items: stretch !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
 }
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-self: stretch !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     flex: none !important;
-    align-self: center !important;
+}
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] > [data-testid="stVerticalBlock"] {
+    width: 100% !important;
+    gap: 0 !important;
+    row-gap: 0 !important;
 }
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stTextInput"],
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stSelectbox"] {
@@ -2773,7 +2782,7 @@ st.markdown("""
 @media (max-width: 767px) {
     .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_reponse_ligne_"] [data-testid="stHorizontalBlock"] {
         grid-template-columns: minmax(0, 1fr) minmax(106px, 43%) !important;
-        gap: 8px !important;
+        column-gap: 8px !important;
     }
 }
 /* La commande de suppression concerne seulement la dernière variante.
@@ -2797,12 +2806,13 @@ st.markdown("""
     white-space: nowrap !important;
 }
 
-/* MathiCap — densite douce des reponses, limitee aux familles d'exercices.
-   Ne modifie ni les clefs de widgets, ni les zones redigees, ni les actions. */
+/* Hauteurs validées : PC 34/32px, smartphone 40/38px.
+   Le texte et le conteneur interne ont deux valeurs distinctes. L'élément
+   stTextInputRootElement est confirmé par l'inspecteur Streamlit 1.66. */
 .st-key-mathicap_zone_exercices_affichage
-[class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] [data-baseweb="input"],
+[class*="st-key-mc_exercice_famille_"] [data-testid="stTextInputRootElement"],
 .st-key-mathicap_zone_exercices_affichage
-[class*="st-key-mc_exercice_famille_"] [data-testid="stTextInputRootElement"] > div {
+[class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
     min-height: 34px !important;
     height: 34px !important;
     box-sizing: border-box !important;
@@ -2811,18 +2821,17 @@ st.markdown("""
 [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
     min-height: 0 !important;
     height: 32px !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
     box-sizing: border-box !important;
 }
-/* Les lignes question/reponse gardent leurs deux colonnes, mais prennent
-   moins de place entre deux questions successives. */
+/* Espacement contrôlé uniquement entre les rangées courtes, sans réduire
+   les paragraphes, les libellés de sections ou les réponses rédigées. */
 .st-key-mathicap_zone_exercices_affichage
 [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
-    margin-top: -3px !important;
-    margin-bottom: -3px !important;
+    margin-top: -5px !important;
+    margin-bottom: -5px !important;
 }
-/* Eviter de reduire excessivement la zone tactile sur smartphone. */
 @media (max-width: 767px) {
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInputRootElement"],
@@ -2837,8 +2846,8 @@ st.markdown("""
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
-        margin-top: -2px !important;
-        margin-bottom: -2px !important;
+        margin-top: -4px !important;
+        margin-bottom: -4px !important;
     }
 }
 </style>
