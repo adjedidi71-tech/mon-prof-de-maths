@@ -5395,6 +5395,7 @@ def _mc_sim_mettre_a_jour_reponse(numero, identifiant, bilan=None):
     else:
         # Modifier la saisie invalide la DERNIÈRE vérification, mais pas la première.
         ligne["bilan"] = None
+        st.session_state[_mc_sim_cle_widget(identifiant, "resultats_visibles")] = False
     return _mc_sim_ecrire_variantes(variantes)
 
 
@@ -5687,12 +5688,25 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
         une_seule_reponse = attendu_unique or questions_evaluables == 1
         with st.container(key=f"mc_sim_controle_{identifiant}"):
             cle_btn = _mc_sim_cle_widget(identifiant, "verifier")
+            cle_resultats = _mc_sim_cle_widget(identifiant, "resultats_visibles")
+            if cle_resultats not in st.session_state:
+                # Les vérifications sauvegardées restent consultables après actualisation.
+                st.session_state[cle_resultats] = isinstance(variante.get("bilan"), dict)
             with st.container(key=f"mc_sim_verification_{identifiant}"):
                 verifier_clique = st.button(
                     "Vérifier ma réponse" if une_seule_reponse else "Vérifier mes réponses",
                     key=cle_btn,
                 )
-            if verifier_clique:
+            masquer_resultats = bool(
+                verifier_clique
+                and st.session_state[cle_resultats]
+                and isinstance(variante.get("bilan"), dict)
+            )
+            if masquer_resultats:
+                # Deuxième clic : masquer uniquement l'affichage. Ne rien réévaluer,
+                # ne supprimer ni la réponse ni le bilan déjà enregistré.
+                st.session_state[cle_resultats] = False
+            if verifier_clique and not masquer_resultats:
                 donnees = _mc_sim_saisies(identifiant, exercice)
                 valeurs = ([donnees.get("valeur")]
                           if donnees.get("type") != "banque" else
@@ -5711,7 +5725,8 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
                         else:
                             st.error("Réponse non sauvegardée.")
                     elif _mc_sim_mettre_a_jour_reponse(numero, identifiant, nouveau_bilan):
-                        # Retour visible même lorsque le fragment est relancé.
+                        # Le premier clic affiche le bilan ; le suivant le masquera.
+                        st.session_state[cle_resultats] = True
                         st.toast("Réponses vérifiées et bilan enregistré.", duration=3)
                         st.rerun(scope="fragment")
                     else:
@@ -5719,7 +5734,8 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
 
             # Le résultat reste visible après rerun et après actualisation.
             bilan = variante.get("bilan")
-            if isinstance(bilan, dict) and bilan.get("total", 0) > 0:
+            if (st.session_state.get(cle_resultats, False)
+                    and isinstance(bilan, dict) and bilan.get("total", 0) > 0):
                 total = bilan["total"]
                 bonnes = bilan.get("bonnes", 0)
                 if total > 1:
@@ -5779,9 +5795,16 @@ def _mc_sim_termine(variante):
     elif reponse.get("type") == "banque":
         champs = variante.get("exercice", {}).get("champs_reponse") or []
         valeurs = reponse.get("champs") or {}
-        rempli = bool(champs) and all(
+        # Sur les problèmes mixtes, la rédaction libre est conseillée mais
+        # non notée. Seules les questions évaluables conditionnent la suite.
+        evaluables = [
+            c for c in champs if isinstance(c, dict)
+            and c.get("type") != "texte_libre"
+        ]
+        controles = evaluables or [c for c in champs if isinstance(c, dict)]
+        rempli = bool(controles) and all(
             str(valeurs.get(c.get("id"), "")).strip() not in ("", "Choisir...")
-            for c in champs if isinstance(c, dict)
+            for c in controles
         )
     else:
         return False
@@ -5998,6 +6021,12 @@ def enregistrer_reponses_banque_auto(numero):
     f"_{numero}"
     )
     st.session_state.pop(cle_bilan, None)
+    # Une réponse modifiée invalide l'affichage de l'ancien bilan,
+    # sans toucher à l'historique de première vérification.
+    cle_visible = (
+        f"mc_original_resultats_visibles_{st.session_state.get('serie_version', 0)}_{numero}"
+    )
+    st.session_state[cle_visible] = False
     code = st.session_state.get("code_actuel")
 
     if not code or not st.session_state.get("eleve_id"):
@@ -7652,11 +7681,26 @@ def _mathicap_afficher_serie_et_reponses():
                                     )
 
                         with st.container(key=f"mc_original_controle_{numero}"):
-                            verification_effectuee = st.button(
+                            version_banque = st.session_state.get('serie_version', 0)
+                            cle_bilan = f"bilan_banque_{version_banque}_{numero}"
+                            cle_visible = f"mc_original_resultats_visibles_{version_banque}_{numero}"
+                            if cle_visible not in st.session_state:
+                                st.session_state[cle_visible] = isinstance(
+                                    st.session_state.get(cle_bilan), dict
+                                )
+                            clic_verifier = st.button(
                                 "Vérifier mes réponses",
-                                key=f"verifier_banque_{st.session_state.get('serie_version', 0)}_{numero}"
+                                key=f"verifier_banque_{version_banque}_{numero}"
                             )
+                            masquer_resultats = bool(
+                                clic_verifier and st.session_state[cle_visible]
+                                and isinstance(st.session_state.get(cle_bilan), dict)
+                            )
+                            if masquer_resultats:
+                                st.session_state[cle_visible] = False
+                            verification_effectuee = clic_verifier and not masquer_resultats
                             if verification_effectuee:
+                                st.session_state[cle_visible] = True
                                 bonnes_reponses = 0
                                 total_reponses = sum(
                                     1 for champ in exercice["champs_reponse"]
@@ -7776,7 +7820,25 @@ def _mathicap_afficher_serie_et_reponses():
                                 # Résultat visible même en cas d'échec de sauvegarde.
                                 bilan = {"bonnes": bonnes_reponses, "total": total_reponses}
 
-                            if isinstance(bilan, dict):
+                            if (st.session_state.get(cle_visible, False)
+                                    and isinstance(bilan, dict)):
+                                if not verification_effectuee:
+                                    # Après un rerun, retrouver les détails depuis les
+                                    # champs saisis, sans recalculer ni modifier le score.
+                                    reponses_visibles = {
+                                        "type": "banque",
+                                        "champs": {
+                                            champ["id"]: st.session_state.get(
+                                                f"banque_{version_banque}_{numero}_{champ['id']}", ""
+                                            )
+                                            for champ in exercice["champs_reponse"]
+                                            if isinstance(champ, dict) and champ.get("id")
+                                        },
+                                    }
+                                    for libelle, statut in _mc_sim_statuts_par_question(
+                                        exercice, reponses_visibles
+                                    ):
+                                        _mc_afficher_retour_question(libelle, statut)
                                 intitulé = (
                                     "Résultat" if verification_effectuee
                                     else "Dernier bilan enregistré"
