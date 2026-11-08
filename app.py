@@ -2601,6 +2601,13 @@ st.markdown("""
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_sim_"][class*="_historique_commande"] {
     margin-top: -8px !important;
 }
+/* Les corrections de problèmes peuvent tenir sur de nombreuses lignes.
+   Laisser une respiration AVANT l'invitation d'entraînement suivante,
+   et seulement lorsque la correction est ouverte. Aucune marge globale. */
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_correction_texte_origine_"],
+.st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_correction_texte_sim_"] {
+    padding-bottom: 14px !important;
+}
 /* L'historique est maintenant un bouton natif à état explicite ; il reste
    compact et consultable au clavier, sans bordure supplémentaire. */
 .st-key-mathicap_zone_exercices_affichage [class*="st-key-mc_exercice_famille_"] [class*="_historique_commande"] button {
@@ -5562,7 +5569,15 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
             total = bilan["total"]
             bonnes = bilan.get("bonnes", 0)
             if bonnes == total:
-                st.success("Bonne réponse !" if total == 1 else "Toutes les réponses sont correctes.")
+                champs_libres = [
+                    c for c in (exercice.get("champs_reponse") or [])
+                    if isinstance(c, dict) and c.get("type") == "texte_libre"
+                ]
+                if champs_libres:
+                    st.success(f"{bonnes} réponses corrigées automatiquement sur {total} : toutes correctes.")
+                    st.caption("La réponse rédigée reste à comparer à la correction : elle n'est pas notée automatiquement.")
+                else:
+                    st.success("Bonne réponse !" if total == 1 else "Toutes les réponses sont correctes.")
             elif total == 1:
                 st.info("Réponse incorrecte. Tu peux réessayer.")
             else:
@@ -5571,7 +5586,8 @@ def _mc_sim_afficher_variante(numero, variante, afficher_titre=True):
         # Une correction reste masquée, y compris quand la variante devient
         # un exercice antérieur replié après la création de 2b/3b…
         if _mc_correction_deployable(identifiant):
-            st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
+            with st.container(key=f"mc_correction_texte_sim_{identifiant}"):
+                st.markdown(str(exercice.get("correction", "")).replace("\n", "  \n"))
 
 
 def _mc_sim_termine(variante):
@@ -5662,8 +5678,23 @@ def _mc_sim_bloc(numero, exercice):
 
         dernier_termine = not existantes or _mc_sim_termine(existantes[-1])
         if existantes and not dernier_termine:
-            # Ne pas proposer 1b tant que 1a n'a pas été vérifié.
-            st.caption("Termine d'abord cet exercice similaire pour en demander un autre.")
+            # Lors d'un problème long, les réponses numériques peuvent être
+            # vérifiées tandis qu'une expression rédigée reste vide.
+            dernier = existantes[-1]
+            champs = dernier.get("exercice", {}).get("champs_reponse") or []
+            saisies = (dernier.get("reponse") or {}).get("champs") or {}
+            libres_manquants = [
+                c.get("libelle", "Réponse rédigée") for c in champs
+                if isinstance(c, dict) and c.get("type") == "texte_libre"
+                and not str(saisies.get(c.get("id"), "")).strip()
+            ]
+            if libres_manquants:
+                st.caption(
+                    "Complète aussi la réponse rédigée avant de demander "
+                    "un autre exercice similaire."
+                )
+            else:
+                st.caption("Termine d'abord cet exercice similaire pour en demander un autre.")
             return
 
         # Message adapté au dernier travail vérifié : exercice principal s'il
@@ -7596,7 +7627,8 @@ def _mathicap_afficher_serie_et_reponses():
                                 texte_correction = _mathicap_correction_division_euclidienne(
                                     dividende, diviseur, quotient, reste
                                 )
-                        st.markdown(texte_correction.replace("\n", "  \n"))
+                        with st.container(key=f"mc_correction_texte_origine_{numero}"):
+                            st.markdown(texte_correction.replace("\n", "  \n"))
 
                     # Variantes indépendantes : 2a, 2b…, conservées dans la même
                     # série Supabase sans gonfler les scores ni la pagination.
