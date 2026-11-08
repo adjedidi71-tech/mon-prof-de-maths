@@ -2828,12 +2828,12 @@ st.markdown("""
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInputRootElement"],
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
-        min-height: 40px !important;
+        min-height: 24px !important;
         height: 32px !important;
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [data-testid="stTextInput"] input {
-        height: 38px !important;
+        height: 22px !important;
     }
     .st-key-mathicap_zone_exercices_affichage
     [class*="st-key-mc_exercice_famille_"] [class*="st-key-mc_reponse_ligne_"] {
