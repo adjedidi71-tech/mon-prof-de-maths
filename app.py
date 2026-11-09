@@ -3733,6 +3733,49 @@ if est_connecte and st.query_params.get("vue") == "profil":
        border-radius:20px;min-width:0}
     .mc-profile-muted {font-size:.8rem;color:#627c99;margin-top:7px;line-height:1.5}
     .mc-profile-avatar-heading {font-size:1.3rem;color:#174379;margin:15px 0 10px;font-weight:800}
+    /* Profil — diagnostic lisible sans tableau horizontal. */
+    .mc-diag-summary {display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap;
+        margin:5px 0 12px;color:#34445e}
+    .mc-diag-summary strong {font-size:1.55rem;font-weight:800;color:#152e59;
+        line-height:1.25;font-variant-numeric:tabular-nums}
+    .mc-diag-summary span {font-size:1rem;color:#5c6878}
+    .mc-diag-result {max-width:820px;margin:7px 0 9px;padding:11px 14px;
+        background:#f6f9fe;border:1px solid #e3ebf9;border-radius:12px}
+    .mc-diag-result-head {display:flex;align-items:baseline;justify-content:space-between;
+        flex-wrap:wrap;gap:5px;font-size:.98rem;color:#183a71}
+    .mc-diag-result-head strong {font-weight:750}
+    .mc-diag-result-score {font-variant-numeric:tabular-nums;font-weight:750}
+    .mc-diag-track {height:7px;background:#e1eaf4;border-radius:20px;
+        overflow:hidden;margin:7px 0 4px}
+    .mc-diag-fill {height:100%;background:linear-gradient(90deg,#7dbbff,#2774ce);
+        border-radius:20px}
+    .mc-diag-detail {font-size:.8rem;color:#667a94}
+    .st-key-mc_diag_filtre_ligne [data-testid="stHorizontalBlock"] {
+        display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+        align-items:end!important;gap:10px!important;max-width:820px!important;
+    }
+    .st-key-mc_diag_filtre_ligne [data-testid="stColumn"] {
+        flex:1.75 1 0%!important;min-width:0!important;width:auto!important;
+    }
+    .st-key-mc_diag_filtre_ligne [data-testid="stColumn"]:last-child {
+        flex:1 1 0%!important;
+    }
+    .st-key-mc_diag_filtre_ligne [data-testid="stSelectbox"] {
+        min-width:0!important;width:100%!important;
+    }
+    @media(max-width:520px){
+        .mc-diag-summary strong{font-size:1.4rem}
+        .mc-diag-summary span{font-size:.9rem}
+        .st-key-mc_diag_filtre_ligne [data-testid="stHorizontalBlock"]{
+            gap:7px!important;
+        }
+        .st-key-mc_diag_filtre_ligne [data-testid="stColumn"]{
+            flex:1.55 1 0%!important;
+        }
+        .st-key-mc_diag_filtre_ligne [data-testid="stColumn"]:last-child{
+            flex:1 1 0%!important;
+        }
+    }
     /* MathiCap — Profil : titres interactifs colorés sans cadres. */
     [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary,
     [data-testid="stMainBlockContainer"]:has(.mc-profile-hero) [data-testid="stExpander"] summary * {
@@ -4174,12 +4217,11 @@ if est_connecte and st.query_params.get("vue") == "profil":
             )
 
     # Projet 2 - lot 2 : lecture seule du diagnostic de premières tentatives.
-    # Source distincte des bilans modifiables visibles dans les exercices.
+    # Les filtres n'affectent ni les données ni les calculs de Supabase.
     st.markdown("#### Mes résultats autonomes")
     st.caption(
-        "Seules les premières vérifications complètes, effectuées avant "
-        "la consultation de la correction, comptent ici. "
-        "Les variantes et les anciennes séries non suivies sont exclues."
+        "Premières vérifications complètes avant correction uniquement. "
+        "Variantes et anciennes séries exclues."
     )
     try:
         _diag_lignes = charger_indicateurs_autonomes(supabase_privee, identifiant_eleve)
@@ -4192,42 +4234,105 @@ if est_connecte and st.query_params.get("vue") == "profil":
         _diag_tentatives = _diag["exercices_autonomes"]
         if _diag_total:
             _diag_pourcent = round(100 * _diag_bonnes / _diag_total)
-            st.write(
-                f"**{_diag_bonnes} bonnes réponses sur {_diag_total} questions "
-                f"évaluées en autonomie ({_diag_pourcent} %)** "
-                f"— {_diag_tentatives} exercice(s)."
+            st.html(
+                '<div class="mc-diag-summary">'
+                f'<strong>{_diag_bonnes} / {_diag_total}</strong>'
+                f'<span>{_diag_pourcent} % · {_diag_tentatives} exercices</span>'
+                '</div>'
             )
         else:
-            st.info(
-                "Aucune première vérification complète et autonome disponible "
-                "pour le moment."
-            )
-        _diag_exclus = _diag["consultation_avant_verification"] + _diag["verifications_partielles"]
+            st.info("Aucune première vérification complète et autonome enregistrée.")
+
+        _diag_exclus = (
+            _diag["consultation_avant_verification"]
+            + _diag["verifications_partielles"]
+        )
         if _diag_exclus:
             st.caption(
-                f"{_diag_exclus} exercice(s) exclu(s) du taux autonome "
-                "(correction consultée avant vérification ou première vérification incomplète)."
+                f"{_diag_exclus} exercice(s) non autonome(s) ou incomplet(s), "
+                "exclus du taux de réussite."
             )
-        if _diag["groupes"]:
-            with st.expander("Détail par chapitre et niveau", expanded=False):
-                _diag_tableau = []
-                for _diag_g in _diag["groupes"]:
-                    _diag_tableau.append({
-                        "Chapitre": _diag_g["chapitre"],
-                        "Niveau": _diag_g["niveau"],
-                        "Bonnes / questions": f"{_diag_g['bonnes']} / {_diag_g['total']}",
-                        "Réussite autonome": (
-                            f"{round(100 * _diag_g['bonnes'] / _diag_g['total'])} %"
-                            if _diag_g["total"] else "—"
-                        ),
-                        "Exercices autonomes": _diag_g["exercices_autonomes"],
-                    })
-                st.dataframe(_diag_tableau, hide_index=True, width="stretch")
-                st.caption(
-                    "Ce relevé indique le taux de réussite constaté. Il ne donne "
-                    "pas encore de conseil de passage au niveau supérieur : "
-                    "le minimum de questions nécessaire reste à définir."
+
+        # Source unique des 14 chapitres : le catalogue existant de MathiCap.
+        _diag_options_chapitres = list(CHAPITRES_MATHICAP)
+        _diag_options_niveaux = ["Tous les niveaux"] + [
+            f"Niveau {n}" for n in range(1, 10)
+        ]
+        _diag_cle_chapitre = "mc_diag_filtre_chapitre"
+        _diag_cle_niveau = "mc_diag_filtre_niveau"
+        _diag_compte_cle = "_mc_diag_filtre_compte"
+
+        # Réhydrater les préférences d'affichage après actualisation de page.
+        # Aucun identifiant d'élève ni résultat n'est écrit dans l'URL.
+        if st.session_state.get(_diag_compte_cle) != identifiant_eleve:
+            st.session_state[_diag_compte_cle] = identifiant_eleve
+            _diag_chapitre_url = st.query_params.get("dg_ch", "")
+            _diag_niveau_url = st.query_params.get("dg_niv", "")
+            st.session_state[_diag_cle_chapitre] = (
+                _diag_chapitre_url if _diag_chapitre_url in _diag_options_chapitres
+                else _diag_options_chapitres[0]
+            )
+            st.session_state[_diag_cle_niveau] = (
+                _diag_niveau_url if _diag_niveau_url in _diag_options_niveaux
+                else "Tous les niveaux"
+            )
+        if st.session_state.get(_diag_cle_chapitre) not in _diag_options_chapitres:
+            st.session_state[_diag_cle_chapitre] = _diag_options_chapitres[0]
+        if st.session_state.get(_diag_cle_niveau) not in _diag_options_niveaux:
+            st.session_state[_diag_cle_niveau] = "Tous les niveaux"
+
+        # Les deux commandes restent sur une seule ligne, y compris sur mobile.
+        # Le chapitre est plus large pour ménager les intitulés longs.
+        with st.container(key="mc_diag_filtre_ligne"):
+            _diag_col_chapitre, _diag_col_niveau = st.columns(
+                [1.75, 1], gap="small", vertical_alignment="bottom"
+            )
+            with _diag_col_chapitre:
+                _diag_chapitre = st.selectbox(
+                    "Chapitre", _diag_options_chapitres,
+                    key=_diag_cle_chapitre,
                 )
+            with _diag_col_niveau:
+                _diag_niveau = st.selectbox(
+                    "Niveau", _diag_options_niveaux,
+                    key=_diag_cle_niveau,
+                )
+        if st.query_params.get("dg_ch") != _diag_chapitre:
+            st.query_params["dg_ch"] = _diag_chapitre
+        if st.query_params.get("dg_niv") != _diag_niveau:
+            st.query_params["dg_niv"] = _diag_niveau
+
+        _diag_groupes_filtres = [
+            g for g in _diag["groupes"]
+            if g["chapitre"] == _diag_chapitre
+            and (
+                _diag_niveau == "Tous les niveaux"
+                or g["niveau"] == int(_diag_niveau.split()[-1])
+            )
+        ]
+        if not _diag_groupes_filtres:
+            st.caption("Aucun résultat autonome pour cette sélection.")
+        else:
+            for _diag_g in _diag_groupes_filtres:
+                _diag_pct = round(100 * _diag_g["bonnes"] / _diag_g["total"])
+                st.html(
+                    '<div class="mc-diag-result">'
+                    '<div class="mc-diag-result-head">'
+                    f'<strong>Niveau {_diag_g["niveau"]}</strong>'
+                    f'<span class="mc-diag-result-score">{_diag_g["bonnes"]} / '
+                    f'{_diag_g["total"]} · {_diag_pct} %</span>'
+                    '</div>'
+                    '<div class="mc-diag-track">'
+                    f'<div class="mc-diag-fill" style="width:{_diag_pct}%"></div>'
+                    '</div>'
+                    f'<div class="mc-diag-detail">{_diag_g["exercices_autonomes"]} '
+                    'exercices évalués en autonomie</div>'
+                    '</div>'
+                )
+        st.caption(
+            "Résultats constatés uniquement : aucun conseil de passage au niveau "
+            "supérieur n'est encore calculé."
+        )
 
     # Résultats QCM, indépendants des statistiques des séries d'exercices.
     from mathicap_qcm_resultats import afficher_progression_qcm
