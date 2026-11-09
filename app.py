@@ -306,7 +306,12 @@ if st.session_state.get("eleve_id"):
 _mc_nav_auth_ms = round((time.perf_counter() - _mc_nav_debut) * 1000)
 
 from pathlib import Path
-from mathicap_diagnostic import MARQUEUR as _MC_DIAG_MARQUEUR, enregistrer_premier_evenement
+from mathicap_diagnostic import (
+    MARQUEUR as _MC_DIAG_MARQUEUR,
+    enregistrer_premier_evenement,
+    charger_indicateurs_autonomes,
+    resumer_indicateurs_autonomes,
+)
 # EN-TÊTE MATHICAP + COMPTE ÉLÈVE
 # Remplacer l'ancien affichage du grand logo ET tout l'ancien bloc
 # « Mon compte élève » par ce code.
@@ -4167,6 +4172,62 @@ if est_connecte and st.query_params.get("vue") == "profil":
                 "Ces barres mesurent la saisie de réponses, "
                 "pas la maîtrise des notions."
             )
+
+    # Projet 2 - lot 2 : lecture seule du diagnostic de premières tentatives.
+    # Source distincte des bilans modifiables visibles dans les exercices.
+    st.markdown("#### Mes résultats autonomes")
+    st.caption(
+        "Seules les premières vérifications complètes, effectuées avant "
+        "la consultation de la correction, comptent ici. "
+        "Les variantes et les anciennes séries non suivies sont exclues."
+    )
+    try:
+        _diag_lignes = charger_indicateurs_autonomes(supabase_privee, identifiant_eleve)
+        _diag = resumer_indicateurs_autonomes(_diag_lignes)
+    except Exception:
+        st.warning("Le diagnostic est momentanément indisponible ; les exercices restent accessibles.")
+    else:
+        _diag_bonnes = _diag["bonnes"]
+        _diag_total = _diag["total"]
+        _diag_tentatives = _diag["exercices_autonomes"]
+        if _diag_total:
+            _diag_pourcent = round(100 * _diag_bonnes / _diag_total)
+            st.write(
+                f"**{_diag_bonnes} bonnes réponses sur {_diag_total} questions "
+                f"évaluées en autonomie ({_diag_pourcent} %)** "
+                f"— {_diag_tentatives} exercice(s)."
+            )
+        else:
+            st.info(
+                "Aucune première vérification complète et autonome disponible "
+                "pour le moment."
+            )
+        _diag_exclus = _diag["consultation_avant_verification"] + _diag["verifications_partielles"]
+        if _diag_exclus:
+            st.caption(
+                f"{_diag_exclus} exercice(s) exclu(s) du taux autonome "
+                "(correction consultée avant vérification ou première vérification incomplète)."
+            )
+        if _diag["groupes"]:
+            with st.expander("Détail par chapitre et niveau", expanded=False):
+                _diag_tableau = []
+                for _diag_g in _diag["groupes"]:
+                    _diag_tableau.append({
+                        "Chapitre": _diag_g["chapitre"],
+                        "Niveau": _diag_g["niveau"],
+                        "Bonnes / questions": f"{_diag_g['bonnes']} / {_diag_g['total']}",
+                        "Réussite autonome": (
+                            f"{round(100 * _diag_g['bonnes'] / _diag_g['total'])} %"
+                            if _diag_g["total"] else "—"
+                        ),
+                        "Exercices autonomes": _diag_g["exercices_autonomes"],
+                    })
+                st.dataframe(_diag_tableau, hide_index=True, width="stretch")
+                st.caption(
+                    "Ce relevé indique le taux de réussite constaté. Il ne donne "
+                    "pas encore de conseil de passage au niveau supérieur : "
+                    "le minimum de questions nécessaire reste à définir."
+                )
 
     # Résultats QCM, indépendants des statistiques des séries d'exercices.
     from mathicap_qcm_resultats import afficher_progression_qcm
