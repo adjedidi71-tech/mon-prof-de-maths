@@ -93,3 +93,80 @@ def enregistrer_premier_evenement(client, eleve_id, code_reprise, numero,
     if not isinstance(data, dict) or data.get("statut") not in ("verification", "correction"):
         raise RuntimeError("Enregistrement du diagnostic non confirmé")
     return data
+
+
+def charger_indicateurs_autonomes(client, eleve_id):
+    """Lecture filtrée par élève, côté serveur uniquement, sans exposer les réponses.
+
+    Pagination explicite pour ne pas tronquer silencieusement les statistiques
+    lorsque Supabase dépasse sa limite de lignes retournées.
+    """
+    if not eleve_id:
+        raise ValueError("Élève non connecté")
+    lignes = []
+    pas = 500
+    for page in range(100):
+        debut = page * pas
+        resultat = (
+            client.table("mathicap_diagnostic_premiers")
+            .select("chapitre,niveau,evenement,complet,bonnes,total,enregistre_le")
+            .eq("eleve_id", eleve_id)
+            .order("enregistre_le", desc=True)
+            .range(debut, debut + pas - 1)
+            .execute()
+        )
+        lot = resultat.data
+        if not isinstance(lot, list):
+            raise RuntimeError("Lecture du diagnostic non confirmée")
+        lignes.extend(lot)
+        if len(lot) < pas:
+            return lignes
+    raise RuntimeError("Trop de résultats pour calculer un diagnostic complet")
+
+
+def resumer_indicateurs_autonomes(lignes):
+    """Agrège les QUESTIONS, pas les séries ; n'infère aucune aide passée.
+
+    Les premières actions de correction et les vérifications incomplètes sont
+    hors score. Les données anciennes ne figurent pas dans cette table.
+    """
+    resume = {
+        "bonnes": 0, "total": 0, "exercices_autonomes": 0,
+        "consultation_avant_verification": 0,
+        "verifications_partielles": 0,
+        "groupes": [],
+    }
+    groupes = {}
+    for ligne in lignes:
+        if not isinstance(ligne, dict):
+            continue
+        evenement = ligne.get("evenement")
+        if evenement == "correction":
+            resume["consultation_avant_verification"] += 1
+            continue
+        if evenement != "verification":
+            continue
+        if ligne.get("complet") is not True:
+            resume["verifications_partielles"] += 1
+            continue
+        bonnes, total = ligne.get("bonnes"), ligne.get("total")
+        chapitre, niveau = ligne.get("chapitre"), ligne.get("niveau")
+        if (type(bonnes) is not int or type(total) is not int
+                or not 0 <= bonnes <= total or total <= 0
+                or not isinstance(chapitre, str) or not chapitre.strip()
+                or type(niveau) is not int or not 1 <= niveau <= 9):
+            continue
+        resume["bonnes"] += bonnes
+        resume["total"] += total
+        resume["exercices_autonomes"] += 1
+        cle = (chapitre.strip(), niveau)
+        if cle not in groupes:
+            groupes[cle] = {
+                "chapitre": chapitre.strip(), "niveau": niveau,
+                "bonnes": 0, "total": 0, "exercices_autonomes": 0,
+            }
+        groupes[cle]["bonnes"] += bonnes
+        groupes[cle]["total"] += total
+        groupes[cle]["exercices_autonomes"] += 1
+    resume["groupes"] = [groupes[k] for k in sorted(groupes, key=lambda k:(k[0].casefold(), k[1]))]
+    return resume
