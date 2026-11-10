@@ -270,6 +270,19 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
 
     # Contrairement au tableau des champs affiché plus haut, ce bilan
     # regroupe les champs appartenant à la même QUESTION pédagogique.
+    # Les familles sont des types de tâches observées, pas des causes
+    # d'erreur certaines ni des compétences certifiées maîtrisées.
+    if stats["competences"]:
+        st.caption("Types de tâches mathématiques travaillées "
+                   "(catégories contrôlées sur les modèles reconnus)")
+        st.dataframe([
+            {"Type de tâche": nom,
+             "Réponses": f"{v['bonnes']}/{v['total']}",
+             "Erreurs": v["total"] - v["bonnes"]}
+            for nom, v in sorted(stats["competences"].items())
+        ], hide_index=True, width="stretch")
+        st.caption("Une erreur peut venir du calcul, de la lecture ou de la méthode. "
+                   "Le tableau indique où elle apparaît, sans présumer sa cause.")
     if g["niveau"] >= 7 and stats["etapes"]:
         st.caption("Réussites par étape du problème (questions évaluables)")
         ordre = ("Début du problème", "Étapes intermédiaires", "Résolution finale")
