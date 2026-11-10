@@ -4856,6 +4856,8 @@ if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
 # modifiées lors du prochain retour sur la liste.
 if page_mathicap != "Mes séries":
     st.session_state.pop("_mathicap_series_pagination_cache", None)
+    # Au retour après une nouvelle vérification, actualiser le bilan autonome.
+    st.session_state.pop("_mc_heat_cache", None)
 
 if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
@@ -5105,6 +5107,14 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                          and int(filtre_niveau[7:]) in fiche["niveaux"]))
                 and (filtre_etat == "Tous les avancements" or fiche["etat"] == filtre_etat)
             ]
+            # Projet 2 — Bilan visuel automatique en lecture seule.
+            # Il respecte les filtres de la liste AVANT sa pagination.
+            # Aucun score ni réponse de série n'est modifié ici.
+            from mathicap_tableau_bilan import afficher_tableau_series
+            afficher_tableau_series(
+                st, supabase_privee, st.session_state["eleve_id"], fiches_visibles
+            )
+
             # Les filtres portent sur la liste complète. La pagination porte
             # uniquement sur l'affichage ; numéros et données restent inchangés.
             nombre_filtre = len(fiches_visibles)
