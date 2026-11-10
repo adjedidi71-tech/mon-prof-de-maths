@@ -5111,9 +5111,22 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             # Il respecte les filtres de la liste AVANT sa pagination.
             # Aucun score ni réponse de série n'est modifié ici.
             from mathicap_tableau_bilan import afficher_tableau_series
-            afficher_tableau_series(
+            demande_ciblee = afficher_tableau_series(
                 st, supabase_privee, st.session_state["eleve_id"], fiches_visibles
             )
+            if demande_ciblee:
+                # Ne pas générer sur la page Mes séries : les générateurs et
+                # la sauvegarde ne sont accessibles que sur la page Exercices.
+                # La série source sera relue et vérifiée après navigation.
+                st.session_state["_mc_diag_entrainement_demande_v1"] = {
+                    "eleve_id": st.session_state["eleve_id"],
+                    **demande_ciblee,
+                }
+                st.session_state["afficher_series"] = False
+                st.session_state["_mathicap_ouvrir_serie"] = True
+                st.query_params["vue"] = "exercices"
+                st.query_params.pop("serie_id", None)
+                st.rerun()
 
             # Les filtres portent sur la liste complète. La pagination porte
             # uniquement sur l'affichage ; numéros et données restent inchangés.
@@ -7953,11 +7966,77 @@ if demande_generation:
         else:
             st.session_state.code_actuel = None
             st.info("Connecte-toi pour sauvegarder tes exercices.", width=500)
+# Option C - entraînement ciblé indépendant des séries existantes.
+# Une nouvelle série crée de nouvelles premières vérifications immuables ;
+# les anciens scores et réponses ne changent jamais. Sans modèle vérifié,
+# aucun exercice de remplacement plus difficile n'est improvisé.
+if page_mathicap == "Exercices":
+    commande_ciblee = st.session_state.pop("_mc_diag_entrainement_demande_v1", None)
+    if isinstance(commande_ciblee, dict):
+        try:
+            if commande_ciblee.get("eleve_id") != st.session_state.get("eleve_id"):
+                raise ValueError("Le compte a changé.")
+            code_origine = commande_ciblee.get("code_reprise")
+            numero_origine = commande_ciblee.get("numero_exercice")
+            if (not isinstance(code_origine, str) or type(numero_origine) is not int
+                    or numero_origine < 1):
+                raise ValueError("Référence du problème invalide.")
+            # Vérification de l'appartenance à l'élève connecté AVANT usage
+            # de l'exercice et de ses réponses.
+            source = recuperer_serie(code_origine)
+            exercices_source = source.get("exercices") if source else None
+            if (not isinstance(exercices_source, list)
+                    or numero_origine > len(exercices_source)):
+                raise ValueError("Le problème d'origine n'est plus disponible.")
+            original = exercices_source[numero_origine - 1]
+            if (not isinstance(original, dict)
+                    or original.get("mathicap_chapitre") != commande_ciblee.get("chapitre")
+                    or original.get("mathicap_niveau") != commande_ciblee.get("niveau")
+                    or original.get("id") != commande_ciblee.get("exercice_id")
+                    or not _mc_sim_modele_supporte(original)):
+                raise ValueError("Aucun modèle validé pour cette difficulté.")
+            deja = {str(original.get("enonce", "")).strip()}
+            nouveaux = []
+            for _indice in range(3):
+                ex_cible = _mc_sim_generer_meme_notion(original, deja)
+                if ex_cible is None:
+                    break
+                deja.add(ex_cible["enonce"].strip())
+                ex_cible["mathicap_entrainement_cible_v1"] = {
+                    "version": 1,
+                    "code_source": code_origine,
+                    "numero_source": numero_origine,
+                    "etape": str(commande_ciblee.get("etape", ""))[:100],
+                }
+                nouveaux.append(ex_cible)
+            if len(nouveaux) != 3:
+                raise ValueError("Impossible de générer trois exercices distincts au même niveau.")
+            # Persister d'abord, n'activer la nouvelle série qu'après succès.
+            code_nouveau = sauvegarder_serie(nouveaux)
+            if not code_nouveau:
+                raise RuntimeError("La sauvegarde de la série n'a pas été confirmée.")
+            st.session_state["exercices_actuels"] = nouveaux
+            st.session_state["code_actuel"] = code_nouveau
+            st.session_state["serie_ouverte_depuis_liste"] = False
+            st.session_state["serie_version"] = st.session_state.get("serie_version", 0) + 1
+            st.session_state["_mc_diag_entrainement_cree_v1"] = True
+            st.query_params["vue"] = "exercices"
+            st.query_params["serie_id"] = str(st.session_state["serie_id_actuel"])
+        except (ValueError, TypeError, KeyError, RuntimeError) as exc:
+            st.warning(str(exc))
+        except Exception:
+            st.warning("Impossible de préparer l'entraînement ciblé pour le moment.")
+
 # Les saisies ne relancent plus toute l'application (en-tête, menus et statistiques).
 # Le fragment garde le défilement plus stable lors de la sauvegarde automatique.
 @st.fragment
 def _mathicap_afficher_serie_et_reponses():
     with st.container(key="mathicap_zone_exercices_affichage"):
+        if st.session_state.pop("_mc_diag_entrainement_cree_v1", False):
+            st.info("Trois exercices du même modèle et du même niveau ont été "
+                    "générés pour retravailler ta difficulté. Les premières "
+                    "réponses vérifiées seront ajoutées à ton bilan ; tes "
+                    "résultats précédents restent inchangés.")
         if st.session_state.pop("mc_diag_erreur_premier_evenement", False):
             st.error(
                 "Suivi pédagogique momentanément indisponible. "
