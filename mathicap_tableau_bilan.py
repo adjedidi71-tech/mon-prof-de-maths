@@ -6,6 +6,7 @@ Les tentatives anciennes / partielles / après correction sont exclues du score.
 
 from html import escape
 from mathicap_diagnostic import premier_bilan
+from mathicap_adaptatif import analyser_bilan, questions_pedagogiques, conseil_argumente
 
 
 def charger_evenements(client, eleve_id):
@@ -110,12 +111,26 @@ def calculer_bilan(series_filtrees, evenements):
         chapitre = exercice.get("mathicap_chapitre")
         if type(niveau) is not int or not 1 <= niveau <= 9:
             continue
+        questions, texte_libre, numerotation = questions_pedagogiques(
+            exercice, repartition
+        )
         points.append({
             "chapitre": chapitre if isinstance(chapitre, str) else "",
             "niveau": niveau, "serie": fiche.get("numero", "?"),
             "numero": numero, "questions": repartition,
             "bonnes": bonnes, "total": total,
             "date": ev.get("enregistre_le") or "",
+            # Métadonnées additionnelles pour l'analyse, sans nouvelle
+            # écriture Supabase et sans remplacer les scores d'origine.
+            "questions_pedagogiques": questions,
+            "avec_texte_libre": texte_libre,
+            "numero_question_fiable": numerotation,
+            "notion": exercice.get("mathicap_partie"),
+            "exercice_id": exercice.get("id"),
+            "code_reprise": cle, "serie_id": s.get("id"),
+            "entrainement_cible": bool(
+                exercice.get("mathicap_entrainement_cible_v1")
+            ),
         })
 
     points.sort(key=lambda x: x["date"], reverse=True)
@@ -206,30 +221,112 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
     st.caption("✓ Correcte · × Incorrecte · — Question absente. "
                "Les 10 dernières vérifications sont affichées ; "
                "les statistiques portent sur toutes les vérifications sélectionnées.")
-    groupe_erreurs = [
-        (i, g["total"] - g["bonnes"], g["total"])
-        for i, g in sorted(bilan["positions"].items())
-        if g["total"] >= 5 and (g["total"] - g["bonnes"]) >= 3
-        and (g["total"] - g["bonnes"]) * 2 >= g["total"]
-    ]
-    if groupe_erreurs:
-        positions = ", ".join(f"Q{i} ({n} erreurs sur {t})"
-                              for i, n, t in groupe_erreurs[:3])
-        st.warning("**Points à consolider :** les erreurs se répètent sur "
-                   + positions + ". Vérifie les compétences évaluées dans ces "
-                   "questions et réessaie des exercices comparables. Ce constat "
-                   "ne permet pas encore d'identifier la cause exacte des erreurs.")
-    elif len(points) >= 5:
-        st.success("Tes erreurs ne se concentrent pas fortement sur une "
-                   "position de question dans cet échantillon. Continue à "
-                   "t'entraîner pour confirmer tes acquis.")
-    else:
-        st.info("Encore quelques exercices pour distinguer une difficulté "
-                "régulière d'une erreur occasionnelle.")
-    if bilan["finales_total"]:
-        st.caption(f"Questions finales des problèmes (niveaux 7 à 9) : "
-                   f"{bilan['finales_bonnes']}/{bilan['finales_total']} correctes.")
+    # Le tableau v1 présente les champs notés, dans l'ordre de saisie.
+    # Leur dernière position n'est PAS forcément la dernière question.
+    # Le module adaptatif ci-dessous fait le regroupement pédagogique fiable.
+    st.caption("La grille ci-dessus présente les champs évalués. Une question "
+               "peut contenir plusieurs champs ; l'analyse par question figure "
+               "dans le bilan détaillé ci-dessous.")
     if bilan["exclus"]:
         st.caption("Les vérifications incomplètes, consultations préalables "
                    "de correction et résultats non détaillables sont exclus "
                    "du tableau.")
+
+    # Projet 2 - option C : analyse multi-questions et conseils par niveau.
+    # Les filtres mixtes ne conduisent jamais à une progression globale.
+    groupes = analyser_bilan(points)
+    if not groupes:
+        return None
+    st.markdown("##### Mon diagnostic pédagogique")
+    if len(groupes) > 1:
+        st.caption("Chaque niveau est analysé séparément. Sélectionne un chapitre "
+                   "et un niveau dans les filtres pour voir le conseil détaillé "
+                   "et accéder à un entraînement ciblé.")
+        st.dataframe([
+            {
+                "Chapitre": g["chapitre"],
+                "Niveau": g["niveau"],
+                "Questions évaluées": g["stats"]["questions"],
+                "Réussite": (f"{round(100 * g['taux'])} %"
+                            if g["taux"] is not None else "—"),
+                "Conseil": {
+                    "echantillon_insuffisant": "Continuer à s'entraîner",
+                    "verification_humaine_necessaire": "Vérifier les réponses rédigées",
+                    "a_consolider": "Consolider",
+                    "analyse_incomplete": "Données à compléter",
+                    "encourageant": "Résultats encourageants",
+                    "progression_envisageable": "Progression envisageable",
+                }.get(g["statut"], "À suivre"),
+            } for g in groupes
+        ], hide_index=True, width="stretch")
+        return None
+
+    g = groupes[0]
+    stats = g["stats"]
+    constat, interpretation, proposition = conseil_argumente(g)
+    st.write(constat)
+    st.caption(interpretation)
+    st.info(proposition)
+
+    # Contrairement au tableau des champs affiché plus haut, ce bilan
+    # regroupe les champs appartenant à la même QUESTION pédagogique.
+    if g["niveau"] >= 7 and stats["etapes"]:
+        st.caption("Réussites par étape du problème (questions évaluables)")
+        ordre = ("Début du problème", "Étapes intermédiaires", "Résolution finale")
+        st.dataframe([
+            {"Étape": label,
+             "Réponses": f"{stats['etapes'][label]['bonnes']}/{stats['etapes'][label]['total']}",
+             "Erreurs": stats["etapes"][label]["total"] - stats["etapes"][label]["bonnes"]}
+            for label in ordre if label in stats["etapes"]
+        ], hide_index=True, width="stretch")
+    elif stats["notions"]:
+        st.caption("Réponses par notion travaillée")
+        st.dataframe([
+            {"Notion": nom, "Réponses": f"{v['bonnes']}/{v['total']}",
+             "Erreurs": v["total"] - v["bonnes"]}
+            for nom, v in sorted(stats["notions"].items())
+        ], hide_index=True, width="stretch")
+
+    if g["niveau"] >= 7:
+        st.caption(
+            f"Pour envisager une progression : "
+            f"{stats['problemes_termines_evaluables']}/6 problèmes "
+            f"entièrement évaluables (minimum), "
+            f"{stats['questions']}/20 questions évaluées (minimum), "
+            "et 80 % de réussite, sans difficulté répétée importante."
+        )
+    if stats["problemes_avec_texte_libre"]:
+        st.caption("Des problèmes comprennent une réponse rédigée non notée "
+                   "automatiquement. Ils ne sont pas déclarés intégralement "
+                   "maîtrisés à partir des seuls champs numériques.")
+    if stats["sans_numerotation"] and g["niveau"] >= 7:
+        st.caption("Certaines séries ne précisent pas la numérotation des "
+                   "questions : aucune compétence finale n'est inférée pour elles.")
+    if g["apres"]["questions"]:
+        avant, apres = g["avant"], g["apres"]
+        st.caption("Comparaison indicative : exercices habituels / entraînement "
+                   "ciblé du même niveau (échantillons et modèles potentiellement différents).")
+        st.dataframe([
+            {"Période": "Hors entraînement ciblé",
+             "Questions": avant["questions"],
+             "Réussite": (f"{round(100 * avant['questions_bonnes']/avant['questions'])} %"
+                         if avant["questions"] else "—")},
+            {"Période": "Entraînement ciblé",
+             "Questions": apres["questions"],
+             "Réussite": (f"{round(100 * apres['questions_bonnes']/apres['questions'])} %"
+                         if apres["questions"] else "—")},
+        ], hide_index=True, width="stretch")
+    cible = g["cible"]
+    if (cible and g["statut"] in ("a_consolider", "echantillon_insuffisant")
+            and cible["chapitre"] == "1. Opérations"):
+        st.caption("Exercices ciblés : même modèle et même niveau que le problème "
+                   "où cette difficulté a été observée. Ils permettront une "
+                   "nouvelle première vérification autonome.")
+        if st.button("Générer 3 exercices pour m'améliorer",
+                     key=f"mathicap_entrainement_adaptatif_{g['niveau']}",
+                     type="primary"):
+            return cible
+    elif g["difficultes"]:
+        st.caption("Un entraînement automatique pour cette notion n'est pas "
+                   "encore disponible. Tu peux créer une nouvelle série au même niveau.")
+    return None
