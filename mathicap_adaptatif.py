@@ -7,6 +7,7 @@ jamais notés automatiquement et bloquent toute conclusion de maîtrise complèt
 """
 
 from collections import defaultdict
+from mathicap_competences import competences_par_question
 
 
 def questions_pedagogiques(exercice, resultats_champs):
@@ -52,9 +53,14 @@ def questions_pedagogiques(exercice, resultats_champs):
         competence = champ.get("mathicap_competence")
         if isinstance(competence, str) and competence.strip():
             g["competences"].add(competence.strip()[:100])
+    # Les métadonnées pédagogiques explicites sont prioritaires.
+    # Le répertoire contrôlé prend le relais pour 31 modèles déterministes
+    # du chapitre Opérations ; pas de déduction depuis une position seule.
+    etiquettes = competences_par_question(exercice) if numero_fiable else {}
     questions = [
         {"numero": numero, "bonne": all(g["bonnes_champs"]),
-         "competences": sorted(g["competences"]),
+         "competences": (sorted(g["competences"])
+                         if g["competences"] else etiquettes.get(numero, [])),
          "explicite": numero_fiable}
         for numero, g in sorted(groupes.items())
     ]
@@ -128,11 +134,11 @@ def _resume_questions(points):
             "competences": dict(competences), "notions": dict(notions)}
 
 
-def _difficultes_significatives(agregat, minimum=5):
+def _difficultes_significatives(agregat, minimum=5, nature="etape"):
     """Repère des difficultés répétées, jamais une erreur isolée."""
     return sorted(
         [{"label": label, "total": g["total"],
-          "erreurs": g["total"] - g["bonnes"]}
+          "erreurs": g["total"] - g["bonnes"], "nature": nature}
          for label, g in agregat.items()
          if g["total"] >= minimum and g["total"] - g["bonnes"] >= 3
          and 2 * (g["total"] - g["bonnes"]) >= g["total"]],
@@ -148,12 +154,18 @@ def _cible_entrainement(points, difficultes):
     """
     if not difficultes:
         return None
-    label = difficultes[0]["label"]
-    # Préférer l'exercice le plus récent contenant une erreur pertinente.
+    difficulte = difficultes[0]
+    label = difficulte["label"]
+    nature = difficulte.get("nature")
+    # Choisir un exercice portant réellement sur la même famille de tâches,
+    # pas simplement un exercice où la dernière réponse est incorrecte.
     for p in points:
         qs = p.get("questions_pedagogiques", [])
-        if p["niveau"] >= 7:
-            erreurs = [q for q in qs if not q["bonne"] and _etape(q, qs, p["niveau"]) == label]
+        if nature == "famille":
+            erreurs = [q for q in qs if not q["bonne"] and label in q["competences"]]
+        elif nature == "etape":
+            erreurs = [q for q in qs if not q["bonne"]
+                       and _etape(q, qs, p["niveau"]) == label]
         else:
             erreurs = [q for q in qs if not q["bonne"] and (
                 label in q["competences"] or label == f"Notion : {p.get('notion', '')}"
@@ -185,17 +197,20 @@ def analyser_bilan(points):
         lignes = sorted(lignes, key=lambda p: p.get("date") or "", reverse=True)
         stats = _resume_questions(lignes)
         recents = _resume_questions(lignes[:12])
-        # Si les compétences sont taguées, elles priment. Sinon, pour les
-        # niveaux 1-6, une notion explicitement sauvegardée est exploitable.
-        # Pour les niveaux 7-9, utiliser les étapes, sans inventer de cause.
-        if recents["competences"]:
-            recent_suivi = recents["competences"]
-        elif niveau >= 7:
-            recent_suivi = recents["etapes"]
+        # Une famille de tâches et une étape sont deux lectures distinctes :
+        # conserver les DEUX permet de repérer une dernière question souvent
+        # ratée, même lorsqu'elle couvre des familles mathématiques variées.
+        familles = _difficultes_significatives(
+            recents["competences"], nature="famille")
+        if niveau >= 7:
+            etapes = _difficultes_significatives(
+                recents["etapes"], nature="etape")
+            difficultes = familles + etapes
         else:
-            recent_suivi = {f"Notion : {nom}": v
-                            for nom, v in recents["notions"].items()}
-        difficultes = _difficultes_significatives(recent_suivi)
+            notions = {f"Notion : {nom}": v
+                       for nom, v in recents["notions"].items()}
+            difficultes = familles + _difficultes_significatives(
+                notions, nature="notion")
         apres = [p for p in lignes if p.get("entrainement_cible")]
         avant = [p for p in lignes if not p.get("entrainement_cible")]
         avant_stats = _resume_questions(avant)
@@ -244,8 +259,13 @@ def conseil_argumente(g):
              f"({taux} %) sur {len(g['points'])} exercice(s) suivi(s).")
     if g["difficultes"]:
         d = g["difficultes"][0]
-        milieu = (f"Dans les 12 derniers exercices au maximum, les erreurs reviennent sur "
-                  f"« {d['label']} » : {d['erreurs']} sur {d['total']} questions évaluées.")
+        sujet = ("les tâches de type" if d.get("nature") == "famille"
+                 else "l'étape" if d.get("nature") == "etape"
+                 else "la notion")
+        milieu = (f"Dans les 12 derniers exercices au maximum, les erreurs "
+                  f"se répètent sur {sujet} « {d['label']} » : "
+                  f"{d['erreurs']} sur {d['total']} questions évaluées. "
+                  "Cela ne permet pas à lui seul d'identifier la cause des erreurs.")
     elif n >= 7 and g["recents"]["sans_numerotation"]:
         milieu = "Certaines questions n'ont pas de numéro pédagogique fiable."
     else:
