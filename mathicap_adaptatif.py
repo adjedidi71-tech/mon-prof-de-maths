@@ -79,10 +79,17 @@ def _etape(question, questions, niveau):
     return "Étapes intermédiaires"
 
 
-def _resume_questions(points):
-    """Pour un groupe chapitre+niveau, une tentative = un exercice principal."""
+def resumer_questions(points):
+    """Agrège les premiers résultats notables et l'état ACTUEL des rédactions.
+
+    L'achèvement de la saisie n'est pas une preuve de réussite autonome :
+    seules les parties automatiquement vérifiables entrent dans le score.
+    """
     q_total = q_bonnes = total_champs = bonnes_champs = 0
-    terminés = 0
+    entierement_saisis = 0
+    sans_redaction = 0
+    redactions_renseignees = 0
+    redactions_manquantes = 0
     libres = 0
     sans_numerotation = 0
     positions = defaultdict(lambda: {"total": 0, "bonnes": 0})
@@ -100,8 +107,15 @@ def _resume_questions(points):
         q_bonnes += sum(q["bonne"] for q in qs)
         if p.get("avec_texte_libre"):
             libres += 1
+            if p.get("redaction_actuellement_renseignee") is True:
+                redactions_renseignees += 1
+                entierement_saisis += 1
+            else:
+                # Inconnu/non sauvegardé : on ne présume pas la saisie complète.
+                redactions_manquantes += 1
         else:
-            terminés += 1
+            sans_redaction += 1
+            entierement_saisis += 1
         if not p.get("numero_question_fiable"):
             sans_numerotation += 1
         niveau = p["niveau"]
@@ -127,7 +141,16 @@ def _resume_questions(points):
 
     return {"questions": q_total, "questions_bonnes": q_bonnes,
             "champs": total_champs, "champs_bons": bonnes_champs,
-            "problemes_termines_evaluables": terminés,
+            # Au premier clic valide, tous les champs NOTABLES étaient remplis.
+            # Les rédactions proviennent de la sauvegarde ACTUELLE ; elles peuvent
+            # avoir été écrites ou modifiées après la première vérification.
+            "problemes_entierement_renseignes": entierement_saisis,
+            "problemes_sans_redaction": sans_redaction,
+            "problemes_redaction_renseignee": redactions_renseignees,
+            "problemes_redaction_manquante": redactions_manquantes,
+            # Ancienne clé conservée pour compatibilité interne, à ne pas
+            # présenter comme « nombre total de problèmes terminés ».
+            "problemes_termines_evaluables": sans_redaction,
             "problemes_avec_texte_libre": libres,
             "sans_numerotation": sans_numerotation,
             "positions": dict(positions), "etapes": dict(etapes),
@@ -195,8 +218,8 @@ def analyser_bilan(points):
     for (chapitre, niveau), lignes in sorted(groupes.items(), key=lambda item: (item[0][0], item[0][1])):
         # Trier même si des données arrivent hors ordre.
         lignes = sorted(lignes, key=lambda p: p.get("date") or "", reverse=True)
-        stats = _resume_questions(lignes)
-        recents = _resume_questions(lignes[:12])
+        stats = resumer_questions(lignes)
+        recents = resumer_questions(lignes[:12])
         # Une famille de tâches et une étape sont deux lectures distinctes :
         # conserver les DEUX permet de repérer une dernière question souvent
         # ratée, même lorsqu'elle couvre des familles mathématiques variées.
@@ -213,22 +236,22 @@ def analyser_bilan(points):
                 notions, nature="notion")
         apres = [p for p in lignes if p.get("entrainement_cible")]
         avant = [p for p in lignes if not p.get("entrainement_cible")]
-        avant_stats = _resume_questions(avant)
-        apres_stats = _resume_questions(apres)
+        avant_stats = resumer_questions(avant)
+        apres_stats = resumer_questions(apres)
         taux = (stats["questions_bonnes"] / stats["questions"]
                 if stats["questions"] else None)
         eligible = None
         if niveau >= 7:
-            if stats["problemes_termines_evaluables"] < 6 or stats["questions"] < 20:
+            if stats["problemes_entierement_renseignes"] < 6 or stats["questions"] < 20:
                 eligible = "echantillon_insuffisant"
-            elif stats["problemes_avec_texte_libre"]:
-                eligible = "verification_humaine_necessaire"
-            elif taux is None or taux < .8:
-                eligible = "a_consolider"
-            elif difficultes:
+            elif taux is None or taux < .8 or difficultes:
                 eligible = "a_consolider"
             elif recents["sans_numerotation"] > 0:
                 eligible = "analyse_incomplete"
+            elif stats["problemes_avec_texte_libre"]:
+                # Les résultats numériques seuls ne certifient pas une
+                # rédaction, mais ne doivent pas non plus effacer les progrès.
+                eligible = "progression_sous_reserve_redaction"
             else:
                 eligible = "progression_envisageable"
         else:
@@ -255,8 +278,9 @@ def conseil_argumente(g):
     n = g["niveau"]
     nb = s["questions"]
     taux = round(100 * s["questions_bonnes"] / nb) if nb else 0
-    debut = (f"Niveau {n} : {s['questions_bonnes']}/{nb} questions évaluées correctement "
-             f"({taux} %) sur {len(g['points'])} exercice(s) suivi(s).")
+    debut = (f"Niveau {n} : {s['questions_bonnes']}/{nb} questions dont les "
+             f"champs notés automatiquement sont corrects ({taux} %) "
+             f"sur {len(g['points'])} exercice(s) vérifié(s).")
     if g["difficultes"]:
         d = g["difficultes"][0]
         sujet = ("les tâches de type" if d.get("nature") == "famille"
@@ -272,13 +296,17 @@ def conseil_argumente(g):
         milieu = "Aucune difficulté répétée suffisamment étayée n'a été détectée."
     if g["statut"] == "echantillon_insuffisant":
         if n >= 7:
-            fin = ("Continue avec des problèmes complets : il faut au moins 6 problèmes "
-                   "et 20 questions évaluées au même niveau pour un premier conseil de progression.")
+            fin = (f"Continue avec des problèmes complets : "
+                   f"{s['problemes_entierement_renseignes']}/6 problèmes "
+                   f"entièrement renseignés et {s['questions']}/20 questions "
+                   "notées automatiquement au même niveau. Les rédactions "
+                   "doivent être remplies, mais ne sont pas notées automatiquement.")
         else:
             fin = "Continue à t'entraîner : il faut davantage de réponses pour établir une tendance."
-    elif g["statut"] == "verification_humaine_necessaire":
-        fin = ("Des questions rédigées restent non évaluées automatiquement. "
-               "Elles nécessitent une vérification avant de conclure à la maîtrise complète.")
+    elif g["statut"] == "progression_sous_reserve_redaction":
+        fin = ("Les résultats automatiquement évaluables sont encourageants. "
+               "Le niveau suivant peut être envisagé, sous réserve de faire "
+               "relire les réponses rédigées : elles ne sont pas notées ici.")
     elif g["statut"] in ("a_consolider", "analyse_incomplete"):
         fin = ("Je te conseille de refaire des exercices du même niveau, "
                "en ciblant les difficultés constatées, puis de comparer tes nouvelles réponses.")
