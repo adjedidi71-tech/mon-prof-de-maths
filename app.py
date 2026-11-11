@@ -4972,6 +4972,19 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     "etat": etat_serie,
                 })
 
+            # Les séries sont chargées de la plus récente à la plus ancienne.
+            # Les compteurs ci-dessus attribuent provisoirement S1 à la plus
+            # récente. Inverser les numéros DANS CHAQUE CHAPITRE uniquement :
+            # l'ancienne série devient S1, la nouvelle reçoit le numéro suivant.
+            # L'ordre d'affichage reste récent -> ancien, et le bilan reçoit
+            # exactement ce même numéro depuis fiche["numero"]. Après une
+            # suppression, les numéros restants sont recalculés comme avant.
+            for fiche in fiches_series:
+                fiche["numero"] = (
+                    compteurs_chapitres[fiche["titre_chapitre"]]
+                    - fiche["numero"] + 1
+                )
+
             chapitres_disponibles = sorted({
                 chap for fiche in fiches_series for chap in fiche["chapitres"]
             }, key=str.casefold)
