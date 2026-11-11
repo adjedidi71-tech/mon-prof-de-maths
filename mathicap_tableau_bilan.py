@@ -5,8 +5,9 @@ Les tentatives anciennes / partielles / après correction sont exclues du score.
 """
 
 from html import escape
-from mathicap_diagnostic import premier_bilan
-from mathicap_adaptatif import analyser_bilan, questions_pedagogiques, conseil_argumente
+from mathicap_diagnostic import premier_bilan, valeur_renseignee
+from mathicap_adaptatif import (analyser_bilan, questions_pedagogiques,
+                                conseil_argumente, resumer_questions)
 
 
 def charger_evenements(client, eleve_id):
@@ -71,6 +72,31 @@ def _details_verification(exercice, saisies):
     return resultat
 
 
+def _etat_redaction_actuelle(exercice, reponses_sauvegardees):
+    """Lecture seule : toutes les rédactions sont-elles ACTUELLEMENT renseignées ?
+
+    L'événement immuable ne contient que les champs notables. On ne peut donc
+    pas attester que la rédaction était présente lors du premier contrôle.
+    None signifie : l'exercice ne comporte aucune rédaction distincte.
+    """
+    champs = [c for c in (exercice.get("champs_reponse") or [])
+              if isinstance(c, dict) and c.get("type") == "texte_libre"]
+    if not champs:
+        return None
+    if not isinstance(reponses_sauvegardees, dict):
+        return False
+    if reponses_sauvegardees.get("type") != "banque":
+        return False
+    saisies = reponses_sauvegardees.get("champs")
+    if not isinstance(saisies, dict):
+        return False
+    return all(
+        isinstance(saisies.get(c.get("id")), str)
+        and valeur_renseignee(saisies.get(c.get("id")))
+        for c in champs
+    )
+
+
 def calculer_bilan(series_filtrees, evenements):
     """Sépare répartition par position, chapitres et niveaux ; non évalué != erreur."""
     index = {}
@@ -114,6 +140,12 @@ def calculer_bilan(series_filtrees, evenements):
         questions, texte_libre, numerotation = questions_pedagogiques(
             exercice, repartition
         )
+        reponses_actuelles = s.get("reponses") or {}
+        if not isinstance(reponses_actuelles, dict):
+            reponses_actuelles = {}
+        etat_redaction = _etat_redaction_actuelle(
+            exercice, reponses_actuelles.get(str(numero))
+        )
         points.append({
             "chapitre": chapitre if isinstance(chapitre, str) else "",
             "niveau": niveau, "serie": fiche.get("numero", "?"),
@@ -124,6 +156,7 @@ def calculer_bilan(series_filtrees, evenements):
             # écriture Supabase et sans remplacer les scores d'origine.
             "questions_pedagogiques": questions,
             "avec_texte_libre": texte_libre,
+            "redaction_actuellement_renseignee": etat_redaction,
             "numero_question_fiable": numerotation,
             "notion": exercice.get("mathicap_partie"),
             "exercice_id": exercice.get("id"),
@@ -156,7 +189,7 @@ def calculer_bilan(series_filtrees, evenements):
 def _html_tableau(points):
     recents = points[:10]
     maxi = max(len(x["questions"]) for x in recents)
-    titres = "".join(f"<th scope='col'>Q{i}</th>" for i in range(1, maxi + 1))
+    titres = "".join(f"<th scope='col'>C{i}</th>" for i in range(1, maxi + 1))
     lignes = []
     for p in recents:
         type_ligne = "P" if p["niveau"] >= 7 else "Ex"
@@ -214,19 +247,24 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
                 "Les anciennes tentatives ne sont pas reconstituées.")
         return
     points = bilan["points"]
-    st.caption(f"{len(points)} exercice(s) vérifié(s) · "
-               f"{bilan['bonnes']}/{bilan['total']} réponses correctes "
-               f"({round(100*bilan['bonnes']/bilan['total'])} %).")
+    somme = resumer_questions(points)
+    st.caption(
+        f"{len(points)} exercice(s) ayant une première vérification valide · "
+        f"{somme['questions_bonnes']}/{somme['questions']} questions dont les "
+        f"champs notés automatiquement sont corrects "
+        f"({round(100 * somme['questions_bonnes']/somme['questions'])} %)."
+    )
+    st.caption(
+        f"Détail des champs de réponse : {bilan['bonnes']}/{bilan['total']} "
+        f"champs corrects ({round(100*bilan['bonnes']/bilan['total'])} %). "
+        "Une question peut contenir plusieurs champs : "
+        "les deux pourcentages mesurent des choses différentes."
+    )
     st.html(_html_tableau(points))
-    st.caption("✓ Correcte · × Incorrecte · — Question absente. "
+    st.caption("C1, C2… = champs de réponse (pas forcément les questions 1, 2…). "
+               "✓ Correct · × Incorrect · — Champ absent. "
                "Les 10 dernières vérifications sont affichées ; "
                "les statistiques portent sur toutes les vérifications sélectionnées.")
-    # Le tableau v1 présente les champs notés, dans l'ordre de saisie.
-    # Leur dernière position n'est PAS forcément la dernière question.
-    # Le module adaptatif ci-dessous fait le regroupement pédagogique fiable.
-    st.caption("La grille ci-dessus présente les champs évalués. Une question "
-               "peut contenir plusieurs champs ; l'analyse par question figure "
-               "dans le bilan détaillé ci-dessous.")
     if bilan["exclus"]:
         st.caption("Les vérifications incomplètes, consultations préalables "
                    "de correction et résultats non détaillables sont exclus "
@@ -252,6 +290,7 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
                 "Conseil": {
                     "echantillon_insuffisant": "Continuer à s'entraîner",
                     "verification_humaine_necessaire": "Vérifier les réponses rédigées",
+                    "progression_sous_reserve_redaction": "Progression possible, rédaction à vérifier",
                     "a_consolider": "Consolider",
                     "analyse_incomplete": "Données à compléter",
                     "encourageant": "Résultats encourageants",
@@ -277,7 +316,7 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
                    "(catégories contrôlées sur les modèles reconnus)")
         st.dataframe([
             {"Type de tâche": nom,
-             "Réponses": f"{v['bonnes']}/{v['total']}",
+             "Partie notée correcte": f"{v['bonnes']}/{v['total']}",
              "Erreurs": v["total"] - v["bonnes"]}
             for nom, v in sorted(stats["competences"].items())
         ], hide_index=True, width="stretch")
@@ -288,30 +327,42 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
         ordre = ("Début du problème", "Étapes intermédiaires", "Résolution finale")
         st.dataframe([
             {"Étape": label,
-             "Réponses": f"{stats['etapes'][label]['bonnes']}/{stats['etapes'][label]['total']}",
+             "Partie notée correcte": f"{stats['etapes'][label]['bonnes']}/{stats['etapes'][label]['total']}",
              "Erreurs": stats["etapes"][label]["total"] - stats["etapes"][label]["bonnes"]}
             for label in ordre if label in stats["etapes"]
         ], hide_index=True, width="stretch")
     elif stats["notions"]:
         st.caption("Réponses par notion travaillée")
         st.dataframe([
-            {"Notion": nom, "Réponses": f"{v['bonnes']}/{v['total']}",
+            {"Notion": nom, "Partie notée correcte": f"{v['bonnes']}/{v['total']}",
              "Erreurs": v["total"] - v["bonnes"]}
             for nom, v in sorted(stats["notions"].items())
         ], hide_index=True, width="stretch")
 
     if g["niveau"] >= 7:
         st.caption(
-            f"Pour envisager une progression : "
-            f"{stats['problemes_termines_evaluables']}/6 problèmes "
-            f"entièrement évaluables (minimum), "
-            f"{stats['questions']}/20 questions évaluées (minimum), "
-            "et 80 % de réussite, sans difficulté répétée importante."
+            "Pour envisager une progression dans ce niveau : "
+            f"{stats['problemes_entierement_renseignes']}/6 problèmes "
+            "entièrement renseignés (minimum), "
+            f"{stats['questions']}/20 questions à réponse notée "
+            "automatiquement (minimum), au moins 80 % de réussite sur "
+            "les parties notées, et pas de difficulté répétée importante."
         )
-    if stats["problemes_avec_texte_libre"]:
-        st.caption("Des problèmes comprennent une réponse rédigée non notée "
-                   "automatiquement. Ils ne sont pas déclarés intégralement "
-                   "maîtrisés à partir des seuls champs numériques.")
+        if stats["problemes_avec_texte_libre"]:
+            st.caption(
+                "Détail des problèmes vérifiés : "
+                f"{stats['problemes_sans_redaction']} sans rédaction, "
+                f"{stats['problemes_redaction_renseignee']} avec rédaction "
+                "actuellement renseignée, "
+                f"{stats['problemes_redaction_manquante']} avec rédaction "
+                "non renseignée dans les réponses sauvegardées. "
+                "Une rédaction remplie compte comme saisie, jamais comme "
+                "réponse correcte automatiquement. Sa présence au moment "
+                "de la première vérification n'est pas attestée."
+            )
+    elif stats["problemes_avec_texte_libre"]:
+        st.caption("Les réponses rédigées ne sont pas notées automatiquement ; "
+                   "leur saisie ne prouve pas leur réussite.")
     if stats["sans_numerotation"] and g["niveau"] >= 7:
         st.caption("Certaines séries ne précisent pas la numérotation des "
                    "questions : aucune compétence finale n'est inférée pour elles.")
