@@ -186,8 +186,71 @@ def calculer_bilan(series_filtrees, evenements):
     }
 
 
+def _tranches_bilan(nombre, taille=10):
+    """Tranches d'affichage uniquement ; les scores utilisent le bilan complet."""
+    if type(nombre) is not int or nombre <= 0 or type(taille) is not int or taille <= 0:
+        return []
+    return [(debut, min(debut + taille, nombre))
+            for debut in range(0, nombre, taille)]
+
+
+def _tranche_choisie(st, eleve_id, points, *, taille=10):
+    """Sélection 1–10, 11–20… ; mémorisée dans l'URL, par contexte de filtre.
+
+    Aucune information d'élève ou de réponse n'est placée dans l'URL.
+    La sélection n'affecte ni les résultats ni l'analyse pédagogique.
+    """
+    tranches = _tranches_bilan(len(points), taille)
+    if not tranches:
+        return [], (0, 0)
+
+    cle = f"mathicap_bilan_tranche_{eleve_id}"
+    cle_contexte = "_mc_bilan_tranche_contexte"
+    contexte = (
+        str(eleve_id),
+        str(st.query_params.get("ms_chapitre", "")),
+        str(st.query_params.get("ms_niveau", "")),
+        str(st.query_params.get("ms_avancement", "")),
+    )
+    ancien_contexte = st.session_state.get(cle_contexte)
+    if ancien_contexte is not None and ancien_contexte != contexte:
+        # Changer de filtre ou d'élève : repartir des lignes récentes.
+        st.session_state[cle] = 0
+        st.query_params.pop("mb_tranche", None)
+    st.session_state[cle_contexte] = contexte
+
+    if cle not in st.session_state:
+        try:
+            numero_url = int(st.query_params.get("mb_tranche", "1")) - 1
+        except (TypeError, ValueError):
+            numero_url = 0
+        st.session_state[cle] = numero_url if 0 <= numero_url < len(tranches) else 0
+
+    if (type(st.session_state.get(cle)) is not int
+            or not 0 <= st.session_state[cle] < len(tranches)):
+        st.session_state[cle] = 0
+        st.query_params.pop("mb_tranche", None)
+
+    def memoriser_tranche():
+        st.query_params["mb_tranche"] = str(st.session_state[cle] + 1)
+        st.query_params["vue"] = "series"
+
+    if len(tranches) > 1:
+        st.selectbox(
+            "Exercices affichés", list(range(len(tranches))),
+            format_func=lambda i: f"{tranches[i][0] + 1} à {tranches[i][1]}",
+            key=cle, on_change=memoriser_tranche,
+            help="Parcourir les exercices évalués, du plus récent au plus ancien. "
+                 "Le diagnostic porte toujours sur l'ensemble des exercices filtrés.",
+        )
+    debut, fin = tranches[st.session_state[cle]]
+    return points[debut:fin], (debut, fin)
+
+
 def _html_tableau(points):
-    recents = points[:10]
+    recents = points
+    if not recents:
+        return ""
     maxi = max(len(x["questions"]) for x in recents)
     titres = "".join(f"<th scope='col'>C{i}</th>" for i in range(1, maxi + 1))
     lignes = []
@@ -246,87 +309,124 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
         st.info("Pas encore de vérification autonome complète pour ces filtres. "
                 "Les anciennes tentatives ne sont pas reconstituées.")
         return
+    # La sélection de la tranche ne change jamais le groupe diagnostiqué.
     points = bilan["points"]
     somme = resumer_questions(points)
-    st.caption(
-        f"{len(points)} exercice(s) ayant une première vérification valide · "
-        f"{somme['questions_bonnes']}/{somme['questions']} questions dont les "
-        f"champs notés automatiquement sont corrects "
-        f"({round(100 * somme['questions_bonnes']/somme['questions'])} %)."
-    )
-    st.caption(
-        f"Détail des champs de réponse : {bilan['bonnes']}/{bilan['total']} "
-        f"champs corrects ({round(100*bilan['bonnes']/bilan['total'])} %). "
-        "Une question peut contenir plusieurs champs : "
-        "les deux pourcentages mesurent des choses différentes."
-    )
-    st.html(_html_tableau(points))
-    st.caption("C1, C2… = champs de réponse (pas forcément les questions 1, 2…). "
-               "✓ Correct · × Incorrect · — Champ absent. "
-               "Les 10 dernières vérifications sont affichées ; "
-               "les statistiques portent sur toutes les vérifications sélectionnées.")
-    if bilan["exclus"]:
-        st.caption("Les vérifications incomplètes, consultations préalables "
-                   "de correction et résultats non détaillables sont exclus "
-                   "du tableau.")
-
-    # Projet 2 - option C : analyse multi-questions et conseils par niveau.
-    # Les filtres mixtes ne conduisent jamais à une progression globale.
     groupes = analyser_bilan(points)
-    if not groupes:
-        return None
-    st.markdown("##### Mon diagnostic pédagogique")
-    if len(groupes) > 1:
-        st.caption("Chaque niveau est analysé séparément. Sélectionne un chapitre "
-                   "et un niveau dans les filtres pour voir le conseil détaillé "
-                   "et accéder à un entraînement ciblé.")
+    groupe_unique = groupes[0] if len(groupes) == 1 else None
+    taux = (round(100 * somme["questions_bonnes"] / somme["questions"])
+            if somme["questions"] else 0)
+
+    # Trois indicateurs faciles à comprendre, avec leurs dénominateurs.
+    col_score, col_finale, col_volume = st.columns(3, gap="small")
+    with col_score:
+        st.metric("Questions réussies", f"{taux} %")
+        st.caption(f"{somme['questions_bonnes']}/{somme['questions']} questions notées")
+    if groupe_unique and groupe_unique["niveau"] >= 7:
+        etape_finale = groupe_unique["stats"]["etapes"].get("Résolution finale") or {}
+        nb_finales = etape_finale.get("total", 0)
+        bonnes_finales = etape_finale.get("bonnes", 0)
+        with col_finale:
+            st.metric("Résolutions finales", (
+                f"{round(100 * bonnes_finales / nb_finales)} %"
+                if nb_finales else "—"
+            ))
+            st.caption(f"{bonnes_finales}/{nb_finales} questions finales notées")
+        with col_volume:
+            st.metric("Problèmes renseignés",
+                      f"{groupe_unique['stats']['problemes_entierement_renseignes']}"
+                      f"/{len(groupe_unique['points'])}")
+            st.caption("Toutes les cases remplies, sans garantir la réussite")
+    else:
+        with col_finale:
+            st.metric("Questions notées", str(somme["questions"]))
+            st.caption("Parties évaluables automatiquement")
+        with col_volume:
+            st.metric("Exercices évalués", str(len(points)))
+            st.caption("Premières vérifications autonomes")
+
+    # Le conseil doit être visible AVANT les longs tableaux explicatifs.
+    if len(groupes) == 1:
+        g = groupes[0]
+        stats = g["stats"]
+        constat, interpretation, proposition = conseil_argumente(g)
+        with st.container(border=True):
+            st.markdown("##### Mon conseil pour progresser")
+            st.write(proposition)
+            st.caption(interpretation)
+    elif len(groupes) > 1:
+        with st.container(border=True):
+            st.markdown("##### Mon conseil pour progresser")
+            st.write("Les résultats sont analysés séparément par chapitre et par niveau. "
+                     "Choisis un chapitre et un niveau dans les filtres pour recevoir "
+                     "un conseil personnalisé.")
         st.dataframe([
             {
-                "Chapitre": g["chapitre"],
-                "Niveau": g["niveau"],
-                "Questions évaluées": g["stats"]["questions"],
-                "Réussite": (f"{round(100 * g['taux'])} %"
-                            if g["taux"] is not None else "—"),
+                "Chapitre": grp["chapitre"],
+                "Niveau": grp["niveau"],
+                "Questions évaluées": grp["stats"]["questions"],
+                "Réussite": (f"{round(100 * grp['taux'])} %"
+                            if grp["taux"] is not None else "—"),
                 "Conseil": {
                     "echantillon_insuffisant": "Continuer à s'entraîner",
                     "verification_humaine_necessaire": "Vérifier les réponses rédigées",
-                    "progression_sous_reserve_redaction": "Progression possible, rédaction à vérifier",
+                    "progression_sous_reserve_redaction": "Passage envisageable, rédaction à vérifier",
                     "a_consolider": "Consolider",
                     "analyse_incomplete": "Données à compléter",
                     "encourageant": "Résultats encourageants",
-                    "progression_envisageable": "Progression envisageable",
-                }.get(g["statut"], "À suivre"),
-            } for g in groupes
+                    "progression_envisageable": "Passage envisageable",
+                }.get(grp["statut"], "À suivre"),
+            } for grp in groupes
         ], hide_index=True, width="stretch")
+
+    # Pagination visuelle, indépendante du calcul précédent.
+    gauche, droite = st.columns([4, 1.5], gap="small")
+    with gauche:
+        st.markdown("##### Répartition de mes réponses")
+        st.caption(f"{len(points)} exercices évalués, du plus récent au plus ancien")
+    with droite:
+        selection, (debut, fin) = _tranche_choisie(st, eleve_id, points)
+    st.html(_html_tableau(selection))
+    st.caption(
+        f"Lignes {debut + 1} à {fin} sur {len(points)} · "
+        "✓ correcte · × incorrecte · — champ absent. "
+        "C1, C2… désignent les champs de réponse, pas nécessairement des questions distinctes."
+    )
+    with st.expander("Comment sont calculés mes résultats ?", expanded=False):
+        st.write(
+            "Le pourcentage principal compte les **questions pédagogiques** : "
+            "une question à plusieurs champs n'est réussie que si tous "
+            "ses champs évaluables sont corrects."
+        )
+        st.caption(
+            f"Questions : {somme['questions_bonnes']}/{somme['questions']} correctes "
+            f"({taux} %). Champs de réponse : {bilan['bonnes']}/{bilan['total']} "
+            f"corrects ({round(100 * bilan['bonnes']/bilan['total'])} %). "
+            "Ces résultats portent sur tous les exercices des filtres, "
+            "quelle que soit la tranche affichée."
+        )
+        st.caption("Seules les premières vérifications complètes, sans correction "
+                   "consultée auparavant, entrent dans ce bilan.")
+        if bilan["exclus"]:
+            st.caption("Certaines tentatives incomplètes, réalisées après "
+                       "correction ou non détaillables ne sont pas comptées.")
+
+    if len(groupes) != 1:
         return None
-
-    g = groupes[0]
-    stats = g["stats"]
-    constat, interpretation, proposition = conseil_argumente(g)
-    st.write(constat)
-    st.caption(interpretation)
-    # Une réserve technique ne doit pas remplacer le conseil pédagogique.
-    # Présenter une action explicite, non une notification bleue isolée.
-    st.markdown("**Mon conseil pour progresser**")
-    st.write(proposition)
-
-    # Contrairement au tableau des champs affiché plus haut, ce bilan
-    # regroupe les champs appartenant à la même QUESTION pédagogique.
-    # Les familles sont des types de tâches observées, pas des causes
-    # d'erreur certaines ni des compétences certifiées maîtrisées.
+    # Conserver les tableaux de diagnostic détaillés et les actions existantes.
+    st.markdown("##### Mes points forts et difficultés")
     if stats["competences"]:
-        st.caption("Types de tâches mathématiques travaillées "
-                   "(catégories contrôlées sur les modèles reconnus)")
+        st.markdown("**Types de tâches mathématiques**")
         st.dataframe([
             {"Type de tâche": nom,
              "Partie notée correcte": f"{v['bonnes']}/{v['total']}",
              "Erreurs": v["total"] - v["bonnes"]}
             for nom, v in sorted(stats["competences"].items())
         ], hide_index=True, width="stretch")
-        st.caption("Une erreur peut venir du calcul, de la lecture ou de la méthode. "
-                   "Le tableau indique où elle apparaît, sans présumer sa cause.")
+        st.caption("Ce tableau indique où apparaissent les erreurs ; "
+                   "il ne permet pas, à lui seul, d'en connaître la cause.")
     if g["niveau"] >= 7 and stats["etapes"]:
-        st.caption("Réussites par étape du problème (questions évaluables)")
+        st.markdown("**Réussite selon l'étape du problème**")
         ordre = ("Début du problème", "Étapes intermédiaires", "Résolution finale")
         st.dataframe([
             {"Étape": label,
@@ -335,7 +435,7 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
             for label in ordre if label in stats["etapes"]
         ], hide_index=True, width="stretch")
     elif stats["notions"]:
-        st.caption("Réponses par notion travaillée")
+        st.markdown("**Réussite selon la notion travaillée**")
         st.dataframe([
             {"Notion": nom, "Partie notée correcte": f"{v['bonnes']}/{v['total']}",
              "Erreurs": v["total"] - v["bonnes"]}
@@ -344,28 +444,29 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
 
     if g["niveau"] >= 7:
         st.caption(
-            "Pour envisager une progression dans ce niveau : "
-            f"{stats['problemes_entierement_renseignes']}/6 problèmes "
-            "entièrement renseignés (minimum), "
-            f"{stats['questions']}/20 questions à réponse notée "
-            "automatiquement (minimum), au moins 80 % de réussite sur "
-            "les parties notées, et pas de difficulté répétée importante."
+            f"Repères pour progresser : au moins 6 problèmes entièrement "
+            f"renseignés (actuellement {stats['problemes_entierement_renseignes']}), "
+            f"20 questions notées (actuellement {stats['questions']}), "
+            "80 % de réussite et pas de difficulté répétée importante."
         )
-        if stats["problemes_avec_texte_libre"]:
+    if stats["problemes_redaction_manquante"]:
+        st.caption(
+            f"Rédactions : {stats['problemes_redaction_manquante']} problème(s) "
+            "ont encore une rédaction vide dans les réponses enregistrées. "
+            "Elles ne sont pas évaluées automatiquement et ne retirent aucun point."
+        )
+    if stats["problemes_avec_texte_libre"]:
+        with st.expander("Détail des réponses rédigées", expanded=False):
             st.caption(
-                "Détail des problèmes vérifiés : "
-                f"{stats['problemes_sans_redaction']} sans rédaction, "
+                f"Parmi les exercices évalués : {stats['problemes_sans_redaction']} "
+                "sans rédaction, "
                 f"{stats['problemes_redaction_renseignee']} avec rédaction "
-                "actuellement renseignée, "
+                "actuellement renseignée et "
                 f"{stats['problemes_redaction_manquante']} avec rédaction "
-                "non renseignée dans les réponses sauvegardées. "
-                "Une rédaction remplie compte comme saisie, jamais comme "
-                "réponse correcte automatiquement. Sa présence au moment "
-                "de la première vérification n'est pas attestée."
+                "non renseignée dans les sauvegardes. "
+                "Une rédaction complétée n'est jamais comptée automatiquement "
+                "comme correcte et son état au premier contrôle est inconnu."
             )
-    elif stats["problemes_avec_texte_libre"]:
-        st.caption("Les réponses rédigées ne sont pas notées automatiquement ; "
-                   "leur saisie ne prouve pas leur réussite.")
     if stats["sans_numerotation"] and g["niveau"] >= 7:
         st.caption("Certaines séries ne précisent pas la numérotation des "
                    "questions : aucune compétence finale n'est inférée pour elles.")
