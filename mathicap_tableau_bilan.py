@@ -286,7 +286,7 @@ def _html_tableau(points):
 def afficher_tableau_series(st, client, eleve_id, series_filtrees):
     """Affichage automatique dans Mes séries, après les filtres, avant la liste."""
     st.markdown("#### Mon bilan de compétences")
-    st.caption("Mes premières réponses évaluées, sans correction préalable · niveaux 1 à 9")
+    st.caption("Mes premières réponses évaluées, sans correction préalable · niveaux 1 à 9 · Lot 1 (12/11)")
     memo = st.session_state.get("_mc_heat_cache")
     import time
     if (not isinstance(memo, dict)
