@@ -272,45 +272,115 @@ def analyser_bilan(points):
     return sorties
 
 
+def _fragilite_resolution_finale(g):
+    """Conseil de vigilance, distinct d'une difficulté répétée bloquante.
+
+    Un écart modéré sur la synthèse ne doit pas être ignoré quand la moyenne
+    dépasse 80 %, ni transformer des réponses rédigées en erreurs.
+    """
+    if g.get("niveau", 0) < 7:
+        return None
+    etapes = g.get("stats", {}).get("etapes", {})
+    finale = etapes.get("Résolution finale") or {}
+    total = finale.get("total", 0)
+    bonnes = finale.get("bonnes", 0)
+    # Échantillon minimal : éviter un message pour 1 ou 2 réponses.
+    if total < 6 or not 0 <= bonnes <= total:
+        return None
+    if bonnes / total >= 0.75:
+        return None
+    # Cette information est un signal d'attention, pas un diagnostic causal.
+    return (f"Sur les questions de résolution finale automatiquement évaluables, "
+            f"tu as réussi {bonnes} réponses sur {total} "
+            f"({round(100 * bonnes / total)} %). "
+            "Cette étape mérite encore un entraînement, sans que cela "
+            "constitue à lui seul un blocage de progression.")
+
+
 def conseil_argumente(g):
-    """Le conseil est transparent : constat, réserve, puis action concrète."""
+    """Conseil actionnable : réussite, fragilités, réserve et prochaine étape."""
     s = g["stats"]
     n = g["niveau"]
     nb = s["questions"]
     taux = round(100 * s["questions_bonnes"] / nb) if nb else 0
-    debut = (f"Niveau {n} : {s['questions_bonnes']}/{nb} questions dont les "
-             f"champs notés automatiquement sont corrects ({taux} %) "
-             f"sur {len(g['points'])} exercice(s) vérifié(s).")
+    constat = (f"Niveau {n} : {s['questions_bonnes']}/{nb} questions "
+               f"automatiquement évaluables réussies ({taux} %) "
+               f"sur {len(g['points'])} exercice(s) suivi(s).")
+    fragilite = _fragilite_resolution_finale(g)
     if g["difficultes"]:
         d = g["difficultes"][0]
         sujet = ("les tâches de type" if d.get("nature") == "famille"
                  else "l'étape" if d.get("nature") == "etape"
                  else "la notion")
-        milieu = (f"Dans les 12 derniers exercices au maximum, les erreurs "
-                  f"se répètent sur {sujet} « {d['label']} » : "
-                  f"{d['erreurs']} sur {d['total']} questions évaluées. "
-                  "Cela ne permet pas à lui seul d'identifier la cause des erreurs.")
+        interpretation = (
+            f"Sur les 12 derniers exercices au maximum, les erreurs se répètent "
+            f"sur {sujet} « {d['label']} » : "
+            f"{d['erreurs']} erreurs sur {d['total']} questions évaluées. "
+            "Ce constat ne suffit pas à identifier la cause des erreurs."
+        )
+    elif fragilite:
+        interpretation = fragilite
     elif n >= 7 and g["recents"]["sans_numerotation"]:
-        milieu = "Certaines questions n'ont pas de numéro pédagogique fiable."
+        interpretation = (
+            "Certaines questions ne possèdent pas de numéro pédagogique fiable ; "
+            "l'analyse des étapes peut être incomplète."
+        )
     else:
-        milieu = "Aucune difficulté répétée suffisamment étayée n'a été détectée."
-    if g["statut"] == "echantillon_insuffisant":
+        interpretation = (
+            "Aucune difficulté répétée importante n'a été détectée "
+            "sur les réponses automatiquement évaluables."
+        )
+    statut = g["statut"]
+    if statut == "echantillon_insuffisant":
         if n >= 7:
-            fin = (f"Continue avec des problèmes complets : "
-                   f"{s['problemes_entierement_renseignes']}/6 problèmes "
-                   f"entièrement renseignés et {s['questions']}/20 questions "
-                   "notées automatiquement au même niveau. Les rédactions "
-                   "doivent être remplies, mais ne sont pas notées automatiquement.")
+            proposition = (
+                f"Continue au niveau {n} : "
+                f"{s['problemes_entierement_renseignes']}/6 problèmes "
+                f"entièrement renseignés et {s['questions']}/20 questions "
+                "automatiquement évaluables. Il faut davantage de résultats "
+                "pour donner un conseil de passage fiable."
+            )
         else:
-            fin = "Continue à t'entraîner : il faut davantage de réponses pour établir une tendance."
-    elif g["statut"] == "progression_sous_reserve_redaction":
-        fin = ("Les résultats automatiquement évaluables sont encourageants. "
-               "Le niveau suivant peut être envisagé, sous réserve de faire "
-               "relire les réponses rédigées : elles ne sont pas notées ici.")
-    elif g["statut"] in ("a_consolider", "analyse_incomplete"):
-        fin = ("Je te conseille de refaire des exercices du même niveau, "
-               "en ciblant les difficultés constatées, puis de comparer tes nouvelles réponses.")
+            proposition = (
+                "Continue à t'entraîner au même niveau : il faut davantage "
+                "de réponses pour établir une tendance."
+            )
+    elif statut == "progression_sous_reserve_redaction":
+        ouverture = (f"Tu peux envisager le niveau {n + 1} "
+                     if n < 9 else "Tu as atteint les critères du niveau 9")
+        proposition = (
+            ouverture + ": les critères quantitatifs "
+            "et le taux de réussite sur les questions automatiquement notées "
+            "sont atteints, sans difficulté répétée importante détectée. "
+        )
+        if fragilite:
+            proposition += (
+                f"Avant de commencer, consolide la résolution finale avec "
+                f"quelques problèmes complets du niveau {n}. "
+            )
+        proposition += (
+            "Les réponses rédigées ne sont pas notées automatiquement : "
+            "leur vérification reste nécessaire pour confirmer la maîtrise "
+            "complète du niveau."
+        )
+    elif statut == "progression_envisageable":
+        ouverture = (f"Tu peux envisager le niveau {n + 1}" if n < 9
+                     else "Tu as atteint les critères du niveau 9")
+        proposition = ouverture + " : les critères prévus sont atteints."
+        if fragilite:
+            proposition += (
+                f" Pour renforcer tes acquis, travaille encore quelques "
+                f"résolutions finales sur des problèmes du niveau {n}."
+            )
+    elif statut in ("a_consolider", "analyse_incomplete"):
+        proposition = (
+            f"Poursuis pour le moment au niveau {n}. "
+            "Refais des problèmes complets en ciblant les difficultés observées, "
+            "puis compare tes nouvelles réponses."
+        )
     else:
-        fin = ("Tes résultats sont encourageants. Le passage au niveau suivant "
-               "peut être envisagé, sans être obligatoire.")
-    return debut, milieu, fin
+        proposition = (
+            "Tes résultats sont encourageants. Tu peux envisager le niveau "
+            "suivant, tout en continuant à consolider tes acquis."
+        )
+    return constat, interpretation, proposition
