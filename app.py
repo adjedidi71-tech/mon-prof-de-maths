@@ -4126,11 +4126,22 @@ if est_connecte and st.query_params.get("vue") == "profil":
         _mathicap_statistiques_progression(series_profil)
         if series_profil is not None else None
     )
+    # Source pédagogique unique : mêmes premières vérifications, mêmes séries
+    # toujours enregistrées, même regroupement de questions que « Mes séries ».
+    # Les événements orphelins (séries supprimées) ne sont jamais comptabilisés.
     try:
-        _diag_lignes = charger_indicateurs_autonomes(supabase_privee, identifiant_eleve)
-        _diag = resumer_indicateurs_autonomes(_diag_lignes)
+        from mathicap_tableau_bilan import charger_evenements, calculer_bilan
+        from mathicap_adaptatif import (analyser_bilan, resumer_questions,
+                                        conseil_argumente)
+        if series_profil is None:
+            raise RuntimeError("Séries non chargées")
+        _diag_evenements = charger_evenements(supabase_privee, identifiant_eleve)
+        _diag_bilan = calculer_bilan(
+            [{"serie": serie, "numero": None} for serie in series_profil],
+            _diag_evenements,
+        )
     except Exception:
-        _diag = None
+        _diag_bilan = None
 
     st.caption(
         "Le travail effectué et la réussite sans consultation de la correction "
@@ -4226,18 +4237,22 @@ if est_connecte and st.query_params.get("vue") == "profil":
             '</div>'
         )
 
-    # Autonomie : on additionne les questions évaluées, pas les séries.
-    if _diag is None:
+    # Autonomie : reprendre exactement le moteur du tableau « Mes séries ».
+    # Les lignes de questions pédagogiques sont regroupées de façon identique,
+    # et seules les séries encore présentes sont éligibles.
+    if _diag_bilan is None:
         st.warning("Le diagnostic autonome est momentanément indisponible.")
     else:
-        _selection_diag = [
-            g for g in _diag["groupes"]
-            if g["chapitre"] == _diag_chapitre
-            and (_niveau_filtre is None or g["niveau"] == _niveau_filtre)
+        _points_profil = [
+            p for p in _diag_bilan["points"]
+            if p["chapitre"] == _diag_chapitre
+            and (_niveau_filtre is None or p["niveau"] == _niveau_filtre)
         ]
-        _bonnes_autonomes = sum(g["bonnes"] for g in _selection_diag)
-        _questions_autonomes = sum(g["total"] for g in _selection_diag)
-        _exos_autonomes = sum(g["exercices_autonomes"] for g in _selection_diag)
+        _resume_profil = resumer_questions(_points_profil)
+        _groupes_profil = analyser_bilan(_points_profil)
+        _bonnes_autonomes = _resume_profil["questions_bonnes"]
+        _questions_autonomes = _resume_profil["questions"]
+        _exos_autonomes = len(_points_profil)
         _pct_autonome = (
             round(100 * _bonnes_autonomes / _questions_autonomes)
             if _questions_autonomes else None
@@ -4268,9 +4283,26 @@ if est_connecte and st.query_params.get("vue") == "profil":
             '</div>'
         )
         st.caption(
-            "Les variantes et les anciennes tentatives sans suivi sont exclues "
-            "du diagnostic. Aucun changement de niveau n'est conseillé à ce stade."
+            "Le diagnostic utilise les questions pédagogiques des séries "
+            "conservées et les premières vérifications autonomes complètes. "
+            "Les séries supprimées et les anciennes tentatives sans suivi "
+            "n'entrent pas dans ce calcul."
         )
+        # Le même conseil que dans « Mes séries », seulement lorsqu'un
+        # chapitre et un niveau uniques sont sélectionnés.
+        if _niveau_filtre is not None and len(_groupes_profil) == 1:
+            _constat_profil, _interpretation_profil, _conseil_profil = (
+                conseil_argumente(_groupes_profil[0])
+            )
+            with st.container(border=True):
+                st.markdown("**Mon conseil pour progresser**")
+                st.write(_conseil_profil)
+                st.caption(_interpretation_profil)
+        elif _niveau_filtre is None and _groupes_profil:
+            st.caption(
+                "Choisis un niveau précis pour obtenir un conseil de progression "
+                "adapté à ce niveau."
+            )
 
     # Statistiques historiques conservées et accessibles, mais repliées.
     if statistiques is not None:
@@ -5210,13 +5242,13 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
 
                 if mode == "toutes":
                     st.warning(
-                        "Attention : toutes tes séries et leurs réponses "
-                        "seront définitivement supprimées."
+                        "Attention : toutes tes séries, leurs réponses et leurs "
+                        "résultats de progression seront définitivement supprimés."
                     )
                 elif ids_valides:
                     st.warning(
-                        f"Attention : {len(ids_valides)} série(s) "
-                        "seront définitivement supprimée(s)."
+                        f"Attention : {len(ids_valides)} série(s), leurs réponses "
+                        "et leurs résultats de progression seront définitivement supprimés."
                     )
 
                 if mode == "toutes" or ids_valides:
@@ -5299,9 +5331,12 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                     "suppression_en_attente", None
                                 )
                                 # Une suppression confirmée invalide la copie locale.
-                                st.session_state.pop(
-                                    "_mathicap_series_pagination_cache", None
-                                )
+                                for _cache_bilan in (
+                                    "_mathicap_series_pagination_cache",
+                                    "_mathicap_nav_series_profil_v7",
+                                    "_mc_heat_cache",
+                                ):
+                                    st.session_state.pop(_cache_bilan, None)
                                 st.session_state["afficher_series"] = True
                                 st.rerun()
 
