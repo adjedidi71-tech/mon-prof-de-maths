@@ -305,7 +305,10 @@ def afficher_tableau_series(st, client, eleve_id, series_filtrees):
     constat, interpretation, proposition = conseil_argumente(g)
     st.write(constat)
     st.caption(interpretation)
-    st.info(proposition)
+    # Une réserve technique ne doit pas remplacer le conseil pédagogique.
+    # Présenter une action explicite, non une notification bleue isolée.
+    st.markdown("**Mon conseil pour progresser**")
+    st.write(proposition)
 
     # Contrairement au tableau des champs affiché plus haut, ce bilan
     # regroupe les champs appartenant à la même QUESTION pédagogique.
