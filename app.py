@@ -4522,6 +4522,12 @@ if _page_depuis_url:
     st.session_state["mathicap_page"] = _page_depuis_url
     st.session_state["afficher_series"] = (_page_depuis_url == "Mes séries")
 
+# Streamlit retire ses valeurs de widgets quand une rubrique ne les rend plus.
+# Garder un témoin de sortie, même si « Mon profil » arrête le script ci-dessous.
+# Il est lié à la session du navigateur, pas aux données pédagogiques Supabase.
+if _vue_mathicap != "exercices":
+    st.session_state["_mc_rehydrater_champs_apres_navigation"] = True
+
 if est_connecte and st.query_params.get("vue") == "profil":
     st.stop()
 
@@ -4829,18 +4835,26 @@ def _mathicap_retablir_serie(serie, *, nouvelle_version=False):
         st.session_state.pop(cle_bilan_banque, None)
         st.session_state.pop(cle_bilan_simple, None)
 
-        if isinstance(valeur, dict) and valeur.get("type") == "banque":
-            champs_sauvegardes = valeur.get("champs") or {}
+        if exercice.get("champs_reponse"):
+            # Une série peut contenir des exercices entièrement vierges :
+            # leurs anciens widgets doivent aussi être remis à zéro.
+            champs_sauvegardes = (
+                valeur.get("champs") or {}
+                if isinstance(valeur, dict) and valeur.get("type") == "banque"
+                else {}
+            )
             if not isinstance(champs_sauvegardes, dict):
                 champs_sauvegardes = {}
             for champ in exercice.get("champs_reponse", []):
-                if champ.get("id") not in champs_sauvegardes:
+                if not isinstance(champ, dict) or not champ.get("id"):
                     continue
-                saisie = champs_sauvegardes[champ["id"]]
+                # Restaurer aussi les champs qui n'ont PAS de valeur sauvegardée :
+                # sinon une ancienne valeur de widget pourrait être réutilisée.
+                saisie = champs_sauvegardes.get(champ["id"], "")
                 if champ.get("type") == "choix" and saisie not in champ.get("options", []):
                     saisie = "Choisir..."
                 st.session_state[f"banque_{version}_{numero}_{champ['id']}"] = saisie
-            if isinstance(valeur.get("bilan"), dict):
+            if isinstance(valeur, dict) and isinstance(valeur.get("bilan"), dict):
                 st.session_state[cle_bilan_banque] = valeur["bilan"]
         elif exercice.get("reponse_attendue") is not None:
             if isinstance(valeur, dict) and valeur.get("type") == "simple":
@@ -4861,20 +4875,57 @@ def _mathicap_retablir_serie(serie, *, nouvelle_version=False):
 # "exercices_actuels" peut donc déjà exister, mais valoir []. Vérifier son
 # CONTENU et l'identifiant demandé, pas seulement la présence de la clé.
 # Une série ouverte par son URL est relue exactement pour l'élève connecté.
+def _mc_champs_a_restaurer_au_retour():
+    """Vrai si Streamlit a nettoyé TOUS les widgets d'une série encore en mémoire.
+
+    Ne tester que les réponses, jamais les clés de bilan : celles-ci peuvent
+    survivre à une navigation alors que les champs de saisie ont disparu.
+    Ne pas réinitialiser les widgets pendant qu'une saisie est en cours.
+    """
+    exercices = st.session_state.get("exercices_actuels") or []
+    version = st.session_state.get("serie_version", 0)
+    cles = []
+    for numero, exercice in enumerate(exercices, 1):
+        if not isinstance(exercice, dict):
+            continue
+        champs = exercice.get("champs_reponse") or []
+        if champs:
+            cles.extend(
+                f"banque_{version}_{numero}_{champ['id']}"
+                for champ in champs
+                if isinstance(champ, dict) and champ.get("id")
+            )
+        elif exercice.get("reponse_attendue") is not None:
+            cles.append(f"reponse_{version}_{numero}")
+        else:
+            cles.append(f"reponse_texte_{version}_{numero}")
+    return bool(cles) and all(cle not in st.session_state for cle in cles)
+
+
 _id_serie_url = st.query_params.get("serie_id")
+_mc_retour_exercices = bool(st.session_state.get("_mc_rehydrater_champs_apres_navigation"))
+_mc_widgets_supprimes = _mc_champs_a_restaurer_au_retour()
 _reprise_a_effectuer = (
     not st.session_state.get("exercices_actuels")
     or (_id_serie_url is not None
         and str(st.session_state.get("serie_id_actuel")) != str(_id_serie_url))
+    or _mc_retour_exercices
+    or _mc_widgets_supprimes
 )
 if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
         and _reprise_a_effectuer):
     try:
         cible = None
-        if _id_serie_url is not None:
-            identifiant = str(_id_serie_url)
-            # IDs de la table series_exercices : BIGINT, sans accepter
-            # un identifiant invalide ni sélectionner une autre série.
+        # Au retour sans « serie_id » dans l'URL, reprendre d'abord la série
+        # effectivement ouverte, pas une autre simplement plus récente.
+        id_a_relire = _id_serie_url
+        if (id_a_relire is None and st.session_state.get("exercices_actuels")
+                and (_mc_retour_exercices or _mc_widgets_supprimes)):
+            id_a_relire = st.session_state.get("serie_id_actuel")
+        if id_a_relire is not None:
+            identifiant = str(id_a_relire)
+            # IDs de la table series_exercices : BIGINT ; toujours filtrer
+            # par l'élève connecté pour préserver l'isolation des comptes.
             if identifiant.isascii() and identifiant.isdigit() and 1 <= len(identifiant) <= 19:
                 resultat = (
                     supabase_privee.table("series_exercices")
@@ -4885,15 +4936,19 @@ if (page_mathicap == "Exercices" and st.session_state.get("eleve_id")
                 )
                 cible = (resultat.data or [None])[0]
         else:
-            # Conserver le comportement ancien lorsqu'aucune série n'est ciblée.
+            # Premier accès sans série active : reprendre la plus récente.
             lignes = recuperer_exercices_eleve(st.session_state["eleve_id"])
             cible = lignes[0] if lignes else None
         if cible is not None:
-            if not _mathicap_retablir_serie(cible):
+            if _mathicap_retablir_serie(cible):
+                st.session_state.pop("_mc_rehydrater_champs_apres_navigation", None)
+            else:
                 st.session_state["erreur_reprise_series"] = True
-        elif _id_serie_url is not None:
+        elif id_a_relire is not None:
             # Ne jamais ouvrir une autre série si l'ID demandé est absent.
             st.session_state["erreur_reprise_series"] = True
+        else:
+            st.session_state.pop("_mc_rehydrater_champs_apres_navigation", None)
     except Exception:
         st.session_state["erreur_reprise_series"] = True
 
@@ -8421,6 +8476,29 @@ def _mathicap_afficher_serie_et_reponses():
                                     for champ in exercice["champs_reponse"]
                                     if isinstance(champ, dict) and champ.get("id")
                                 }
+                                # Garantir d'abord la sauvegarde des réponses dans
+                                # series_exercices, AVANT le diagnostic immuable.
+                                # Sinon l'historique compte une vérification dont les
+                                # réponses peuvent rester absentes de « Mes séries ».
+                                code_verification = st.session_state.get("code_actuel")
+                                if not code_verification or not st.session_state.get("eleve_id"):
+                                    st.error("Série non sauvegardée : vérification reportée.")
+                                    st.stop()
+                                try:
+                                    saisies_confirmees = sauvegarder_reponse(
+                                        code_verification,
+                                        numero,
+                                        {"type": "banque", "champs": saisies_premier_clic},
+                                    )
+                                except Exception:
+                                    saisies_confirmees = False
+                                if not saisies_confirmees:
+                                    st.error(
+                                        "Les réponses n'ont pas été confirmées dans Mes séries. "
+                                        "La vérification est reportée pour éviter un bilan incohérent. "
+                                        "Vérifie ta connexion, puis rouvre la série."
+                                    )
+                                    st.stop()
                                 if not _mc_diag_enregistrer(
                                     numero, "verification", exercice,
                                     {"type": "banque", "champs": saisies_premier_clic},
@@ -8534,9 +8612,17 @@ def _mathicap_afficher_serie_et_reponses():
                                                 f"bilan_banque_{st.session_state.get('serie_version', 0)}_{numero}"
                                             ] = bilan_verifie
                                         else:
-                                            st.error("Le bilan n'a pas pu être enregistré.")
+                                            # Les réponses restent sauvegardées par la première
+                                            # écriture, mais le score détaillé est à synchroniser.
+                                            st.error(
+                                                "Réponses sauvegardées, mais résultat non confirmé "
+                                                "dans Mes séries. Rouvre cette série avant de continuer."
+                                            )
                                     except Exception:
-                                        st.error("Le bilan n'a pas pu être enregistré.")
+                                        st.error(
+                                            "Réponses sauvegardées, mais résultat non confirmé "
+                                            "dans Mes séries. Rouvre cette série avant de continuer."
+                                        )
                             cle_bilan = (
                                 f"bilan_banque_{st.session_state.get('serie_version', 0)}"
                                 f"_{numero}"
