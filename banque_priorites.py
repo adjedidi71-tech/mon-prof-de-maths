@@ -1070,7 +1070,8 @@ def generer_modele_p7_sciences():
     paquets = quotient + (1 if reste > 0 else 0)
 
     depense = paquets * prix_paquet + frais
-    budget = depense + random.randint(15, 45)
+    # Marge budgétaire plus diversifiée, adaptée au coût de l'atelier.
+    budget = depense + random.randint(12, 95)
     restant = budget - depense
 
     enonce = (
@@ -1600,7 +1601,9 @@ def generer_modele_p7_velo():
     })
 
 def generer_modele_p7_fete():
-    caisse = random.randint(160, 240)
+    # Stock initial plus varié, sans dépasser les montants plausibles
+    # pour un club scolaire.
+    caisse = random.randint(160, 340)
 
     eleves = random.randint(14, 22)
     parents = random.randint(8, 14)
@@ -1612,8 +1615,6 @@ def generer_modele_p7_fete():
     decoration = random.randint(20, 45)
     prix_badge = random.randint(1, 3)
 
-    reserve_minimale = random.randint(130, 230)
-
     participants = eleves + parents
 
     recettes = eleves * prix_eleve + parents * prix_parent
@@ -1622,6 +1623,14 @@ def generer_modele_p7_fete():
     depenses = salle + decoration + cout_badges
 
     restant = caisse + recettes - depenses
+
+    # L'ancien tirage indépendant de la réserve donnait presque toujours
+    # « Oui ». Équilibrer les situations sans limiter l'écart final à
+    # quelques réponses : la réserve reste positive et plausible.
+    if random.choice((True, False)):
+        reserve_minimale = restant - random.randint(8, min(115, restant - 60))
+    else:
+        reserve_minimale = restant + random.randint(8, 125)
 
     objectif_atteint = (
         "Oui" if restant >= reserve_minimale else "Non"
@@ -1758,24 +1767,17 @@ def generer_modele_p7_cartes():
         "cartes différentes dans son album.\n\n"
         f"Il achète {paquets} paquets contenant chacun "
         f"{cartes_paquet} cartes.\n\n"
-        f"Parmi les cartes achetées, {doublons} sont "
-        "des doublons, c'est-à-dire des cartes qu'il "
-        "possède déjà dans son album. "
-        "Toutes les autres sont nouvelles "
-        "pour sa collection.\n\n"
-        "Il échange ensuite ses doublons avec un ami : "
-        "pour **2 doublons donnés**, il reçoit "
-        "**1 carte différente** qu'il ne possède pas encore.\n\n"
-        "Son ami dispose de suffisamment de cartes "
-        "pour réaliser tous les échanges possibles.\n\n"
+        f"Parmi les cartes achetées, {doublons} sont des doublons : "
+        "il possède déjà ces cartes dans son album. "
+        "Il ajoute les autres cartes à son album.\n\n"
+        "Il échange ensuite **tous ses doublons** avec un ami : "
+        "pour **2 doublons donnés**, il reçoit **1 nouvelle carte** "
+        "qu'il ne possède pas encore et qu'il ajoute à son album.\n\n"
         "**Questions**\n\n"
         "1. Combien de cartes achète-t-il au total ?\n\n"
-        "2. Combien de nouvelles cartes conserve-t-il "
-        "avant les échanges ?\n\n"
-        "3. Combien de nouvelles cartes obtient-il "
-        "grâce aux échanges ?\n\n"
-        "4. Combien de cartes différentes possède-t-il "
-        "finalement dans son album ?"
+        "2. Combien de cartes ajoute-t-il à son album avant les échanges ?\n\n"
+        "3. Combien de cartes reçoit-il grâce aux échanges ?\n\n"
+        "4. Combien de cartes possède-t-il finalement dans son album ?"
     )
 
     correction = (
@@ -1807,7 +1809,7 @@ def generer_modele_p7_cartes():
         f"= {total_collection}.\n\n"
 
         f"**Réponse :** Il possède finalement "
-        f"{total_collection} cartes différentes."
+        f"{total_collection} cartes dans son album."
     )
 
     return _mc_uniformiser_exercice({
@@ -1844,7 +1846,7 @@ def generer_modele_p7_cartes():
             {
                 "id": "r4",
                 "question": 4,
-                "libelle": "Cartes différentes dans l'album",
+                "libelle": "Cartes dans l'album",
                 "type": "nombre",
                 "attendu": total_collection,
                 "unite": "cartes"
@@ -1882,12 +1884,14 @@ def generer_modele_p7_badminton():
     )
 
     if suffisant == "Oui":
+        question_finale = "Combien de volants restera-t-il au club après le tournoi ?"
         conclusion = (
             f"Il restera {ecart} volants utilisables "
             "après le tournoi."
         )
         libelle_ecart = "Nombre de volants restants"
     else:
+        question_finale = "Combien de volants manque-t-il au club pour tous les matchs ?"
         conclusion = (
             f"Il manque {ecart} volants pour organiser "
             "tous les matchs prévus."
@@ -1913,9 +1917,7 @@ def generer_modele_p7_badminton():
         "après avoir retiré les volants abîmés ?\n\n"
         "3. Combien de volants faut-il prévoir "
         "pour tous les matchs ?\n\n"
-        "4. Le club dispose-t-il de suffisamment "
-        "de volants ? Combien en restera-t-il "
-        "ou combien en manquera-t-il ?"
+        f"4. {question_finale}"
     )
 
     correction = (
@@ -2019,9 +2021,13 @@ def generer_modele_p7_jeu_video():
 
     solde = pieces_depart + gains - depenses_et_pertes
 
-    variation_prix = random.choice([
-        -30, -20, -10, 10, 20, 30
-    ])
+    # Les écarts étaient limités à 10, 20 ou 30 pièces.
+    # Désormais : écarts variés, prix positif et achat possible / impossible
+    # dans des proportions équilibrées. Les quatre réponses restent entières.
+    if random.choice((True, False)):
+        variation_prix = -random.randint(7, min(85, solde - 20))
+    else:
+        variation_prix = random.randint(7, 95)
     prix_equipement = solde + variation_prix
 
     achat_possible = "Oui" if solde >= prix_equipement else "Non"
@@ -2178,7 +2184,12 @@ def generer_modele_p7_dessin():
         if 20 <= feuilles_restantes <= 90:
             break
 
-    variation = random.choice([-12, -8, 8, 12])
+    # Anciennement : réponse finale toujours égale à 8 ou 12 feuilles.
+    # Choisir un déficit ou un surplus plausible, avec davantage de valeurs.
+    if random.choice((True, False)):
+        variation = -random.randint(4, min(55, feuilles_restantes - 3))
+    else:
+        variation = random.randint(4, 65)
     feuilles_exposition = feuilles_restantes + variation
 
     suffisant = (
@@ -5666,15 +5677,15 @@ REGLES = {
     ],
     "P7-M07": [
         ("r1", "Combien de cartes achète-t-il au total ?"),
-        ("r2", "Combien de nouvelles cartes conserve-t-il avant les échanges ?"),
-        ("r3", "Combien de cartes différentes obtient-il grâce aux échanges ?"),
-        ("r4", "Combien de cartes différentes possède-t-il finalement dans son album ?"),
+        ("r2", "Combien de cartes ajoute-t-il à son album avant les échanges ?"),
+        ("r3", "Combien de cartes reçoit-il grâce aux échanges ?"),
+        ("r4", "Combien de cartes possède-t-il finalement dans son album ?"),
     ],
     "P7-M08": [
         ("r1", "Combien de volants le club a-t-il achetés ?"),
         ("r2", "Combien de volants utilisables possède-t-il après avoir retiré les volants abîmés ?"),
         ("r3", "Combien de volants faut-il pour tous les matchs ?"),
-        ("r5", "Quelle est la différence entre les volants disponibles et les volants nécessaires (manque ou reste) ?"),
+        ("r5", "Combien de volants manque-t-il ou restera-t-il au club ?"),
     ],
     "P7-M09": [
         ("r1", "Combien de pièces gagne-t-il au total au cours de son aventure ?"),
@@ -5943,6 +5954,18 @@ def _mc_uniformiser_exercice(exercice):
     if len(par_id) != len(resultat["champs_reponse"]):
         raise ValueError(f"Identifiants de champs dupliqués : {identifiant}")
     par_id.update(_champs_ajoutes(resultat, par_id))
+    # Le tournoi peut présenter un manque ou un surplus selon le tirage.
+    # La question finale pose une seule demande numérique et ne prescrit pas la méthode.
+    if identifiant == "P7-M08":
+        stock_suffisant = par_id.get("r4", {}).get("attendu")
+        if stock_suffisant not in ("Oui", "Non"):
+            raise ValueError("Indicateur de stock absent pour P7-M08")
+        formulation = (
+            "Combien de volants restera-t-il au club après le tournoi ?"
+            if stock_suffisant == "Oui"
+            else "Combien de volants manque-t-il au club pour tous les matchs ?"
+        )
+        regles = [*regles[:-1], ("r5", formulation)]
     categories = _CATEGORIES_PAR_MODELE[identifiant].split()
     if len(categories) != nombre_attendu:
         raise ValueError(f"Catégories de compétences incomplètes : {identifiant}")
