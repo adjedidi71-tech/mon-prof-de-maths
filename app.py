@@ -4591,6 +4591,22 @@ def _mathicap_sauver_reglage_exercices(cle, parametre):
     st.query_params["vue"] = "exercices"
 
 
+def _mathicap_migrer_reglage_vers_url(cle, ancien_parametre, options):
+    """Migration des anciennes préférences vers le widget lié à l'URL.
+
+    Streamlit sauvegarde ensuite la valeur à chaque changement, même après
+    une actualisation complète du navigateur. Aucune donnée d'élève n'est exposée.
+    """
+    if cle not in st.session_state and cle not in st.query_params:
+        ancien = st.query_params.get(ancien_parametre)
+        valeurs = {str(option): option for option in options}
+        if ancien is not None and str(ancien) in valeurs:
+            st.session_state[cle] = valeurs[str(ancien)]
+    # Ne pas laisser un ancien ex_* concurrencer la nouvelle source de vérité.
+    if ancien_parametre in st.query_params:
+        st.query_params.pop(ancien_parametre)
+
+
 def _mathicap_changement_chapitre_exercices():
     _mathicap_sauver_reglage_exercices("mathicap_choix_chapitre", "ex_chapitre")
     # Le sous-chapitre d'un autre chapitre ne doit pas rester sélectionné.
@@ -4672,8 +4688,8 @@ if page_mathicap == "Exercices":
             "Je résous des problèmes"
         ]
 
-        _mathicap_retablir_reglage_exercices(
-            "categorie_exercice", "ex_type", categories, categories[0],
+        _mathicap_migrer_reglage_vers_url(
+            "categorie_exercice", "ex_type", categories,
         )
         type_exercice = st.radio(
             "Choisis une catégorie",
@@ -4681,8 +4697,7 @@ if page_mathicap == "Exercices":
             horizontal=True,
             label_visibility="collapsed",
             key="categorie_exercice",
-            on_change=_mathicap_sauver_reglage_exercices,
-            args=("categorie_exercice", "ex_type"),
+            bind="query-params",
         )
 
         couleurs_categories = {
@@ -4710,16 +4725,15 @@ if page_mathicap == "Exercices":
 
         col2 = st.container()
         with col2:
-            _mathicap_retablir_reglage_exercices(
-                "mathicap_difficulte_exercice", "ex_difficulte", [1, 2, 3], 2,
+            _mathicap_migrer_reglage_vers_url(
+                "mathicap_difficulte_exercice", "ex_difficulte", [1, 2, 3],
             )
             difficulte = st.radio(
                 "Difficulté",
                 [1, 2, 3],
-                index=None,
+                index=1,
                 key="mathicap_difficulte_exercice",
-                on_change=_mathicap_sauver_reglage_exercices,
-                args=("mathicap_difficulte_exercice", "ex_difficulte"),
+                bind="query-params",
                 horizontal=True,
                 format_func=lambda x: {
                     1: "1 - Facile",
@@ -4750,15 +4764,15 @@ if page_mathicap == "Exercices":
             f'<div class="mc-exos-progress-fill" style="--mc-progress:{pourcentage_parcours:.4f}%"></div>'
             '</div>'
         )
-        _mathicap_retablir_reglage_exercices(
-            "mathicap_nombre_exercices", "ex_nombre", [1, 2, 3, 4, 5], 3,
+        _mathicap_migrer_reglage_vers_url(
+            "mathicap_nombre_exercices", "ex_nombre", [1, 2, 3, 4, 5],
         )
         nombre = st.selectbox(
             "Nombre d'exercices",
             [1, 2, 3, 4, 5],
+            index=2,
             key="mathicap_nombre_exercices",
-            on_change=_mathicap_sauver_reglage_exercices,
-            args=("mathicap_nombre_exercices", "ex_nombre"),
+            bind="query-params",
         )
 
         # Une seule action pour les niveaux 1 à 9 : aucun générateur n'est déplacé.
@@ -5516,39 +5530,115 @@ def recuperer_serie(code):
 
     return None
 
-def sauvegarder_reponse(code, numero, reponse):
-    """Sauvegarder en 1 écriture lorsque la série est déjà chargée.
+# Révision de sauvegarde stockée dans le JSON de la série : évite les écritures
+# concurrentes entre onglets ou sessions, sans modifier la structure Supabase.
+_MC_REVISION_SAUVEGARDE = "__mc_revision_sauvegarde_v1"
 
-    Le cache local est initialisé lors de la création/ouverture de la série.
-    À défaut, une lecture unique est effectuée. Le cache n'est mis à jour
-    qu'après confirmation de Supabase, sans masquer les erreurs.
+
+def sauvegarder_reponse(code, numero, reponse, *, champ_id=None):
+    """Écriture optimiste sans écraser une version plus récente de la série.
+
+    Chaque écriture conserve toutes les autres réponses. Le callback d'un champ
+    de banque ne modifie QUE ce champ : il ne reconstitue jamais les autres
+    champs depuis les widgets Streamlit (potentiellement absents du navigateur).
+
+    Le contrôle de révision dans la clause WHERE est atomique dans Postgres :
+    deux onglets ne peuvent pas écraser mutuellement leur JSON complet. Si un
+    autre onglet a écrit, on relit la dernière version avant de réessayer.
     """
     eleve_id = st.session_state.get("eleve_id")
     if not eleve_id or not isinstance(code, str) or not code.strip():
         return False
-
     code_normalise = code.strip().upper()
     cle = (eleve_id, code_normalise)
     cache = st.session_state.setdefault("_mathicap_reponses_cache", {})
     if cle not in cache:
         serie = recuperer_serie(code_normalise)
-        if not serie:
+        if not serie or not isinstance(serie.get("reponses"), dict):
             return False
-        cache[cle] = dict(serie.get("reponses") or {})
+        cache[cle] = deepcopy(serie["reponses"])
 
-    reponses = dict(cache[cle])
-    reponses[str(numero)] = reponse
-    resultat = (
-        supabase_privee.table("series_exercices")
-        .update({"reponses": reponses})
-        .eq("code_reprise", code_normalise)
-        .eq("eleve_id", eleve_id)
-        .execute()
-    )
-    if not resultat.data:
+    if not isinstance(cache[cle], dict):
         return False
-    cache[cle] = reponses
-    return True
+    numero_cle = str(numero)
+    reponse_origine = deepcopy(cache[cle].get(numero_cle))
+
+    for tentative in range(4):
+        if tentative == 0:
+            base = deepcopy(cache[cle])
+        else:
+            serie = recuperer_serie(code_normalise)
+            if not serie or not isinstance(serie.get("reponses"), dict):
+                return False
+            base = deepcopy(serie["reponses"])
+
+        actuel = base.get(numero_cle)
+        if champ_id is not None:
+            if not isinstance(numero, int) or numero < 1 or not isinstance(champ_id, str):
+                return False
+            # Ne pas modifier le même champ si un autre onglet l'a changé depuis
+            # l'ouverture de cette version (la mise à jour ne serait pas fiable).
+            avant = (reponse_origine or {}).get("champs", {}) if isinstance(reponse_origine, dict) else {}
+            maintenant = (actuel or {}).get("champs", {}) if isinstance(actuel, dict) else {}
+            if not isinstance(avant, dict) or not isinstance(maintenant, dict):
+                return False
+            if maintenant.get(champ_id, "") != avant.get(champ_id, "") and maintenant.get(champ_id, "") != reponse:
+                return False
+            if actuel is not None and (not isinstance(actuel, dict) or actuel.get("type") != "banque"):
+                return False
+            valeur = deepcopy(actuel) if isinstance(actuel, dict) else {"type": "banque", "champs": {}}
+            champs = deepcopy(valeur.get("champs") or {})
+            if not isinstance(champs, dict):
+                return False
+            champs[champ_id] = reponse
+            valeur["champs"] = champs
+            valeur.pop("bilan", None)  # Re-vérification nécessaire après modification.
+        else:
+            # Pour un contrôle complet ou une variante, on refuse d'écraser
+            # une version du MÊME exercice modifiée depuis son chargement.
+            if actuel != reponse_origine and actuel != reponse:
+                return False
+            if (isinstance(reponse, dict) and reponse.get("type") == "banque"
+                    and isinstance(actuel, dict) and actuel.get("type") == "banque"):
+                champs_avant = actuel.get("champs") or {}
+                champs_nouveaux = reponse.get("champs") or {}
+                if not isinstance(champs_avant, dict) or not isinstance(champs_nouveaux, dict):
+                    return False
+                # Défense complémentaire : un rerun n'a pas le droit de
+                # remplacer silencieusement une valeur saisie par un vide.
+                if any(
+                    str(val).strip() not in ("", "Choisir...")
+                    and str(champs_nouveaux.get(cid, "")).strip() in ("", "Choisir...")
+                    for cid, val in champs_avant.items()
+                ):
+                    return False
+            valeur = deepcopy(reponse)
+
+        nouvelles = deepcopy(base)
+        nouvelles[numero_cle] = valeur
+        revision_avant = base.get(_MC_REVISION_SAUVEGARDE)
+        nouvelles[_MC_REVISION_SAUVEGARDE] = uuid4().hex
+        requete = (
+            supabase_privee.table("series_exercices")
+            .update({"reponses": nouvelles})
+            .eq("code_reprise", code_normalise)
+            .eq("eleve_id", eleve_id)
+        )
+        if isinstance(revision_avant, str) and revision_avant:
+            requete = requete.eq("reponses->>__mc_revision_sauvegarde_v1", revision_avant)
+        else:
+            requete = requete.is_("reponses->>__mc_revision_sauvegarde_v1", "null")
+        resultat = requete.select("reponses").execute()
+        lignes = resultat.data or []
+        if lignes:
+            reponses_confirmees = lignes[0].get("reponses")
+            if not isinstance(reponses_confirmees, dict):
+                return False
+            cache[cle] = deepcopy(reponses_confirmees)
+            return True
+        # Aucune ligne : une écriture concurrente a pu prendre la priorité.
+        # Réessayer depuis le serveur, jamais avec l'ancien JSON.
+    return False
     
 # Projet pédagogique 1 : entraînement supplémentaire lié à l'exercice initial.
 # Stockage sous une clé réservée du JSON « reponses » de la série : aucune
@@ -6589,50 +6679,30 @@ def enregistrer_reponse_texte_auto(numero):
             st.session_state["erreur_sauvegarde"] = True
 
 
-def enregistrer_reponses_banque_auto(numero):
-    cle_bilan = (
-    f"bilan_banque_{st.session_state.get('serie_version', 0)}"
-    f"_{numero}"
-    )
-    st.session_state.pop(cle_bilan, None)
-    # Une réponse modifiée invalide l'affichage de l'ancien bilan,
-    # sans toucher à l'historique de première vérification.
-    cle_visible = (
-        f"mc_original_resultats_visibles_{st.session_state.get('serie_version', 0)}_{numero}"
-    )
-    st.session_state[cle_visible] = False
+def enregistrer_reponses_banque_auto(numero, champ_id):
+    """Écrit uniquement le champ touché, sans vider ses voisins."""
+    version = st.session_state.get("serie_version", 0)
     code = st.session_state.get("code_actuel")
-
     if not code or not st.session_state.get("eleve_id"):
         return
-
     exercices = st.session_state.get("exercices_actuels", [])
-
-    if numero > len(exercices):
+    if not isinstance(numero, int) or not 1 <= numero <= len(exercices):
+        return
+    champs = exercices[numero - 1].get("champs_reponse") or []
+    if not any(isinstance(c, dict) and c.get("id") == champ_id for c in champs):
         return
 
-    exercice = exercices[numero - 1]
-    reponses = {}
-
-    for champ in exercice.get("champs_reponse", []):
-        cle = (
-            f"banque_{st.session_state.get('serie_version', 0)}"
-            f"_{numero}_{champ['id']}"
-        )
-
-        reponses[champ["id"]] = st.session_state.get(cle, "")
-
+    cle = f"banque_{version}_{numero}_{champ_id}"
     try:
         confirme = sauvegarder_reponse(
-            code,
-            numero,
-            {
-                "type": "banque",
-                "champs": reponses
-            }
+            code, numero, st.session_state.get(cle, ""), champ_id=champ_id
         )
         if not confirme:
             st.session_state["erreur_sauvegarde"] = True
+            return
+        # Le résultat précédent n'est invalidé qu'APRÈS sauvegarde confirmée.
+        st.session_state.pop(f"bilan_banque_{version}_{numero}", None)
+        st.session_state[f"mc_original_resultats_visibles_{version}_{numero}"] = False
     except Exception:
         st.session_state["erreur_sauvegarde"] = True
 import random
@@ -8285,7 +8355,7 @@ def _mathicap_afficher_serie_et_reponses():
                                             placeholder="Réponse",
                                             key=cle,
                                             on_change=enregistrer_reponses_banque_auto,
-                                            args=(numero,)
+                                            args=(numero, champ["id"])
                                         )
 
                                 elif division_euclidienne:
@@ -8296,18 +8366,18 @@ def _mathicap_afficher_serie_et_reponses():
                                             placeholder="Réponse",
                                             key=cle,
                                             on_change=enregistrer_reponses_banque_auto,
-                                            args=(numero,)
+                                            args=(numero, champ["id"])
                                         )
                                 else:
                                     _mc_reponse_courte_sur_ligne(
                                         etiquette, cle, f"origine_{numero}_{index}",
-                                        enregistrer_reponses_banque_auto, (numero,),
+                                        enregistrer_reponses_banque_auto, (numero, champ["id"]),
                                     )
 
                             elif champ["type"] == "choix":
                                 _mc_reponse_courte_sur_ligne(
                                     etiquette, cle, f"origine_{numero}_{index}",
-                                    enregistrer_reponses_banque_auto, (numero,),
+                                    enregistrer_reponses_banque_auto, (numero, champ["id"]),
                                     type_champ="choix", options=champ["options"],
                                 )
 
@@ -8321,7 +8391,7 @@ def _mathicap_afficher_serie_et_reponses():
                                         key=cle,
                                         placeholder="Réponse rédigée · non notée automatiquement",
                                         on_change=enregistrer_reponses_banque_auto,
-                                        args=(numero,)
+                                        args=(numero, champ["id"])
                                     )
 
                         with st.container(key=f"mc_original_controle_{numero}"):
