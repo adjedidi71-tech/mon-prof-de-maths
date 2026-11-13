@@ -5613,6 +5613,25 @@ def generer_modele_p9_mosaique(seed=None):
         seed, enonce, correction, champs
     )
 
+# MathiCap : uniformisation sur les nouveaux problèmes uniquement.
+# Les générateurs directs restent utilisables pour les variantes similaires.
+# Leur nom et la graine aléatoire éventuelle sont préservés.
+from functools import wraps as _mc_wraps
+from mathicap_questions_uniformes import uniformiser_exercice as _mc_uniformiser_exercice
+
+
+def _mc_generateur_uniforme(generateur):
+    @_mc_wraps(generateur)
+    def _gen(*args, **kwargs):
+        return _mc_uniformiser_exercice(generateur(*args, **kwargs))
+    return _gen
+
+
+for _mc_nom in tuple(globals()):
+    if _mc_nom.startswith(("generer_modele_p7_", "generer_modele_p8_", "generer_modele_p9_")):
+        globals()[_mc_nom] = _mc_generateur_uniforme(globals()[_mc_nom])
+
+
 def generer_exercices_priorites(difficulte, nombre=1):
     """Tire `nombre` problèmes distincts du niveau demandé.
 
