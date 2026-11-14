@@ -1792,8 +1792,8 @@ def generer_modele_p7_cartes():
         f"= {emplacements_vides} emplacements vides.\n\n"
         "**4. Nombre minimal de lots supplémentaires**\n\n"
         "Division avec quotient entier et reste :\n\n"
-        f"{emplacements_vides} = {cartes_par_lot} × "
-        f"{quotient} + {reste}.\n\n"
+        f"{emplacements_vides} : {cartes_par_lot} → "
+        f"quotient {quotient}, reste {reste}.\n\n"
         + (
             f"Après {quotient} lots, il manque encore {reste} cartes. "
             "Un dernier lot est donc nécessaire.\n\n"
@@ -1904,13 +1904,7 @@ def generer_modele_p7_badminton():
         f"Volants nécessaires : {volants_necessaires}.\n\n"
         f"Différence : {ecart} volants.\n\n"
         f"**Le stock est-il suffisant ? {suffisant}.**\n\n"
-        f"{conclusion}\n\n"
-
-        "**Expression complète du stock disponible :**\n\n"
-        f"{stock_initial} + "
-        f"{nb_boites} × {volants_par_boite} "
-        f"− {volants_abimes} "
-        f"= {volants_utilisables}."
+        f"{conclusion}"
     )
 
     return _mc_uniformiser_exercice({
@@ -2225,14 +2219,6 @@ def generer_modele_p7_dessin():
         f"− {feuilles_abimees} "
         f"− {feuilles_utilisees} "
         f"= {feuilles_restantes} feuilles.\n\n"
-
-        "**Expression complète :**\n\n"
-        f"{feuilles_depart} "
-        f"+ ({nb_paquets} × {feuilles_par_paquet}) "
-        f"− {feuilles_abimees} "
-        f"− ({nb_groupes} × {eleves_par_groupe} "
-        f"× {feuilles_par_eleve}) "
-        f"= {feuilles_restantes}.\n\n"
 
         "**4. Préparation de l'exposition**\n\n"
         f"Feuilles disponibles : {feuilles_restantes}.\n\n"
