@@ -2466,8 +2466,12 @@ def generer_modele_p7_planetarium():
 
 
 def generer_modele_p7_robotique():
-    # Chaque robot nécessite les deux composants : c'est la ressource limitante
-    # qui détermine le nombre de robots assemblés, pas une somme des stocks.
+    """Niveau 7 : comprendre une ressource limitante et décider face à un objectif.
+
+    La question 2 laisse l'élève calculer lui-même les batteries utilisables.
+    La dernière question mobilise la capacité réelle après livraison et un
+    objectif variable, sans ajouter de champ supplémentaire.
+    """
     while True:
         moteurs = random.randint(34, 72)
         moteurs_abimes = random.randint(3, 11)
@@ -2478,11 +2482,36 @@ def generer_modele_p7_robotique():
         moteurs_utilisables = moteurs - moteurs_abimes
         batteries_utilisables = batteries - batteries_abimees
         robots = min(moteurs_utilisables // 2, batteries_utilisables // 3)
-        robots_apres = min((moteurs_utilisables + moteurs_livres) // 2,
-                          (batteries_utilisables + batteries_livrees) // 3)
-        supplement = robots_apres - robots
-        if 2 <= supplement <= 15:
+        moteurs_finaux = moteurs_utilisables + moteurs_livres
+        batteries_finales = batteries_utilisables + batteries_livrees
+        robots_apres = min(moteurs_finaux // 2, batteries_finales // 3)
+        if 2 <= robots_apres - robots <= 15 and robots_apres >= 12:
             break
+
+    # Objectif indépendant des valeurs attendues, variable dans les deux sens.
+    # Il est toujours réaliste et différent du maximum réalisable.
+    if random.choice((True, False)):
+        objectif = random.randint(max(8, robots_apres // 2), robots_apres - 1)
+        ecart = robots_apres - objectif
+        question_finale = (
+            "Combien de robots le club pourrait-il fabriquer en plus de "
+            "son objectif, après la livraison ?"
+        )
+        conclusion = (
+            f"L'objectif est atteint : {robots_apres} robots possibles pour "
+            f"{objectif} prévus. Il peut en fabriquer {ecart} de plus."
+        )
+    else:
+        objectif = random.randint(robots_apres + 1, robots_apres + max(14, robots_apres // 2))
+        ecart = objectif - robots_apres
+        question_finale = (
+            "Combien de robots manqueront au club pour atteindre "
+            "son objectif, après la livraison ?"
+        )
+        conclusion = (
+            f"L'objectif n'est pas atteint : {robots_apres} robots possibles "
+            f"pour {objectif} prévus. Il manque {ecart} robot{'s' if ecart > 1 else ''}."
+        )
 
     enonce = (
         "**Le club de robotique**\n\n"
@@ -2490,40 +2519,53 @@ def generer_modele_p7_robotique():
         "Chaque robot nécessite **2 moteurs et 3 batteries**.\n\n"
         f"Le club possède {moteurs} moteurs, dont {moteurs_abimes} hors d'usage, "
         f"et {batteries} batteries, dont {batteries_abimees} défectueuses.\n\n"
-        f"Une livraison arrive ensuite avec {moteurs_livres} nouveaux moteurs "
-        f"et {batteries_livrees} nouvelles batteries.\n\n"
+        f"Il reçoit ensuite {moteurs_livres} nouveaux moteurs et "
+        f"{batteries_livrees} nouvelles batteries.\n\n"
+        f"Pour sa démonstration, il souhaite préparer {objectif} robots.\n\n"
         "**Questions**\n\n"
-        "1. Combien de moteurs sont utilisables avant la livraison ?\n\n"
-        "2. Combien de batteries sont utilisables avant la livraison ?\n\n"
-        "3. Combien de robots complets le club peut-il assembler avant la livraison ?\n\n"
-        "4. Combien de robots supplémentaires peut-il assembler après la livraison, "
-        "en utilisant également les pièces restantes ?"
+        "1. Combien de moteurs utilisables le club possède-t-il avant la livraison ?\n\n"
+        "2. Combien de robots complets peut-il assembler avant la livraison ?\n\n"
+        "3. Combien de batteries utilisables possède-t-il après la livraison ?\n\n"
+        f"4. {question_finale}"
     )
     correction = (
         "**1. Moteurs utilisables**\n\n"
         f"{moteurs} − {moteurs_abimes} = {moteurs_utilisables} moteurs.\n\n"
-        "**2. Batteries utilisables**\n\n"
-        f"{batteries} − {batteries_abimees} = {batteries_utilisables} batteries.\n\n"
-        "**3. Robots avant livraison**\n\n"
+        "**2. Robots avant la livraison**\n\n"
+        f"Batteries utilisables : {batteries} − {batteries_abimees} = "
+        f"{batteries_utilisables}.\n"
         f"Avec les moteurs : {moteurs_utilisables} ÷ 2, quotient entier "
         f"{moteurs_utilisables // 2}.\n"
         f"Avec les batteries : {batteries_utilisables} ÷ 3, quotient entier "
         f"{batteries_utilisables // 3}.\n"
-        f"Il faut les deux composants pour chaque robot, donc {robots} robots complets.\n\n"
-        "**4. Robots supplémentaires après la livraison**\n\n"
-        f"Nouveaux stocks : {moteurs_utilisables + moteurs_livres} moteurs "
-        f"et {batteries_utilisables + batteries_livrees} batteries.\n"
-        f"Avec ces stocks, le maximum est de {robots_apres} robots au total.\n"
-        f"Il peut donc assembler {robots_apres} − {robots} = {supplement} robots supplémentaires."
+        f"Un robot a besoin des deux composants : le club peut en assembler "
+        f"{robots} au maximum.\n\n"
+        "**3. Batteries utilisables après livraison**\n\n"
+        f"{batteries} − {batteries_abimees} + {batteries_livrees} "
+        f"= {batteries_finales} batteries utilisables.\n\n"
+        "**4. Résolution finale : capacité et objectif**\n\n"
+        f"Moteurs utilisables après livraison : {moteurs_utilisables} + "
+        f"{moteurs_livres} = {moteurs_finaux}.\n"
+        f"Avec les moteurs : {moteurs_finaux} ÷ 2, quotient entier "
+        f"{moteurs_finaux // 2}.\n"
+        f"Avec les batteries : {batteries_finales} ÷ 3, quotient entier "
+        f"{batteries_finales // 3}.\n"
+        f"Un robot nécessite les deux composants : le maximum est "
+        f"{robots_apres} robots.\n"
+        f"Objectif : {objectif} robots. Capacité : {robots_apres} robots.\n"
+        f"Écart : {max(robots_apres, objectif)} − "
+        f"{min(robots_apres, objectif)} = {ecart} robot{'s' if ecart > 1 else ''}.\n"
+        f"**Conclusion :** {conclusion}"
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M13", "titre": "Le club de robotique",
         "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "mathicap_objectif_atteint": robots_apres > objectif,
         "champs_reponse": [
             {"id": "r1", "question": 1, "libelle": "Moteurs utilisables", "type": "nombre", "attendu": moteurs_utilisables, "unite": "moteurs"},
-            {"id": "r2", "question": 2, "libelle": "Batteries utilisables", "type": "nombre", "attendu": batteries_utilisables, "unite": "batteries"},
-            {"id": "r3", "question": 3, "libelle": "Robots avant livraison", "type": "nombre", "attendu": robots, "unite": "robots"},
-            {"id": "r4", "question": 4, "libelle": "Robots supplémentaires", "type": "nombre", "attendu": supplement, "unite": "robots"},
+            {"id": "r2", "question": 2, "libelle": "Robots avant livraison", "type": "nombre", "attendu": robots, "unite": "robots"},
+            {"id": "r3", "question": 3, "libelle": "Batteries après livraison", "type": "nombre", "attendu": batteries_finales, "unite": "batteries"},
+            {"id": "r4", "question": 4, "libelle": "Écart avec l'objectif", "type": "nombre", "attendu": ecart, "unite": "robots"},
         ],
     })
 
@@ -5967,10 +6009,10 @@ REGLES = {
         ("r4", "Quelle est la différence entre le budget et les dépenses totales ?"),
     ],
     "P7-M13": [
-        ("r1", "Combien de moteurs sont utilisables avant la livraison ?"),
-        ("r2", "Combien de batteries sont utilisables avant la livraison ?"),
-        ("r3", "Combien de robots complets le club peut-il assembler avant la livraison ?"),
-        ("r4", "Combien de robots supplémentaires peut-il assembler après la livraison, en utilisant également les pièces restantes ?"),
+        ("r1", "Combien de moteurs utilisables le club possède-t-il avant la livraison ?"),
+        ("r2", "Combien de robots complets peut-il assembler avant la livraison ?"),
+        ("r3", "Combien de batteries utilisables possède-t-il après la livraison ?"),
+        ("r4", "Quel est l'écart entre l'objectif et la capacité du club après la livraison ?"),
     ],
     "P7-M14": [
         ("r1", "Combien de vêtements les élèves ont-ils collectés ?"),
@@ -6151,7 +6193,7 @@ _CATEGORIES_PAR_MODELE = {
     "P7-M04": "B B C R", "P7-M05": "D D D L", "P7-M06": "B B B C",
     "P7-M07": "Q Q R L", "P7-M08": "Q Q Q R", "P7-M09": "Q B R R",
     "P7-M10": "Q Q R R", "P7-M11": "Q Q Q R",
-    "P7-M12": "Q L B B", "P7-M13": "Q Q L L",
+    "P7-M12": "Q L B B", "P7-M13": "Q L Q R",
     "P7-M14": "Q Q L L", "P7-M15": "D D D L",
     "P7-M16": "Q Q R L",
     "P8-M01": "B B B B L", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
@@ -6250,6 +6292,13 @@ def _mc_uniformiser_exercice(exercice):
             "Combien d'euros restera-t-il du budget après paiement des billets et des cars ?"
             if resultat.get("mathicap_budget_suffisant") else
             "Combien d'euros manque-t-il pour payer les billets et les cars ?",
+        )]
+    if identifiant == "P7-M13":
+        regles = [*regles[:-1], (
+            "r4",
+            "Combien de robots le club pourrait-il fabriquer en plus de son objectif, après la livraison ?"
+            if resultat.get("mathicap_objectif_atteint")
+            else "Combien de robots manqueront au club pour atteindre son objectif, après la livraison ?",
         )]
     if identifiant == "P7-M08":
         stock_suffisant = par_id.get("r4", {}).get("attendu")
