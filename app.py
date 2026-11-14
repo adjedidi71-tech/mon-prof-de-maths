@@ -8048,6 +8048,39 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
         "champs_reponse": champs_reponse
     }
    
+def _mathicap_historique_modeles_priorites(eleve_id, difficulte):
+    """Lit les modèles récents du compte sans modifier aucune série.
+
+    Les séries sont parcourues de la plus récente à la plus ancienne ; le
+    tirage de la nouvelle série privilégiera les modèles non récemment vus.
+    La liste est limitée aux 150 dernières séries afin de maîtriser le volume
+    téléchargé à chaque génération (et comprend les différents niveaux).
+    """
+    if not eleve_id or difficulte not in (1, 2, 3):
+        return []
+    resultat = (
+        supabase_privee.table("series_exercices")
+        .select("exercices")
+        .eq("eleve_id", eleve_id)
+        .order("created_at", desc=True)
+        .limit(150)
+        .execute()
+    )
+    prefixe = f"P{6 + difficulte}-M"
+    historique = []
+    for ligne in resultat.data or []:
+        exercices = ligne.get("exercices") if isinstance(ligne, dict) else None
+        if not isinstance(exercices, list):
+            continue
+        for exercice in exercices:
+            if not isinstance(exercice, dict):
+                continue
+            identifiant = exercice.get("id")
+            if isinstance(identifiant, str) and identifiant.startswith(prefixe):
+                historique.append(identifiant)
+    return historique
+
+
 if "exercices_actuels" not in st.session_state:
     st.session_state.exercices_actuels = []
 if demande_generation:
@@ -8056,7 +8089,21 @@ if demande_generation:
             and type_exercice == "Je résous des problèmes"
         ):
             
-            exercices = generer_exercices_priorites(difficulte, nombre)
+            try:
+                historique_modeles = _mathicap_historique_modeles_priorites(
+                    st.session_state.get("eleve_id"), difficulte
+                )
+            except Exception:
+                # Aucun blocage de la génération si l'historique est indisponible.
+                # Le tirage historique reste alors purement aléatoire.
+                historique_modeles = []
+                st.warning(
+                    "Historique des modèles indisponible : tirage aléatoire "
+                    "pour cette série. Les séries précédentes restent intactes."
+                )
+            exercices = generer_exercices_priorites(
+                difficulte, nombre, historique_modeles=historique_modeles
+            )
                     
         elif type_exercice == "Je résous des problèmes":
                 try:
