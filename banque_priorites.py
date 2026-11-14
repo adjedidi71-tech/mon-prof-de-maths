@@ -1487,80 +1487,86 @@ def generer_modele_p7_photos():
     })
 
 def generer_modele_p7_velo():
+    """Défi collectif : le nombre de cyclistes intervient réellement dans le calcul."""
 
     def km(valeur):
         return f"{valeur / 10:.1f}".replace(".", ",")
 
-    # Distances exprimées en dixièmes de kilomètre
+    # Distances en dixièmes de kilomètre : pas d'erreurs d'arrondi.
+    nb_cyclistes = random.randint(3, 5)
     trajet = random.randint(32, 68)
     boucle = random.randint(18, 36)
     nb_boucles = random.randint(2, 4)
     petit_tour = random.randint(12, 23)
 
-    aller_retour = 2 * trajet
-    distance_initiale = aller_retour + nb_boucles * boucle
+    aller_retour = 2 * trajet                   # par cycliste
+    distance_individuelle = aller_retour + nb_boucles * boucle
+    distance_collective = nb_cyclistes * distance_individuelle
 
-    manque = random.randint(
-        petit_tour + 2,
-        petit_tour * 3 + 8
-    )
+    quotient_voulu = random.randint(1, 4)
+    reste_voulu = random.randint(0, petit_tour - 1)
+    manque_par_cycliste = quotient_voulu * petit_tour + reste_voulu
+    manque_collectif = nb_cyclistes * manque_par_cycliste
+    objectif_collectif = distance_collective + manque_collectif
 
-    objectif = distance_initiale + manque
-
-    quotient, reste = divmod(manque, petit_tour)
+    quotient, reste = divmod(manque_par_cycliste, petit_tour)
     tours = quotient + (1 if reste else 0)
 
     enonce = (
         "**Le rallye à vélo**\n\n"
-        "Trois amis organisent une sortie à vélo.\n\n"
-        f"Ils parcourent {km(trajet)} km pour rejoindre "
-        "un parc, puis empruntent le même trajet pour rentrer.\n\n"
-        f"Dans le parc, ils effectuent {nb_boucles} boucles "
-        f"de {km(boucle)} km chacune.\n\n"
-        f"Leur objectif est de parcourir au moins "
-        f"{km(objectif)} km au total.\n\n"
-        "Pour compléter leur parcours, ils peuvent effectuer "
-        f"des petits tours supplémentaires de {km(petit_tour)} km "
-        "chacun, près de chez eux.\n\n"
+        f"{nb_cyclistes} amis participent à un défi collectif à vélo. "
+        "Chacun emprunte le même parcours. "
+        "Pour ce défi, leurs distances parcourues s'additionnent.\n\n"
+        f"Chaque cycliste parcourt {km(trajet)} km pour rejoindre un parc, "
+        "puis suit le même trajet au retour.\n\n"
+        f"Dans le parc, chacun effectue {nb_boucles} boucles "
+        f"de {km(boucle)} km.\n\n"
+        f"En additionnant les distances de tous les cyclistes, "
+        f"le groupe veut parcourir au moins {km(objectif_collectif)} km.\n\n"
+        "Après ce parcours, chaque cycliste peut effectuer le même nombre "
+        f"de petits tours supplémentaires de {km(petit_tour)} km chacun.\n\n"
         "**Questions**\n\n"
-        "1. Quelle distance représente l'aller-retour "
-        "jusqu'au parc ?\n\n"
-        "2. Quelle distance totale ont-ils parcourue "
-        "après les boucles dans le parc ?\n\n"
-        "3. Quelle distance leur manque-t-il pour atteindre "
-        "leur objectif ? Combien de petits tours complets "
-        "doivent-ils effectuer au minimum pour atteindre "
-        "ou dépasser cet objectif ?"
+        "1. Quelle distance représente l'aller-retour entre le départ et le parc "
+        "pour un cycliste ?\n\n"
+        "2. Quelle distance le groupe a-t-il parcourue au total, "
+        "en additionnant les distances de tous les cyclistes ?\n\n"
+        "3. Quelle distance manque-t-il au groupe pour atteindre son objectif ?\n\n"
+        "4. Combien de petits tours supplémentaires chaque cycliste "
+        "doit-il effectuer, au minimum, pour atteindre l'objectif commun ?"
     )
 
     correction = (
-        "**1. Distance aller-retour**\n\n"
+        "**1. Aller-retour pour un cycliste**\n\n"
         f"2 × {km(trajet)} = {km(aller_retour)} km.\n\n"
-
-        "**2. Distance totale parcourue**\n\n"
-        f"Distance des boucles : {nb_boucles} × "
-        f"{km(boucle)} = {km(nb_boucles * boucle)} km.\n\n"
-        f"Distance totale : {km(aller_retour)} + "
-        f"{km(nb_boucles * boucle)} "
-        f"= {km(distance_initiale)} km.\n\n"
-        "**Expression complète :**\n\n"
-        f"2 × {km(trajet)} + {nb_boucles} × "
-        f"{km(boucle)} = {km(distance_initiale)} km.\n\n"
-
-        "**3. Distance manquante**\n\n"
-        f"{km(objectif)} − {km(distance_initiale)} = {km(manque)} km.\n\n"
-        "**4. Nombre minimal de petits tours**\n\n"
-        f"Chaque tour mesure {km(petit_tour)} km.\n"
-        f"On peut écrire : {km(manque)} = {quotient} × {km(petit_tour)} "
-        f"+ {km(reste)} (en km).\n"
-        f"Quotient entier : {quotient} ; reste : {km(reste)} km.\n\n"
+        "**2. Distance cumulée par le groupe**\n\n"
+        f"Chaque cycliste parcourt {km(aller_retour)} + "
+        f"{nb_boucles} × {km(boucle)} = {km(distance_individuelle)} km.\n\n"
+        f"Les {nb_cyclistes} cyclistes parcourent au total "
+        f"{nb_cyclistes} × {km(distance_individuelle)} = "
+        f"{km(distance_collective)} km.\n\n"
+        "**3. Distance manquante pour le groupe**\n\n"
+        f"{km(objectif_collectif)} − {km(distance_collective)} "
+        f"= {km(manque_collectif)} km.\n\n"
+        "**4. Nombre minimal de petits tours par cycliste**\n\n"
+        f"Puisque les {nb_cyclistes} cyclistes effectueront le même nombre "
+        f"de tours, il manque {km(manque_collectif)} ÷ "
+        f"{nb_cyclistes} = {km(manque_par_cycliste)} km par cycliste.\n\n"
+        "**Division avec quotient entier et reste :**\n\n"
+        f"{km(manque_par_cycliste)} ÷ {km(petit_tour)} : "
+        f"quotient entier {quotient} ; reste {km(reste)} km.\n\n"
+        f"Vérification : {km(manque_par_cycliste)} = "
+        f"{km(petit_tour)} × {quotient} + {km(reste)}.\n\n"
         + (
-            f"Après {quotient} tours complets, il manque encore "
-            f"{km(reste)} km. Il faut donc effectuer un tour de plus.\n\n"
+            f"Après {quotient} tour{'s' if quotient > 1 else ''} par cycliste, "
+            f"il manque encore {km(reste)} km à chacun. "
+            "Un tour supplémentaire est nécessaire.\n\n"
             if reste else
-            f"Le reste étant nul, {quotient} tours complets suffisent.\n\n"
+            f"Le reste est nul : les {quotient} tours calculés suffisent, "
+            "sans ajouter de tour au quotient.\n\n"
         )
-        + f"**Réponse :** {tours} petits tours complets au minimum."
+        + f"**Réponse :** Chaque cycliste doit effectuer au minimum "
+          f"{tours} petit{'s' if tours > 1 else ''} "
+          f"tour{'s' if tours > 1 else ''}."
     )
 
     return _mc_uniformiser_exercice({
@@ -1570,39 +1576,11 @@ def generer_modele_p7_velo():
         "correction": correction,
         "reponse_attendue": None,
         "champs_reponse": [
-            {
-                "id": "r1",
-                "question": 1,
-                "libelle": "Distance aller-retour",
-                "type": "nombre",
-                "attendu": aller_retour / 10,
-                "unite": "km"
-            },
-            {
-                "id": "r2",
-                "question": 2,
-                "libelle": "Distance totale parcourue",
-                "type": "nombre",
-                "attendu": distance_initiale / 10,
-                "unite": "km"
-            },
-            {
-                "id": "r3",
-                "question": 3,
-                "libelle": "Distance manquante",
-                "type": "nombre",
-                "attendu": manque / 10,
-                "unite": "km"
-            },
-            {
-                "id": "r4",
-                "question": 3,
-                "libelle": "Nombre minimal de petits tours",
-                "type": "nombre",
-                "attendu": tours,
-                "unite": "tours"
-            }
-        ]
+            {"id": "r1", "question": 1, "libelle": "Aller-retour d'un cycliste", "type": "nombre", "attendu": aller_retour / 10, "unite": "km"},
+            {"id": "r2", "question": 2, "libelle": "Distance cumulée du groupe", "type": "nombre", "attendu": distance_collective / 10, "unite": "km"},
+            {"id": "r3", "question": 3, "libelle": "Distance manquante du groupe", "type": "nombre", "attendu": manque_collectif / 10, "unite": "km"},
+            {"id": "r4", "question": 4, "libelle": "Petits tours par cycliste", "type": "nombre", "attendu": tours, "unite": "tours"},
+        ],
     })
 
 def generer_modele_p7_fete():
@@ -1746,84 +1724,86 @@ def generer_modele_p7_fete():
     })
 
 def generer_modele_p7_cartes():
+    """Achats, échanges et division entière pour compléter l'album."""
 
     cartes_depart = random.randint(65, 110)
     paquets = random.randint(5, 9)
     cartes_paquet = random.choice([6, 8])
-
     cartes_achetees = paquets * cartes_paquet
 
+    # Un nombre pair de doublons permet réellement de tous les échanger par 2.
     doublons = random.choice([8, 10, 12, 14, 16, 18, 20])
-
-    nouvelles_cartes = cartes_achetees - doublons
-
+    nouvelles_apres_achats = cartes_achetees - doublons
     cartes_echangees = doublons // 2
-    doublons_restants = 0
+    cartes_ajoutees = nouvelles_apres_achats + cartes_echangees
+    total_collection = cartes_depart + cartes_ajoutees
 
-    total_collection = (
-        cartes_depart
-        + nouvelles_cartes
-        + cartes_echangees
-    )
-    capacites_possibles = (180, 200, 220, 240, 260, 280)
-    capacite_album = random.choice([
+    capacites_possibles = (160, 180, 200, 220, 240, 260, 280)
+    capacites_valides = [
         capacite for capacite in capacites_possibles
-        if 15 <= capacite - total_collection <= 140
-    ])
+        if 15 <= capacite - total_collection <= 100
+    ]
+    if not capacites_valides:
+        raise ValueError("Aucune capacité d'album adaptée au tirage")
+    capacite_album = random.choice(capacites_valides)
     emplacements_vides = capacite_album - total_collection
+
+    cartes_par_lot = random.choice([5, 6, 8, 10, 12])
+    quotient, reste = divmod(emplacements_vides, cartes_par_lot)
+    lots_necessaires = quotient + (1 if reste else 0)
 
     enonce = (
         "**Une collection de cartes**\n\n"
-        f"Un collégien possède déjà {cartes_depart} "
-        "cartes différentes dans son album.\n\n"
-        f"Il achète {paquets} paquets contenant chacun "
-        f"{cartes_paquet} cartes.\n\n"
-        f"Parmi les cartes achetées, {doublons} sont des doublons : "
-        "il possède déjà ces cartes dans son album. "
-        "Il ajoute les autres cartes à son album.\n\n"
+        f"Un collégien possède déjà {cartes_depart} cartes différentes dans son album.\n\n"
+        f"Il achète {paquets} paquets de {cartes_paquet} cartes chacun.\n\n"
+        f"Parmi les cartes achetées, {doublons} sont des doublons "
+        "(il les possède déjà dans son album).\n\n"
         "Il échange ensuite **tous ses doublons** avec un ami : "
         "pour **2 doublons donnés**, il reçoit **1 nouvelle carte** "
-        "qu'il ne possède pas encore et qu'il ajoute à son album.\n\n"
-        f"Son album peut contenir au maximum {capacite_album} cartes.\n\n"
+        "qu'il ne possède pas encore.\n\n"
+        f"Son album contient {capacite_album} emplacements. "
+        "Pour le compléter, il peut aussi acheter des lots de "
+        f"{cartes_par_lot} cartes. "
+        "Toutes les cartes de ces lots sont garanties différentes "
+        "et absentes de son album.\n\n"
         "**Questions**\n\n"
-        "1. Combien de cartes achète-t-il au total ?\n\n"
-        "2. Combien de cartes ajoute-t-il à son album avant les échanges ?\n\n"
-        "3. Combien de cartes reçoit-il grâce aux échanges ?\n\n"
-        "4. Combien d'emplacements seront encore vides dans son album "
-        "après les achats et les échanges ?"
+        "1. Combien de cartes achète-t-il ?\n\n"
+        "2. Combien de nouvelles cartes ajoute-t-il à son album grâce "
+        "aux achats et aux échanges ?\n\n"
+        "3. Combien d'emplacements restent vides dans son album "
+        "après les achats et les échanges ?\n\n"
+        "4. Combien de lots supplémentaires doit-il acheter au minimum "
+        "pour obtenir assez de nouvelles cartes et remplir son album ?"
     )
 
     correction = (
-        "**1. Nombre de cartes achetées**\n\n"
-        f"{paquets} × {cartes_paquet} "
-        f"= {cartes_achetees} cartes.\n\n"
-
-        "**2. Nouvelles cartes avant les échanges**\n\n"
-        f"{cartes_achetees} − {doublons} "
-        f"= {nouvelles_cartes} cartes.\n\n"
-
-        "**3. Cartes obtenues par échange**\n\n"
-        f"Il possède {doublons} doublons.\n\n"
-        f"En les regroupant par 2, il peut réaliser "
-        f"{cartes_echangees} échanges.\n\n"
-        f"Il obtient donc {cartes_echangees} "
-        "nouvelles cartes.\n\n"
-        f"Doublons non échangés : {doublons_restants}.\n\n"
-
-        "**4. Emplacements encore vides dans l'album**\n\n"
+        "**1. Cartes achetées**\n\n"
+        f"{paquets} × {cartes_paquet} = {cartes_achetees} cartes.\n\n"
+        "**2. Cartes ajoutées grâce aux achats et aux échanges**\n\n"
+        f"Les cartes non doublons : {cartes_achetees} − {doublons} "
+        f"= {nouvelles_apres_achats} cartes.\n\n"
+        f"Les échanges : {doublons} ÷ 2 = {cartes_echangees} nouvelles cartes.\n\n"
+        f"Il ajoute donc {nouvelles_apres_achats} + {cartes_echangees} "
+        f"= {cartes_ajoutees} cartes à son album.\n\n"
+        "**3. Emplacements encore vides**\n\n"
         f"Après les achats et les échanges, il possède "
-        f"{cartes_depart} + {nouvelles_cartes} + {cartes_echangees} "
-        f"= {total_collection} cartes.\n\n"
-        f"Son album contient {capacite_album} emplacements.\n"
-        f"Il en reste {capacite_album} − {total_collection} "
-        f"= {emplacements_vides} vides.\n\n"
-        "**Expression complète :**\n\n"
-        f"{capacite_album} − ({cartes_depart} + "
-        f"({paquets} × {cartes_paquet} − {doublons}) "
-        f"+ {cartes_echangees}) "
-        f"= {emplacements_vides}.\n\n"
-        f"**Réponse :** Il reste {emplacements_vides} "
-        "emplacements vides dans l'album."
+        f"{cartes_depart} + {cartes_ajoutees} = {total_collection} cartes.\n\n"
+        f"Il reste {capacite_album} − {total_collection} "
+        f"= {emplacements_vides} emplacements vides.\n\n"
+        "**4. Nombre minimal de lots supplémentaires**\n\n"
+        "Division avec quotient entier et reste :\n\n"
+        f"{emplacements_vides} = {cartes_par_lot} × "
+        f"{quotient} + {reste}.\n\n"
+        + (
+            f"Après {quotient} lots, il manque encore {reste} cartes. "
+            "Un dernier lot est donc nécessaire.\n\n"
+            if reste else
+            f"Le reste est nul : {quotient} lots suffisent.\n\n"
+        )
+        + f"**Réponse :** Il faut au minimum {lots_necessaires} "
+          f"lot{'s' if lots_necessaires > 1 else ''} supplémentaires. "
+          "Les cartes en trop, s'il y en a, "
+          "restent hors de l'album."
     )
 
     return _mc_uniformiser_exercice({
@@ -1833,39 +1813,11 @@ def generer_modele_p7_cartes():
         "correction": correction,
         "reponse_attendue": None,
         "champs_reponse": [
-            {
-                "id": "r1",
-                "question": 1,
-                "libelle": "Cartes achetées",
-                "type": "nombre",
-                "attendu": cartes_achetees,
-                "unite": "cartes"
-            },
-            {
-                "id": "r2",
-                "question": 2,
-                "libelle": "Nouvelles cartes avant échanges",
-                "type": "nombre",
-                "attendu": nouvelles_cartes,
-                "unite": "cartes"
-            },
-            {
-                "id": "r3",
-                "question": 3,
-                "libelle": "Cartes obtenues par échange",
-                "type": "nombre",
-                "attendu": cartes_echangees,
-                "unite": "cartes"
-            },
-            {
-                "id": "r4",
-                "question": 4,
-                "libelle": "Emplacements vides dans l'album",
-                "type": "nombre",
-                "attendu": emplacements_vides,
-                "unite": "emplacements"
-            }
-        ]
+            {"id": "r1", "question": 1, "libelle": "Cartes achetées", "type": "nombre", "attendu": cartes_achetees, "unite": "cartes"},
+            {"id": "r2", "question": 2, "libelle": "Cartes ajoutées à l'album", "type": "nombre", "attendu": cartes_ajoutees, "unite": "cartes"},
+            {"id": "r3", "question": 3, "libelle": "Emplacements encore vides", "type": "nombre", "attendu": emplacements_vides, "unite": "emplacements"},
+            {"id": "r4", "question": 4, "libelle": "Lots supplémentaires nécessaires", "type": "nombre", "attendu": lots_necessaires, "unite": "lots"},
+        ],
     })
 
 def generer_modele_p7_badminton():
@@ -5676,9 +5628,9 @@ REGLES = {
     ],
     "P7-M05": [
         ("r1", "Quelle est la distance de l'aller-retour jusqu'au parc ?"),
-        ("r2", "Quelle distance totale a déjà été parcourue après les boucles dans le parc ?"),
-        ("r3", "Quelle distance manque-t-il pour atteindre l'objectif ?"),
-        ("r4", "Combien de petits tours complets faut-il encore faire, au minimum, pour atteindre l'objectif ?"),
+        ("r2", "Quelle distance le groupe a-t-il parcourue au total, en additionnant les distances de tous les cyclistes ?"),
+        ("r3", "Quelle distance manque-t-il au groupe pour atteindre son objectif ?"),
+        ("r4", "Combien de petits tours supplémentaires chaque cycliste doit-il effectuer au minimum pour atteindre l'objectif commun ?"),
     ],
     "P7-M06": [
         ("r1", "Quel est le montant total des recettes de la fête ?"),
@@ -5687,10 +5639,10 @@ REGLES = {
         ("choix", "Le club a-t-il atteint son objectif de réserve : oui ou non ?"),
     ],
     "P7-M07": [
-        ("r1", "Combien de cartes achète-t-il au total ?"),
-        ("r2", "Combien de cartes ajoute-t-il à son album avant les échanges ?"),
-        ("r3", "Combien de cartes reçoit-il grâce aux échanges ?"),
-        ("r4", "Combien d'emplacements seront encore vides dans son album après les achats et les échanges ?"),
+        ("r1", "Combien de cartes achète-t-il ?"),
+        ("r2", "Combien de nouvelles cartes ajoute-t-il à son album grâce aux achats et aux échanges ?"),
+        ("r3", "Combien d'emplacements restent vides dans son album après les achats et les échanges ?"),
+        ("r4", "Combien de lots supplémentaires doit-il acheter au minimum pour obtenir assez de nouvelles cartes et remplir son album ?"),
     ],
     "P7-M08": [
         ("r1", "Combien de volants le club a-t-il achetés ?"),
@@ -5875,7 +5827,7 @@ _CATEGORIES = {
 _CATEGORIES_PAR_MODELE = {
     "P7-M01": "Q Q L B", "P7-M02": "Q L R B", "P7-M03": "Q Q C R",
     "P7-M04": "B B C R", "P7-M05": "D D D L", "P7-M06": "B B B C",
-    "P7-M07": "Q Q Q R", "P7-M08": "Q Q Q R", "P7-M09": "Q B R R",
+    "P7-M07": "Q Q R L", "P7-M08": "Q Q Q R", "P7-M09": "Q B R R",
     "P7-M10": "Q Q R R", "P7-M11": "Q Q Q R",
     "P8-M01": "B B B B L", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
     "P8-M04": "Q Q L B R", "P8-M05": "L B B B R", "P8-M06": "B B B C R",
