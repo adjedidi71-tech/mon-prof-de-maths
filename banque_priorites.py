@@ -2794,10 +2794,19 @@ def generer_modele_p7_echecs():
         "**3. Recettes des inscriptions**\n\n"
         f"{joueurs} × {prix_inscription} = {recettes} €.\n\n"
         "**4. Bilan financier du tournoi**\n\n"
-        f"Récompenses : {rencontres} × {prix_recompense} = {rencontres * prix_recompense} €.\n"
-        f"Dépenses : {rencontres * prix_recompense} + {location_salle} = {couts} €.\n"
-        f"Ressources : {fonds_club} + {recettes} = {fonds_club + recettes} €.\n"
-        f"Écart : {abs(solde)} €. **Conclusion :** {conclusion}"
+        f"**Recettes des inscriptions :** {joueurs} × {prix_inscription} = {recettes} €.\n"
+        f"**Caisse initiale :** {fonds_club} €.\n"
+        f"**Somme disponible :** {fonds_club} + {recettes} = {fonds_club + recettes} €.\n\n"
+        f"**Récompenses :** {rencontres} × {prix_recompense} = {rencontres * prix_recompense} €.\n"
+        f"**Location de la salle :** {location_salle} €.\n"
+        f"**Dépenses totales :** {rencontres * prix_recompense} + {location_salle} = {couts} €.\n\n"
+        "**Expression complète du bilan :**\n"
+        f"{fonds_club} + ({joueurs} × {prix_inscription}) − "
+        f"(({rencontres} × {prix_recompense}) + {location_salle}) = {solde} €.\n"
+        + (f"**Différence :** {fonds_club + recettes} − {couts} = {solde} €.\n"
+           if solde > 0 else
+           f"**Montant manquant :** {couts} − {fonds_club + recettes} = {-solde} €.\n")
+        + f"**Conclusion :** {conclusion}"
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M17", "titre": "Le tournoi d'échecs", "mathicap_solde_positif": solde > 0,
@@ -2857,8 +2866,11 @@ def generer_modele_p7_fresque():
         f"{surface_peindre // couverture}, reste {surface_peindre % couverture}.\n"
         f"Il faut {pots} pots entiers pour les deux couches.\n\n"
         "**4. Bilan du budget**\n\n"
-        f"Coût des pots : {pots} × {prix_pot} = {cout} €.\n"
-        f"Budget : {budget} €. Différence : {abs(budget - cout)} €.\n"
+        f"**Coût total des pots :** {pots} × {prix_pot} = {cout} €.\n"
+        f"**Budget disponible :** {budget} €.\n"
+        + (f"**Différence :** {cout} − {budget} = {cout - budget} €.\n"
+           if manque else
+           f"**Différence :** {budget} − {cout} = {budget - cout} €.\n")
         + (
             f"**Conclusion :** Il manque {cout - budget} €."
             if manque else
@@ -2894,6 +2906,7 @@ def generer_modele_p7_carnets_transport():
         if cout_mixte != cout_carnets:
             break
     minimum = min(cout_mixte, cout_carnets)
+    economie = abs(cout_mixte - cout_carnets)
     enonce = (
         "**Les carnets de transport**\n\n"
         f"Un club prépare une sortie pour {voyageurs} participants. "
@@ -2907,8 +2920,9 @@ def generer_modele_p7_carnets_transport():
         "2. Si le club achète autant de carnets complets que possible sans dépasser "
         "le nombre de billets nécessaires, combien de billets reste-t-il à acheter à l'unité ?\n\n"
         "3. Combien coûte l'achat de ces carnets et des billets restants à l'unité ?\n\n"
-        "4. Quel est le montant minimal à payer si le club peut aussi choisir "
-        "d'acheter un carnet supplémentaire au lieu des billets à l'unité ?"
+        "4. En comparant ces deux possibilités (compléter avec des billets à l'unité "
+        "ou acheter un carnet supplémentaire), combien d'euros le club économise-t-il "
+        "en choisissant la moins chère ?"
     )
     conclusion = (
         "Il vaut mieux acheter un carnet supplémentaire."
@@ -2925,9 +2939,13 @@ def generer_modele_p7_carnets_transport():
         f"{carnets} × {prix_carnet} + {billets_isoles} × {prix_unitaire} "
         f"= {cout_mixte} €.\n\n"
         "**4. Comparer les deux achats possibles**\n\n"
-        f"Avec un carnet supplémentaire : {carnets + 1} × {prix_carnet} = {cout_carnets} €.\n"
-        f"Avec les billets à l'unité en complément : {cout_mixte} €.\n"
-        f"**Conclusion :** {conclusion} Le coût minimal est {minimum} €."
+        f"**Option 1 — Compléter à l'unité :** {carnets} × {prix_carnet} + "
+        f"{billets_isoles} × {prix_unitaire} = {cout_mixte} €.\n"
+        f"**Option 2 — Acheter un carnet supplémentaire :** {carnets + 1} × "
+        f"{prix_carnet} = {cout_carnets} €.\n"
+        f"**Économie :** {max(cout_mixte, cout_carnets)} − {minimum} = {economie} €.\n"
+        f"**Conclusion :** {conclusion} Il économise {economie} € "
+        f"et paie {minimum} € au minimum."
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M19", "titre": "Les carnets de transport",
@@ -2936,7 +2954,7 @@ def generer_modele_p7_carnets_transport():
             {"id": "r1", "question": 1, "libelle": "Billets nécessaires", "type": "nombre", "attendu": billets, "unite": "billets"},
             {"id": "r2", "question": 2, "libelle": "Billets à l'unité", "type": "nombre", "attendu": billets_isoles, "unite": "billets"},
             {"id": "r3", "question": 3, "libelle": "Coût des carnets et billets", "type": "nombre", "attendu": cout_mixte, "unite": "€"},
-            {"id": "r4", "question": 4, "libelle": "Coût minimal", "type": "nombre", "attendu": minimum, "unite": "€"},
+            {"id": "r4", "question": 4, "libelle": "Économie réalisée", "type": "nombre", "attendu": economie, "unite": "€"},
         ],
     })
 
@@ -2990,8 +3008,13 @@ def generer_modele_p7_course_solidaire():
         "**3. Argent des parrains**\n\n"
         f"{tours} × {euros_tour} = {recettes} €.\n\n"
         "**4. Objectif après les frais**\n\n"
-        f"Dons disponibles : {recettes} − {frais} = {net} €.\n"
-        f"Objectif : {objectif} €. Écart : {ecart} €.\n"
+        f"**Recettes de parrainage :** {tours} × {euros_tour} = {recettes} €.\n"
+        f"**Frais d'organisation :** {frais} €.\n"
+        f"**Somme réellement disponible :** {recettes} − {frais} = {net} €.\n"
+        f"**Objectif de don :** {objectif} €.\n"
+        + (f"**Différence :** {net} − {objectif} = {ecart} €.\n"
+           if suffisant else
+           f"**Différence :** {objectif} − {net} = {ecart} €.\n")
         + (f"**Conclusion :** L'objectif est dépassé de {ecart} €."
            if suffisant else f"**Conclusion :** Il manque {ecart} € pour atteindre l'objectif.")
     )
@@ -6377,7 +6400,7 @@ REGLES = {
         ("r1", "Combien de billets faut-il pour tous les participants ?"),
         ("r2", "Avec un maximum de carnets complets sans dépasser les besoins, combien de billets faut-il acheter à l'unité ?"),
         ("r3", "Combien coûte l'achat de ces carnets et des billets restants à l'unité ?"),
-        ("r4", "Quel est le montant minimal à payer en comparant avec l'achat d'un carnet supplémentaire ?"),
+        ("r4", "Combien d'euros le club économise-t-il en choisissant l'achat le moins cher : compléter avec des billets à l'unité ou acheter un carnet supplémentaire ?"),
     ],
     "P7-M20": [
         ("r1", "Combien de tours ont été réalisés par l'ensemble des groupes ?"),
