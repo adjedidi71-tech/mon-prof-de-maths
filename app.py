@@ -8048,37 +8048,105 @@ def generer_exercice(chapitre, partie, difficulte, type_exercice):
         "champs_reponse": champs_reponse
     }
    
-def _mathicap_historique_modeles_priorites(eleve_id, difficulte):
-    """Lit les modèles récents du compte sans modifier aucune série.
+def _mathicap_id_modele_priorites(ident, difficulte):
+    """Rattache aussi les cinq anciens IDs aux modèles actuels correspondants."""
+    if not isinstance(ident, str):
+        return None
+    niveau = 6 + difficulte
+    prefixe = f"P{niveau}-M"
+    if ident.startswith(prefixe):
+        return ident
+    anciens = {1: 6, 2: 7, 3: 8, 4: 9, 5: 10} if difficulte == 1 else {i: i for i in range(1, 6)}
+    if ident.startswith(f"P{niveau}-"):
+        suffixe = ident[len(f"P{niveau}-"):]
+        if suffixe.isdigit() and int(suffixe) in anciens:
+            return f"{prefixe}{anciens[int(suffixe)]:02d}"
+    return None
 
-    Les séries sont parcourues de la plus récente à la plus ancienne ; le
-    tirage de la nouvelle série privilégiera les modèles non récemment vus.
-    La liste est limitée aux 150 dernières séries afin de maîtriser le volume
-    téléchargé à chaque génération (et comprend les différents niveaux).
+
+def _mathicap_cle_historique_priorites(eleve_id, difficulte):
+    """Sépare les derniers tirages par élève et par niveau (7, 8 ou 9)."""
+    return f"{eleve_id}::P{6 + difficulte}"
+
+
+def _mathicap_memoriser_tirage_priorites(eleve_id, difficulte, exercices):
+    """Retient immédiatement un tirage confirmé dans Supabase.
+
+    Ce garde-fou de session complète l'historique distant, notamment si la
+    lecture suivante de Supabase tarde à refléter une série récente.
+    """
+    if not eleve_id or difficulte not in (1, 2, 3):
+        return
+    prefixe = f"P{6 + difficulte}-M"
+    ids = [
+        _mathicap_id_modele_priorites(ex.get("id"), difficulte)
+        for ex in exercices if isinstance(ex, dict)
+    ]
+    ids = [ident for ident in ids if ident is not None]
+    if not ids:
+        return
+    cle = _mathicap_cle_historique_priorites(eleve_id, difficulte)
+    cache = st.session_state.setdefault("_mc_historique_priorites_session", {})
+    precedents = cache.get(cle, [])
+    cache[cle] = (ids + precedents)[:60]
+
+
+def _mathicap_historique_modeles_priorites(eleve_id, difficulte):
+    """Agrège les tirages de la session et des séries sauvegardées.
+
+    La session couvre les créations récentes ; Supabase couvre les retours
+    après fermeture de page ou sur un autre appareil. Aucun historique des
+    autres élèves ou des autres niveaux n'est utilisé.
     """
     if not eleve_id or difficulte not in (1, 2, 3):
         return []
-    resultat = (
-        supabase_privee.table("series_exercices")
-        .select("exercices")
-        .eq("eleve_id", eleve_id)
-        .order("created_at", desc=True)
-        .limit(150)
-        .execute()
-    )
+    cle = _mathicap_cle_historique_priorites(eleve_id, difficulte)
     prefixe = f"P{6 + difficulte}-M"
-    historique = []
-    for ligne in resultat.data or []:
-        exercices = ligne.get("exercices") if isinstance(ligne, dict) else None
-        if not isinstance(exercices, list):
-            continue
-        for exercice in exercices:
-            if not isinstance(exercice, dict):
+    session = st.session_state.get("_mc_historique_priorites_session", {}).get(cle, [])
+    session = [
+        _mathicap_id_modele_priorites(ident, difficulte) for ident in session
+    ]
+    session = [ident for ident in session if ident is not None]
+    try:
+        resultat = (
+            supabase_privee.table("series_exercices")
+            .select("exercices")
+            .eq("eleve_id", eleve_id)
+            .order("created_at", desc=True)
+            .limit(150)
+            .execute()
+        )
+        historique_distant = []
+        for ligne in resultat.data or []:
+            exercices = ligne.get("exercices") if isinstance(ligne, dict) else None
+            if not isinstance(exercices, list):
                 continue
-            identifiant = exercice.get("id")
-            if isinstance(identifiant, str) and identifiant.startswith(prefixe):
-                historique.append(identifiant)
-    return historique
+            for exercice in exercices:
+                ident = (
+                    _mathicap_id_modele_priorites(exercice.get("id"), difficulte)
+                    if isinstance(exercice, dict) else None
+                )
+                if ident is not None:
+                    historique_distant.append(ident)
+    except Exception:
+        if not session:
+            raise
+        st.warning(
+            "Lecture de l'historique Supabase indisponible : les derniers "
+            "tirages de cette session restent pris en compte."
+        )
+        historique_distant = []
+
+    # Éliminer les doublons en gardant la dernière apparition (ordre récent
+    # vers ancien). Le générateur peut alors prioriser les modèles les moins
+    # récemment utilisés, sans pénaliser artificiellement un même identifiant.
+    ids_uniques = []
+    deja_vus = set()
+    for ident in session + historique_distant:
+        if ident not in deja_vus:
+            ids_uniques.append(ident)
+            deja_vus.add(ident)
+    return ids_uniques
 
 
 if "exercices_actuels" not in st.session_state:
@@ -8176,6 +8244,10 @@ if demande_generation:
                 code = sauvegarder_serie(exercices)
                 if code:
                     st.session_state.code_actuel = code
+                    if chapitre == "1. Opérations" and type_exercice == "Je résous des problèmes":
+                        _mathicap_memoriser_tirage_priorites(
+                            st.session_state.get("eleve_id"), difficulte, exercices
+                        )
                     if st.session_state.get("serie_id_actuel") is not None:
                         st.query_params["serie_id"] = str(st.session_state["serie_id_actuel"])
                     st.toast("Exercices générés et sauvegardés !", icon="✅", duration=3)
