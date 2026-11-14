@@ -6,7 +6,7 @@ Difficultés :
     3 = niveau 9
 
 Les exercices sont écrits et conservés : aucune API d'IA n'est appelée.
-Modèles actifs du chapitre : 16 au niveau 7, 10 aux niveaux 8 et 9.
+Modèles actifs du chapitre : 21 au niveau 7, 10 aux niveaux 8 et 9.
 """
 
 from copy import deepcopy
@@ -2733,6 +2733,335 @@ def generer_modele_p7_plantations():
             {"id": "r2", "question": 2, "libelle": "Graines disponibles", "type": "nombre", "attendu": graines_disponibles, "unite": "graines"},
             {"id": "r3", "question": 3, "libelle": "Graines restantes", "type": "nombre", "attendu": graines_restantes, "unite": "graines"},
             {"id": "r4", "question": 4, "libelle": "Planches supplémentaires", "type": "nombre", "attendu": planches_supp, "unite": "planches"},
+        ],
+    })
+
+
+
+# ================================================================
+# Cinq nouveaux modèles N7 : diversité des raisonnements (P7-M17..M21).
+# Chaque question comporte un champ numérique évalué indépendant.
+# ================================================================
+
+
+def generer_modele_p7_echecs():
+    """Compter des rencontres sans compter deux fois chaque paire."""
+    while True:
+        joueurs = random.randint(8, 16)
+        prix_inscription = random.randint(3, 8)
+        prix_recompense = random.randint(2, 6)
+        location_salle = random.randint(35, 135)
+        fonds_club = random.randint(100, 460)
+        adversaires = joueurs - 1
+        rencontres = joueurs * adversaires // 2
+        recettes = joueurs * prix_inscription
+        couts = rencontres * prix_recompense + location_salle
+        solde = fonds_club + recettes - couts
+        if 15 <= abs(solde) <= 240:
+            break
+    question_finale = (
+        "Combien d'euros restera-t-il au club après les dépenses du tournoi ?"
+        if solde > 0 else
+        "Combien d'euros manque-t-il au club pour payer toutes les dépenses du tournoi ?"
+    )
+    enonce = (
+        "**Le tournoi d'échecs**\n\n"
+        f"Un club organise un tournoi avec {joueurs} joueurs. "
+        "Chaque joueur rencontre **une fois chacun des autres joueurs**, "
+        "et une partie oppose exactement deux joueurs.\n\n"
+        f"L'inscription coûte {prix_inscription} € par joueur. "
+        f"Le club prévoit {prix_recompense} € de matériel de récompense pour chaque partie "
+        f"et {location_salle} € pour la location de la salle. "
+        f"Il possède déjà {fonds_club} € dans sa caisse.\n\n"
+        "**Questions**\n\n"
+        "1. Combien d'adversaires chaque joueur rencontrera-t-il ?\n\n"
+        "2. Combien de parties seront jouées au total, sans compter deux fois la même partie ?\n\n"
+        "3. Combien d'euros les inscriptions rapporteront-elles au club ?\n\n"
+        f"4. {question_finale}"
+    )
+    conclusion = (
+        f"Il restera {solde} € dans la caisse."
+        if solde > 0 else
+        f"Il manquera {-solde} € pour payer le tournoi."
+    )
+    correction = (
+        "**1. Adversaires par joueur**\n\n"
+        f"{joueurs} − 1 = {adversaires} adversaires.\n\n"
+        "**2. Parties sans doublons**\n\n"
+        f"{joueurs} × {adversaires} = {joueurs * adversaires} rencontres comptées par les joueurs. "
+        "Chaque partie est comptée deux fois (par ses deux joueurs).\n"
+        f"{joueurs * adversaires} ÷ 2 = {rencontres} parties distinctes.\n\n"
+        "**3. Recettes des inscriptions**\n\n"
+        f"{joueurs} × {prix_inscription} = {recettes} €.\n\n"
+        "**4. Bilan financier du tournoi**\n\n"
+        f"Récompenses : {rencontres} × {prix_recompense} = {rencontres * prix_recompense} €.\n"
+        f"Dépenses : {rencontres * prix_recompense} + {location_salle} = {couts} €.\n"
+        f"Ressources : {fonds_club} + {recettes} = {fonds_club + recettes} €.\n"
+        f"Écart : {abs(solde)} €. **Conclusion :** {conclusion}"
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M17", "titre": "Le tournoi d'échecs", "mathicap_solde_positif": solde > 0,
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Adversaires par joueur", "type": "nombre", "attendu": adversaires, "unite": "adversaires"},
+            {"id": "r2", "question": 2, "libelle": "Parties distinctes", "type": "nombre", "attendu": rencontres, "unite": "parties"},
+            {"id": "r3", "question": 3, "libelle": "Recettes des inscriptions", "type": "nombre", "attendu": recettes, "unite": "€"},
+            {"id": "r4", "question": 4, "libelle": "Écart après dépenses", "type": "nombre", "attendu": abs(solde), "unite": "€"},
+        ],
+    })
+
+
+def generer_modele_p7_fresque():
+    """Aire de rectangles, deux couches, pots entiers, budget."""
+    while True:
+        panneaux = random.randint(4, 9)
+        longueur = random.randint(2, 5)
+        hauteur = random.randint(2, 4)
+        surface = panneaux * longueur * hauteur
+        surface_peindre = 2 * surface
+        couverture = random.randint(12, 25)
+        pots = (surface_peindre + couverture - 1) // couverture
+        prix_pot = random.randint(12, 28)
+        cout = pots * prix_pot
+        ecart = random.randint(17, 165)
+        budget = cout + ecart if random.choice((True, False)) else cout - ecart
+        if 4 <= pots <= 18 and budget >= 65:
+            break
+    manque = budget < cout
+    question_finale = (
+        "Combien d'euros manque-t-il au collège pour acheter tous les pots nécessaires ?"
+        if manque else
+        "Combien d'euros restera-t-il du budget après l'achat des pots nécessaires ?"
+    )
+    enonce = (
+        "**La fresque du préau**\n\n"
+        f"Les élèves veulent peindre {panneaux} panneaux rectangulaires de "
+        f"{longueur} m de long et {hauteur} m de haut. "
+        "Chaque panneau doit recevoir **deux couches de peinture**.\n\n"
+        f"Un pot permet de couvrir au maximum {couverture} m² pour une couche "
+        f"et coûte {prix_pot} €. Le collège dispose d'un budget de {budget} €. "
+        "Les pots s'achètent entiers.\n\n"
+        "**Questions**\n\n"
+        "1. Quelle est la surface totale des panneaux, en m² ?\n\n"
+        "2. Quelle surface de peinture faut-il prévoir pour les deux couches, en m² ?\n\n"
+        "3. Combien de pots de peinture faut-il acheter au minimum ?\n\n"
+        f"4. {question_finale}"
+    )
+    correction = (
+        "**1. Surface totale des panneaux**\n\n"
+        f"{panneaux} × {longueur} × {hauteur} = {surface} m².\n\n"
+        "**2. Deux couches de peinture**\n\n"
+        f"{surface} × 2 = {surface_peindre} m² de couverture nécessaires.\n\n"
+        "**3. Nombre minimal de pots**\n\n"
+        f"{surface_peindre} ÷ {couverture} : quotient entier "
+        f"{surface_peindre // couverture}, reste {surface_peindre % couverture}.\n"
+        f"Il faut {pots} pots entiers pour les deux couches.\n\n"
+        "**4. Bilan du budget**\n\n"
+        f"Coût des pots : {pots} × {prix_pot} = {cout} €.\n"
+        f"Budget : {budget} €. Différence : {abs(budget - cout)} €.\n"
+        + (
+            f"**Conclusion :** Il manque {cout - budget} €."
+            if manque else
+            f"**Conclusion :** Il restera {budget - cout} €."
+        )
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M18", "titre": "La fresque du préau", "mathicap_budget_suffisant": not manque,
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Surface totale", "type": "nombre", "attendu": surface, "unite": "m²"},
+            {"id": "r2", "question": 2, "libelle": "Surface pour deux couches", "type": "nombre", "attendu": surface_peindre, "unite": "m²"},
+            {"id": "r3", "question": 3, "libelle": "Pots nécessaires", "type": "nombre", "attendu": pots, "unite": "pots"},
+            {"id": "r4", "question": 4, "libelle": "Écart avec le budget", "type": "nombre", "attendu": abs(budget - cout), "unite": "€"},
+        ],
+    })
+
+
+def generer_modele_p7_carnets_transport():
+    """Choisir entre carnets complets et billets à l'unité."""
+    while True:
+        voyageurs = random.randint(38, 116)
+        if voyageurs % 5 == 0:
+            continue  # Conserver des billets isolés pour que le choix soit utile.
+        billets = 2 * voyageurs
+        prix_unitaire = random.randint(2, 5)
+        prix_carnet = random.randint(11, 27)
+        if prix_carnet >= 10 * prix_unitaire:
+            continue
+        carnets, billets_isoles = divmod(billets, 10)
+        cout_mixte = carnets * prix_carnet + billets_isoles * prix_unitaire
+        cout_carnets = (carnets + 1) * prix_carnet
+        if cout_mixte != cout_carnets:
+            break
+    minimum = min(cout_mixte, cout_carnets)
+    enonce = (
+        "**Les carnets de transport**\n\n"
+        f"Un club prépare une sortie pour {voyageurs} participants. "
+        "Chaque personne a besoin d'un billet pour l'aller et d'un autre pour le retour.\n\n"
+        f"Les billets sont vendus à l'unité pour {prix_unitaire} € chacun, "
+        f"ou par carnet de 10 billets pour {prix_carnet} € le carnet. "
+        "Le club peut combiner les deux modes d'achat et conserver les billets inutilisés "
+        "pour une autre sortie.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de billets faut-il pour tous les participants ?\n\n"
+        "2. Si le club achète autant de carnets complets que possible sans dépasser "
+        "le nombre de billets nécessaires, combien de billets reste-t-il à acheter à l'unité ?\n\n"
+        "3. Combien coûte l'achat de ces carnets et des billets restants à l'unité ?\n\n"
+        "4. Quel est le montant minimal à payer si le club peut aussi choisir "
+        "d'acheter un carnet supplémentaire au lieu des billets à l'unité ?"
+    )
+    conclusion = (
+        "Il vaut mieux acheter un carnet supplémentaire."
+        if cout_carnets < cout_mixte else
+        "Il vaut mieux compléter les carnets avec les billets à l'unité."
+    )
+    correction = (
+        "**1. Billets nécessaires**\n\n"
+        f"{voyageurs} × 2 = {billets} billets.\n\n"
+        "**2. Billets à acheter à l'unité**\n\n"
+        f"{billets} ÷ 10 : quotient entier {carnets}, reste {billets_isoles}.\n"
+        f"Avec {carnets} carnets, il manque {billets_isoles} billets.\n\n"
+        "**3. Carnets et billets à l'unité**\n\n"
+        f"{carnets} × {prix_carnet} + {billets_isoles} × {prix_unitaire} "
+        f"= {cout_mixte} €.\n\n"
+        "**4. Comparer les deux achats possibles**\n\n"
+        f"Avec un carnet supplémentaire : {carnets + 1} × {prix_carnet} = {cout_carnets} €.\n"
+        f"Avec les billets à l'unité en complément : {cout_mixte} €.\n"
+        f"**Conclusion :** {conclusion} Le coût minimal est {minimum} €."
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M19", "titre": "Les carnets de transport",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Billets nécessaires", "type": "nombre", "attendu": billets, "unite": "billets"},
+            {"id": "r2", "question": 2, "libelle": "Billets à l'unité", "type": "nombre", "attendu": billets_isoles, "unite": "billets"},
+            {"id": "r3", "question": 3, "libelle": "Coût des carnets et billets", "type": "nombre", "attendu": cout_mixte, "unite": "€"},
+            {"id": "r4", "question": 4, "libelle": "Coût minimal", "type": "nombre", "attendu": minimum, "unite": "€"},
+        ],
+    })
+
+
+def generer_modele_p7_course_solidaire():
+    """Distances décimales et recettes d'un parrainage solidaire."""
+    while True:
+        eleves = [random.randint(8, 17) for _ in range(3)]
+        tours_eleve = [random.randint(3, 7) for _ in range(3)]
+        tours = sum(a*b for a,b in zip(eleves, tours_eleve))
+        longueur_dixieme = random.choice([4, 5, 6, 8, 12])
+        distance = tours * longueur_dixieme / 10
+        euros_tour = random.randint(2, 5)
+        frais = random.randint(90, 280)
+        recettes = tours * euros_tour
+        net = recettes - frais
+        ecart = random.randint(25, 155)
+        objectif = net - ecart if random.choice((True, False)) else net + ecart
+        if net > 180 and objectif >= 70:
+            break
+    suffisant = net > objectif
+    question_finale = (
+        "De combien d'euros la somme disponible dépasse-t-elle l'objectif de don après les frais ?"
+        if suffisant else
+        "De combien d'euros la somme disponible est-elle inférieure à l'objectif de don après les frais ?"
+    )
+    equipes = "; ".join(
+        f"{eleves[i]} élèves parcourent chacun {tours_eleve[i]} tours" for i in range(3)
+    )
+    longueur_texte = str(longueur_dixieme / 10).replace(".", ",")
+    distance_texte = f"{distance:g}".replace(".", ",")
+    enonce = (
+        "**La course solidaire du collège**\n\n"
+        "Trois groupes participent à une course parrainée : " + equipes + ".\n\n"
+        f"Chaque tour mesure {longueur_texte} km. "
+        f"Les parrains donnent {euros_tour} € pour chaque tour effectué, quel que soit le groupe. "
+        f"L'organisation coûte {frais} €. Les élèves souhaitent remettre au moins "
+        f"{objectif} € à une association après paiement de ces frais.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de tours ont été réalisés par l'ensemble des groupes ?\n\n"
+        "2. Quelle distance ont-ils parcourue au total, en kilomètres ?\n\n"
+        "3. Quelle somme les parrains versent-ils au total, avant les frais ?\n\n"
+        f"4. {question_finale}"
+    )
+    detail = " + ".join(f"{a} × {b}" for a,b in zip(eleves, tours_eleve))
+    correction = (
+        "**1. Tours parcourus**\n\n"
+        f"{detail} = {tours} tours.\n\n"
+        "**2. Distance cumulée**\n\n"
+        f"{tours} × {longueur_texte} = {distance_texte} km.\n\n"
+        "**3. Argent des parrains**\n\n"
+        f"{tours} × {euros_tour} = {recettes} €.\n\n"
+        "**4. Objectif après les frais**\n\n"
+        f"Dons disponibles : {recettes} − {frais} = {net} €.\n"
+        f"Objectif : {objectif} €. Écart : {ecart} €.\n"
+        + (f"**Conclusion :** L'objectif est dépassé de {ecart} €."
+           if suffisant else f"**Conclusion :** Il manque {ecart} € pour atteindre l'objectif.")
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M20", "titre": "La course solidaire du collège", "mathicap_objectif_atteint": suffisant,
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Tours parcourus", "type": "nombre", "attendu": tours, "unite": "tours"},
+            {"id": "r2", "question": 2, "libelle": "Distance cumulée", "type": "nombre", "attendu": distance, "unite": "km"},
+            {"id": "r3", "question": 3, "libelle": "Somme des parrainages", "type": "nombre", "attendu": recettes, "unite": "€"},
+            {"id": "r4", "question": 4, "libelle": "Écart avec l'objectif", "type": "nombre", "attendu": ecart, "unite": "€"},
+        ],
+    })
+
+
+def generer_modele_p7_refuge():
+    """Rations, conversion kg/g, jours entiers, sacs supplémentaires."""
+    adultes = random.randint(12, 25)
+    jeunes = random.randint(9, 21)
+    g_adulte = random.choice([120, 140, 160, 180])
+    g_jeune = random.choice([60, 70, 80, 90, 100])
+    initial_kg = random.randint(22, 65)
+    livraison_kg = random.randint(8, 25)
+    sac_kg = random.choice([2, 3, 5])
+    ration = adultes * g_adulte + jeunes * g_jeune
+    stock = (initial_kg + livraison_kg) * 1000
+    jours, reste = divmod(stock, ration)
+    objectif_jours = jours + random.randint(4, 13)
+    manque_g = objectif_jours * ration - stock
+    sacs, reste_sacs = divmod(manque_g, sac_kg * 1000)
+    sacs += int(reste_sacs > 0)
+    enonce = (
+        "**Le refuge des lapins**\n\n"
+        f"Un refuge accueille {adultes} lapins adultes et {jeunes} jeunes lapins. "
+        f"Chaque adulte mange {g_adulte} g de granulés par jour, "
+        f"et chaque jeune en mange {g_jeune} g par jour.\n\n"
+        f"Le refuge possède {initial_kg} kg de granulés et reçoit une livraison de "
+        f"{livraison_kg} kg. Pour tenir jusqu'à la prochaine livraison, il souhaite "
+        f"avoir assez de nourriture pour {objectif_jours} jours. "
+        f"On peut acheter des sacs supplémentaires de {sac_kg} kg chacun.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de grammes de granulés faut-il pour nourrir tous les lapins pendant une journée ?\n\n"
+        "2. Combien de grammes de granulés le refuge possède-t-il après la livraison ?\n\n"
+        "3. Pendant combien de jours complets ce stock suffit-il ?\n\n"
+        "4. Combien de sacs supplémentaires faut-il acheter au minimum "
+        "pour nourrir tous les lapins pendant le nombre de jours prévu ?"
+    )
+    correction = (
+        "**1. Ration quotidienne**\n\n"
+        f"{adultes} × {g_adulte} + {jeunes} × {g_jeune} = {ration} g.\n\n"
+        "**2. Stock en grammes**\n\n"
+        f"({initial_kg} + {livraison_kg}) × 1 000 = {stock} g.\n\n"
+        "**3. Nombre de jours complets**\n\n"
+        f"{stock} ÷ {ration} : quotient entier {jours}, reste {reste} g.\n"
+        f"Ce stock suffit pour {jours} jours entiers.\n\n"
+        "**4. Sacs supplémentaires nécessaires**\n\n"
+        f"Quantité à prévoir : {objectif_jours} × {ration} = {objectif_jours*ration} g.\n"
+        f"Manque : {objectif_jours*ration} − {stock} = {manque_g} g.\n"
+        f"{manque_g} ÷ {sac_kg*1000} : quotient entier {manque_g//(sac_kg*1000)}, "
+        f"reste {manque_g%(sac_kg*1000)} g.\n"
+        f"Il faut donc {sacs} sacs supplémentaires de {sac_kg} kg."
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M21", "titre": "Le refuge des lapins",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Ration quotidienne", "type": "nombre", "attendu": ration, "unite": "g"},
+            {"id": "r2", "question": 2, "libelle": "Stock disponible", "type": "nombre", "attendu": stock, "unite": "g"},
+            {"id": "r3", "question": 3, "libelle": "Jours complets", "type": "nombre", "attendu": jours, "unite": "jours"},
+            {"id": "r4", "question": 4, "libelle": "Sacs supplémentaires", "type": "nombre", "attendu": sacs, "unite": "sacs"},
         ],
     })
 
@@ -5930,7 +6259,7 @@ def generer_modele_p9_mosaique(seed=None):
 # Une seule réponse évaluée par question, sans sous-questions A/B.
 # La dernière question est consacrée à la résolution finale.
 # Les exercices historiques déjà sauvegardés restent intacts.
-# Les 36 modèles appellent directement _mc_uniformiser_exercice
+# Les 41 modèles appellent directement _mc_uniformiser_exercice
 # dans leur return : aucun nouveau module n'est nécessaire.
 # ================================================================
 
@@ -6031,6 +6360,36 @@ REGLES = {
         ("r2", "Combien de graines le club possède-t-il après avoir reçu les sachets ?"),
         ("r3", "Combien de graines restera-t-il après les premières plantations ?"),
         ("r4", "Combien de planches supplémentaires complètes pourra-t-il préparer au maximum ?"),
+    ],
+    "P7-M17": [
+        ("r1", "Combien d'adversaires chaque joueur rencontrera-t-il ?"),
+        ("r2", "Combien de parties seront jouées au total, sans compter deux fois la même partie ?"),
+        ("r3", "Combien d'euros les inscriptions rapporteront-elles au club ?"),
+        ("r4", "Quel est l'écart entre les ressources et les dépenses du tournoi ?"),
+    ],
+    "P7-M18": [
+        ("r1", "Quelle est la surface totale des panneaux, en m² ?"),
+        ("r2", "Quelle surface de peinture faut-il prévoir pour les deux couches, en m² ?"),
+        ("r3", "Combien de pots de peinture faut-il acheter au minimum ?"),
+        ("r4", "Quel est l'écart entre le budget et le coût de tous les pots ?"),
+    ],
+    "P7-M19": [
+        ("r1", "Combien de billets faut-il pour tous les participants ?"),
+        ("r2", "Avec un maximum de carnets complets sans dépasser les besoins, combien de billets faut-il acheter à l'unité ?"),
+        ("r3", "Combien coûte l'achat de ces carnets et des billets restants à l'unité ?"),
+        ("r4", "Quel est le montant minimal à payer en comparant avec l'achat d'un carnet supplémentaire ?"),
+    ],
+    "P7-M20": [
+        ("r1", "Combien de tours ont été réalisés par l'ensemble des groupes ?"),
+        ("r2", "Quelle distance ont-ils parcourue au total, en kilomètres ?"),
+        ("r3", "Quelle somme les parrains versent-ils au total, avant les frais ?"),
+        ("r4", "Quel est l'écart entre la somme disponible après les frais et l'objectif de don ?"),
+    ],
+    "P7-M21": [
+        ("r1", "Combien de grammes de granulés faut-il pour nourrir tous les lapins pendant une journée ?"),
+        ("r2", "Combien de grammes de granulés le refuge possède-t-il après la livraison ?"),
+        ("r3", "Pendant combien de jours complets ce stock suffit-il ?"),
+        ("r4", "Combien de sacs supplémentaires faut-il acheter au minimum pour nourrir les lapins pendant la durée prévue ?"),
     ],
     # ---- Niveau 8 : exactement cinq questions ----
     "P8-M01": [
@@ -6196,6 +6555,9 @@ _CATEGORIES_PAR_MODELE = {
     "P7-M12": "Q L B B", "P7-M13": "Q L Q R",
     "P7-M14": "Q Q L L", "P7-M15": "D D D L",
     "P7-M16": "Q Q R L",
+    "P7-M17": "Q Q B B", "P7-M18": "Q Q L B",
+    "P7-M19": "Q L B B", "P7-M20": "Q D B B",
+    "P7-M21": "Q Q L L",
     "P8-M01": "B B B B L", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
     "P8-M04": "Q Q L B R", "P8-M05": "L B B B R", "P8-M06": "B B B C R",
     "P8-M07": "D Q Q R R", "P8-M08": "D D D D R", "P8-M09": "Q Q L R L",
@@ -6300,6 +6662,27 @@ def _mc_uniformiser_exercice(exercice):
             if resultat.get("mathicap_objectif_atteint")
             else "Combien de robots manqueront au club pour atteindre son objectif, après la livraison ?",
         )]
+    if identifiant == "P7-M17":
+        regles = [*regles[:-1], (
+            "r4",
+            "Combien d'euros restera-t-il au club après les dépenses du tournoi ?"
+            if resultat["mathicap_solde_positif"]
+            else "Combien d'euros manque-t-il au club pour payer toutes les dépenses du tournoi ?",
+        )]
+    if identifiant == "P7-M18":
+        regles = [*regles[:-1], (
+            "r4",
+            "Combien d'euros restera-t-il du budget après l'achat des pots nécessaires ?"
+            if resultat["mathicap_budget_suffisant"]
+            else "Combien d'euros manque-t-il au collège pour acheter tous les pots nécessaires ?",
+        )]
+    if identifiant == "P7-M20":
+        regles = [*regles[:-1], (
+            "r4",
+            "De combien d'euros la somme disponible dépasse-t-elle l'objectif de don après les frais ?"
+            if resultat["mathicap_objectif_atteint"]
+            else "De combien d'euros la somme disponible est-elle inférieure à l'objectif de don après les frais ?",
+        )]
     if identifiant == "P7-M08":
         stock_suffisant = par_id.get("r4", {}).get("attendu")
         if stock_suffisant not in ("Oui", "Non"):
@@ -6394,6 +6777,11 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p7_collecte_solidaire())
         banque.append(generer_modele_p7_repetitions())
         banque.append(generer_modele_p7_plantations())
+        banque.append(generer_modele_p7_echecs())
+        banque.append(generer_modele_p7_fresque())
+        banque.append(generer_modele_p7_carnets_transport())
+        banque.append(generer_modele_p7_course_solidaire())
+        banque.append(generer_modele_p7_refuge())
 
     if difficulte == 2:
         banque = [
