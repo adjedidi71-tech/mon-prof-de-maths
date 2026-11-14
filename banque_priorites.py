@@ -6,7 +6,7 @@ Difficultés :
     3 = niveau 9
 
 Les exercices sont écrits et conservés : aucune API d'IA n'est appelée.
-Modèles actifs du chapitre : 11 au niveau 7, 10 aux niveaux 8 et 9.
+Modèles actifs du chapitre : 16 au niveau 7, 10 aux niveaux 8 et 9.
 """
 
 from copy import deepcopy
@@ -2388,6 +2388,312 @@ def generer_modele_p7_tables_dessin():
             }
         ]
     })
+
+# ---------------------------------------------------------------
+# MathiCap : nouveaux modèles N7 (P7-M12 à P7-M16).
+# Même contrat de champs et de correction que les modèles existants.
+# ---------------------------------------------------------------
+
+def generer_modele_p7_planetarium():
+    classes = random.randint(2, 4)
+    eleves_classe = random.randint(22, 30)
+    accompagnateurs = random.randint(3, 7)
+    places_car = random.choice([40, 48, 52, 55])
+    prix_eleve = random.randint(8, 15)
+    prix_adulte = random.randint(12, 19)
+    cout_car = random.randint(180, 330)
+
+    eleves = classes * eleves_classe
+    personnes = eleves + accompagnateurs
+    cars, reste = divmod(personnes, places_car)
+    cars += int(reste > 0)
+    billets = eleves * prix_eleve + accompagnateurs * prix_adulte
+    cout_total = billets + cars * cout_car
+    ecart = random.randint(24, 195)
+    budget_suffisant = random.choice([True, False])
+    budget = cout_total + ecart if budget_suffisant else cout_total - ecart
+    assert budget > 0
+    question_finale = (
+        "Quelle somme restera-t-il dans le budget après avoir payé les billets et les cars ?"
+        if budget_suffisant else
+        "Combien d'euros manque-t-il pour financer les billets et les cars ?"
+    )
+    conclusion = (
+        f"Il restera {ecart} € dans le budget."
+        if budget_suffisant else
+        f"Il manquera {ecart} € pour financer la sortie."
+    )
+    enonce = (
+        "**La sortie au planétarium**\n\n"
+        f"Le collège organise une sortie avec {classes} classes de {eleves_classe} élèves chacune "
+        f"et {accompagnateurs} adultes accompagnateurs.\n\n"
+        f"Un car peut transporter au maximum {places_car} personnes et coûte {cout_car} €.\n\n"
+        f"L'entrée coûte {prix_eleve} € par élève et {prix_adulte} € par adulte. "
+        f"Le collège dispose d'un budget de {budget} € pour les transports et les entrées.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de personnes participeront à la sortie ?\n\n"
+        "2. Combien de cars sont nécessaires au minimum ?\n\n"
+        "3. Quel sera le coût de tous les billets d'entrée ?\n\n"
+        f"4. {question_finale}"
+    )
+    correction = (
+        "**1. Participants**\n\n"
+        f"{classes} × {eleves_classe} + {accompagnateurs} = {personnes} personnes.\n\n"
+        "**2. Nombre de cars**\n\n"
+        f"{personnes} ÷ {places_car} : quotient entier {personnes // places_car}, "
+        f"reste {personnes % places_car}.\n"
+        f"Il faut {cars} cars pour transporter tout le monde.\n\n"
+        "**3. Billets d'entrée**\n\n"
+        f"{eleves} × {prix_eleve} + {accompagnateurs} × {prix_adulte} "
+        f"= {billets} €.\n\n"
+        "**4. Bilan du budget**\n\n"
+        f"Transport : {cars} × {cout_car} = {cars * cout_car} €.\n"
+        f"Total à payer : {billets} + {cars * cout_car} = {cout_total} €.\n"
+        f"Budget : {budget} €.\n"
+        f"Différence : {ecart} €. {conclusion}"
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M12", "titre": "La sortie au planétarium",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "mathicap_budget_suffisant": budget_suffisant,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Participants", "type": "nombre", "attendu": personnes, "unite": "personnes"},
+            {"id": "r2", "question": 2, "libelle": "Cars nécessaires", "type": "nombre", "attendu": cars, "unite": "cars"},
+            {"id": "r3", "question": 3, "libelle": "Coût des billets", "type": "nombre", "attendu": billets, "unite": "€"},
+            {"id": "r4", "question": 4, "libelle": "Écart avec le budget", "type": "nombre", "attendu": ecart, "unite": "€"},
+        ],
+    })
+
+
+def generer_modele_p7_robotique():
+    # Chaque robot nécessite les deux composants : c'est la ressource limitante
+    # qui détermine le nombre de robots assemblés, pas une somme des stocks.
+    while True:
+        moteurs = random.randint(34, 72)
+        moteurs_abimes = random.randint(3, 11)
+        batteries = random.randint(42, 105)
+        batteries_abimees = random.randint(4, 15)
+        moteurs_livres = random.randint(12, 32)
+        batteries_livrees = random.randint(15, 45)
+        moteurs_utilisables = moteurs - moteurs_abimes
+        batteries_utilisables = batteries - batteries_abimees
+        robots = min(moteurs_utilisables // 2, batteries_utilisables // 3)
+        robots_apres = min((moteurs_utilisables + moteurs_livres) // 2,
+                          (batteries_utilisables + batteries_livrees) // 3)
+        supplement = robots_apres - robots
+        if 2 <= supplement <= 15:
+            break
+
+    enonce = (
+        "**Le club de robotique**\n\n"
+        "Pour préparer une démonstration, le club assemble des petits robots. "
+        "Chaque robot nécessite **2 moteurs et 3 batteries**.\n\n"
+        f"Le club possède {moteurs} moteurs, dont {moteurs_abimes} hors d'usage, "
+        f"et {batteries} batteries, dont {batteries_abimees} défectueuses.\n\n"
+        f"Une livraison arrive ensuite avec {moteurs_livres} nouveaux moteurs "
+        f"et {batteries_livrees} nouvelles batteries.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de moteurs sont utilisables avant la livraison ?\n\n"
+        "2. Combien de batteries sont utilisables avant la livraison ?\n\n"
+        "3. Combien de robots complets le club peut-il assembler avant la livraison ?\n\n"
+        "4. Combien de robots supplémentaires peut-il assembler après la livraison, "
+        "en utilisant également les pièces restantes ?"
+    )
+    correction = (
+        "**1. Moteurs utilisables**\n\n"
+        f"{moteurs} − {moteurs_abimes} = {moteurs_utilisables} moteurs.\n\n"
+        "**2. Batteries utilisables**\n\n"
+        f"{batteries} − {batteries_abimees} = {batteries_utilisables} batteries.\n\n"
+        "**3. Robots avant livraison**\n\n"
+        f"Avec les moteurs : {moteurs_utilisables} ÷ 2, quotient entier "
+        f"{moteurs_utilisables // 2}.\n"
+        f"Avec les batteries : {batteries_utilisables} ÷ 3, quotient entier "
+        f"{batteries_utilisables // 3}.\n"
+        f"Il faut les deux composants pour chaque robot, donc {robots} robots complets.\n\n"
+        "**4. Robots supplémentaires après la livraison**\n\n"
+        f"Nouveaux stocks : {moteurs_utilisables + moteurs_livres} moteurs "
+        f"et {batteries_utilisables + batteries_livrees} batteries.\n"
+        f"Avec ces stocks, le maximum est de {robots_apres} robots au total.\n"
+        f"Il peut donc assembler {robots_apres} − {robots} = {supplement} robots supplémentaires."
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M13", "titre": "Le club de robotique",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Moteurs utilisables", "type": "nombre", "attendu": moteurs_utilisables, "unite": "moteurs"},
+            {"id": "r2", "question": 2, "libelle": "Batteries utilisables", "type": "nombre", "attendu": batteries_utilisables, "unite": "batteries"},
+            {"id": "r3", "question": 3, "libelle": "Robots avant livraison", "type": "nombre", "attendu": robots, "unite": "robots"},
+            {"id": "r4", "question": 4, "libelle": "Robots supplémentaires", "type": "nombre", "attendu": supplement, "unite": "robots"},
+        ],
+    })
+
+
+def generer_modele_p7_collecte_solidaire():
+    sacs = random.randint(15, 45)
+    articles_par_sac = random.randint(8, 22)
+    articles_abimes = random.randint(11, 48)
+    capacite_carton = random.choice([10, 12, 15, 18, 20])
+    cartons_par_trajet = random.randint(3, 8)
+
+    total_articles = sacs * articles_par_sac
+    articles_utilisables = total_articles - articles_abimes
+    cartons, reste = divmod(articles_utilisables, capacite_carton)
+    cartons += int(reste > 0)
+    trajets, reste_trajets = divmod(cartons, cartons_par_trajet)
+    trajets += int(reste_trajets > 0)
+    enonce = (
+        "**La collecte solidaire**\n\n"
+        "Les élèves collectent des vêtements pour une association. "
+        f"Ils réunissent {sacs} sacs contenant chacun {articles_par_sac} vêtements.\n\n"
+        f"Lors du tri, {articles_abimes} vêtements ne peuvent pas être distribués.\n\n"
+        f"Les autres vêtements sont rangés dans des cartons pouvant contenir "
+        f"au maximum {capacite_carton} vêtements chacun. "
+        "Un carton entamé doit lui aussi être transporté.\n\n"
+        f"Une camionnette peut transporter au maximum {cartons_par_trajet} cartons par trajet.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de vêtements les élèves ont-ils collectés ?\n\n"
+        "2. Combien de vêtements peuvent être distribués après le tri ?\n\n"
+        "3. Combien de cartons faut-il préparer au minimum ?\n\n"
+        "4. Combien de trajets la camionnette doit-elle faire au minimum pour tout transporter ?"
+    )
+    correction = (
+        "**1. Vêtements collectés**\n\n"
+        f"{sacs} × {articles_par_sac} = {total_articles} vêtements.\n\n"
+        "**2. Vêtements utilisables**\n\n"
+        f"{total_articles} − {articles_abimes} = {articles_utilisables} vêtements.\n\n"
+        "**3. Cartons nécessaires**\n\n"
+        f"{articles_utilisables} ÷ {capacite_carton} : quotient entier "
+        f"{articles_utilisables // capacite_carton}, "
+        f"reste {articles_utilisables % capacite_carton}.\n"
+        f"Il faut {cartons} cartons, y compris le dernier s'il n'est pas rempli.\n\n"
+        "**4. Trajets nécessaires**\n\n"
+        f"{cartons} ÷ {cartons_par_trajet} : quotient entier "
+        f"{cartons // cartons_par_trajet}, reste {cartons % cartons_par_trajet}.\n"
+        f"Il faut {trajets} trajets pour emporter tous les cartons."
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M14", "titre": "La collecte solidaire",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Vêtements collectés", "type": "nombre", "attendu": total_articles, "unite": "vêtements"},
+            {"id": "r2", "question": 2, "libelle": "Vêtements utilisables", "type": "nombre", "attendu": articles_utilisables, "unite": "vêtements"},
+            {"id": "r3", "question": 3, "libelle": "Cartons nécessaires", "type": "nombre", "attendu": cartons, "unite": "cartons"},
+            {"id": "r4", "question": 4, "libelle": "Trajets de camionnette", "type": "nombre", "attendu": trajets, "unite": "trajets"},
+        ],
+    })
+
+
+def generer_modele_p7_repetitions():
+    scenes = random.randint(4, 7)
+    minutes_scene = random.randint(12, 23)
+    minutes_pause = random.randint(5, 12)
+    minutes_suppl = random.randint(9, 17)
+    minutes_scenes = scenes * minutes_scene
+    minutes_pauses = (scenes - 1) * minutes_pause
+    minutes_total = minutes_scenes + minutes_pauses
+    marge = random.randint(25, 105)
+    minutes_creneau = minutes_total + marge
+    repetitions = marge // minutes_suppl
+
+    enonce = (
+        "**Les répétitions de théâtre**\n\n"
+        "Une troupe du collège répète un spectacle. "
+        f"Elle travaille {scenes} scènes, pendant {minutes_scene} minutes par scène.\n\n"
+        f"Elle fait une pause de {minutes_pause} minutes **entre deux scènes consécutives** "
+        "(aucune pause après la dernière scène).\n\n"
+        f"La salle est réservée pour {minutes_creneau} minutes. "
+        f"Si du temps reste, la troupe souhaite répéter une dernière scène de "
+        f"{minutes_suppl} minutes autant de fois que possible, sans pause supplémentaire.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de minutes dure l'ensemble des premières répétitions, sans les pauses ?\n\n"
+        "2. Combien de minutes durent les pauses au total ?\n\n"
+        "3. Combien de minutes sont utilisées pour les scènes et les pauses ?\n\n"
+        "4. Combien de fois peut-on répéter entièrement la dernière scène dans le temps restant ?"
+    )
+    correction = (
+        "**1. Temps des premières scènes**\n\n"
+        f"{scenes} × {minutes_scene} = {minutes_scenes} min.\n\n"
+        "**2. Temps des pauses**\n\n"
+        f"Il y a {scenes - 1} pauses, pas {scenes}. "
+        f"{scenes - 1} × {minutes_pause} = {minutes_pauses} min.\n\n"
+        "**3. Durée totale initiale**\n\n"
+        f"{minutes_scenes} + {minutes_pauses} = {minutes_total} min.\n\n"
+        "**4. Répétitions possibles dans le temps restant**\n\n"
+        f"Temps disponible : {minutes_creneau} − {minutes_total} = {marge} min.\n"
+        f"{marge} ÷ {minutes_suppl} : quotient entier {repetitions}, "
+        f"reste {marge % minutes_suppl}.\n"
+        f"La troupe peut répéter la dernière scène {repetitions} fois entièrement."
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M15", "titre": "Les répétitions de théâtre",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Durée des scènes", "type": "nombre", "attendu": minutes_scenes, "unite": "min"},
+            {"id": "r2", "question": 2, "libelle": "Durée des pauses", "type": "nombre", "attendu": minutes_pauses, "unite": "min"},
+            {"id": "r3", "question": 3, "libelle": "Durée utilisée", "type": "nombre", "attendu": minutes_total, "unite": "min"},
+            {"id": "r4", "question": 4, "libelle": "Répétitions supplémentaires", "type": "nombre", "attendu": repetitions, "unite": "répétitions"},
+        ],
+    })
+
+
+def generer_modele_p7_plantations():
+    planches = random.randint(3, 6)
+    rangs_par_planche = random.randint(3, 6)
+    graines_par_rang = random.randint(7, 13)
+    sachets = random.randint(5, 11)
+    graines_par_sachet = random.choice([20, 25, 30, 36, 40])
+    stock_initial = random.randint(12, 45)
+
+    graines_planche = rangs_par_planche * graines_par_rang
+    graines_total = planches * graines_planche
+    graines_disponibles = stock_initial + sachets * graines_par_sachet
+    # Le stock doit couvrir le projet initial mais ne pas être démesuré.
+    while graines_disponibles < graines_total + graines_planche:
+        sachets += 1
+        graines_disponibles = stock_initial + sachets * graines_par_sachet
+    graines_restantes = graines_disponibles - graines_total
+    planches_supp = graines_restantes // graines_planche
+    enonce = (
+        "**Les plantations du collège**\n\n"
+        f"Les élèves veulent préparer {planches} planches de culture. "
+        f"Chaque planche contient {rangs_par_planche} rangs de {graines_par_rang} graines.\n\n"
+        f"Le club possède déjà {stock_initial} graines et reçoit "
+        f"{sachets} sachets de {graines_par_sachet} graines chacun.\n\n"
+        "Après avoir semé les premières planches, le club envisage "
+        "d'en préparer d'autres exactement de la même taille, sans acheter de graines.\n\n"
+        "**Questions**\n\n"
+        "1. Combien de graines faut-il pour les planches prévues au départ ?\n\n"
+        "2. Combien de graines le club possède-t-il après avoir reçu les sachets ?\n\n"
+        "3. Combien de graines restera-t-il après les premières plantations ?\n\n"
+        "4. Combien de planches supplémentaires complètes pourra-t-il préparer au maximum ?"
+    )
+    correction = (
+        "**1. Graines pour le projet initial**\n\n"
+        f"{planches} × {rangs_par_planche} × {graines_par_rang} "
+        f"= {graines_total} graines.\n\n"
+        "**2. Stock après réception**\n\n"
+        f"{stock_initial} + {sachets} × {graines_par_sachet} "
+        f"= {graines_disponibles} graines.\n\n"
+        "**3. Graines restantes**\n\n"
+        f"{graines_disponibles} − {graines_total} = {graines_restantes} graines.\n\n"
+        "**4. Planches supplémentaires possibles**\n\n"
+        f"Il faut {rangs_par_planche} × {graines_par_rang} "
+        f"= {graines_planche} graines par planche.\n"
+        f"{graines_restantes} ÷ {graines_planche} : quotient entier {planches_supp}, "
+        f"reste {graines_restantes % graines_planche}.\n"
+        f"Il peut donc préparer {planches_supp} planches supplémentaires complètes."
+    )
+    return _mc_uniformiser_exercice({
+        "id": "P7-M16", "titre": "Les plantations du collège",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Graines à semer", "type": "nombre", "attendu": graines_total, "unite": "graines"},
+            {"id": "r2", "question": 2, "libelle": "Graines disponibles", "type": "nombre", "attendu": graines_disponibles, "unite": "graines"},
+            {"id": "r3", "question": 3, "libelle": "Graines restantes", "type": "nombre", "attendu": graines_restantes, "unite": "graines"},
+            {"id": "r4", "question": 4, "libelle": "Planches supplémentaires", "type": "nombre", "attendu": planches_supp, "unite": "planches"},
+        ],
+    })
+
 
 def generer_modele_p8_clubs():
 
@@ -5582,7 +5888,7 @@ def generer_modele_p9_mosaique(seed=None):
 # Une seule réponse évaluée par question, sans sous-questions A/B.
 # La dernière question est consacrée à la résolution finale.
 # Les exercices historiques déjà sauvegardés restent intacts.
-# Les 31 modèles appellent directement _mc_uniformiser_exercice
+# Les 36 modèles appellent directement _mc_uniformiser_exercice
 # dans leur return : aucun nouveau module n'est nécessaire.
 # ================================================================
 
@@ -5653,6 +5959,36 @@ REGLES = {
         ("r1", "Combien de feuilles faut-il au total pour une table, essais compris ?"),
         ("r2", "Combien de feuilles faut-il pour toutes les tables ?"),
         ("r3", "Combien de feuilles restera-t-il au professeur après l'atelier ?"),
+    ],
+    "P7-M12": [
+        ("r1", "Combien de personnes participeront à la sortie ?"),
+        ("r2", "Combien de cars sont nécessaires au minimum ?"),
+        ("r3", "Quel sera le coût de tous les billets d'entrée ?"),
+        ("r4", "Quelle est la différence entre le budget et les dépenses totales ?"),
+    ],
+    "P7-M13": [
+        ("r1", "Combien de moteurs sont utilisables avant la livraison ?"),
+        ("r2", "Combien de batteries sont utilisables avant la livraison ?"),
+        ("r3", "Combien de robots complets le club peut-il assembler avant la livraison ?"),
+        ("r4", "Combien de robots supplémentaires peut-il assembler après la livraison, en utilisant également les pièces restantes ?"),
+    ],
+    "P7-M14": [
+        ("r1", "Combien de vêtements les élèves ont-ils collectés ?"),
+        ("r2", "Combien de vêtements peuvent être distribués après le tri ?"),
+        ("r3", "Combien de cartons faut-il préparer au minimum ?"),
+        ("r4", "Combien de trajets la camionnette doit-elle faire au minimum pour tout transporter ?"),
+    ],
+    "P7-M15": [
+        ("r1", "Combien de minutes dure l'ensemble des premières répétitions, sans les pauses ?"),
+        ("r2", "Combien de minutes durent les pauses au total ?"),
+        ("r3", "Combien de minutes sont utilisées pour les scènes et les pauses ?"),
+        ("r4", "Combien de fois peut-on répéter entièrement la dernière scène dans le temps restant ?"),
+    ],
+    "P7-M16": [
+        ("r1", "Combien de graines faut-il pour les planches prévues au départ ?"),
+        ("r2", "Combien de graines le club possède-t-il après avoir reçu les sachets ?"),
+        ("r3", "Combien de graines restera-t-il après les premières plantations ?"),
+        ("r4", "Combien de planches supplémentaires complètes pourra-t-il préparer au maximum ?"),
     ],
     # ---- Niveau 8 : exactement cinq questions ----
     "P8-M01": [
@@ -5815,6 +6151,9 @@ _CATEGORIES_PAR_MODELE = {
     "P7-M04": "B B C R", "P7-M05": "D D D L", "P7-M06": "B B B C",
     "P7-M07": "Q Q R L", "P7-M08": "Q Q Q R", "P7-M09": "Q B R R",
     "P7-M10": "Q Q R R", "P7-M11": "Q Q Q R",
+    "P7-M12": "Q L B B", "P7-M13": "Q Q L L",
+    "P7-M14": "Q Q L L", "P7-M15": "D D D L",
+    "P7-M16": "Q Q R L",
     "P8-M01": "B B B B L", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
     "P8-M04": "Q Q L B R", "P8-M05": "L B B B R", "P8-M06": "B B B C R",
     "P8-M07": "D Q Q R R", "P8-M08": "D D D D R", "P8-M09": "Q Q L R L",
@@ -5905,6 +6244,13 @@ def _mc_uniformiser_exercice(exercice):
     par_id.update(_champs_ajoutes(resultat, par_id))
     # Le tournoi peut présenter un manque ou un surplus selon le tirage.
     # La question finale pose une seule demande numérique et ne prescrit pas la méthode.
+    if identifiant == "P7-M12":
+        regles = [*regles[:-1], (
+            "r4",
+            "Combien d'euros restera-t-il du budget après paiement des billets et des cars ?"
+            if resultat.get("mathicap_budget_suffisant") else
+            "Combien d'euros manque-t-il pour payer les billets et les cars ?",
+        )]
     if identifiant == "P7-M08":
         stock_suffisant = par_id.get("r4", {}).get("attendu")
         if stock_suffisant not in ("Oui", "Non"):
@@ -5971,7 +6317,7 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         raise ValueError("Difficulté attendue : 1, 2 ou 3.")
     if not isinstance(nombre, int) or not 1 <= nombre <= len(BANQUE_PRIORITES[difficulte]):
         raise ValueError(
-            "Cette banque contient 5 exercices distincts par difficulté."
+            "Nombre d’exercices demandé supérieur aux modèles disponibles pour ce niveau."
         )
     
     banque = deepcopy(BANQUE_PRIORITES[difficulte])
@@ -5994,6 +6340,11 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p7_enigmes())
         banque.append(generer_modele_p7_photos())
         banque.append(generer_modele_p7_velo())
+        banque.append(generer_modele_p7_planetarium())
+        banque.append(generer_modele_p7_robotique())
+        banque.append(generer_modele_p7_collecte_solidaire())
+        banque.append(generer_modele_p7_repetitions())
+        banque.append(generer_modele_p7_plantations())
 
     if difficulte == 2:
         banque = [
