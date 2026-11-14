@@ -1098,13 +1098,15 @@ def generer_modele_p7_sciences():
         f"= {eleves}.\n"
         f"Piles : {eleves} × {piles_par_eleve} "
         f"= {necessaires} piles.\n\n"
-        "**2. Nombre de paquets**\n\n"
-        f"Piles à acheter : {necessaires} - {stock} "
-        f"= {a_acheter}.\n"
+        "**2. Piles supplémentaires nécessaires**\n\n"
+        f"Le collège possède déjà {stock} piles sur les {necessaires} nécessaires.\n"
+        f"Il manque donc {necessaires} − {stock} = {a_acheter} piles.\n\n"
+        "**3. Nombre minimal de paquets**\n\n"
+        f"Les piles sont vendues par paquets de {capacite_paquet}.\n"
         f"Division : {a_acheter} ÷ {capacite_paquet}.\n"
-        f"Quotient : {quotient}, reste : {reste}.\n"
+        f"Quotient entier : {quotient}, reste : {reste}.\n"
         f"Il faut acheter {paquets} paquets.\n\n"
-        "**3. Budget restant**\n\n"
+        "**4. Budget restant**\n\n"
         f"Prix des paquets : {paquets} × {prix_paquet} "
         f"= {paquets * prix_paquet} €.\n"
         f"Dépense totale : {paquets * prix_paquet} "
@@ -1505,7 +1507,8 @@ def generer_modele_p7_velo():
 
     objectif = distance_initiale + manque
 
-    tours = (manque + petit_tour - 1) // petit_tour
+    quotient, reste = divmod(manque, petit_tour)
+    tours = quotient + (1 if reste else 0)
 
     enonce = (
         "**Le rallye à vélo**\n\n"
@@ -1544,18 +1547,20 @@ def generer_modele_p7_velo():
         f"2 × {km(trajet)} + {nb_boucles} × "
         f"{km(boucle)} = {km(distance_initiale)} km.\n\n"
 
-        "**3. Distance manquante et petits tours**\n\n"
-        f"{km(objectif)} − {km(distance_initiale)} "
-        f"= {km(manque)} km.\n\n"
-        f"Chaque petit tour mesure {km(petit_tour)} km.\n\n"
-        f"Avec {tours - 1} tour(s), ils parcourent "
-        f"{km((tours - 1) * petit_tour)} km : "
-        "ce n'est pas suffisant.\n\n"
-        f"Avec {tours} tours, ils parcourent "
-        f"{km(tours * petit_tour)} km : "
-        "l'objectif est atteint ou dépassé.\n\n"
-        f"**Réponse :** Ils doivent effectuer au minimum "
-        f"{tours} petits tours complets."
+        "**3. Distance manquante**\n\n"
+        f"{km(objectif)} − {km(distance_initiale)} = {km(manque)} km.\n\n"
+        "**4. Nombre minimal de petits tours**\n\n"
+        f"Chaque tour mesure {km(petit_tour)} km.\n"
+        f"On peut écrire : {km(manque)} = {quotient} × {km(petit_tour)} "
+        f"+ {km(reste)} (en km).\n"
+        f"Quotient entier : {quotient} ; reste : {km(reste)} km.\n\n"
+        + (
+            f"Après {quotient} tours complets, il manque encore "
+            f"{km(reste)} km. Il faut donc effectuer un tour de plus.\n\n"
+            if reste else
+            f"Le reste étant nul, {quotient} tours complets suffisent.\n\n"
+        )
+        + f"**Réponse :** {tours} petits tours complets au minimum."
     )
 
     return _mc_uniformiser_exercice({
@@ -1760,6 +1765,12 @@ def generer_modele_p7_cartes():
         + nouvelles_cartes
         + cartes_echangees
     )
+    capacites_possibles = (180, 200, 220, 240, 260, 280)
+    capacite_album = random.choice([
+        capacite for capacite in capacites_possibles
+        if 15 <= capacite - total_collection <= 140
+    ])
+    emplacements_vides = capacite_album - total_collection
 
     enonce = (
         "**Une collection de cartes**\n\n"
@@ -1773,11 +1784,13 @@ def generer_modele_p7_cartes():
         "Il échange ensuite **tous ses doublons** avec un ami : "
         "pour **2 doublons donnés**, il reçoit **1 nouvelle carte** "
         "qu'il ne possède pas encore et qu'il ajoute à son album.\n\n"
+        f"Son album peut contenir au maximum {capacite_album} cartes.\n\n"
         "**Questions**\n\n"
         "1. Combien de cartes achète-t-il au total ?\n\n"
         "2. Combien de cartes ajoute-t-il à son album avant les échanges ?\n\n"
         "3. Combien de cartes reçoit-il grâce aux échanges ?\n\n"
-        "4. Combien de cartes possède-t-il finalement dans son album ?"
+        "4. Combien d'emplacements seront encore vides dans son album "
+        "après les achats et les échanges ?"
     )
 
     correction = (
@@ -1797,19 +1810,20 @@ def generer_modele_p7_cartes():
         "nouvelles cartes.\n\n"
         f"Doublons non échangés : {doublons_restants}.\n\n"
 
-        "**4. Collection finale**\n\n"
-        f"{cartes_depart} + {nouvelles_cartes} "
-        f"+ {cartes_echangees} "
+        "**4. Emplacements encore vides dans l'album**\n\n"
+        f"Après les achats et les échanges, il possède "
+        f"{cartes_depart} + {nouvelles_cartes} + {cartes_echangees} "
         f"= {total_collection} cartes.\n\n"
-
+        f"Son album contient {capacite_album} emplacements.\n"
+        f"Il en reste {capacite_album} − {total_collection} "
+        f"= {emplacements_vides} vides.\n\n"
         "**Expression complète :**\n\n"
-        f"{cartes_depart} + "
+        f"{capacite_album} − ({cartes_depart} + "
         f"({paquets} × {cartes_paquet} − {doublons}) "
-        f"+ {cartes_echangees} "
-        f"= {total_collection}.\n\n"
-
-        f"**Réponse :** Il possède finalement "
-        f"{total_collection} cartes dans son album."
+        f"+ {cartes_echangees}) "
+        f"= {emplacements_vides}.\n\n"
+        f"**Réponse :** Il reste {emplacements_vides} "
+        "emplacements vides dans l'album."
     )
 
     return _mc_uniformiser_exercice({
@@ -1846,10 +1860,10 @@ def generer_modele_p7_cartes():
             {
                 "id": "r4",
                 "question": 4,
-                "libelle": "Cartes dans l'album",
+                "libelle": "Emplacements vides dans l'album",
                 "type": "nombre",
-                "attendu": total_collection,
-                "unite": "cartes"
+                "attendu": emplacements_vides,
+                "unite": "emplacements"
             }
         ]
     })
@@ -1907,10 +1921,9 @@ def generer_modele_p7_badminton():
         f"Lors de la vérification du matériel, "
         f"{volants_abimes} volants sont déclarés "
         "abîmés et ne peuvent pas être utilisés.\n\n"
-        "Le tournoi comporte :\n"
-        f"- {nb_matchs} matchs ;\n"
-        f"- une prévision de {volants_par_match} "
-        "volants utilisés par match.\n\n"
+        f"Le tournoi comporte {nb_matchs} matchs. "
+        f"Le club prévoit d'utiliser {volants_par_match} "
+        "volants pour chacun de ces matchs.\n\n"
         "**Questions**\n\n"
         "1. Combien de volants le club a-t-il achetés ?\n\n"
         "2. Combien de volants utilisables possède-t-il "
@@ -2220,13 +2233,11 @@ def generer_modele_p7_dessin():
         f"{feuilles_par_paquet} feuilles.\n\n"
         f"Avant l'atelier, {feuilles_abimees} feuilles "
         "sont abîmées et ne peuvent plus être utilisées.\n\n"
-        "Pendant l'atelier :\n"
-        f"- {nb_groupes} groupes participent ;\n"
-        f"- chaque groupe comporte {eleves_par_groupe} élèves ;\n"
-        f"- chaque élève utilise {feuilles_par_eleve} feuilles.\n\n"
-        "Après l'atelier, le club souhaite préparer "
-        "une exposition nécessitant "
-        f"{feuilles_exposition} feuilles supplémentaires.\n\n"
+        f"Pendant l'atelier, {nb_groupes} groupes participent.\n"
+        f"Chaque groupe compte {eleves_par_groupe} élèves.\n"
+        f"Chaque élève utilise {feuilles_par_eleve} feuilles.\n\n"
+        "Après l'atelier, le club souhaite préparer une exposition "
+        f"pour laquelle il faudra {feuilles_exposition} feuilles.\n\n"
         "**Questions**\n\n"
         "1. Combien de feuilles le club a-t-il achetées ?\n\n"
         "2. Combien de feuilles les élèves utilisent-ils "
@@ -5679,7 +5690,7 @@ REGLES = {
         ("r1", "Combien de cartes achète-t-il au total ?"),
         ("r2", "Combien de cartes ajoute-t-il à son album avant les échanges ?"),
         ("r3", "Combien de cartes reçoit-il grâce aux échanges ?"),
-        ("r4", "Combien de cartes possède-t-il finalement dans son album ?"),
+        ("r4", "Combien d'emplacements seront encore vides dans son album après les achats et les échanges ?"),
     ],
     "P7-M08": [
         ("r1", "Combien de volants le club a-t-il achetés ?"),
@@ -5864,7 +5875,7 @@ _CATEGORIES = {
 _CATEGORIES_PAR_MODELE = {
     "P7-M01": "Q Q L B", "P7-M02": "Q L R B", "P7-M03": "Q Q C R",
     "P7-M04": "B B C R", "P7-M05": "D D D L", "P7-M06": "B B B C",
-    "P7-M07": "Q Q Q Q", "P7-M08": "Q Q Q R", "P7-M09": "Q B R R",
+    "P7-M07": "Q Q Q R", "P7-M08": "Q Q Q R", "P7-M09": "Q B R R",
     "P7-M10": "Q Q R R", "P7-M11": "Q Q Q R",
     "P8-M01": "B B B B L", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
     "P8-M04": "Q Q L B R", "P8-M05": "L B B B R", "P8-M06": "B B B C R",
