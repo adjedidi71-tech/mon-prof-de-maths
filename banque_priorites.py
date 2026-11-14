@@ -6011,10 +6011,12 @@ def _mc_uniformiser_exercice(exercice):
     return resultat
 
 
-def generer_exercices_priorites(difficulte, nombre=1):
-    """Tire `nombre` problèmes distincts du niveau demandé.
+def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
+    """Tire des modèles distincts, en privilégiant les moins récemment vus.
 
-    Cette banque contient 5 exercices distincts par niveau.
+    `historique_modeles` est une liste facultative des identifiants de modèles
+    du même élève et du même niveau, du plus récent au plus ancien.
+    Le comportement aléatoire historique demeure si cette liste est absente.
     """
     if difficulte not in BANQUE_PRIORITES:
         raise ValueError("Difficulté attendue : 1, 2 ou 3.")
@@ -6082,7 +6084,27 @@ def generer_exercices_priorites(difficulte, nombre=1):
         banque.append(generer_modele_p9_drones())
         banque.append(generer_modele_p9_mosaique())
             
-    exercices = random.sample(banque, k=nombre)
+    # Même tirage aléatoire qu'avant en l'absence d'historique utilisable.
+    # Chaque nouvelle série privilégie ensuite les modèles les moins récents.
+    # Les entrées absentes de l'historique sont prioritaires ; les égalités
+    # restent aléatoires afin de ne pas créer de séquence fixe entre élèves.
+    historique = historique_modeles if isinstance(historique_modeles, (list, tuple)) else []
+    derniere_apparition = {}
+    for position, modele_id in enumerate(historique):
+        if isinstance(modele_id, str) and modele_id not in derniere_apparition:
+            derniere_apparition[modele_id] = position
+    if derniere_apparition:
+        random.shuffle(banque)
+        priorite_inedit = len(historique) + 1
+        banque.sort(
+            key=lambda exercice: derniere_apparition.get(
+                exercice.get("id"), priorite_inedit
+            ),
+            reverse=True,
+        )
+        exercices = banque[:nombre]
+    else:
+        exercices = random.sample(banque, k=nombre)
     for exercice in exercices:
         if "champs_reponse" not in exercice:
             exercice["champs_reponse"] = deepcopy(
