@@ -1,0 +1,788 @@
+{
+  "produit": "MathiCap",
+  "version": "1.0-candidate",
+  "date": "2026-11-15",
+  "statut": "étalonnage provisoire — validation humaine requise avant tout reclassement",
+  "code_reference_sha256": "485be87017639f26f57ed3b2cacd9d6c20d579b63a19b70cf60a668ca0bb9613",
+  "calcul": "Somme des notes de 0 à 4 pondérées : Σ(note × poids ÷ 4)",
+  "criteres": {
+    "autonomie": {
+      "poids": 25,
+      "ancrages": [
+        "Les opérations sont toutes annoncées ou directement imposées.",
+        "Les questions suggèrent presque toutes les opérations.",
+        "Une partie de la méthode doit être choisie par l’élève.",
+        "L’élève construit la majorité de son enchaînement.",
+        "L’élève doit concevoir, justifier et contrôler une stratégie non guidée."
+      ]
+    },
+    "enchaînement": {
+      "poids": 20,
+      "ancrages": [
+        "Calcul isolé.",
+        "Deux opérations faiblement liées.",
+        "Trois opérations liées.",
+        "Plusieurs étapes interdépendantes.",
+        "Étapes ramifiées et réévaluations conditionnelles."
+      ]
+    },
+    "contraintes": {
+      "poids": 20,
+      "ancrages": [
+        "Aucune contrainte réelle.",
+        "Une contrainte indépendante.",
+        "Deux contraintes à articuler.",
+        "Plusieurs contraintes qui interagissent.",
+        "Contraintes multiples et cas limites à gérer."
+      ]
+    },
+    "stratégies": {
+      "poids": 15,
+      "ancrages": [
+        "Aucune décision de méthode ou de solution.",
+        "Choix immédiat ou évident.",
+        "Une décision non évidente ou deux possibilités.",
+        "Comparaison structurée de plusieurs stratégies.",
+        "Optimisation réelle nécessitant d’évaluer plusieurs configurations."
+      ]
+    },
+    "résolution_finale": {
+      "poids": 15,
+      "ancrages": [
+        "Répète une réponse ou un calcul déjà donné.",
+        "Simple complément ou différence.",
+        "Combine au moins deux résultats déjà obtenus.",
+        "Synthétise plusieurs résultats sous contrainte.",
+        "Résolution autonome avec décision, justification et contrôle des contraintes."
+      ]
+    },
+    "numérique": {
+      "poids": 5,
+      "ancrages": [
+        "Calculs entiers directs.",
+        "Opérations entières variées.",
+        "Décimaux, conversion ou division avec reste.",
+        "Plusieurs conversions, unités ou divisions avec reste.",
+        "Combinaison numérique délicate dont la précision est essentielle."
+      ]
+    }
+  },
+  "seuils_provisoires": {
+    "hors_7_9": [
+      0,
+      34.99999
+    ],
+    "7": [
+      35,
+      54.99999
+    ],
+    "8": [
+      55,
+      74.99999
+    ],
+    "9": [
+      75,
+      100
+    ]
+  },
+  "zone_frontiere_points": 3,
+  "regles": [
+    "Les notes sont des évaluations pédagogiques déclarées et contrôlables, non une lecture automatique du sens du texte.",
+    "Un score seul ne permet pas de certifier la difficulté ressentie par les élèves.",
+    "Avant publication, un modèle nécessite une validation humaine de ses six notes et exemples de tirage.",
+    "Les erreurs structurelles bloquent l’audit ; les écarts de niveau déclenchent une revue, sans déplacer de série historique.",
+    "Toute évolution du barème ou des seuils impose une nouvelle version."
+  ],
+  "modeles": [
+    {
+      "id": "P7-M01",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 0,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Piles par lots, achat arrondi et bilan budgétaire.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M02",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 0,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Sachets entiers, restes, recette puis bénéfice.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M03",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 1,
+        "stratégies": 2,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Scores comparés, gagnant et écart.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M04",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 1,
+        "stratégies": 2,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Comparaison de deux offres d’impression à tarifs fixes et variables.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M05",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 2,
+        "résolution_finale": 3,
+        "numérique": 3
+      },
+      "justification": "Distance collective et tours supplémentaires avec arrondi.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M06",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Recettes et dépenses guidées, décision de réserve.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M07",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Doublons, échanges et lots nécessaires pour remplir un album.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M08",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Stock, pertes et comparaison au besoin.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M09",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Gains et pertes successifs, comparaison au prix.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M10",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Stock avec pertes, consommation et exposition.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M11",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 0,
+        "enchaînement": 1,
+        "contraintes": 0,
+        "stratégies": 0,
+        "résolution_finale": 1,
+        "numérique": 0
+      },
+      "justification": "Opérations très guidées par table, sans choix de stratégie.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M12",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Capacité de cars et contrainte budgétaire avec arrondis.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M13",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 2,
+        "résolution_finale": 3,
+        "numérique": 1
+      },
+      "justification": "Deux composants limitants, livraison et objectif.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M14",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Cartons incomplets puis transport limité par trajets.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M15",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Pauses entre scènes, durée réservée, répétitions entières.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M16",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 1,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Graines par planche, stock puis planches supplémentaires.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M17",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 1
+      },
+      "justification": "Parties d’échecs sans double comptage et bilan financier.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M18",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Aire, couches, pots entiers et budget.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M19",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 3,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Comparer carnet complémentaire et billets unitaires.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M20",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Courses cumulées et objectif de dons après frais.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M21",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 3
+      },
+      "justification": "Rations quotidiennes, conversions et sacs manquants.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M22",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Objectif réparti en jours et élèves avec double arrondi.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M23",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 2,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Découpe d’un ruban continu, rouleaux distincts et chutes non raccordables.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M24",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 2,
+        "contraintes": 3,
+        "stratégies": 1,
+        "résolution_finale": 3,
+        "numérique": 1
+      },
+      "justification": "Chevauchement exceptionnel de créneaux et capacité maximale.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M25",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 2,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Échelle, détour au retour et sélection du chemin le plus court.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P7-M26",
+      "niveau_declare": 7,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Volume retiré puis rajouté, bidons entiers et budget.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M01",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Recettes, dépenses, réserve et partage entre clubs.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M02",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 1
+      },
+      "justification": "Tri de dessins, panneaux pleins et apport d’un partenaire.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M03",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 3,
+        "résolution_finale": 3,
+        "numérique": 1
+      },
+      "justification": "Deux chemins d’aventure et comparaison de gains nets.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M04",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Réserve de batteries, boîtes entières, coût et reste.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M05",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Achats obligatoires, souvenirs et réserve budgétaire.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M06",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 1,
+        "stratégies": 0,
+        "résolution_finale": 1,
+        "numérique": 1
+      },
+      "justification": "Kit, remise et livraison ; dernière question calcul direct.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M07",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 3
+      },
+      "justification": "Consommation avant et après, durée et écart d’objectif.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M08",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Distance, temps de marche, pauses et détour.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M09",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 3,
+        "contraintes": 2,
+        "stratégies": 1,
+        "résolution_finale": 2,
+        "numérique": 3
+      },
+      "justification": "Volumes, récipients entiers, bouteilles puis lots.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P8-M10",
+      "niveau_declare": 8,
+      "notes": {
+        "autonomie": 1,
+        "enchaînement": 2,
+        "contraintes": 1,
+        "stratégies": 2,
+        "résolution_finale": 2,
+        "numérique": 2
+      },
+      "justification": "Tarifs fixes et kilométriques, choix de l’offre.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M01",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 3,
+        "résolution_finale": 3,
+        "numérique": 1
+      },
+      "justification": "Deux projets de plantations, coûts et décision budgétaire.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M02",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 3,
+        "enchaînement": 4,
+        "contraintes": 3,
+        "stratégies": 3,
+        "résolution_finale": 4,
+        "numérique": 2
+      },
+      "justification": "Deux prestataires, rentabilité et recette marginale cible.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M03",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 3,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Sortie avec coûts fixes et variables, comparaison de transport.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M04",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 4,
+        "contraintes": 3,
+        "stratégies": 2,
+        "résolution_finale": 4,
+        "numérique": 2
+      },
+      "justification": "Cristaux, réserve et capacité d’équipement de l’équipe.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M05",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 3,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 2,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Reconstruction d’un stock inconnu à partir de plusieurs flux.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M06",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 3,
+        "enchaînement": 4,
+        "contraintes": 3,
+        "stratégies": 2,
+        "résolution_finale": 4,
+        "numérique": 2
+      },
+      "justification": "Places, tarifs, coûts et billetterie marginale pour le bénéfice.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M07",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 3,
+        "contraintes": 3,
+        "stratégies": 3,
+        "résolution_finale": 3,
+        "numérique": 3
+      },
+      "justification": "Masses décimales, capacités de conteneurs et tarifs.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M08",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 3,
+        "enchaînement": 3,
+        "contraintes": 4,
+        "stratégies": 3,
+        "résolution_finale": 4,
+        "numérique": 2
+      },
+      "justification": "Deux salles avec contraintes simultanées de capacité et de budget.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M09",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 2,
+        "enchaînement": 4,
+        "contraintes": 4,
+        "stratégies": 2,
+        "résolution_finale": 3,
+        "numérique": 2
+      },
+      "justification": "Ressources limitantes multiples pour des mini-drones.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    },
+    {
+      "id": "P9-M10",
+      "niveau_declare": 9,
+      "notes": {
+        "autonomie": 3,
+        "enchaînement": 4,
+        "contraintes": 3,
+        "stratégies": 4,
+        "résolution_finale": 4,
+        "numérique": 2
+      },
+      "justification": "Deux lots à capacités et prix différents, optimisation des carreaux.",
+      "evaluation": "provisoire_a_valider",
+      "version_grille": "1.0-candidate"
+    }
+  ]
+}
