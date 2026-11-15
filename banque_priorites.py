@@ -3187,10 +3187,26 @@ def generer_modele_p7_couture():
         noeuds_pleine, petite_chute_pleine = divmod(chute_pleine, longueur_noeud)
         noeuds_dernier, petite_chute_derniere = divmod(chute_dernier, longueur_noeud)
         noeuds = (rouleaux - 1) * noeuds_pleine + noeuds_dernier
-        if 2 <= rouleaux <= 18 and 2 <= noeuds <= 65:
+        if 2 <= rouleaux <= 18 and 3 <= noeuds <= 65:
             break
     else:
         raise ValueError("Aucune situation cohérente pour les fanions")
+
+    # Des formulations lisibles quel que soit le nombre de nœuds ou de rubans.
+    formule_noeuds_pleine = (
+        "aucun nœud complet" if noeuds_pleine == 0 else
+        "1 nœud complet" if noeuds_pleine == 1 else
+        f"{noeuds_pleine} nœuds complets"
+    )
+    formule_noeuds_dernier = (
+        "aucun nœud complet" if noeuds_dernier == 0 else
+        "1 nœud complet" if noeuds_dernier == 1 else
+        f"{noeuds_dernier} nœuds complets"
+    )
+    libelle_rubans_dernier = (
+        f"{fanions_dernier} ruban" if fanions_dernier == 1 else
+        f"{fanions_dernier} rubans"
+    )
 
     # Un dernier rouleau partiellement utilisé n'a pas la même chute qu'un rouleau plein.
     # Lorsque la division est exacte, tous les rouleaux ont au contraire la même chute.
@@ -3202,27 +3218,35 @@ def generer_modele_p7_couture():
             f"{ruban_un} = {chute_pleine} cm restants.\n"
             f"{chute_pleine} ÷ {longueur_noeud} : quotient entier "
             f"{noeuds_pleine}, reste {petite_chute_pleine} cm.\n"
-            f"On obtient donc **{noeuds_pleine} nœud(s) complet(s) par rouleau** ; "
+            f"On obtient donc **{formule_noeuds_pleine} par rouleau** ; "
             f"les {petite_chute_pleine} cm restants sur chacun ne permettent pas un nœud supplémentaire.\n"
             f"Total des nœuds : {rouleaux} × {noeuds_pleine} "
             f"= **{noeuds} nœuds complets**.\n"
         )
     else:
+        # Un seul rouleau plein exige le singulier ; la quantité totale de nœuds
+        # ne doit pas influer sur la grammaire de cette phrase.
+        nb_rouleaux_pleins = rouleaux - 1
+        description_rouleaux = (
+            "Dans le premier rouleau" if nb_rouleaux_pleins == 1
+            else f"Dans chacun des {nb_rouleaux_pleins} premiers rouleaux"
+        )
         detail_chutes = (
-            f"Dans chacun des {rouleaux - 1} premiers rouleaux, on découpe "
-            f"{par_rouleau} rubans : il reste {chute_pleine} cm.\n"
+            f"{description_rouleaux}, on découpe {par_rouleau} rubans : "
+            f"il reste {chute_pleine} cm par rouleau.\n"
             f"{chute_pleine} ÷ {longueur_noeud} : quotient entier {noeuds_pleine}, "
             f"reste {petite_chute_pleine} cm.\n"
-            f"Cela permet **{noeuds_pleine} nœud(s) complet(s) par premier rouleau** ; "
-            f"la petite chute de {petite_chute_pleine} cm est insuffisante pour un autre nœud.\n"
-            f"Dans le dernier rouleau, on découpe seulement {fanions_dernier} "
-            f"ruban(s) : {longueur_rouleau_cm} − {fanions_dernier} × "
+            f"Chaque rouleau plein permet de fabriquer {formule_noeuds_pleine}. "
+            f"Les {petite_chute_pleine} cm restants sur chaque rouleau ne suffisent pas "
+            "pour fabriquer un nœud supplémentaire.\n"
+            f"Dans le dernier rouleau, on découpe {libelle_rubans_dernier} : "
+            f"{longueur_rouleau_cm} − {fanions_dernier} × "
             f"{ruban_un} = {chute_dernier} cm.\n"
             f"{chute_dernier} ÷ {longueur_noeud} : quotient entier {noeuds_dernier}, "
             f"reste {petite_chute_derniere} cm.\n"
-            f"Le dernier rouleau donne donc **{noeuds_dernier} nœud(s) complet(s)**, "
-            f"avec {petite_chute_derniere} cm inutilisables pour un autre nœud.\n"
-            f"Total des nœuds : {rouleaux - 1} × {noeuds_pleine} + "
+            f"Le dernier rouleau permet donc de fabriquer {formule_noeuds_dernier} ; "
+            f"les {petite_chute_derniere} cm restants ne suffisent pas pour un autre.\n"
+            f"Total des nœuds : {nb_rouleaux_pleins} × {noeuds_pleine} + "
             f"{noeuds_dernier} = **{noeuds} nœuds complets**.\n"
         )
 
