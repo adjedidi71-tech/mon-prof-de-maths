@@ -3166,7 +3166,7 @@ def generer_modele_p7_defi_lecture():
 def generer_modele_p7_couture():
     """Découpe réelle : un ruban continu par fanion, sans réunir les chutes."""
     for _ in range(800):
-        fanions = random.randint(12, 39)
+        fanions = random.randint(10, 55)
         petit = random.randint(18, 46)
         grand = random.randint(45, 102)
         if 2 * petit <= grand:
@@ -3174,7 +3174,7 @@ def generer_modele_p7_couture():
             continue
         ruban_un = 2 * petit + grand
         ruban_total = fanions * ruban_un
-        longueur_rouleau_m = random.choice([5, 8, 10])
+        longueur_rouleau_m = random.choice([5, 6, 8, 10, 12, 15])
         longueur_rouleau_cm = longueur_rouleau_m * 100
         par_rouleau, chute_pleine = divmod(longueur_rouleau_cm, ruban_un)
         if par_rouleau < 2:
@@ -3202,6 +3202,8 @@ def generer_modele_p7_couture():
             f"{ruban_un} = {chute_pleine} cm restants.\n"
             f"{chute_pleine} ÷ {longueur_noeud} : quotient entier "
             f"{noeuds_pleine}, reste {petite_chute_pleine} cm.\n"
+            f"On obtient donc **{noeuds_pleine} nœud(s) complet(s) par rouleau** ; "
+            f"les {petite_chute_pleine} cm restants sur chacun ne permettent pas un nœud supplémentaire.\n"
             f"Total des nœuds : {rouleaux} × {noeuds_pleine} "
             f"= **{noeuds} nœuds complets**.\n"
         )
@@ -3211,11 +3213,15 @@ def generer_modele_p7_couture():
             f"{par_rouleau} rubans : il reste {chute_pleine} cm.\n"
             f"{chute_pleine} ÷ {longueur_noeud} : quotient entier {noeuds_pleine}, "
             f"reste {petite_chute_pleine} cm.\n"
+            f"Cela permet **{noeuds_pleine} nœud(s) complet(s) par premier rouleau** ; "
+            f"la petite chute de {petite_chute_pleine} cm est insuffisante pour un autre nœud.\n"
             f"Dans le dernier rouleau, on découpe seulement {fanions_dernier} "
             f"ruban(s) : {longueur_rouleau_cm} − {fanions_dernier} × "
             f"{ruban_un} = {chute_dernier} cm.\n"
             f"{chute_dernier} ÷ {longueur_noeud} : quotient entier {noeuds_dernier}, "
             f"reste {petite_chute_derniere} cm.\n"
+            f"Le dernier rouleau donne donc **{noeuds_dernier} nœud(s) complet(s)**, "
+            f"avec {petite_chute_derniere} cm inutilisables pour un autre nœud.\n"
             f"Total des nœuds : {rouleaux - 1} × {noeuds_pleine} + "
             f"{noeuds_dernier} = **{noeuds} nœuds complets**.\n"
         )
@@ -6842,7 +6848,7 @@ REGLES = {
     "P7-M25": [
         ("r1", "Quelle est la longueur réelle du sentier A, en kilomètres ?"),
         ("r2", "Quelle est la longueur réelle du sentier B, en kilomètres ?"),
-        ("r3", "Quelle est la différence de longueur entre les deux sentiers, en kilomètres ?"),
+        ("r3", "Quelle serait la distance réelle du retour par le sentier A, détour compris, en kilomètres ?"),
         ("r4", "Quelle distance la classe parcourra-t-elle au total pour l'aller par A et le retour par le sentier le plus court ?"),
     ],
     "P7-M26": [
