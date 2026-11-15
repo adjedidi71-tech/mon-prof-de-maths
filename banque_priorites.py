@@ -3643,7 +3643,7 @@ def generer_modele_p8_clubs():
 
     return _mc_uniformiser_exercice({
         "id": "P8-M01",
-        "titre": "La fête des clubs du collège — TEST V2",
+        "titre": "La fête des clubs du collège",
         "enonce": enonce,
         "correction": correction,
         "reponse_attendue": None,
@@ -3728,6 +3728,8 @@ def generer_modele_p8_manga():
             break
 
     panneaux_total = panneaux_complets + 1
+    dessins_invites = random.randint(16, 44)
+    panneaux_exposition = (dessins_exposables + dessins_invites + capacite_panneau - 1) // capacite_panneau
 
     enonce = (
         "**Le club manga**\n\n"
@@ -3751,9 +3753,11 @@ def generer_modele_p8_manga():
         "Le club utilise des panneaux pouvant accueillir "
         f"chacun **au maximum {capacite_panneau} dessins**.\n\n"
 
-        "Les organisateurs remplissent d'abord autant "
+        "Pour commencer, les organisateurs répartissent les seuls dessins du club. Ils remplissent autant "
         "de panneaux que possible, puis placent les "
         "dessins restants sur un dernier panneau.\n\n"
+        f"Un collège partenaire apporte ensuite {dessins_invites} "
+        "dessins supplémentaires. Pour l’exposition finale, tous les dessins sont répartis à nouveau sur les panneaux communs.\n\n"
 
         "**Questions**\n\n"
 
@@ -3811,7 +3815,7 @@ def generer_modele_p8_manga():
         f"Il est donc possible de remplir entièrement "
         f"**{panneaux_complets} panneaux**.\n\n"
 
-        "**4. Dernier panneau et nombre total**\n\n"
+        "**4. Dessins sur le dernier panneau du club**\n\n"
 
         f"Il reste {dessins_dernier} dessins "
         "à placer sur un dernier panneau.\n\n"
@@ -3820,9 +3824,16 @@ def generer_modele_p8_manga():
         f"{panneaux_complets} + 1 "
         f"= {panneaux_total}.\n\n"
 
-        f"**Réponse :** Il faut {panneaux_total} "
-        f"panneaux au total, dont un dernier contenant "
-        f"{dessins_dernier} dessins."
+        f"Pour les dessins du club seul, il faudrait {panneaux_total} "
+        f"panneaux, dont un dernier contenant {dessins_dernier} dessins.\n\n"
+        "**5. Accueil des dessins du collège partenaire**\n\n"
+        f"Dessins à exposer ensemble : {dessins_exposables} + {dessins_invites} "
+        f"= {dessins_exposables + dessins_invites} dessins.\n\n"
+        f"Division par {capacite_panneau} : quotient entier "
+        f"{(dessins_exposables + dessins_invites) // capacite_panneau}, "
+        f"reste {(dessins_exposables + dessins_invites) % capacite_panneau}.\n\n"
+        f"**Il faudra {panneaux_exposition} panneaux au minimum** "
+        "pour accueillir tous les dessins, y compris ceux du collège partenaire."
     )
 
     return _mc_uniformiser_exercice({
@@ -3873,9 +3884,9 @@ def generer_modele_p8_manga():
             {
                 "id": "r5",
                 "question": 4,
-                "libelle": "Nombre total de panneaux",
+                "libelle": "Panneaux pour tous les dessins",
                 "type": "nombre",
-                "attendu": panneaux_total,
+                "attendu": panneaux_exposition,
                 "unite": "panneaux"
             }
         ]
@@ -4362,9 +4373,9 @@ def generer_modele_p8_jeu_piste():
 
     # Génère les deux situations : budget suffisant
     # ou insuffisant pour les souvenirs et la réserve.
-    variation = random.choice([
-        -500, -300, -200, 200, 300, 500
-    ])
+    # Écart en centimes, assez varié pour éviter trois réponses finales répétitives.
+    amplitude = min(random.randrange(150, 1251, 10), somme_necessaire - 200)
+    variation = random.choice([-1, 1]) * amplitude
 
     argent_disponible = somme_necessaire + variation
     budget = depenses + argent_disponible
@@ -4614,7 +4625,8 @@ def generer_modele_p8_kits(seed=None):
     total = prix_kits - reduction + livraison
 
     # Budget parfois suffisant, parfois insuffisant
-    variation = rng.choice([-15, -10, -5, 5, 10, 15])
+    amplitude = min(rng.randint(4, 36), total - 5)
+    variation = rng.choice([-1, 1]) * amplitude
     budget = total + variation
 
     difference = abs(variation)
@@ -4810,7 +4822,8 @@ def generer_modele_p8_eau(seed=None):
     economie = consommation_avant - consommation_apres
 
     # Objectif parfois atteint, parfois non
-    variation = rng.choice([-1000, -500, 500, 1000])
+    # Écart de 1,80 à 13,00 litres, sans valeur finale prédéfinie.
+    variation = rng.choice([-1, 1]) * rng.randrange(180, 1301, 10)
     objectif = economie + variation
 
     objectif_atteint = "Oui" if economie >= objectif else "Non"
@@ -5009,12 +5022,16 @@ def generer_modele_p8_parcours(seed=None):
     temps_pause = nb_pauses * pause_minutes
     duree_totale = temps_marche + temps_pause
 
-    variation = rng.choice([-18, -12, -6, 6, 12, 18])
-    temps_maximal = duree_totale + variation
+    detour_demi_km = rng.randint(1, 4)
+    distance_detour = detour_demi_km / 2
+    temps_detour = int(distance_detour * minutes_par_km)
+    duree_avec_detour = duree_totale + temps_detour
+    variation = rng.choice([-1, 1]) * rng.randint(4, 29)
+    temps_maximal = duree_avec_detour + variation
     objectif_atteint = (
-        "Oui" if duree_totale <= temps_maximal else "Non"
+        "Oui" if duree_avec_detour <= temps_maximal else "Non"
     )
-    ecart = abs(duree_totale - temps_maximal)
+    ecart = abs(duree_avec_detour - temps_maximal)
 
     def km(valeur):
         return f"{valeur:.1f}".replace(".", ",")
@@ -5022,13 +5039,13 @@ def generer_modele_p8_parcours(seed=None):
     if objectif_atteint == "Oui":
         libelle_ecart = "Minutes d'avance sur la limite"
         conclusion = (
-            f"Le groupe respecte la limite et termine "
+            f"Avec le détour, le groupe respecte la limite et termine "
             f"avec {ecart} minutes d'avance."
         )
     else:
         libelle_ecart = "Minutes de dépassement"
         conclusion = (
-            f"Le groupe dépasse la limite de {ecart} minutes."
+            f"Avec le détour, le groupe dépasse la limite de {ecart} minutes."
         )
 
     enonce = (
@@ -5041,7 +5058,9 @@ def generer_modele_p8_parcours(seed=None):
         f"Ils marchent à une allure régulière de {minutes_par_km} minutes "
         "par kilomètre.\n\n"
         f"Entre deux tours, ils font une pause de {pause_minutes} minutes. "
-        "Ils ne font pas de pause après le dernier tour.\n\n"
+        f"Ils ne font pas de pause après le dernier tour.\n\n"
+        f"Après le parcours, ils envisagent un détour d’observation de "
+        f"{km(distance_detour)} km, effectué à la même allure et sans pause.\n\n"
         f"Le groupe souhaite terminer le parcours en **{temps_maximal} "
         "minutes au maximum**, pauses comprises.\n\n"
         "**Questions**\n\n"
@@ -5075,8 +5094,11 @@ def generer_modele_p8_parcours(seed=None):
         f"{km(longueur_b_demi_km / 2)}) × {minutes_par_km} "
         f"+ ({nb_tours} − 1) × {pause_minutes} "
         f"= {duree_totale}.\n\n"
-        "**5. Comparaison avec la durée maximale**\n\n"
-        f"Durée totale : {duree_totale} minutes.\n\n"
+        "**5. Détour d’observation et durée maximale**\n\n"
+        f"Temps du détour : {km(distance_detour)} × {minutes_par_km} "
+        f"= {temps_detour} minutes.\n\n"
+        f"Durée totale avec détour : {duree_totale} + {temps_detour} "
+        f"= {duree_avec_detour} minutes.\n\n"
         f"Limite : {temps_maximal} minutes.\n\n"
         f"Écart : {ecart} minutes.\n\n"
         f"**Objectif atteint : {objectif_atteint}.**\n\n"
@@ -5184,6 +5206,8 @@ def generer_modele_p8_boissons(seed=None):
             break
 
     bouteilles_necessaires = bouteilles_pleines + 1
+    bouteilles_par_lot = rng.choice([3, 4, 5, 6])
+    lots_necessaires = (bouteilles_necessaires + bouteilles_par_lot - 1) // bouteilles_par_lot
 
     def litres(centilitres):
         return f"{centilitres / 100:.2f}".replace(".", ",")
@@ -5197,9 +5221,11 @@ def generer_modele_p8_boissons(seed=None):
         f"- {quantite_b} cL de {parfums[1]} ;\n"
         f"- {quantite_eau} cL d'eau.\n\n"
         f"Ils réalisent **{nombre_preparations} préparations identiques**.\n\n"
-        f"Ils disposent de bouteilles de {capacite_bouteille} cL chacune. "
+        f"Ils souhaitent utiliser des bouteilles de {capacite_bouteille} cL chacune. "
         "Ils remplissent d'abord le plus grand nombre possible de bouteilles "
         "complètes, puis mettent le reste dans une dernière bouteille.\n\n"
+        f"Les bouteilles vides s’achètent par lots de {bouteilles_par_lot}. "
+        "Il faut disposer de suffisamment de bouteilles pour toute la boisson.\n\n"
         "**Questions**\n\n"
         "1. Quel volume de boisson obtiennent-ils avec une seule "
         "préparation, en cL ?\n\n"
@@ -5231,7 +5257,12 @@ def generer_modele_p8_boissons(seed=None):
         "**4. Dernière bouteille et total**\n\n"
         f"Il reste {reste_cl} cL, versés dans une dernière bouteille.\n\n"
         f"Nombre total : {bouteilles_pleines} + 1 "
-        f"= **{bouteilles_necessaires} bouteilles**."
+        f"= **{bouteilles_necessaires} bouteilles**.\n\n"
+        "**5. Lots de bouteilles à acheter**\n\n"
+        f"{bouteilles_necessaires} ÷ {bouteilles_par_lot} : quotient entier "
+        f"{bouteilles_necessaires // bouteilles_par_lot}, "
+        f"reste {bouteilles_necessaires % bouteilles_par_lot}.\n\n"
+        f"Il faut **{lots_necessaires} lots** de bouteilles au minimum."
     )
 
     return _mc_uniformiser_exercice({
@@ -5283,10 +5314,10 @@ def generer_modele_p8_boissons(seed=None):
             {
                 "id": "r5",
                 "question": 4,
-                "libelle": "Nombre total de bouteilles",
+                "libelle": "Lots de bouteilles à acheter",
                 "type": "nombre",
-                "attendu": bouteilles_necessaires,
-                "unite": "bouteilles"
+                "attendu": lots_necessaires,
+                "unite": "lots"
             }
         ]
     })
@@ -6896,9 +6927,9 @@ REGLES = {
     "P8-M02": [
         ("r1", "Combien de nouveaux dessins les élèves ont-ils réalisés ?"),
         ("r2", "Combien de dessins peuvent être exposés après les retraits ?"),
-        ("r3", "Combien de panneaux peuvent être entièrement remplis ?"),
-        ("r4", "Combien de dessins seront placés sur le dernier panneau incomplet ?"),
-        ("r5", "Combien de panneaux faudra-t-il au total pour exposer tous les dessins ?"),
+        ("r3", "Avec les seuls dessins du club, combien de panneaux peuvent être entièrement remplis ?"),
+        ("r4", "Avant d’ajouter les dessins invités, combien de dessins se trouvent sur le dernier panneau incomplet du club ?"),
+        ("r5", "Combien de panneaux faut-il au minimum pour exposer ensemble les dessins du club et ceux du collège partenaire ?"),
     ],
     "P8-M03": [
         ("r1", "Combien de pièces possède-t-il après les missions, le bonus et l'achat des potions ?"),
@@ -6940,14 +6971,14 @@ REGLES = {
         ("r2", "Quelle distance est parcourue pendant tous les tours ?"),
         ("r3", "Combien de minutes les élèves passent-ils à marcher ?"),
         ("r4", "Quelle est la durée totale, pauses comprises ?"),
-        ("r6", "Quel est l'écart en minutes entre la durée totale et le temps maximal autorisé ?"),
+        ("r6", "En effectuant également le détour d’observation, quel est l’écart en minutes entre la durée réelle et la limite autorisée ?"),
     ],
     "P8-M09": [
         ("r1", "Quel volume de boisson est obtenu avec une seule préparation, en cL ?"),
         ("r2", "Quel est le volume total préparé, en litres ?"),
         ("r3", "Combien de bouteilles peuvent être entièrement remplies ?"),
         ("r4", "Combien de cL faudra-t-il verser dans la dernière bouteille ?"),
-        ("r5", "Combien de bouteilles sont nécessaires au total pour contenir toute la boisson ?"),
+        ("r5", "Combien de lots de bouteilles vides faut-il acheter au minimum pour conditionner toute la boisson ?"),
     ],
     "P8-M10": [
         ("r1", "Quelle distance totale le véhicule parcourt-il ?"),
