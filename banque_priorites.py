@@ -3096,7 +3096,7 @@ def generer_modele_p7_refuge():
 # ================================================================
 
 def generer_modele_p7_defi_lecture():
-    """Projet collectif et augmentation minimale du rythme de lecture."""
+    """Projet collectif : quotient entier puis reste par jour et par élève."""
     eleves = random.randint(5, 11)
     pages_deja = random.randint(18, 67)
     jours = random.randint(4, 8)
@@ -3108,8 +3108,10 @@ def generer_modele_p7_defi_lecture():
     jours_eleves = eleves * jours
     supplement = (bonus_par_jour - 1) * jours_eleves + random.randint(1, jours_eleves)
     objectif = total_prevu + supplement
-    quotient, reste = divmod(supplement, jours_eleves)
-    bonus_minimal = quotient + int(reste > 0)
+    quotidien, reste_jours = divmod(supplement, jours)
+    quotidien_minimum = quotidien + int(reste_jours > 0)
+    par_eleve, reste_eleves = divmod(quotidien_minimum, eleves)
+    bonus_minimal = par_eleve + int(reste_eleves > 0)
     assert bonus_minimal == bonus_par_jour
     enonce = (
         "**Le défi de lecture**\n\n"
@@ -3134,14 +3136,20 @@ def generer_modele_p7_defi_lecture():
         f"{eleves} × {jours} × {pages_jour} = {lecture_prevue} pages.\n\n"
         "**3. Lecture totale prévue**\n\n"
         f"{lecture_initiale} + {lecture_prevue} = {total_prevu} pages.\n\n"
-        "**4. Pages supplémentaires chaque jour**\n\n"
-        f"Pages manquantes : {objectif} − {total_prevu} = {supplement} pages.\n"
-        f"Un supplément de 1 page par élève et par jour représente "
-        f"{eleves} × {jours} = {jours_eleves} pages pour le groupe.\n"
-        f"{supplement} ÷ {jours_eleves} : quotient entier {quotient}, reste {reste}.\n"
-        + (f"Comme le reste est {reste}, il faut une page supplémentaire : "
-           if reste else "La division est exacte : ")
-        + f"**{bonus_minimal} pages supplémentaires par élève et par jour** au minimum."
+        "**4. Pages supplémentaires par jour et par élève**\n\n"
+        f"Pages encore nécessaires pour le groupe : {objectif} − {total_prevu} = {supplement} pages.\n"
+        f"**D'abord, par jour :** {supplement} ÷ {jours} : quotient entier {quotidien}, "
+        f"reste {reste_jours}.\n"
+        + (f"Comme le reste est non nul, il faut au moins {quotidien_minimum} pages "
+           "supplémentaires par jour pour le groupe.\n" if reste_jours else
+           f"Le groupe doit donc lire {quotidien_minimum} pages supplémentaires par jour.\n")
+        + f"**Ensuite, par élève :** {quotidien_minimum} ÷ {eleves} : "
+        f"quotient entier {par_eleve}, reste {reste_eleves}.\n"
+        + ("Il faut arrondir au nombre entier supérieur : " if reste_eleves else "La division est exacte : ")
+        + f"**{bonus_minimal} pages supplémentaires par élève et par jour**, au minimum.\n"
+        f"Vérification : {eleves} × {jours} × {bonus_minimal} = "
+        f"{eleves * jours * bonus_minimal} pages supplémentaires, "
+        f"au moins {supplement} pages nécessaires."
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M22", "titre": "Le défi de lecture", "enonce": enonce,
@@ -3156,55 +3164,76 @@ def generer_modele_p7_defi_lecture():
 
 
 def generer_modele_p7_couture():
-    """Mesures en centimètres, rouleaux entiers et réutilisation des chutes."""
-    for _ in range(300):
+    """Découpe réelle : un ruban continu par fanion, sans réunir les chutes."""
+    for _ in range(800):
         fanions = random.randint(12, 39)
         petit = random.randint(18, 46)
         grand = random.randint(45, 102)
+        if 2 * petit <= grand:
+            # Un fanion triangulaire doit avoir trois côtés géométriquement possibles.
+            continue
         ruban_un = 2 * petit + grand
         ruban_total = fanions * ruban_un
         longueur_rouleau_m = random.choice([5, 8, 10])
         longueur_rouleau_cm = longueur_rouleau_m * 100
-        rouleaux, chute = divmod(ruban_total, longueur_rouleau_cm)
-        rouleaux += int(chute > 0)
-        reste = rouleaux * longueur_rouleau_cm - ruban_total
+        par_rouleau, chute_pleine = divmod(longueur_rouleau_cm, ruban_un)
+        if par_rouleau < 2:
+            continue
+        rouleaux, reste_fanions = divmod(fanions, par_rouleau)
+        rouleaux += int(reste_fanions > 0)
+        fanions_dernier = reste_fanions or par_rouleau
+        chute_dernier = longueur_rouleau_cm - fanions_dernier * ruban_un
         longueur_noeud = random.choice([15, 20, 25, 30, 35, 40])
-        noeuds, petite_chute = divmod(reste, longueur_noeud)
-        if 2 <= rouleaux <= 18 and 1 <= noeuds <= 30:
+        noeuds_pleine, petite_chute_pleine = divmod(chute_pleine, longueur_noeud)
+        noeuds_dernier, petite_chute_derniere = divmod(chute_dernier, longueur_noeud)
+        noeuds = (rouleaux - 1) * noeuds_pleine + noeuds_dernier
+        if 2 <= rouleaux <= 18 and 2 <= noeuds <= 65:
             break
     else:
-        raise ValueError("Aucune situation cohérente pour le ruban de couture")
+        raise ValueError("Aucune situation cohérente pour les fanions")
+
     enonce = (
         "**Les fanions du club de couture**\n\n"
-        f"Le club prépare {fanions} fanions identiques pour décorer la cour. "
-        f"Pour chaque fanion, il faut **deux morceaux de ruban de {petit} cm** "
-        f"et **un morceau de {grand} cm**.\n\n"
-        f"Le ruban s'achète en rouleaux entiers de {longueur_rouleau_m} m. "
-        f"Avec les chutes de ruban, le club souhaite ensuite fabriquer des petits nœuds "
-        f"nécessitant chacun {longueur_noeud} cm de ruban. "
-        "Pour cet exercice, on suppose que les chutes peuvent être réunies et utilisées "
-        "sans perte de longueur.\n\n"
+        f"Le club prépare {fanions} fanions identiques. Pour décorer les trois côtés "
+        f"d'un fanion (deux côtés de {petit} cm et un côté de {grand} cm), "
+        "il utilise **un seul ruban continu**, sans raccord.\n\n"
+        f"Le ruban est vendu en rouleaux de {longueur_rouleau_m} m. "
+        "On découpe le plus grand nombre possible de fanions dans un rouleau "
+        "avant de commencer le suivant.\n\n"
+        f"Avec les chutes restantes, on fabrique de petits nœuds de {longueur_noeud} cm. "
+        "**Les chutes de rouleaux différents ne peuvent pas être raccordées.**\n\n"
         "**Questions**\n\n"
-        "1. Combien de centimètres de ruban faut-il pour un fanion ?\n\n"
-        "2. Combien de centimètres de ruban faut-il pour tous les fanions ?\n\n"
-        "3. Combien de rouleaux de ruban faut-il acheter au minimum ?\n\n"
-        "4. Combien de petits nœuds complets peut-on fabriquer au maximum avec le ruban restant ?"
+        "1. Quelle longueur de ruban faut-il pour décorer un fanion ?\n\n"
+        "2. Quelle longueur de ruban faut-il pour tous les fanions ?\n\n"
+        "3. Combien de rouleaux faut-il acheter au minimum ?\n\n"
+        "4. Combien de nœuds complets peut-on fabriquer avec les chutes "
+        "obtenues selon cette méthode de découpe ?"
     )
     correction = (
-        "**1. Ruban pour un fanion**\n\n"
+        "**1. Ruban continu pour un fanion**\n\n"
         f"2 × {petit} + {grand} = {ruban_un} cm.\n\n"
-        "**2. Ruban pour tous les fanions**\n\n"
+        "**2. Longueur pour tous les fanions**\n\n"
         f"{fanions} × {ruban_un} = {ruban_total} cm.\n\n"
-        "**3. Rouleaux entiers nécessaires**\n\n"
-        f"Un rouleau contient {longueur_rouleau_m} × 100 = {longueur_rouleau_cm} cm.\n"
-        f"{ruban_total} ÷ {longueur_rouleau_cm} : quotient entier "
-        f"{ruban_total // longueur_rouleau_cm}, reste {ruban_total % longueur_rouleau_cm} cm.\n"
-        f"Le club doit acheter {rouleaux} rouleaux entiers.\n\n"
-        "**4. Nœuds réalisables avec le reste**\n\n"
-        f"Ruban acheté : {rouleaux} × {longueur_rouleau_cm} = {rouleaux * longueur_rouleau_cm} cm.\n"
-        f"Ruban restant : {rouleaux * longueur_rouleau_cm} − {ruban_total} = {reste} cm.\n"
-        f"{reste} ÷ {longueur_noeud} : quotient entier {noeuds}, reste {petite_chute} cm.\n"
-        f"**Conclusion :** le club peut fabriquer {noeuds} petits nœuds complets."
+        "**3. Nombre de rouleaux**\n\n"
+        f"Chaque rouleau contient {longueur_rouleau_cm} cm. "
+        f"{longueur_rouleau_cm} ÷ {ruban_un} : quotient entier {par_rouleau}, "
+        f"reste {chute_pleine} cm.\n"
+        f"Un rouleau permet donc de découper {par_rouleau} rubans continus entiers.\n"
+        f"{fanions} ÷ {par_rouleau} : quotient entier {fanions // par_rouleau}, "
+        f"reste {fanions % par_rouleau} fanion(s).\n"
+        f"Il faut **{rouleaux} rouleaux**.\n\n"
+        "**4. Nœuds obtenus avec les chutes**\n\n"
+        f"Dans chacun des {rouleaux - 1} premiers rouleaux : "
+        f"chute de {chute_pleine} cm. "
+        f"{chute_pleine} ÷ {longueur_noeud} : quotient entier {noeuds_pleine}, "
+        f"reste {petite_chute_pleine} cm.\n"
+        f"Dans le dernier rouleau, on découpe {fanions_dernier} fanion(s) : "
+        f"{longueur_rouleau_cm} − {fanions_dernier} × {ruban_un} = {chute_dernier} cm.\n"
+        f"{chute_dernier} ÷ {longueur_noeud} : quotient entier {noeuds_dernier}, "
+        f"reste {petite_chute_derniere} cm.\n"
+        f"Total des nœuds : {rouleaux - 1} × {noeuds_pleine} + {noeuds_dernier} "
+        f"= **{noeuds} nœuds complets**.\n"
+        "**Conclusion :** on compte les chutes séparément, sans les assembler."
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M23", "titre": "Les fanions du club de couture", "enonce": enonce,
@@ -3219,18 +3248,24 @@ def generer_modele_p7_couture():
 
 
 def generer_modele_p7_casiers():
-    """Comparer le besoin maximum de deux créneaux, et non les additionner."""
-    while True:
-        equipes = random.randint(3, 7)
+    """Trois affluences : matin, après-midi et chevauchement à midi."""
+    pic_chevauchement = random.choice([True, False])
+    for _ in range(1000):
+        equipes = random.randint(4, 8)
         eleves_equipe = random.randint(4, 7)
-        groupes = random.randint(3, 8)
+        groupes = random.randint(4, 8)
         eleves_groupe = random.randint(4, 7)
+        equipes_restant = random.randint(1, equipes - 1)
+        groupes_avance = random.randint(1, groupes - 1)
         matin = equipes * eleves_equipe
         apres_midi = groupes * eleves_groupe
-        if matin != apres_midi:
+        transition = equipes_restant * eleves_equipe + groupes_avance * eleves_groupe
+        maximum = max(matin, apres_midi, transition)
+        if matin != apres_midi and (transition > max(matin, apres_midi)) == pic_chevauchement:
             break
-    maximum = max(matin, apres_midi)
-    ecart = random.randint(3, 27)
+    else:
+        raise ValueError("Aucun créneau de gymnase cohérent")
+    ecart = random.randint(4, 24)
     suffisant = random.choice([True, False])
     if maximum - ecart <= 0:
         suffisant = True
@@ -3238,44 +3273,48 @@ def generer_modele_p7_casiers():
     hors_service = random.randint(3, 13)
     total_casiers = utilisables + hors_service
     q4 = (
-        "Combien de casiers resteront inoccupés pendant le créneau le plus chargé ?"
+        "Combien de casiers resteront libres au moment où il y a le plus d'élèves dans le gymnase ?"
         if suffisant else
-        "Combien de casiers supplémentaires faut-il pour accueillir tous les élèves du créneau le plus chargé ?"
+        "Combien de casiers supplémentaires faut-il au moment où il y a le plus d'élèves dans le gymnase ?"
     )
+    texte_equipes = "équipe du matin reste" if equipes_restant == 1 else "équipes du matin restent"
+    texte_groupes = "groupe de l'après-midi arrive" if groupes_avance == 1 else "groupes de l'après-midi arrivent"
     enonce = (
         "**Les casiers du gymnase**\n\n"
-        "Le gymnase accueille deux groupes **à des horaires différents**. "
-        "Chaque élève a besoin d'un casier personnel. Les élèves du premier créneau "
-        "libèrent leurs casiers avant l'arrivée des suivants.\n\n"
-        f"Le matin, {equipes} équipes de {eleves_equipe} élèves utilisent le gymnase. "
+        "Chaque élève utilise un casier. Le matin et l'après-midi, les groupes se succèdent, "
+        "mais à midi une partie des élèves du matin reste pendant que d'autres arrivent.\n\n"
+        f"Le matin, {equipes} équipes de {eleves_equipe} élèves fréquentent le gymnase. "
         f"L'après-midi, ce sont {groupes} groupes de {eleves_groupe} élèves.\n\n"
-        f"Le gymnase possède {total_casiers} casiers, dont {hors_service} sont hors service.\n\n"
+        f"À midi, **{equipes_restant} {texte_equipes}** et "
+        f"**{groupes_avance} {texte_groupes} en avance**. Les autres élèves ont libéré "
+        "leurs casiers.\n\n"
+        f"Le gymnase possède {total_casiers} casiers, dont {hors_service} hors service.\n\n"
         "**Questions**\n\n"
         "1. Combien d'élèves sont présents le matin ?\n\n"
-        "2. Combien d'élèves sont présents l'après-midi ?\n\n"
+        "2. Combien d'élèves sont attendus l'après-midi ?\n\n"
         "3. Combien de casiers utilisables le gymnase possède-t-il ?\n\n"
         f"4. {q4}"
     )
     correction = (
-        "**1. Élèves présents le matin**\n\n"
+        "**1. Élèves le matin**\n\n"
         f"{equipes} × {eleves_equipe} = {matin} élèves.\n\n"
-        "**2. Élèves présents l'après-midi**\n\n"
+        "**2. Élèves l'après-midi**\n\n"
         f"{groupes} × {eleves_groupe} = {apres_midi} élèves.\n\n"
         "**3. Casiers utilisables**\n\n"
         f"{total_casiers} − {hors_service} = {utilisables} casiers.\n\n"
-        "**4. Besoin au créneau le plus chargé**\n\n"
-        f"Les créneaux ne sont pas simultanés : on ne doit pas additionner "
-        f"{matin} et {apres_midi}.\n"
-        f"Nombre maximal d'élèves présents : {maximum}.\n"
-        + (f"Casiers inoccupés : {utilisables} − {maximum} = {ecart}.\n"
-           f"**Conclusion :** {ecart} casiers resteront disponibles."
-           if suffisant else
+        "**4. Effectif maximal à accueillir**\n\n"
+        f"Le matin : {matin} élèves ; l'après-midi : {apres_midi} élèves.\n"
+        f"À midi : {equipes_restant} × {eleves_equipe} + "
+        f"{groupes_avance} × {eleves_groupe} = {transition} élèves.\n"
+        f"On retient le plus grand de ces trois effectifs : **{maximum} élèves**.\n"
+        + (f"Casiers libres : {utilisables} − {maximum} = {ecart}.\n"
+           f"**Conclusion :** il restera {ecart} casiers libres." if suffisant else
            f"Casiers manquants : {maximum} − {utilisables} = {ecart}.\n"
-           f"**Conclusion :** il faut prévoir {ecart} casiers supplémentaires.")
+           f"**Conclusion :** il faudra {ecart} casiers supplémentaires.")
     )
     return _mc_uniformiser_exercice({
-        "id": "P7-M24", "titre": "Les casiers du gymnase", "mathicap_stock_suffisant": suffisant, "enonce": enonce,
-        "correction": correction, "reponse_attendue": None,
+        "id": "P7-M24", "titre": "Les casiers du gymnase", "mathicap_stock_suffisant": suffisant,
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
         "champs_reponse": [
             {"id": "r1", "question": 1, "libelle": "Élèves le matin", "type": "nombre", "attendu": matin, "unite": "élèves"},
             {"id": "r2", "question": 2, "libelle": "Élèves l'après-midi", "type": "nombre", "attendu": apres_midi, "unite": "élèves"},
@@ -3286,57 +3325,59 @@ def generer_modele_p7_casiers():
 
 
 def generer_modele_p7_carte_orientation():
-    """Lire une échelle simplifiée, comparer deux routes et choisir un retour."""
-    while True:
+    """Échelle, déviation du retour et comparaison de trajets possibles."""
+    retour_a_souhaite = random.choice([True, False])
+    for _ in range(1000):
         a1, a2 = random.randint(3, 11), random.randint(3, 11)
         b1, b2, b3 = [random.randint(2, 8) for _ in range(3)]
         longueur_a = a1 + a2
         longueur_b = b1 + b2 + b3
-        if 2 <= abs(longueur_a - longueur_b) <= 11:
+        detour_cm = random.randint(2, 10)
+        if (2 <= abs(longueur_a + detour_cm - longueur_b) <= 10
+                and ((longueur_a + detour_cm < longueur_b) == retour_a_souhaite)):
             break
+    else:
+        raise ValueError("Pas de trajet d'orientation exploitable")
     coefficient_dixieme = random.choice([2, 3, 4, 5, 6])
-    distance_a = longueur_a * coefficient_dixieme / 10
-    distance_b = longueur_b * coefficient_dixieme / 10
-    difference = abs(distance_a - distance_b)
-    distance_parcourue = distance_a + min(distance_a, distance_b)
-    # Éviter les représentations 6,3000000001 au lieu de 6,3.
-    distance_a = round(distance_a, 1)
-    distance_b = round(distance_b, 1)
-    difference = round(difference, 1)
-    distance_parcourue = round(distance_parcourue, 1)
+    distance_a = round(longueur_a * coefficient_dixieme / 10, 1)
+    distance_b = round(longueur_b * coefficient_dixieme / 10, 1)
+    retour_a = round((longueur_a + detour_cm) * coefficient_dixieme / 10, 1)
+    distance_parcourue = round(distance_a + min(retour_a, distance_b), 1)
     format_dec = lambda x: f"{x:.1f}".replace(".", ",")
+    retour = "A, avec sa déviation" if retour_a < distance_b else "B"
     enonce = (
         "**La carte du parcours d'orientation**\n\n"
-        "Deux sentiers relient le collège au même point d'arrivée. Sur une carte, "
-        f"**1 cm représente {format_dec(coefficient_dixieme / 10)} km** sur le terrain.\n\n"
-        f"Le sentier A est formé de deux portions de {a1} cm et {a2} cm sur la carte. "
-        f"Le sentier B comporte trois portions de {b1} cm, {b2} cm et {b3} cm.\n\n"
-        "Pour l'aller, la classe doit emprunter le sentier A. Pour le retour, "
-        "elle peut choisir le plus court des deux sentiers.\n\n"
+        "Deux sentiers relient le collège à un point d'arrivée. Sur la carte, "
+        f"**1 cm représente {format_dec(coefficient_dixieme/10)} km** sur le terrain.\n\n"
+        f"Le sentier A comprend deux portions de {a1} cm et {a2} cm sur la carte. "
+        f"Le sentier B comprend trois portions de {b1} cm, {b2} cm et {b3} cm.\n\n"
+        "La classe doit emprunter A à l'aller pour passer par un point de contrôle. "
+        f"Pour le retour, des travaux imposent **{detour_cm} cm de détour sur la carte** "
+        "si l'on choisit A. B ne comporte pas de détour.\n\n"
         "**Questions**\n\n"
-        "1. Quelle est la longueur réelle du sentier A, en kilomètres ?\n\n"
-        "2. Quelle est la longueur réelle du sentier B, en kilomètres ?\n\n"
-        "3. Quelle est la différence de longueur entre les deux sentiers, en kilomètres ?\n\n"
-        "4. Quelle distance la classe parcourra-t-elle au total pour l'aller par A "
-        "et le retour par le sentier le plus court ?"
+        "1. Quelle est la distance réelle du sentier A, en kilomètres ?\n\n"
+        "2. Quelle est la distance réelle du sentier B, en kilomètres ?\n\n"
+        "3. Quelle serait la distance du retour par le sentier A, avec la déviation ?\n\n"
+        "4. Quelle distance totale la classe parcourra-t-elle si elle choisit "
+        "le trajet de retour le plus court ?"
     )
-    retour = "A" if distance_a < distance_b else "B"
     correction = (
-        "**1. Longueur réelle du sentier A**\n\n"
-        f"({a1} + {a2}) × {format_dec(coefficient_dixieme / 10)} "
+        "**1. Distance réelle du sentier A**\n\n"
+        f"({a1} + {a2}) × {format_dec(coefficient_dixieme/10)} "
         f"= {format_dec(distance_a)} km.\n\n"
-        "**2. Longueur réelle du sentier B**\n\n"
-        f"({b1} + {b2} + {b3}) × {format_dec(coefficient_dixieme / 10)} "
+        "**2. Distance réelle du sentier B**\n\n"
+        f"({b1} + {b2} + {b3}) × {format_dec(coefficient_dixieme/10)} "
         f"= {format_dec(distance_b)} km.\n\n"
-        "**3. Écart de longueur**\n\n"
-        f"{format_dec(max(distance_a, distance_b))} − "
-        f"{format_dec(min(distance_a, distance_b))} = {format_dec(difference)} km.\n\n"
-        "**4. Distance totale du trajet**\n\n"
-        f"À l'aller, la classe parcourt {format_dec(distance_a)} km par A. "
-        f"Le plus court chemin de retour est le sentier {retour}, "
-        f"long de {format_dec(min(distance_a, distance_b))} km.\n"
-        f"{format_dec(distance_a)} + {format_dec(min(distance_a, distance_b))} "
-        f"= **{format_dec(distance_parcourue)} km**."
+        "**3. Retour par A avec déviation**\n\n"
+        f"({a1} + {a2} + {detour_cm}) × {format_dec(coefficient_dixieme/10)} "
+        f"= {format_dec(retour_a)} km.\n\n"
+        "**4. Parcours total le plus court**\n\n"
+        f"Retour par A avec déviation : {format_dec(retour_a)} km. "
+        f"Retour par B : {format_dec(distance_b)} km.\n"
+        f"Le plus court retour est **{retour}**.\n"
+        f"Distance aller-retour : {format_dec(distance_a)} + "
+        f"{format_dec(min(retour_a, distance_b))} = "
+        f"**{format_dec(distance_parcourue)} km**."
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M25", "titre": "La carte du parcours d'orientation", "enonce": enonce,
@@ -3344,8 +3385,8 @@ def generer_modele_p7_carte_orientation():
         "champs_reponse": [
             {"id": "r1", "question": 1, "libelle": "Distance du sentier A", "type": "nombre", "attendu": distance_a, "unite": "km"},
             {"id": "r2", "question": 2, "libelle": "Distance du sentier B", "type": "nombre", "attendu": distance_b, "unite": "km"},
-            {"id": "r3", "question": 3, "libelle": "Écart des sentiers", "type": "nombre", "attendu": difference, "unite": "km"},
-            {"id": "r4", "question": 4, "libelle": "Distance totale du trajet", "type": "nombre", "attendu": distance_parcourue, "unite": "km"},
+            {"id": "r3", "question": 3, "libelle": "Retour A avec détour", "type": "nombre", "attendu": retour_a, "unite": "km"},
+            {"id": "r4", "question": 4, "libelle": "Distance totale", "type": "nombre", "attendu": distance_parcourue, "unite": "km"},
         ],
     })
 
