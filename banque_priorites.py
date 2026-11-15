@@ -3192,6 +3192,34 @@ def generer_modele_p7_couture():
     else:
         raise ValueError("Aucune situation cohérente pour les fanions")
 
+    # Un dernier rouleau partiellement utilisé n'a pas la même chute qu'un rouleau plein.
+    # Lorsque la division est exacte, tous les rouleaux ont au contraire la même chute.
+    if reste_fanions == 0:
+        detail_chutes = (
+            f"Les {rouleaux} rouleaux servent chacun à découper {par_rouleau} rubans "
+            "continus pour les fanions. Ils ont donc tous la même chute.\n"
+            f"Sur chaque rouleau : {longueur_rouleau_cm} − {par_rouleau} × "
+            f"{ruban_un} = {chute_pleine} cm restants.\n"
+            f"{chute_pleine} ÷ {longueur_noeud} : quotient entier "
+            f"{noeuds_pleine}, reste {petite_chute_pleine} cm.\n"
+            f"Total des nœuds : {rouleaux} × {noeuds_pleine} "
+            f"= **{noeuds} nœuds complets**.\n"
+        )
+    else:
+        detail_chutes = (
+            f"Dans chacun des {rouleaux - 1} premiers rouleaux, on découpe "
+            f"{par_rouleau} rubans : il reste {chute_pleine} cm.\n"
+            f"{chute_pleine} ÷ {longueur_noeud} : quotient entier {noeuds_pleine}, "
+            f"reste {petite_chute_pleine} cm.\n"
+            f"Dans le dernier rouleau, on découpe seulement {fanions_dernier} "
+            f"ruban(s) : {longueur_rouleau_cm} − {fanions_dernier} × "
+            f"{ruban_un} = {chute_dernier} cm.\n"
+            f"{chute_dernier} ÷ {longueur_noeud} : quotient entier {noeuds_dernier}, "
+            f"reste {petite_chute_derniere} cm.\n"
+            f"Total des nœuds : {rouleaux - 1} × {noeuds_pleine} + "
+            f"{noeuds_dernier} = **{noeuds} nœuds complets**.\n"
+        )
+
     enonce = (
         "**Les fanions du club de couture**\n\n"
         f"Le club prépare {fanions} fanions identiques. Pour décorer les trois côtés "
@@ -3223,17 +3251,8 @@ def generer_modele_p7_couture():
         f"reste {fanions % par_rouleau} fanion(s).\n"
         f"Il faut **{rouleaux} rouleaux**.\n\n"
         "**4. Nœuds obtenus avec les chutes**\n\n"
-        f"Dans chacun des {rouleaux - 1} premiers rouleaux : "
-        f"chute de {chute_pleine} cm. "
-        f"{chute_pleine} ÷ {longueur_noeud} : quotient entier {noeuds_pleine}, "
-        f"reste {petite_chute_pleine} cm.\n"
-        f"Dans le dernier rouleau, on découpe {fanions_dernier} fanion(s) : "
-        f"{longueur_rouleau_cm} − {fanions_dernier} × {ruban_un} = {chute_dernier} cm.\n"
-        f"{chute_dernier} ÷ {longueur_noeud} : quotient entier {noeuds_dernier}, "
-        f"reste {petite_chute_derniere} cm.\n"
-        f"Total des nœuds : {rouleaux - 1} × {noeuds_pleine} + {noeuds_dernier} "
-        f"= **{noeuds} nœuds complets**.\n"
-        "**Conclusion :** on compte les chutes séparément, sans les assembler."
+        + detail_chutes
+        + "**Conclusion :** les chutes de rouleaux différents sont comptées séparément, sans les raccorder."
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M23", "titre": "Les fanions du club de couture", "enonce": enonce,
@@ -3245,6 +3264,17 @@ def generer_modele_p7_couture():
             {"id": "r4", "question": 4, "libelle": "Nœuds possibles", "type": "nombre", "attendu": noeuds, "unite": "nœuds"},
         ],
     })
+
+
+def _mc_libelle_question_finale_casiers(suffisant):
+    """Formulation unique de Q4, utilisée aussi après uniformisation des questions."""
+    return (
+        "En tenant compte du chevauchement exceptionnel de midi, combien de casiers resteront "
+        "libres au moment le plus chargé de la journée ?"
+        if suffisant else
+        "En tenant compte du chevauchement exceptionnel de midi, combien de casiers "
+        "supplémentaires faut-il pour accueillir tous les élèves au moment le plus chargé ?"
+    )
 
 
 def generer_modele_p7_casiers():
@@ -3272,22 +3302,20 @@ def generer_modele_p7_casiers():
     utilisables = maximum + ecart if suffisant else maximum - ecart
     hors_service = random.randint(3, 13)
     total_casiers = utilisables + hors_service
-    q4 = (
-        "Combien de casiers resteront libres au moment où il y a le plus d'élèves dans le gymnase ?"
-        if suffisant else
-        "Combien de casiers supplémentaires faut-il au moment où il y a le plus d'élèves dans le gymnase ?"
-    )
+    q4 = _mc_libelle_question_finale_casiers(suffisant)
     texte_equipes = "équipe du matin reste" if equipes_restant == 1 else "équipes du matin restent"
     texte_groupes = "groupe de l'après-midi arrive" if groupes_avance == 1 else "groupes de l'après-midi arrivent"
     enonce = (
         "**Les casiers du gymnase**\n\n"
-        "Chaque élève utilise un casier. Le matin et l'après-midi, les groupes se succèdent, "
-        "mais à midi une partie des élèves du matin reste pendant que d'autres arrivent.\n\n"
+        "Chaque élève utilise un casier personnel. Le gymnase accueille habituellement "
+        "deux créneaux distincts : un le matin et un l'après-midi.\n\n"
         f"Le matin, {equipes} équipes de {eleves_equipe} élèves fréquentent le gymnase. "
         f"L'après-midi, ce sont {groupes} groupes de {eleves_groupe} élèves.\n\n"
-        f"À midi, **{equipes_restant} {texte_equipes}** et "
-        f"**{groupes_avance} {texte_groupes} en avance**. Les autres élèves ont libéré "
-        "leurs casiers.\n\n"
+        "**Exceptionnellement, au changement de créneau à midi**, "
+        f"**{equipes_restant} {texte_equipes}** et "
+        f"**{groupes_avance} {texte_groupes} en avance**. "
+        "Ces élèves sont présents simultanément et ont tous besoin d'un casier. "
+        "Les autres élèves du matin ont déjà libéré les leurs.\n\n"
         f"Le gymnase possède {total_casiers} casiers, dont {hors_service} hors service.\n\n"
         "**Questions**\n\n"
         "1. Combien d'élèves sont présents le matin ?\n\n"
@@ -3304,8 +3332,8 @@ def generer_modele_p7_casiers():
         f"{total_casiers} − {hors_service} = {utilisables} casiers.\n\n"
         "**4. Effectif maximal à accueillir**\n\n"
         f"Le matin : {matin} élèves ; l'après-midi : {apres_midi} élèves.\n"
-        f"À midi : {equipes_restant} × {eleves_equipe} + "
-        f"{groupes_avance} × {eleves_groupe} = {transition} élèves.\n"
+        f"Au chevauchement exceptionnel de midi : {equipes_restant} × {eleves_equipe} + "
+        f"{groupes_avance} × {eleves_groupe} = {transition} élèves simultanément.\n"
         f"On retient le plus grand de ces trois effectifs : **{maximum} élèves**.\n"
         + (f"Casiers libres : {utilisables} − {maximum} = {ecart}.\n"
            f"**Conclusion :** il restera {ecart} casiers libres." if suffisant else
@@ -7119,10 +7147,7 @@ def _mc_uniformiser_exercice(exercice):
         )]
     if identifiant == "P7-M24":
         regles = [*regles[:-1], (
-            "r4",
-            "Combien de casiers resteront inoccupés pendant le créneau le plus chargé ?"
-            if resultat["mathicap_stock_suffisant"]
-            else "Combien de casiers supplémentaires faut-il pour accueillir tous les élèves du créneau le plus chargé ?",
+            "r4", _mc_libelle_question_finale_casiers(resultat["mathicap_stock_suffisant"]),
         )]
     if identifiant == "P7-M26":
         regles = [*regles[:-1], (
