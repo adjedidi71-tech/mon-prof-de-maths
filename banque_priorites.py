@@ -4166,6 +4166,7 @@ def generer_modele_p8_robotique():
 
         if (
             3 <= manque <= 22
+            and manque % batteries_par_boite != 0
             and 1 <= boites_supplementaires <= 3
         ):
             break
@@ -4382,11 +4383,15 @@ def generer_modele_p8_jeu_piste():
     cout_souvenirs = nb_equipes * prix_souvenir
     somme_necessaire = cout_souvenirs + reserve
 
-    # Génère les deux situations : budget suffisant
-    # ou insuffisant pour les souvenirs et la réserve.
-    # Écart en centimes, assez varié pour éviter trois réponses finales répétitives.
-    amplitude = min(random.randrange(150, 1251, 10), somme_necessaire - 200)
-    variation = random.choice([-1, 1]) * amplitude
+    # Deux situations maintenues : achat possible ou non avec la réserve.
+    # Si non, les souvenirs seuls restent finançables : c'est bien la
+    # réserve qui interdit l'achat, pas un manque antérieur de budget.
+    # Si oui, le montant au-delà de la réserve demeure varié.
+    if random.choice([True, False]):
+        variation = random.randrange(150, 1251, 10)
+    else:
+        # reserve >= 400 centimes : au moins 1 € reste après les souvenirs.
+        variation = -random.randrange(100, reserve, 10)
 
     argent_disponible = somme_necessaire + variation
     budget = depenses + argent_disponible
