@@ -2744,6 +2744,19 @@ def generer_modele_p7_plantations():
 # ================================================================
 
 
+def _mc_question_finale_echecs(solde_positif):
+    """Précise les recettes et le fonds initial dans la question de bilan."""
+    if solde_positif:
+        return (
+            "En tenant compte de la caisse initiale et des recettes des inscriptions, "
+            "combien d'euros restera-t-il au club après les dépenses du tournoi ?"
+        )
+    return (
+        "En tenant compte de la caisse initiale et des recettes des inscriptions, "
+        "combien d'euros manquera-t-il au club pour payer les dépenses du tournoi ?"
+    )
+
+
 def generer_modele_p7_echecs():
     """Compter des rencontres sans compter deux fois chaque paire."""
     while True:
@@ -2759,11 +2772,7 @@ def generer_modele_p7_echecs():
         solde = fonds_club + recettes - couts
         if 15 <= abs(solde) <= 240:
             break
-    question_finale = (
-        "Combien d'euros restera-t-il au club après les dépenses du tournoi ?"
-        if solde > 0 else
-        "Combien d'euros manque-t-il au club pour payer toutes les dépenses du tournoi ?"
-    )
+    question_finale = _mc_question_finale_echecs(solde > 0)
     enonce = (
         "**Le tournoi d'échecs**\n\n"
         f"Un club organise un tournoi avec {joueurs} joueurs. "
@@ -3325,7 +3334,9 @@ def generer_modele_p7_casiers():
         apres_midi = groupes * eleves_groupe
         transition = equipes_restant * eleves_equipe + groupes_avance * eleves_groupe
         maximum = max(matin, apres_midi, transition)
-        if matin != apres_midi and (transition > max(matin, apres_midi)) == pic_chevauchement:
+        # Évite les ex aequo qui neutralisent le raisonnement sur midi.
+        if (len({matin, apres_midi, transition}) == 3
+                and (transition > max(matin, apres_midi)) == pic_chevauchement):
             break
     else:
         raise ValueError("Aucun créneau de gymnase cohérent")
@@ -4174,7 +4185,7 @@ def generer_modele_p8_robotique():
         "pour fonctionner.\n\n"
 
         f"De plus, chaque équipe doit disposer de "
-        f"{batteries_reserve} batteries de réserve.\n\n"
+        f"{batteries_reserve} batterie{'s' if batteries_reserve != 1 else ''} de réserve.\n\n"
 
         "Le club possède déjà :\n"
         f"- {stock_initial} batteries en stock ;\n"
@@ -5529,7 +5540,12 @@ def generer_modele_p9_potager(seed=None):
 
         ecart = abs(cout_a - cout_b)
 
-        if 10 <= ecart <= 125 and plants_a != plants_b:
+        # Les projets doivent présenter un vrai arbitrage entre plants et matériel.
+        # Rejette tout tirage où un seul projet est moins cher sur les deux postes.
+        cout_plants_a = quantite_a * prix_a
+        cout_plants_b = quantite_b * prix_b
+        arbitrage_reel = (cout_plants_a - cout_plants_b) * (materiel_a - materiel_b) < 0
+        if 10 <= ecart <= 125 and plants_a != plants_b and arbitrage_reel:
             break
 
     budget = max(cout_a, cout_b) + rng.randint(20, 70)
@@ -6860,7 +6876,7 @@ REGLES = {
         ("r1", "Combien d'adversaires chaque joueur rencontrera-t-il ?"),
         ("r2", "Combien de parties seront jouées au total, sans compter deux fois la même partie ?"),
         ("r3", "Combien d'euros les inscriptions rapporteront-elles au club ?"),
-        ("r4", "Quel est l'écart entre les ressources et les dépenses du tournoi ?"),
+        ("r4", "En tenant compte de la caisse initiale et des recettes des inscriptions, quel est l'écart entre les ressources et les dépenses du tournoi ?"),
     ],
     "P7-M18": [
         ("r1", "Quelle est la surface totale des panneaux, en m² ?"),
@@ -6950,7 +6966,7 @@ REGLES = {
         ("r2", "Combien coûtent tous les achats obligatoires ?"),
         ("r3", "Combien d'argent reste-t-il après ces achats ?"),
         ("r4", "Combien coûteraient tous les souvenirs supplémentaires ?"),
-        ("r6", "Quelle est la différence entre le budget disponible et la somme nécessaire pour les souvenirs et la réserve minimale ?"),
+        ("r6", "Après les achats obligatoires, quel est l'écart entre l'argent restant et la somme nécessaire pour acheter les souvenirs tout en conservant la réserve minimale ?"),
     ],
     "P8-M06": [
         ("r1", "Combien coûte le matériel nécessaire pour une équipe ?"),
@@ -7005,8 +7021,8 @@ REGLES = {
     "P9-M03": [
         ("r1", "Combien de personnes participent à la sortie au festival ?"),
         ("r3", "Quel est le coût commun des entrées et des repas ?"),
-        ("r4", "Quel est le coût total du voyage avec la formule A ?"),
-        ("r5", "Quel est le coût total du voyage avec la formule B ?"),
+        ("r4", "Quel est le coût total avec la formule A, transport, entrées et repas compris ?"),
+        ("r5", "Quel est le coût total avec la formule B, transport, entrées et repas compris ?"),
         ("r7", "Combien économise-t-on en choisissant la formule la moins chère ?"),
     ],
     "P9-M04": [
@@ -7019,7 +7035,7 @@ REGLES = {
     "P9-M05": [
         ("r1", "Combien de mangas contiennent tous les colis reçus ?"),
         ("r2", "Combien de mangas ont été prêtés au total aux classes ?"),
-        ("r3", "Quelle est l'ampleur de la variation du nombre de mangas sur les étagères pendant la semaine ?"),
+        ("r3", "Quelle est la variation signée du nombre de mangas sur les étagères pendant la semaine (positive si augmentation, négative si diminution, nulle si aucun changement) ?"),
         ("r4", "Combien de mangas la bibliothèque possédait-elle avant tous ces mouvements ?"),
         ("r5", "Combien de mangas seront présents quand les classes auront rendu leurs emprunts ?"),
     ],
@@ -7191,10 +7207,7 @@ def _mc_uniformiser_exercice(exercice):
         )]
     if identifiant == "P7-M17":
         regles = [*regles[:-1], (
-            "r4",
-            "Combien d'euros restera-t-il au club après les dépenses du tournoi ?"
-            if resultat["mathicap_solde_positif"]
-            else "Combien d'euros manque-t-il au club pour payer toutes les dépenses du tournoi ?",
+            "r4", _mc_question_finale_echecs(resultat["mathicap_solde_positif"]),
         )]
     if identifiant == "P7-M18":
         regles = [*regles[:-1], (
