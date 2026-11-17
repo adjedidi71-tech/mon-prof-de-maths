@@ -2455,9 +2455,32 @@ def generer_modele_p7_robotique():
     robots = min(moteurs_utilisables // 2, batteries_utilisables // 3)
     manque_moteurs = max(0, 2 * objectif - moteurs_utilisables)
     manque_batteries = max(0, 3 * objectif - batteries_utilisables)
+    robots_restants = objectif - robots
+    moteurs_restants = moteurs_utilisables - 2 * robots
+    batteries_restantes = batteries_utilisables - 3 * robots
+    besoin_moteurs_restants = 2 * robots_restants
+    besoin_batteries_restantes = 3 * robots_restants
+    assert max(0, besoin_moteurs_restants - moteurs_restants) == manque_moteurs
+    assert max(0, besoin_batteries_restantes - batteries_restantes) == manque_batteries
     assert (manque_moteurs > 0) != (manque_batteries > 0)
     assert manque_moteurs + manque_batteries == manque
     assert robots < objectif
+    texte_moteurs_a_acheter = (
+        f"- Moteurs : {besoin_moteurs_restants} nécessaires, {moteurs_restants} disponibles. "
+        f"Il manque {besoin_moteurs_restants} − {moteurs_restants} = "
+        f"**{manque_moteurs} moteurs**.\n"
+        if manque_moteurs else
+        f"- Moteurs : {besoin_moteurs_restants} nécessaires, {moteurs_restants} disponibles. "
+        "Il n'en manque aucun.\n"
+    )
+    texte_batteries_a_acheter = (
+        f"- Batteries : {besoin_batteries_restantes} nécessaires, {batteries_restantes} disponibles. "
+        f"Il manque {besoin_batteries_restantes} − {batteries_restantes} = "
+        f"**{manque_batteries} batteries**.\n"
+        if manque_batteries else
+        f"- Batteries : {besoin_batteries_restantes} nécessaires, {batteries_restantes} disponibles. "
+        "Il n'en manque aucune.\n"
+    )
 
     enonce = (
         "**Le club de robotique**\n\n"
@@ -2485,12 +2508,23 @@ def generer_modele_p7_robotique():
         f"Avec les batteries : {batteries_utilisables} ÷ 3, soit "
         f"{batteries_utilisables // 3} robots complets.\n"
         f"On retient le plus petit nombre : {robots} robots.\n\n"
-        "**4. Matériel manquant pour l'objectif**\n\n"
-        f"Pour {objectif} robots, il faut {2 * objectif} moteurs et "
-        f"{3 * objectif} batteries.\n"
-        f"Moteurs manquants : {manque_moteurs}. "
-        f"Batteries manquantes : {manque_batteries}.\n"
-        f"Il faut donc **{manque} {type_manquant} supplémentaires**."
+        "**4. Matériel manquant pour atteindre l'objectif**\n\n"
+        f"Le club peut assembler {robots} robots, mais souhaite en fabriquer "
+        f"{objectif}. Il manque donc {objectif} − {robots} = "
+        f"**{robots_restants} robots** à fabriquer.\n\n"
+        "Après fabrication des robots possibles avec le stock actuel :\n"
+        f"- Moteurs restants : {moteurs_utilisables} − "
+        f"({robots} × 2) = {moteurs_restants} moteurs.\n"
+        f"- Batteries restantes : {batteries_utilisables} − "
+        f"({robots} × 3) = {batteries_restantes} batteries.\n\n"
+        f"Pour les {robots_restants} robots encore à fabriquer, il faut "
+        f"{robots_restants} × 2 = {besoin_moteurs_restants} moteurs et "
+        f"{robots_restants} × 3 = {besoin_batteries_restantes} batteries.\n\n"
+        + texte_moteurs_a_acheter
+        + texte_batteries_a_acheter
+        + "\n"
+        f"**Conclusion : il faut acheter {manque} {type_manquant} "
+        "supplémentaires.**"
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M13", "titre": "Le club de robotique",
