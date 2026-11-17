@@ -12,6 +12,7 @@ Modèles actifs du chapitre : 26 au niveau 7, 10 aux niveaux 8 et 9.
 from copy import deepcopy
 import random
 import re
+import math
 
 
 BANQUE_PRIORITES = {
@@ -1160,6 +1161,10 @@ def generer_modele_p7_patisserie():
 
     total = plateaux * par_plateau
     disponibles = total - reserves
+    # Maintenir une vraie question sur les biscuits hors sachets.
+    if disponibles % par_sachet == 0:
+        reserves += 1
+        disponibles -= 1
     sachets, reste = divmod(disponibles, par_sachet)
     recette = sachets * prix_sachet
     benefice = recette - cout_ingredients
@@ -1286,11 +1291,11 @@ def generer_modele_p7_enigmes():
         "**Équipe A :**\n"
         f"- {faciles_a} énigmes faciles résolues ;\n"
         f"- {difficiles_a} énigmes difficiles résolues ;\n"
-        f"- {indices_a} indices utilisés.\n\n"
+        f"- {indices_a} indice{' utilisé' if indices_a == 1 else 's utilisés'}.\n\n"
         "**Équipe B :**\n"
         f"- {faciles_b} énigmes faciles résolues ;\n"
         f"- {difficiles_b} énigmes difficiles résolues ;\n"
-        f"- {indices_b} indices utilisés.\n\n"
+        f"- {indices_b} indice{' utilisé' if indices_b == 1 else 's utilisés'}.\n\n"
         "**Questions**\n\n"
         "1. Calcule le score final de l'équipe A.\n\n"
         "2. Calcule le score final de l'équipe B.\n\n"
@@ -1504,7 +1509,7 @@ def generer_modele_p7_velo():
     distance_collective = nb_cyclistes * distance_individuelle
 
     quotient_voulu = random.randint(1, 4)
-    reste_voulu = random.randint(0, petit_tour - 1)
+    reste_voulu = random.randint(1, petit_tour - 1)
     manque_par_cycliste = quotient_voulu * petit_tour + reste_voulu
     manque_collectif = nb_cyclistes * manque_par_cycliste
     objectif_collectif = distance_collective + manque_collectif
@@ -1748,7 +1753,8 @@ def generer_modele_p7_cartes():
     capacite_album = random.choice(capacites_valides)
     emplacements_vides = capacite_album - total_collection
 
-    cartes_par_lot = random.choice([5, 6, 8, 10, 12])
+    cartes_par_lot = random.choice([n for n in (5, 6, 8, 10, 12)
+                                    if emplacements_vides % n != 0])
     quotient, reste = divmod(emplacements_vides, cartes_par_lot)
     lots_necessaires = quotient + (1 if reste else 0)
 
@@ -2694,6 +2700,12 @@ def generer_modele_p7_plantations():
         sachets += 1
         graines_disponibles = stock_initial + sachets * graines_par_sachet
     graines_restantes = graines_disponibles - graines_total
+    # Un partage exact rendrait la limitation du nombre de planches latente.
+    # Le changement de stock d'une graine maintient la même structure pédagogique.
+    if graines_restantes % graines_planche == 0:
+        stock_initial += 1
+        graines_disponibles += 1
+        graines_restantes += 1
     planches_supp = graines_restantes // graines_planche
     enonce = (
         "**Les plantations du collège**\n\n"
@@ -2843,7 +2855,7 @@ def generer_modele_p7_fresque():
         cout = pots * prix_pot
         ecart = random.randint(17, 165)
         budget = cout + ecart if random.choice((True, False)) else cout - ecart
-        if 4 <= pots <= 18 and budget >= 65:
+        if 4 <= pots <= 18 and budget >= 65 and surface_peindre % couverture != 0:
             break
     manque = budget < cout
     question_finale = (
@@ -3115,7 +3127,7 @@ def generer_modele_p7_defi_lecture():
     total_prevu = lecture_initiale + lecture_prevue
     bonus_par_jour = random.randint(2, 15)
     jours_eleves = eleves * jours
-    supplement = (bonus_par_jour - 1) * jours_eleves + random.randint(1, jours_eleves)
+    supplement = (bonus_par_jour - 1) * jours_eleves + random.randint(1, jours_eleves - 1)
     objectif = total_prevu + supplement
     quotidien, reste_jours = divmod(supplement, jours)
     quotidien_minimum = quotidien + int(reste_jours > 0)
@@ -3196,7 +3208,8 @@ def generer_modele_p7_couture():
         noeuds_pleine, petite_chute_pleine = divmod(chute_pleine, longueur_noeud)
         noeuds_dernier, petite_chute_derniere = divmod(chute_dernier, longueur_noeud)
         noeuds = (rouleaux - 1) * noeuds_pleine + noeuds_dernier
-        if 2 <= rouleaux <= 18 and 3 <= noeuds <= 65:
+        if (2 <= rouleaux <= 18 and 3 <= noeuds <= 65
+                and reste_fanions != 0 and 1 <= noeuds_dernier <= 20):
             break
     else:
         raise ValueError("Aucune situation cohérente pour les fanions")
@@ -3300,6 +3313,14 @@ def generer_modele_p7_couture():
     return _mc_uniformiser_exercice({
         "id": "P7-M23", "titre": "Les fanions du club de couture", "enonce": enonce,
         "correction": correction, "reponse_attendue": None,
+        "mathicap_decoupe_v3": {
+            "fanions_dernier": fanions_dernier,
+            "ruban_un": ruban_un,
+            "longueur_rouleau_cm": longueur_rouleau_cm,
+            "longueur_noeud": longueur_noeud,
+            "noeuds_dernier": noeuds_dernier,
+            "chute_dernier": chute_dernier,
+        },
         "champs_reponse": [
             {"id": "r1", "question": 1, "libelle": "Ruban pour un fanion", "type": "nombre", "attendu": ruban_un, "unite": "cm"},
             {"id": "r2", "question": 2, "libelle": "Ruban total", "type": "nombre", "attendu": ruban_total, "unite": "cm"},
@@ -3312,10 +3333,10 @@ def generer_modele_p7_couture():
 def _mc_libelle_question_finale_casiers(suffisant):
     """Formulation unique de Q4, utilisée aussi après uniformisation des questions."""
     return (
-        "En tenant compte du chevauchement exceptionnel de midi, combien de casiers resteront "
+        "En comparant les effectifs du matin, du midi et de l'après-midi, combien de casiers resteront "
         "libres au moment le plus chargé de la journée ?"
         if suffisant else
-        "En tenant compte du chevauchement exceptionnel de midi, combien de casiers "
+        "En comparant les effectifs du matin, du midi et de l'après-midi, combien de casiers "
         "supplémentaires faut-il pour accueillir tous les élèves au moment le plus chargé ?"
     )
 
@@ -5375,7 +5396,7 @@ def generer_modele_p8_transport(seed=None):
         f"Le collège doit transporter du matériel pour {evenement}.\n\n"
         f"Le lieu de l'événement se trouve à {distance_aller} km du collège. "
         "Le véhicule fait l'aller-retour par le même trajet, "
-        f"mais il doit effectuer un détour supplémentaire de "
+        "mais, sur l'ensemble de l'aller-retour, un seul détour ajoute "
         f"{distance_detour} km pour récupérer des accessoires.\n\n"
         "Deux entreprises proposent de louer un véhicule. "
         "Les tarifs comprennent tout le transport.\n\n"
@@ -5644,8 +5665,12 @@ def generer_modele_p9_tournoi(seed=None):
 
         location_a = rng.randint(30, 75)
         location_b = rng.randint(60, 110)
-        fournitures_a = rng.randint(1, 3)
-        fournitures_b = rng.randint(1, 3)
+        # Compromis réel : A moins cher en fixe, B moins cher par joueur.
+        fournitures_a = rng.choice([2, 3])
+        fournitures_b = 1
+        if not (location_a < location_b and
+                24 <= (location_b - location_a) / (fournitures_a - fournitures_b) <= 42):
+            continue
 
         recettes = joueurs * entree + sponsor
         depenses_a = prix + location_a + joueurs * fournitures_a
@@ -6174,7 +6199,8 @@ def generer_modele_p9_spectacle(seed=None):
         recettes = billets_eleves * tarif_eleve + billets_adultes * tarif_adulte
         depenses = technique + billets_vendus * programme
         benefice = recettes - depenses
-        if billets_vendus <= places_disponibles and 80 <= benefice <= 700:
+        if (2 <= places_disponibles - billets_vendus <= 35
+                and 80 <= benefice <= 700):
             break
 
     objectif = benefice + rng.choice([-35, -20, 20, 35])
@@ -6189,7 +6215,12 @@ def generer_modele_p9_spectacle(seed=None):
             "élèves supplémentaires pour l'atteindre."
         )
     else:
-        montant_a_financer = rng.choice([12, 18, 24, 30])
+        # Scénarios situés de part et d'autre de la capacité disponible.
+        # L'élève doit vérifier la faisabilité, pas seulement arrondir.
+        places_libres = places_disponibles - billets_vendus
+        gain_net = tarif_eleve - programme
+        billets_vises = max(1, places_libres + rng.choice([-4, -3, 2, 3]))
+        montant_a_financer = (billets_vises - 1) * gain_net + rng.randint(1, gain_net)
         situation_q7 = (
             f"Le collège a déjà atteint son objectif de {objectif} €. "
             f"Il souhaite maintenant augmenter encore son bénéfice "
@@ -6337,16 +6368,17 @@ def generer_modele_p9_recyclage(seed=None):
         if c != capacite
     ])
 
-    prix_a = rng.randint(6, 13)
+    # Si B contient plus de matériaux, sa location unitaire est plus chère,
+    # et réciproquement : aucune offre ne domine trivialement l'autre.
+    prix_a = rng.randint(8, 13)
     total_b = (masse_valide + capacite_b - 1) // capacite_b
-
     cout_a = total_contenants * prix_a
-
-    # Empêcher une égalité entre les coûts
-    prix_b = rng.choice([
-        p for p in range(7, 19)
-        if total_b * p != cout_a
-    ])
+    if capacite_b > capacite:
+        choix_prix_b = range(prix_a + 1, 20)
+    else:
+        choix_prix_b = range(5, prix_a)
+    candidats = [p for p in choix_prix_b if total_b * p != cout_a]
+    prix_b = rng.choice(candidats)
 
     cout_b = total_b * prix_b
 
@@ -6608,11 +6640,14 @@ def generer_modele_p9_drones(seed=None):
         "Chaque drone nécessite un châssis, 4 hélices et 2 batteries.\n\n"
         f"Le club possède {chassis} châssis. Il reçoit {sachets_helices} "
         f"sachets de {helices_par_sachet} hélices, mais "
-        f"{helices_abimees} hélices sont inutilisables.\n\n"
-        f"Il reçoit aussi {boites_batteries} boîtes de "
-        f"{batteries_par_boite} batteries, dont {batteries_hs} "
-        "batteries défectueuses au total.\n\n"
-        f"L'objectif est de fabriquer **{objectif} drones complets**.\n\n"
+        + ("aucune hélice n'est inutilisable.\n\n" if helices_abimees == 0
+           else f"{helices_abimees} hélices sont inutilisables.\n\n")
+        + f"Il reçoit aussi {boites_batteries} boîtes de "
+        f"{batteries_par_boite} batteries, dont "
+        + ("aucune n'est défectueuse.\n\n" if batteries_hs == 0
+           else f"{batteries_hs} batterie{' est' if batteries_hs == 1 else 's sont'} "
+                f"défectueuse{' ' if batteries_hs == 1 else 's '}au total.\n\n")
+        + f"L'objectif est de fabriquer **{objectif} drones complets**.\n\n"
         "**Questions**\n\n"
         "1. Combien d'hélices utilisables reste-t-il ?\n\n"
         "2. Combien de batteries utilisables reste-t-il ?\n\n"
@@ -6686,7 +6721,9 @@ def generer_modele_p9_mosaique(seed=None):
         cout_a = boites_a * prix_a
         cout_b = boites_b * prix_b
         ecart = abs(cout_a - cout_b)
-        if 5 <= ecart <= 120:
+        surplus_optimal = (boites_a*paquet_a-besoin if cout_a < cout_b
+                           else boites_b*paquet_b-besoin)
+        if 5 <= ecart <= 120 and prix_a < prix_b and surplus_optimal > 0:
             break
     choix = "A" if cout_a < cout_b else "B"
     surplus = (
@@ -6992,7 +7029,7 @@ REGLES = {
         ("r2", "Quelle distance est parcourue pendant tous les tours ?"),
         ("r3", "Combien de minutes les élèves passent-ils à marcher ?"),
         ("r4", "Quelle est la durée totale, pauses comprises ?"),
-        ("r6", "En effectuant également le détour d’observation, quel est l’écart en minutes entre la durée réelle et la limite autorisée ?"),
+        ("r6", "En effectuant également le détour d’observation, quelle est la valeur absolue de la différence, en minutes, entre la durée réelle et la limite autorisée ?"),
     ],
     "P8-M09": [
         ("r1", "Quel volume de boisson est obtenu avec une seule préparation, en cL ?"),
@@ -7031,7 +7068,7 @@ REGLES = {
         ("r7", "Combien économise-t-on en choisissant la formule la moins chère ?"),
     ],
     "P9-M04": [
-        ("r1", "Combien de cristaux l'aventurier gagne-t-il pendant les missions, bonus compris ?"),
+        ("r1", "Combien de cristaux le joueur gagne-t-il pendant les missions, bonus compris ?"),
         ("r2", "Combien de cristaux possède-t-il après le piège, avant les achats ?"),
         ("r3", "Combien d'équipements peut-il acheter au maximum en conservant sa réserve ?"),
         ("r4", "Combien de cristaux lui restera-t-il après ces achats ?"),
@@ -7106,13 +7143,13 @@ _CATEGORIES_PAR_MODELE = {
     "P7-M21": "Q Q L L",
     "P7-M22": "Q Q Q L", "P7-M23": "Q Q L L",
     "P7-M24": "Q Q Q L", "P7-M25": "D D D D", "P7-M26": "Q Q L B",
-    "P8-M01": "B B B B L", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
-    "P8-M04": "Q Q L B R", "P8-M05": "L B B B R", "P8-M06": "B B B C R",
-    "P8-M07": "D Q Q R R", "P8-M08": "D D D D R", "P8-M09": "Q Q L R L",
+    "P8-M01": "B B B B B", "P8-M02": "Q Q L R L", "P8-M03": "Q Q Q C R",
+    "P8-M04": "Q Q L B R", "P8-M05": "L B B B R", "P8-M06": "B B B C B",
+    "P8-M07": "D Q Q R L", "P8-M08": "D D D D L", "P8-M09": "Q Q L R L",
     "P8-M10": "D B B C R",
     "P9-M01": "Q Q B B B", "P9-M02": "B B B R B", "P9-M03": "Q B B B R",
     "P9-M04": "Q Q L R L", "P9-M05": "Q Q R Q Q", "P9-M06": "Q B B B L",
-    "P9-M07": "Q Q B B R", "P9-M08": "Q Q B B C", "P9-M09": "Q Q L R R",
+    "P9-M07": "Q Q B B B", "P9-M08": "Q Q B B C", "P9-M09": "Q Q L R B",
     "P9-M10": "Q B B R R",
 }
 
@@ -7173,6 +7210,435 @@ def _formater_reponse(champ):
     return f"{nombre} {unite}" if unite else nombre
 
 
+
+
+# ================================================================
+# MATHICAP V3 — DIFFICULTÉ OBSERVABLE ET ÉNONCÉS COHÉRENTS
+# Les identifiants sont conservés pour la reprise des séries et les
+# variantes ; les exercices déjà enregistrés ne sont pas recalculés.
+# Les défis ci-dessous sont dérivés des paramètres du tirage réel.
+# ================================================================
+
+def _mc_v3_champ(identifiant, valeur, libelle, unite):
+    return {"id": identifiant, "type": "nombre", "attendu": valeur,
+            "libelle": libelle, "unite": unite}
+
+
+def _mc_v3_extraire(pattern, texte, contexte):
+    match = re.search(pattern, texte, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        raise ValueError("Donnée manquante pour " + contexte)
+    return match
+
+
+def _mc_v3_preparer(exercice, par_id, regles, blocs):
+    """Révise le défi final sans changer le contrat d'API ni les anciens IDs.
+
+    Chaque défi expose toutes les données nécessaires. La réponse attendue est
+    recomputée indépendamment à partir des paramètres réellement tirés.
+    """
+    identifiant = exercice["id"]
+    avant = blocs[0]
+    original = blocs[1]
+    contexte = ""
+    calcul = ""
+
+    if identifiant == "P9-M06":
+        benefice = par_id["r5"]["attendu"]
+        objectif = int(_mc_v3_extraire(r"bénéfice d'au moins\s+(\d+)\s*€", avant, identifiant).group(1))
+        if benefice >= objectif:
+            complement = int(_mc_v3_extraire(r"augmenter encore son bénéfice\s+d'au moins\s+(\d+)\s*€", original, identifiant).group(1))
+            cible = benefice + complement
+            contexte = (f"\n\n**Nouveau défi :** l'objectif initial est déjà atteint. "
+                        f"Le collège veut augmenter son bénéfice actuel d'au moins {complement} € "
+                        "en vendant davantage de billets élèves. Chaque nouveau spectateur "
+                        "reçoit un programme imprimé au prix déjà indiqué.\n\n")
+        else:
+            cible = objectif
+            contexte = ("\n\n**Nouveau défi :** le collège vendrait des billets élèves "
+                        "supplémentaires pour atteindre son objectif initial. "
+                        "Chaque nouveau spectateur reçoit un programme imprimé "
+                        "au prix déjà indiqué.\n\n")
+        tarif = int(_mc_v3_extraire(r"billets élèves à\s+(\d+)\s*€", avant, identifiant).group(1))
+        cout_prog = int(_mc_v3_extraire(r"coût de\s+(\d+)\s*€\s+par programme", avant, identifiant).group(1))
+        places = _mc_v3_extraire(r"possède\s+(\d+)\s+rangées de\s+(\d+)\s+places\.\s+(\d+)\s+places sont réservées", avant, identifiant)
+        capacity = int(places.group(1))*int(places.group(2))-int(places.group(3))
+        nb_vendus = par_id["r2"]["attendu"]
+        missing = max(0,cible-benefice)
+        gain = tarif-cout_prog
+        nb_supp = (missing+gain-1)//gain
+        bilan_places = capacity-nb_vendus-nb_supp
+        par_id["mc_v3_q5"] = _mc_v3_champ("mc_v3_q5", bilan_places,"Solde projeté de places", "places")
+        regles = [*regles[:-1],("mc_v3_q5", "Après la vente du plus petit nombre de billets élèves nécessaires pour cet objectif, quel serait le solde de places de la salle ? Indique un nombre positif s'il reste des places, 0 si elle est remplie, ou un nombre négatif s'il manquerait des places (vente alors impossible).")]
+        calcul = ("**Nouveau défi — places :** "
+                  f"bénéfice supplémentaire {missing} € ; gain net par nouveau billet "
+                  f"{tarif} − {cout_prog} = {gain} € ; "
+                  f"minimum de billets {missing} ÷ {gain} arrondi au supérieur = {nb_supp}. "
+                  f"Places vendables : {capacity} ; déjà vendues : {nb_vendus}. "
+                  f"Solde théorique = {capacity} − {nb_vendus} − {nb_supp} = **{bilan_places} places**.\n\n")
+
+    elif identifiant == "P9-M09":
+        helices = par_id["r1"]["attendu"]
+        batteries = par_id["r2"]["attendu"]
+        chassis = int(_mc_v3_extraire(r"possède\s+(\d+)\s+châssis", avant, identifiant).group(1))
+        # On construit une situation où les DEUX ressources consommables sont
+        # réellement limitantes ; on élimine ainsi le risque d'un Q5 trivial.
+        cible = max(chassis, helices//4, batteries//2)+2
+        gratuits = cible-chassis
+        manque_hel = max(0,4*cible-helices)
+        manque_bat = max(0,2*cible-batteries)
+        taille_hel = next((v for v in (6,8,10) if manque_hel % v != 0),6)
+        taille_bat = next((v for v in (3,4,5) if manque_bat % v != 0),3)
+        prix_hel = 7+chassis%3
+        prix_bat = 5+helices%4
+        n_hel = (manque_hel+taille_hel-1)//taille_hel
+        n_bat = (manque_bat+taille_bat-1)//taille_bat
+        depense = n_hel*prix_hel+n_bat*prix_bat
+        contexte = (f"\n\n**Nouveau défi :** le club souhaite désormais pouvoir construire "
+                    f"{cible} drones au total. Un partenaire offre gratuitement {gratuits} châssis. "
+                    f"Il est possible d'acheter des hélices par sachets entiers de "
+                    f"{taille_hel}, à {prix_hel} € le sachet, et des batteries par "
+                    f"boîtes entières de {taille_bat}, à {prix_bat} € la boîte. "
+                    "Les pièces déjà disponibles sont utilisables pour ce nouvel objectif.\n\n")
+        par_id["mc_v3_q5"] = _mc_v3_champ("mc_v3_q5",depense,"Coût minimal de composants", "€")
+        regles = [*regles[:-1],("mc_v3_q5",f"Quel est le coût minimal des hélices et batteries supplémentaires à acheter pour fabriquer {cible} drones, compte tenu des châssis offerts et du matériel initial ?")]
+        calcul = ("**Nouveau défi — achats :** "
+                  f"hélices manquantes : 4 × {cible} − {helices} = {manque_hel} ; "
+                  f"{n_hel} sachet(s) de {taille_hel} hélices. "
+                  f"Batteries manquantes : 2 × {cible} − {batteries} = {manque_bat} ; "
+                  f"{n_bat} boîte(s) de {taille_bat} batteries. "
+                  f"Coût total : {n_hel} × {prix_hel} + {n_bat} × {prix_bat} "
+                  f"= **{depense} €**.\n\n")
+
+    elif identifiant == "P9-M02":
+        objectif = int(_mc_v3_extraire(r"bénéfice d'au moins\s+(\d+)\s*€", original, identifiant).group(1))
+        benefice_a = par_id["r4"]["attendu"]
+        benefice_b = par_id["r5"]["attendu"]
+        moins_rentable = "A" if benefice_a < benefice_b else "B"
+        location_var = _mc_v3_extraire(rf"Organisateur {moins_rentable}\s+— Proposition.*?Fournitures\s*:\s*(\d+)\s*€\s*par joueur", avant, identifiant)
+        variable = int(location_var.group(1))
+        entree = int(_mc_v3_extraire(r"versent chacun\s*\*\*(\d+)\s*€", avant, identifiant).group(1))
+        gain_nouveau = entree-variable
+        manque = objectif-min(benefice_a,benefice_b)
+        nouveaux = (manque+gain_nouveau-1)//gain_nouveau
+        contexte = (f"\n\n**Nouveau défi :** le collège s'est fixé un bénéfice minimal "
+                    f"de {objectif} €. Imagine qu'il retienne malgré tout "
+                    f"l'organisateur {moins_rentable}, le moins rentable pour "
+                    "le nombre actuel de joueurs. De nouveaux joueurs pourraient "
+                    "s'inscrire au même tarif ; chaque nouveau joueur engendrerait "
+                    "aussi le coût de fournitures prévu par cet organisateur. "
+                    "Les récompenses et la location ne changeraient pas.\n\n")
+        par_id["mc_v3_q5"] = _mc_v3_champ("mc_v3_q5",nouveaux,"Inscriptions supplémentaires nécessaires", "joueurs")
+        regles = [*regles[:-1],("mc_v3_q5","Combien de joueurs supplémentaires devraient s'inscrire au minimum pour atteindre le bénéfice minimal souhaité avec cet organisateur ?")]
+        calcul = ("**Nouveau défi — inscriptions :** "
+                  f"bénéfice de {moins_rentable} : {min(benefice_a,benefice_b)} € ; "
+                  f"objectif {objectif} € ; manque {manque} €. "
+                  f"Chaque nouvel élève rapporte net {entree} − {variable} = "
+                  f"{gain_nouveau} €. Il faut **{nouveaux} inscriptions** au minimum.\n\n")
+
+    elif identifiant == "P9-M03":
+        personnes=par_id["r1"]["attendu"]
+        couta=par_id["r4"]["attendu"]
+        coutb=par_id["r5"]["attendu"]
+        frais=_mc_v3_extraire(r"Chaque personne paie\s+(\d+)\s*€ d'entrée.*?et\s+(\d+)\s*€ pour le repas", avant, identifiant)
+        commun=int(frais.group(1))+int(frais.group(2))
+        prix_b=int(_mc_v3_extraire(r"\*\*Transport B\*\*.*?-\s*(\d+)\s*€ par personne transportée", avant, identifiant).group(1))
+        nouveaux=3+personnes%5
+        nouveau_a=couta+nouveaux*commun
+        nouveau_b=coutb+nouveaux*(commun+prix_b)
+        economie=abs(nouveau_a-nouveau_b)
+        if economie == 0:
+            # Écarter le cas où la comparaison finale ne distingue pas les choix.
+            nouveaux += 1
+            nouveau_a=couta+nouveaux*commun
+            nouveau_b=coutb+nouveaux*(commun+prix_b)
+            economie=abs(nouveau_a-nouveau_b)
+        contexte=(f"\n\n**Nouveau défi :** {nouveaux} personnes supplémentaires "
+                  "rejoignent la sortie. Le nombre de kilomètres, les frais fixes, "
+                  "les prix par kilomètre, par personne, les entrées et les repas "
+                  "ne changent pas. Les deux formules restent accessibles.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",economie,"Économie après nouvelles inscriptions", "€")
+        regles=[*regles[:-1],("mc_v3_q5","Avec ces participants supplémentaires, combien d'euros le collège économisera-t-il en retenant la formule de transport globalement la moins chère ?")]
+        calcul=("**Nouveau défi — sortie :** "
+                f"A = {couta} + {nouveaux} × {commun} = {nouveau_a} € ; "
+                f"B = {coutb} + {nouveaux} × ({commun} + {prix_b}) = {nouveau_b} €. "
+                f"Économie : **{economie} €**.\n\n")
+
+    elif identifiant == "P8-M03":
+        # Nouvelle condition après Q4 : refaire la comparaison au lieu de
+        # se contenter de soustraire deux résultats déjà fournis.
+        solde_a=par_id["r2"]["attendu"]
+        solde_b=par_id["r3"]["attendu"]
+        meilleur="A" if solde_a>=solde_b else "B"
+        taxe=6+(int(par_id["r1"]["attendu"])%37)
+        nouveau_a=solde_a-taxe if meilleur=="A" else solde_a
+        nouveau_b=solde_b-taxe if meilleur=="B" else solde_b
+        difference=abs(nouveau_a-nouveau_b)
+        contexte=(f"\n\n**Nouveau défi :** un péage imprévu de {taxe} pièces "
+                  f"est maintenant facturé uniquement sur le chemin {meilleur}, "
+                  "celui qui paraissait le plus rentable auparavant. "
+                  "Les autres gains, achats et pertes restent identiques.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",difference,"Écart après péage", "pièces")
+        regles=[*regles[:-1],("mc_v3_q5","Après ce péage, combien de pièces séparent les deux soldes finaux ? Recalcule le meilleur choix si nécessaire.")]
+        calcul=("**Nouveau défi — chemin et péage :** "
+                f"nouveau solde A {nouveau_a}, nouveau solde B {nouveau_b}. "
+                f"Écart absolu : **{difference} pièces**.\n\n")
+
+    elif identifiant == "P8-M08":
+        tour=par_id["r1"]["attendu"]
+        rythme=int(_mc_v3_extraire(r"allure régulière de (\d+) minutes par kilomètre",avant,identifiant).group(1))
+        pause=int(_mc_v3_extraire(r"font une pause de (\d+) minutes",avant,identifiant).group(1))
+        detour=float(_mc_v3_extraire(r"détour d.observation de (\d+,\d+) km",avant,identifiant).group(1).replace(',','.'))
+        limite=int(_mc_v3_extraire(r"en \*\*(\d+) minutes au maximum",avant,identifiant).group(1))
+        # Le détours se fait une seule fois. Entre n tours, il y a n-1 pauses.
+        max_tours=max(0,int((limite-detour*rythme+pause)//(tour*rythme+pause)))
+        contexte=("\n\n**Nouveau défi :** avant de partir, les élèves souhaitent "
+                  "déterminer le nombre maximal de tours complets qu'ils peuvent "
+                  "effectuer en gardant le détour d'observation, les pauses "
+                  "uniquement entre les tours, et la limite totale annoncée.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",max_tours,"Nombre maximal de tours", "tours")
+        regles=[*regles[:-1],("mc_v3_q5","Combien de tours complets au maximum peuvent-ils prévoir sans dépasser la limite totale de durée, détour et pauses inclus ?")]
+        calcul=("**Nouveau défi — maximum de tours :** "
+                f"un tour dure {tour} × {rythme} = {tour*rythme} min ; "
+                f"un détour dure {detour} × {rythme} = {detour*rythme} min. "
+                f"Pour n tours, durée = n × {tour*rythme} + (n−1) × {pause} "
+                f"+ {detour*rythme} min ; contrainte {limite} min. "
+                f"Maximum entier : **{max_tours} tours**.\n\n")
+
+    elif identifiant == "P8-M01":
+        montant=par_id["r3"]["attendu"]
+        clubs=int(_mc_v3_extraire(r"Les\s+(\d+)\s+clubs",avant,identifiant).group(1))
+        objectif=math.ceil(montant/clubs)+5+(clubs%3)
+        nouvelle_recette=max(0,objectif*clubs-montant)
+        contexte=(f"\n\n**Nouveau défi :** chaque club voudrait finalement "
+                  f"recevoir au moins {objectif} € après le partage, tout en "
+                  "conservant la réserve commune. De nouvelles ventes sont "
+                  "possibles et n'entraînent aucune dépense supplémentaire.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",round(nouvelle_recette,2),"Recettes complémentaires nécessaires", "€")
+        regles=[*regles[:-1],("mc_v3_q5","Combien d'euros de recettes supplémentaires faut-il réaliser au minimum pour que chacun des clubs reçoive le montant souhaité ?")]
+        calcul=("**Nouveau défi — partage :** "
+                f"pour {clubs} clubs il faut {clubs} × {objectif} = {clubs*objectif} € "
+                f"à partager ; le montant initial à partager est {montant} €. "
+                f"Il faut **{nouvelle_recette:.2f} €** supplémentaires.\n\n")
+
+    elif identifiant == "P8-M07":
+        d=_mc_v3_extraire(r"(\d+) robinets sont utilisés chacun (\d+) minutes par jour pendant (\d+) jours", avant,identifiant)
+        robinets,minutes,jours=map(int,d.groups())
+        tarifs=re.findall(r"laisse couler(?: seulement)?\s+(\d+,\d+) litre",avant)
+        if len(tarifs)!=2:raise ValueError("Débits d'eau introuvables")
+        debit1, debit2=[float(v.replace(',','.')) for v in tarifs]
+        gain_par_robinet=minutes*jours*(debit1-debit2)
+        economie=par_id["r4"]["attendu"]
+        besoin=2+robinets%3
+        objectif=round(economie+gain_par_robinet*(besoin-0.25),2)
+        objectif_affiche=f"{objectif:.2f}".replace(".", ",")
+        contexte=(f"\n\n**Nouveau défi :** le collège veut désormais économiser "
+                  f"au moins {objectif_affiche} L sur cette même période. Il peut "
+                  "installer le même économiseur sur de nouveaux robinets identiques, "
+                  "utilisés chacun pendant la même durée, aux mêmes débits "
+                  "avant et après équipement.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",besoin,"Robinets supplémentaires", "robinets")
+        regles=[*regles[:-1],("mc_v3_q5","Quel est le nombre minimal de robinets supplémentaires à équiper pour atteindre le nouvel objectif total d'économie d'eau ?")]
+        calcul=("**Nouveau défi — nouveaux robinets :** "
+                f"gain pour un robinet = {minutes} × {jours} × ({debit1} − {debit2}) "
+                f"= {gain_par_robinet:.2f} L ; déjà économisés {economie} L ; "
+                f"objectif {objectif:.2f} L ; nombre minimal **{besoin} robinets**.\n\n")
+
+    elif identifiant == "P9-M07":
+        masse_kg=par_id["r2"]["attendu"]
+        modif=round(0.5+(int(round(masse_kg*10))%9)*0.2,2)
+        texte=avant
+        offre_a=_mc_v3_extraire(r"\*\*Offre A\*\*.*?au maximum\s+(\d+,\d+)\s+kg.*?Location\s*:\s*(\d+)\s*€",texte,identifiant)
+        offre_b=_mc_v3_extraire(r"\*\*Offre B\*\*.*?au maximum\s+(\d+,\d+)\s+kg.*?Location\s*:\s*(\d+)\s*€",texte,identifiant)
+        cap_a=float(offre_a.group(1).replace(',','.'))
+        cap_b=float(offre_b.group(1).replace(',','.'))
+        tarif_a=int(offre_a.group(2));tarif_b=int(offre_b.group(2))
+        # Entiers en grammes pour éviter les imprécisions de seuil.
+        total_g=int(round((masse_kg+modif)*1000))
+        cout_a=((total_g+int(cap_a*1000)-1)//int(cap_a*1000))*tarif_a
+        cout_b=((total_g+int(cap_b*1000)-1)//int(cap_b*1000))*tarif_b
+        minimum=min(cout_a,cout_b)
+        modif_affiche=f"{modif:.2f}".replace(".", ",")
+        contexte=(f"\n\n**Nouveau défi :** le collège reçoit après le tri "
+                  f"{modif_affiche} kg de matériaux recyclables supplémentaires. "
+                  "Il doit désormais louer assez de conteneurs pour toute la quantité. "
+                  "Chaque conteneur est facturé même s'il n'est pas rempli, "
+                  "et le collège choisit librement l'une des deux offres, sans les mélanger.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",minimum,"Coût optimal après collecte", "€")
+        regles=[*regles[:-1],("mc_v3_q5","Avec cette collecte supplémentaire, quel est le coût TOTAL minimal de location des conteneurs, en comparant les deux offres ?")]
+        calcul=("**Nouveau défi — recalcul des deux offres :** "
+                f"nouveau total {total_g} g ; offre A : {cout_a} € ; "
+                f"offre B : {cout_b} € ; coût minimal **{minimum} €**.\n\n")
+
+    elif identifiant == "P9-M10":
+        besoin=par_id["r1"]["attendu"]
+        offre_a=_mc_v3_extraire(r"\*\*Offre A\*\*.*?(\d+)\s+carreaux par boîte.*?(\d+)\s*€ par boîte",avant,identifiant)
+        offre_b=_mc_v3_extraire(r"\*\*Offre B\*\*.*?(\d+)\s+carreaux par boîte.*?(\d+)\s*€ par boîte",avant,identifiant)
+        qa,pa=map(int,offre_a.groups());qb,pb=map(int,offre_b.groups())
+        ajout=5+besoin%11
+        cible=besoin+ajout
+        na=(cible+qa-1)//qa;nb=(cible+qb-1)//qb
+        ca=na*pa;cb=nb*pb
+        reste=na*qa-cible if ca<=cb else nb*qb-cible
+        if reste == 0:
+            # Une variante exacte ne doit pas supprimer le dernier reste.
+            ajout += 1
+            cible=besoin+ajout
+            na=(cible+qa-1)//qa;nb=(cible+qb-1)//qb
+            ca=na*pa;cb=nb*pb
+            reste=na*qa-cible if ca<=cb else nb*qb-cible
+        contexte=(f"\n\n**Nouveau défi :** {ajout} carreaux supplémentaires "
+                  "s'avèrent nécessaires. Les prix et tailles des boîtes restent "
+                  "identiques. La commande n'a pas encore été passée ; le collège "
+                  "recompare les deux offres pour ce nouveau besoin. "
+                  "Les offres ne peuvent pas être mélangées.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",reste,"Carreaux restants après nouveau choix", "carreaux")
+        regles=[*regles[:-1],("mc_v3_q5","Après avoir sélectionné la nouvelle offre la moins chère pour tous les carreaux, combien en restera-t-il inutilisés ? En cas de prix égal, choisis l'offre A.")]
+        calcul=("**Nouveau défi — nouvel achat :** "
+                f"besoin {besoin}+{ajout}={cible} carreaux ; "
+                f"offre A : {na} boîtes pour {ca} € ; "
+                f"offre B : {nb} boîtes pour {cb} € ; "
+                f"reste inutilisé dans l'offre retenue : **{reste} carreaux**.\n\n")
+
+    elif identifiant == "P7-M23":
+        # La version historique demandait de compter toutes les chutes de
+        # rouleaux, avec un dernier rouleau traité différemment : niveau 9.
+        # Pour N7, limiter Q4 à la chute du dernier rouleau ; Q1-Q3 restent.
+        details=exercice["mathicap_decoupe_v3"]
+        par_id["r4"]["attendu"]=details["noeuds_dernier"]
+        par_id["r4"]["libelle"]="Nœuds depuis le dernier rouleau"
+        regles=[*regles[:-1],(regles[-1][0],
+            "Avec la chute du dernier rouleau uniquement, combien de nœuds complets peut-on fabriquer ? Calcule d'abord la longueur utilisée dans ce dernier rouleau, puis la longueur disponible pour les nœuds, sans raccorder les chutes.")]
+        calcul=("**Défi final — chute du dernier rouleau :** "
+                f"après {details['fanions_dernier']} fanions, il reste "
+                f"{details['longueur_rouleau_cm']} − "
+                f"{details['fanions_dernier']} × {details['ruban_un']} "
+                f"= {details['chute_dernier']} cm. "
+                f"Nœuds complets : {details['chute_dernier']} ÷ "
+                f"{details['longueur_noeud']}, soit "
+                f"**{details['noeuds_dernier']} nœuds**.\n\n")
+
+    elif identifiant == "P7-M05":
+        regles=[*regles[:-1],(regles[-1][0],
+            "Combien de petits tours supplémentaires chaque cycliste doit-il effectuer au minimum ? Partage d'abord la distance manquante du groupe entre les cyclistes, puis calcule le nombre de petits tours complets nécessaires à chacun.")]
+
+    elif identifiant == "P7-M22":
+        regles=[*regles[:-1],(regles[-1][0],
+            "Combien de pages supplémentaires chaque élève doit-il lire par jour au minimum ? Calcule d'abord le manque de pages du groupe, puis partage-le entre les jours et entre les élèves, en arrondissant à un nombre entier de pages.")]
+
+    elif identifiant == "P7-M21":
+        regles=[*regles[:-1],(regles[-1][0],
+            "Combien de sacs supplémentaires faut-il acheter ? Calcule d'abord la nourriture nécessaire pour tous les jours prévus, retire le stock disponible, puis compte les sacs entiers.")]
+    elif identifiant == "P7-M13":
+        regles=[*regles[:-1],(regles[-1][0],
+            "Après la livraison, combien de robots le club pourrait-il fabriquer en plus de l'objectif, ou combien lui manquerait-il ? Calcule séparément la capacité après livraison avec les moteurs et avec les batteries, puis compare le minimum à l'objectif.")]
+
+    elif identifiant == "P9-M04":
+        # Planification à deux contraintes : réserve minimale et quêtes entières.
+        disponibles=par_id["r2"]["attendu"]
+        achetables=par_id["r3"]["attendu"]
+        equipement=int(_mc_v3_extraire(r"Un équipement coûte\s+\*\*(\d+)\s+cristaux", avant, identifiant).group(1))
+        reserve=int(_mc_v3_extraire(r"conserver au moins\s+\*\*(\d+)\s+cristaux",avant,identifiant).group(1))
+        gain=int(_mc_v3_extraire(r"missions\*\* qui rapportent chacune\s+\*\*(\d+)\s+cristaux",avant,identifiant).group(1))
+        membres=int(_mc_v3_extraire(r"comprend\s+\*\*(\d+)\s+aventuriers",avant,identifiant).group(1))
+        cible=max(membres+2,achetables+2)
+        bonus=3+(cible%5)
+        manque=max(0,cible*equipement+reserve-disponibles-bonus)
+        quetes=(manque+gain-1)//gain
+        assert quetes>=1
+        contexte=(f"\n\n**Nouveau défi :** avant d'acheter le moindre équipement, "
+                  f"le groupe accueille des membres et souhaite équiper {cible} aventuriers. "
+                  f"Le joueur reçoit {bonus} cristaux supplémentaires gratuitement. "
+                  f"Il peut recommencer des missions, rapportant chacune {gain} cristaux, "
+                  f"et veut toujours conserver au moins {reserve} cristaux de réserve "
+                  "une fois tous les équipements achetés.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",quetes,"Missions supplémentaires minimales","missions")
+        regles=[*regles[:-1],("mc_v3_q5","En repartant du stock de cristaux avant tout achat, quel nombre minimal de missions supplémentaires faut-il réussir pour équiper tous ces aventuriers et conserver la réserve ?")]
+        calcul=("**Nouveau défi — missions :** "
+                f"{cible} équipements coûtent {cible} × {equipement} = {cible*equipement} cristaux. "
+                f"Il faut en outre la réserve de {reserve}. "
+                f"Stock initial avant achats : {disponibles} + {bonus} = {disponibles+bonus}. "
+                f"Cristaux à gagner : {manque} ; gain par mission : {gain}. "
+                f"Nombre minimal de missions : **{quetes}**.\n\n")
+
+    elif identifiant == "P9-M05":
+        retour=par_id["r5"]["attendu"]
+        retrait=5+(retour%7)
+        taille=6+(retour%3)
+        supplement=21+(retour%13)
+        cible=retour-retrait+supplement
+        manquant=cible-(retour-retrait)
+        colis=(manquant+taille-1)//taille
+        contexte=(f"\n\n**Nouveau défi :** après le retour de tous les livres prêtés, "
+                  f"la bibliothèque retire encore {retrait} mangas usés. "
+                  f"Elle souhaite alors disposer d'au moins {cible} mangas sur ses "
+                  f"étagères. Les colis contiennent {taille} mangas et doivent "
+                  "être achetés entiers.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",colis,"Nombre minimal de colis", "colis")
+        regles=[*regles[:-1],("mc_v3_q5","Quel est le nombre minimal de colis supplémentaires à commander pour atteindre ce nouveau stock, après les retours et le retrait ?")]
+        calcul=("**Nouveau défi — colis :** "
+                f"stock après retours {retour} ; après retrait {retour-retrait} ; "
+                f"mangas manquants {cible} − {retour-retrait} = {manquant} ; "
+                f"colis entiers de {taille} mangas : **{colis} colis**.\n\n")
+
+    elif identifiant == "P9-M01":
+        reste=par_id["r7"]["attendu"]
+        parcelle=5
+        prix_plant=2+(reste%2)
+        cout_parcelle=parcelle*prix_plant+7
+        maxi=reste//cout_parcelle
+        contexte=(f"\n\n**Nouveau défi :** après le choix du projet le moins "
+                  "coûteux, le collège envisage des parcelles supplémentaires. "
+                  f"Chaque nouvelle parcelle nécessite {parcelle} plants à "
+                  f"{prix_plant} € et {7} € de matériel, sans autre frais. "
+                  "Les parcelles ne peuvent pas être financées partiellement.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",maxi,"Parcelles supplémentaires", "parcelles")
+        regles=[*regles[:-1],("mc_v3_q5","Combien de parcelles supplémentaires le collège peut-il financer au maximum avec le budget qui restera après le projet retenu ?")]
+        calcul=("**Nouveau défi — parcelles :** "
+                f"reste {reste} € ; coût par parcelle {parcelle} × {prix_plant} + 7 = "
+                f"{cout_parcelle} € ; nombre maximal **{maxi}**.\n\n")
+
+    elif identifiant == "P8-M06":
+        equipe_cout=par_id["r1"]["attendu"]
+        total=par_id["r3"]["attendu"]
+        budget=int(_mc_v3_extraire(r"budget de\s*\*\*(\d+)\s*€",avant,identifiant).group(1))
+        ajout_equipes=2+(int(equipe_cout)%3)
+        nouveau_cout=total+ajout_equipes*equipe_cout
+        complement=max(0,nouveau_cout-budget)
+        contexte=(f"\n\n**Nouveau défi :** {ajout_equipes} nouvelles équipes "
+                  "rejoignent le jeu de piste. Elles reçoivent les mêmes kits. "
+                  "La remise accordée et les frais de livraison restent identiques, "
+                  "et le collège conserve le même budget.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",complement,"Budget supplémentaire nécessaire", "€")
+        regles=[*regles[:-1],("mc_v3_q5","Combien d'euros de financement supplémentaire faut-il trouver pour payer tous les kits, nouveaux kits compris ? Réponds 0 € si le budget initial suffit encore.")]
+        calcul=("**Nouveau défi — budget :** "
+                f"coût initial {total} € ; {ajout_equipes} × {equipe_cout} € "
+                f"pour les nouveaux kits ; coût total {nouveau_cout} € ; "
+                f"budget {budget} € ; manque **{complement} €**.\n\n")
+
+    elif identifiant == "P8-M10":
+        couta=par_id["r2"]["attendu"]
+        coutb=par_id["r3"]["attendu"]
+        meilleur="A" if couta<coutb else "B"
+        # Le gagnant peut rester le même ou basculer après la modification.
+        ecart_init=abs(couta-coutb)
+        hausse=max(1, ecart_init + ((int(couta+coutb)%9)-4))
+        couta2=couta+hausse if meilleur=="A" else couta
+        coutb2=coutb+hausse if meilleur=="B" else coutb
+        economie=abs(couta2-coutb2)
+        contexte=(f"\n\n**Nouveau défi :** l'entreprise {meilleur}, "
+                  f"initialement la moins chère, annonce une hausse "
+                  f"de {hausse} € de ses seuls frais fixes. "
+                  "Les conditions de l'autre entreprise sont inchangées.\n\n")
+        par_id["mc_v3_q5"]=_mc_v3_champ("mc_v3_q5",economie,"Économie après nouveau tarif", "€")
+        regles=[*regles[:-1],("mc_v3_q5","Après cette hausse, combien d'euros le collège économisera-t-il en choisissant la nouvelle offre la moins chère ?")]
+        calcul=("**Nouveau défi — nouvelle comparaison :** "
+                f"A vaut {couta2} € et B vaut {coutb2} € ; "
+                f"écart et économie : **{economie} €**.\n\n")
+
+    return regles, contexte, calcul
+
+
 def _mc_uniformiser_exercice(exercice):
     """Retourne une COPIE structurée, sans altérer l'exercice historique source."""
     if not isinstance(exercice, dict) or exercice.get("id") not in REGLES:
@@ -7194,6 +7660,7 @@ def _mc_uniformiser_exercice(exercice):
     if len(par_id) != len(resultat["champs_reponse"]):
         raise ValueError(f"Identifiants de champs dupliqués : {identifiant}")
     par_id.update(_champs_ajoutes(resultat, par_id))
+    regles, contexte_v3, calcul_v3 = _mc_v3_preparer(resultat, par_id, regles, blocs)
     # Le tournoi peut présenter un manque ou un surplus selon le tirage.
     # La question finale pose une seule demande numérique et ne prescrit pas la méthode.
     if identifiant == "P7-M12":
@@ -7210,6 +7677,8 @@ def _mc_uniformiser_exercice(exercice):
             if resultat.get("mathicap_objectif_atteint")
             else "Combien de robots manqueront au club pour atteindre son objectif, après la livraison ?",
         )]
+        regles = [*regles[:-1], ("r4", regles[-1][1] +
+            " Calcule séparément les capacités après livraison avec les moteurs et avec les batteries, puis retiens la plus petite.")]
     if identifiant == "P7-M17":
         regles = [*regles[:-1], (
             "r4", _mc_question_finale_echecs(resultat["mathicap_solde_positif"]),
@@ -7273,7 +7742,7 @@ def _mc_uniformiser_exercice(exercice):
         raise ValueError(f"Champ sélectionné plusieurs fois : {identifiant}")
 
     resultat["enonce"] = (
-        blocs[0].rstrip() + "\n\n**Questions**\n\n"
+        blocs[0].rstrip() + contexte_v3 + "\n\n**Questions**\n\n"
         + "\n\n".join(lignes_questions)
         + "\n\n*Écris tes calculs et ton raisonnement au brouillon. "
         "Les champs de réponse sont notés automatiquement ; "
@@ -7283,14 +7752,24 @@ def _mc_uniformiser_exercice(exercice):
     # Le raisonnement d'origine est conservé, mais les numéros de ses étapes
     # ne doivent pas entrer en contradiction avec les nouvelles questions.
     ancien_corrige = re.sub(r"(?m)^\*\*\d+\.\s*([^*\n]+)\*\*", r"**Étape : \1**", ancien_corrige)
+    # Si le défi final a été remplacé, ne pas afficher comme méthode
+    # actuelle l'ancienne question finale, devenue étrangère à Q5.
+    if calcul_v3:
+        positions = list(re.finditer(r"(?m)^\*\*Étape : ", ancien_corrige))
+        if len(positions) >= nombre_attendu:
+            ancien_corrige = ancien_corrige[:positions[nombre_attendu - 1].start()].rstrip()
     resultat["correction"] = (
         "**Réponses attendues — questions de ce problème**\n\n"
         + "\n\n".join(lignes_corrige)
-        + "\n\n**Méthode et calculs détaillés**\n\n"
+        + ("\n\n**Raisonnement du défi final**\n\n" + calcul_v3 if calcul_v3 else "")
+        + "\n\n**Méthode et calculs détaillés des étapes précédentes**\n\n"
         + ancien_corrige
     )
     resultat["champs_reponse"] = nouveaux_champs
-    resultat["mathicap_questions_uniformisees"] = 1
+    resultat["mathicap_questions_uniformisees"] = 3
+    resultat["mathicap_revision_pedagogique"] = "v3.0"
+    resultat["mathicap_niveau_pedagogique"] = niveau
+    resultat["mathicap_referentiel_pedagogique"] = "MathiCap V3 — progressivité guidage/autonomie/contraintes"
     return resultat
 
 
