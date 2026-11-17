@@ -2646,28 +2646,37 @@ def generer_modele_p7_repetitions():
 
 
 def generer_modele_p7_plantations():
-    planches = random.randint(3, 6)
-    rangs_par_planche = random.randint(3, 6)
-    graines_par_rang = random.randint(7, 13)
-    sachets = random.randint(5, 11)
-    graines_par_sachet = random.choice([20, 25, 30, 36, 40])
-    stock_initial = random.randint(12, 45)
+    """N7 : quatre étapes guidées, variantes de difficulté homogène.
 
-    graines_planche = rangs_par_planche * graines_par_rang
-    graines_total = planches * graines_planche
-    graines_disponibles = stock_initial + sachets * graines_par_sachet
-    # Le stock doit couvrir le projet initial mais ne pas être démesuré.
-    while graines_disponibles < graines_total + graines_planche:
-        sachets += 1
+    Le nombre de planches supplémentaires vaut de 1 à 4, avec un reste
+    non nul. Les nouveaux tirages sont répartis équitablement entre
+    ces quatre résultats, évitant les réponses quasi systématiques à 1.
+    """
+    cible_planches_supp = random.randint(1, 4)
+    for _ in range(500):
+        planches = random.randint(3, 6)
+        rangs_par_planche = random.randint(3, 6)
+        graines_par_rang = random.randint(7, 13)
+        sachets = random.randint(5, 11)
+        graines_par_sachet = random.choice([20, 25, 30, 36, 40])
+        stock_initial = random.randint(12, 45)
+
+        graines_planche = rangs_par_planche * graines_par_rang
+        graines_total = planches * graines_planche
         graines_disponibles = stock_initial + sachets * graines_par_sachet
-    graines_restantes = graines_disponibles - graines_total
-    # Un partage exact rendrait la limitation du nombre de planches latente.
-    # Le changement de stock d'une graine maintient la même structure pédagogique.
-    if graines_restantes % graines_planche == 0:
-        stock_initial += 1
-        graines_disponibles += 1
-        graines_restantes += 1
-    planches_supp = graines_restantes // graines_planche
+        while graines_disponibles < graines_total + graines_planche:
+            sachets += 1
+            graines_disponibles = stock_initial + sachets * graines_par_sachet
+        graines_restantes = graines_disponibles - graines_total
+        if graines_restantes % graines_planche == 0:
+            stock_initial += 1
+            graines_disponibles += 1
+            graines_restantes += 1
+        planches_supp = graines_restantes // graines_planche
+        if planches_supp == cible_planches_supp:
+            break
+    else:
+        raise ValueError("Aucun tirage cohérent pour les plantations N7")
     enonce = (
         "**Les plantations du collège**\n\n"
         f"Les élèves veulent préparer {planches} planches de culture. "
