@@ -1263,14 +1263,15 @@ def generer_modele_p7_enigmes():
         score_a = faciles_a * points_facile + difficiles_a * points_difficile - indices_a * penalite
         score_b = faciles_b * points_facile + difficiles_b * points_difficile - indices_b * penalite
         ecart = abs(score_a - score_b)
-        if points_facile < ecart <= 3 * points_facile and ecart > 0:
+        if 10 < ecart <= 30:
             break
     else:
         raise ValueError("Impossible de trouver une manche décisive cohérente")
 
     gagnant = "A" if score_a > score_b else "B"
     perdant = "B" if gagnant == "A" else "A"
-    faciles_pour_egaliser = (ecart + points_facile - 1) // points_facile
+    points_manche = 10
+    faciles_pour_egaliser = (ecart + points_manche - 1) // points_manche
     def ligne_indice(n):
         return f"{n} indice{'s' if n != 1 else ''} utilisé{'s' if n != 1 else ''}"
     enonce = (
@@ -1288,9 +1289,10 @@ def generer_modele_p7_enigmes():
         f"- {faciles_b} énigmes faciles ;\n"
         f"- {difficiles_b} énigmes difficiles ;\n"
         f"- {ligne_indice(indices_b)}.\n\n"
-        "**Manche décisive :** l'équipe qui a le moins de points peut répondre, "
-        "avant son adversaire, à trois nouvelles énigmes faciles. Chaque réponse juste "
-        f"rapporte {points_facile} points et aucun indice n'est utilisé.\n\n"
+        "**Manche décisive :** l'équipe perdante, pour rattraper son retard, "
+        "peut répondre avant son adversaire à trois nouvelles énigmes faciles "
+        "consécutives. Chaque réponse juste rapporte 10 points, et aucun indice "
+        "n'est utilisé.\n\n"
         "**Questions**\n\n"
         "1. Quel est le score de l'équipe A ?\n\n"
         "2. Quel est le score de l'équipe B ?\n\n"
@@ -1310,11 +1312,11 @@ def generer_modele_p7_enigmes():
         f"= {ecart} points d'avance.\n\n"
         "**4. Manche décisive**\n\n"
         f"L'équipe {perdant} doit rattraper {ecart} points. "
-        f"Chaque énigme facile vaut {points_facile} points.\n"
-        f"{ecart} ÷ {points_facile} : on arrondit au nombre entier supérieur "
+        f"Chaque énigme de la manche décisive vaut 10 points.\n"
+        f"{ecart} ÷ 10 : on arrondit au nombre entier supérieur "
         f"pour obtenir {faciles_pour_egaliser} énigmes.\n"
         f"Avec {faciles_pour_egaliser} énigmes, elle gagne "
-        f"{faciles_pour_egaliser * points_facile} points et peut au moins égaliser."
+        f"{faciles_pour_egaliser * points_manche} points et peut au moins égaliser."
     )
     return _mc_uniformiser_exercice({
         "id":"P7-M03", "titre":"Le tournoi d'énigmes", "enonce":enonce,
@@ -1499,7 +1501,7 @@ def generer_modele_p7_velo():
         "en additionnant les distances de tous les cyclistes ?\n\n"
         "3. Quelle distance manque-t-il au groupe pour atteindre son objectif ?\n\n"
         "4. Combien de petits tours supplémentaires chaque cycliste "
-        "doit-il effectuer, au minimum, pour atteindre l'objectif commun ?"
+        "doit-il effectuer au minimum pour atteindre l'objectif du groupe ?"
     )
 
     correction = (
@@ -2434,30 +2436,42 @@ def generer_modele_p7_planetarium():
 
 
 def generer_modele_p7_robotique():
-    """N7 : ressources utilisables et quantités de pièces manquantes, sans livraison."""
-    moteurs = random.randint(27, 70)
-    batteries = random.randint(30, 95)
-    moteurs_abimes = random.randint(3, 11)
-    batteries_abimees = random.randint(4, 15)
-    moteurs_utilisables = moteurs - moteurs_abimes
-    batteries_utilisables = batteries - batteries_abimees
+    """N7 : une seule catégorie de matériel manque pour l'objectif."""
+    objectif = random.randint(8, 17)
+    type_manquant = random.choice(("moteurs", "batteries"))
+    manque = random.randint(2, 9)
+    # Génération explicite : une ressource strictement insuffisante,
+    # la seconde suffisante, éventuellement exactement.
+    if type_manquant == "moteurs":
+        moteurs_utilisables = 2 * objectif - manque
+        batteries_utilisables = 3 * objectif + random.randint(0, 12)
+    else:
+        moteurs_utilisables = 2 * objectif + random.randint(0, 8)
+        batteries_utilisables = 3 * objectif - manque
+    moteurs_abimes = random.randint(2, 10)
+    batteries_abimees = random.randint(2, 12)
+    moteurs = moteurs_utilisables + moteurs_abimes
+    batteries = batteries_utilisables + batteries_abimees
     robots = min(moteurs_utilisables // 2, batteries_utilisables // 3)
-    objectif = robots + random.randint(2, 6)
     manque_moteurs = max(0, 2 * objectif - moteurs_utilisables)
     manque_batteries = max(0, 3 * objectif - batteries_utilisables)
-    manque_total = manque_moteurs + manque_batteries
+    assert (manque_moteurs > 0) != (manque_batteries > 0)
+    assert manque_moteurs + manque_batteries == manque
+    assert robots < objectif
+
     enonce = (
         "**Le club de robotique**\n\n"
         "Pour une démonstration, le club assemble des robots. "
         "Chaque robot nécessite 2 moteurs et 3 batteries.\n\n"
-        f"Le club possède {moteurs} moteurs dont {moteurs_abimes} hors d'usage, "
-        f"et {batteries} batteries dont {batteries_abimees} défectueuses.\n\n"
-        f"Il souhaite fabriquer {objectif} robots.\n\n"
+        f"Le club possède {moteurs} moteurs, dont {moteurs_abimes} hors d'usage, "
+        f"et {batteries} batteries, dont {batteries_abimees} défectueuses.\n\n"
+        f"Il souhaite fabriquer {objectif} robots. "
+        "Pour atteindre cet objectif, une seule des deux ressources lui manque.\n\n"
         "**Questions**\n\n"
         "1. Combien de moteurs utilisables le club possède-t-il ?\n\n"
         "2. Combien de batteries utilisables possède-t-il ?\n\n"
         "3. Combien de robots complets peut-il assembler avec son matériel ?\n\n"
-        "4. Combien de pièces supplémentaires (moteurs et batteries réunis) "
+        "4. Combien de moteurs ou de batteries supplémentaires "
         "lui manque-t-il pour fabriquer le nombre de robots souhaité ?"
     )
     correction = (
@@ -2466,22 +2480,26 @@ def generer_modele_p7_robotique():
         "**2. Batteries utilisables**\n\n"
         f"{batteries} − {batteries_abimees} = {batteries_utilisables} batteries.\n\n"
         "**3. Robots réalisables**\n\n"
-        f"Avec les moteurs : {moteurs_utilisables} ÷ 2, soit {moteurs_utilisables // 2} robots.\n"
-        f"Avec les batteries : {batteries_utilisables} ÷ 3, soit {batteries_utilisables // 3} robots.\n"
-        f"On retient la plus petite capacité : {robots} robots.\n\n"
-        "**4. Pièces manquantes pour l'objectif**\n\n"
-        f"Pour {objectif} robots, il faut {2*objectif} moteurs et {3*objectif} batteries.\n"
-        f"Moteurs manquants : {manque_moteurs}. Batteries manquantes : {manque_batteries}.\n"
-        f"Au total : {manque_moteurs} + {manque_batteries} = {manque_total} pièces supplémentaires."
+        f"Avec les moteurs : {moteurs_utilisables} ÷ 2, soit "
+        f"{moteurs_utilisables // 2} robots complets.\n"
+        f"Avec les batteries : {batteries_utilisables} ÷ 3, soit "
+        f"{batteries_utilisables // 3} robots complets.\n"
+        f"On retient le plus petit nombre : {robots} robots.\n\n"
+        "**4. Matériel manquant pour l'objectif**\n\n"
+        f"Pour {objectif} robots, il faut {2 * objectif} moteurs et "
+        f"{3 * objectif} batteries.\n"
+        f"Moteurs manquants : {manque_moteurs}. "
+        f"Batteries manquantes : {manque_batteries}.\n"
+        f"Il faut donc **{manque} {type_manquant} supplémentaires**."
     )
     return _mc_uniformiser_exercice({
-        "id":"P7-M13", "titre":"Le club de robotique", "enonce":enonce,
-        "correction":correction, "reponse_attendue":None,
-        "champs_reponse":[
-            {"id":"r1", "question":1, "libelle":"Moteurs utilisables", "type":"nombre", "attendu":moteurs_utilisables, "unite":"moteurs"},
-            {"id":"r2", "question":2, "libelle":"Batteries utilisables", "type":"nombre", "attendu":batteries_utilisables, "unite":"batteries"},
-            {"id":"r3", "question":3, "libelle":"Robots réalisables", "type":"nombre", "attendu":robots, "unite":"robots"},
-            {"id":"r4", "question":4, "libelle":"Pièces supplémentaires nécessaires", "type":"nombre", "attendu":manque_total, "unite":"pièces"},
+        "id": "P7-M13", "titre": "Le club de robotique",
+        "enonce": enonce, "correction": correction, "reponse_attendue": None,
+        "champs_reponse": [
+            {"id": "r1", "question": 1, "libelle": "Moteurs utilisables", "type": "nombre", "attendu": moteurs_utilisables, "unite": "moteurs"},
+            {"id": "r2", "question": 2, "libelle": "Batteries utilisables", "type": "nombre", "attendu": batteries_utilisables, "unite": "batteries"},
+            {"id": "r3", "question": 3, "libelle": "Robots réalisables", "type": "nombre", "attendu": robots, "unite": "robots"},
+            {"id": "r4", "question": 4, "libelle": "Moteurs ou batteries manquants", "type": "nombre", "attendu": manque, "unite": type_manquant},
         ],
     })
 
@@ -3142,76 +3160,75 @@ def generer_modele_p7_couture():
     })
 
 def _mc_libelle_question_finale_casiers(suffisant):
-    """Question finale : choisir le créneau le plus fréquenté, sans chevauchement."""
+    """Question finale : équipes supplémentaires au créneau le plus fréquenté."""
     return (
-        "En comparant le matin et l'après-midi, combien de casiers supplémentaires "
-        "faut-il pour accueillir les élèves du créneau le plus chargé ? "
-        "Réponds 0 si les casiers utilisables suffisent."
+        "En tenant compte du créneau le plus chargé, combien d'équipes "
+        "supplémentaires le gymnase peut-il accueillir en même temps ?"
     )
 
 
 def generer_modele_p7_casiers():
-    """Deux créneaux distincts : comparaison des effectifs et test de capacité."""
-    pic_matin = random.choice([True, False])
-    for _ in range(1000):
-        equipes = random.randint(4, 8)
-        eleves_equipe = random.randint(4, 7)
-        groupes = random.randint(4, 8)
-        eleves_groupe = random.randint(4, 7)
-        matin = equipes * eleves_equipe
-        apres_midi = groupes * eleves_groupe
-        if 3 <= abs(matin - apres_midi) <= 25 and (matin > apres_midi) == pic_matin:
-            break
-    else:
-        raise ValueError("Impossible de produire deux créneaux distincts")
+    """N7 : comparer deux créneaux et compter des équipes supplémentaires."""
+    # Les équipes des deux créneaux ont la même taille : une seule réponse
+    # numérique à Q4, sans hypothèse à choisir sur la taille d'une équipe.
+    eleves_par_equipe = random.randint(4, 7)
+    equipes_matin = random.randint(4, 8)
+    equipes_apres_midi = random.randint(4, 8)
+    while equipes_apres_midi == equipes_matin:
+        equipes_apres_midi = random.randint(4, 8)
 
-    maximum = max(matin, apres_midi)
-    ecart = random.randint(3, 12)
-    suffisant = random.choice([True, False])
-    utilisables = maximum + ecart if suffisant else maximum - ecart
+    matin = equipes_matin * eleves_par_equipe
+    apres_midi = equipes_apres_midi * eleves_par_equipe
+    pic = max(matin, apres_midi)
+    equipes_supplementaires = random.randint(1, 3)
+    casiers_en_plus = equipes_supplementaires * eleves_par_equipe + random.randint(0, eleves_par_equipe - 1)
+    utilisables = pic + casiers_en_plus
     hors_service = random.randint(3, 13)
     total_casiers = utilisables + hors_service
-    manquants = max(0, maximum - utilisables)
+    libres = utilisables - pic
+    assert libres >= eleves_par_equipe
+    assert libres // eleves_par_equipe == equipes_supplementaires
 
     enonce = (
         "**Les casiers du gymnase**\n\n"
         "Chaque élève utilise un casier personnel. Le gymnase accueille deux "
-        "créneaux distincts, un le matin et un l'après-midi. Les élèves du matin "
+        "créneaux distincts : le matin et l'après-midi. Les élèves du matin "
         "libèrent leur casier avant l'arrivée de ceux de l'après-midi.\n\n"
-        f"Le matin, {equipes} équipes de {eleves_equipe} élèves fréquentent le gymnase. "
-        f"L'après-midi, ce sont {groupes} groupes de {eleves_groupe} élèves.\n\n"
+        f"Le matin, {equipes_matin} équipes de {eleves_par_equipe} élèves fréquentent le gymnase. "
+        f"L'après-midi, ce sont {equipes_apres_midi} équipes de {eleves_par_equipe} élèves.\n\n"
         f"Le gymnase possède {total_casiers} casiers, dont {hors_service} hors service.\n\n"
+        "Chaque nouvelle équipe comporte le même nombre d'élèves que les autres.\n\n"
         "**Questions**\n\n"
         "1. Combien d'élèves sont présents le matin ?\n\n"
         "2. Combien d'élèves sont présents l'après-midi ?\n\n"
         "3. Combien de casiers utilisables le gymnase possède-t-il ?\n\n"
-        f"4. {_mc_libelle_question_finale_casiers(suffisant)}"
+        "4. En tenant compte du créneau le plus chargé, combien d'équipes "
+        "supplémentaires le gymnase peut-il accueillir en même temps ?"
     )
     correction = (
         "**1. Élèves le matin**\n\n"
-        f"{equipes} × {eleves_equipe} = {matin} élèves.\n\n"
+        f"{equipes_matin} × {eleves_par_equipe} = {matin} élèves.\n\n"
         "**2. Élèves l'après-midi**\n\n"
-        f"{groupes} × {eleves_groupe} = {apres_midi} élèves.\n\n"
+        f"{equipes_apres_midi} × {eleves_par_equipe} = {apres_midi} élèves.\n\n"
         "**3. Casiers utilisables**\n\n"
         f"{total_casiers} − {hors_service} = {utilisables} casiers.\n\n"
-        "**4. Casiers à prévoir**\n\n"
-        f"Le matin : {matin} élèves ; l'après-midi : {apres_midi} élèves.\n"
-        f"Le plus grand de ces deux effectifs est {maximum} élèves.\n"
-        + (f"Il manque {maximum} − {utilisables} = {manquants} casiers.\n"
-           f"**Réponse : {manquants} casiers supplémentaires.**" if manquants else
-           f"Les {utilisables} casiers utilisables suffisent : "
-           f"il en restera {utilisables - maximum} libres.\n"
-           "**Réponse : 0 casier supplémentaire.**")
+        "**4. Équipes supplémentaires possibles**\n\n"
+        f"Le créneau le plus chargé rassemble {pic} élèves. "
+        f"Il reste alors {utilisables} − {pic} = {libres} casiers libres.\n"
+        f"Une équipe comprend {eleves_par_equipe} élèves. "
+        f"{libres} ÷ {eleves_par_equipe} permet d'accueillir "
+        f"**{equipes_supplementaires} "
+        f"{'équipe supplémentaire complète' if equipes_supplementaires == 1 else 'équipes supplémentaires complètes'}**."
     )
     return _mc_uniformiser_exercice({
         "id": "P7-M24", "titre": "Les casiers du gymnase",
-        "mathicap_stock_suffisant": suffisant,
+        "mathicap_stock_suffisant": True,
         "enonce": enonce, "correction": correction, "reponse_attendue": None,
         "champs_reponse": [
             {"id": "r1", "question": 1, "libelle": "Élèves le matin", "type": "nombre", "attendu": matin, "unite": "élèves"},
             {"id": "r2", "question": 2, "libelle": "Élèves l'après-midi", "type": "nombre", "attendu": apres_midi, "unite": "élèves"},
             {"id": "r3", "question": 3, "libelle": "Casiers utilisables", "type": "nombre", "attendu": utilisables, "unite": "casiers"},
-            {"id": "r4", "question": 4, "libelle": "Casiers supplémentaires", "type": "nombre", "attendu": manquants, "unite": "casiers"},
+            {"id": "r4", "question": 4, "libelle": "Équipes supplémentaires", "type": "nombre", "attendu": equipes_supplementaires, "unite": "équipe" if equipes_supplementaires == 1 else "équipes"},
         ],
     })
 
@@ -6631,7 +6648,7 @@ REGLES = {
         ('r1', "Quel est le score de l'équipe A ?"),
         ('r2', "Quel est le score de l'équipe B ?"),
         ('r4', "Quel est l'écart de points entre les deux équipes ?"),
-        ('r5', "Combien d'énigmes faciles l'équipe en retard doit-elle résoudre de suite pour au moins égaliser ?"),
+        ('r5', "Combien d'énigmes faciles au minimum l'équipe en retard doit-elle résoudre de suite pour au moins égaliser ?"),
     ],
     "P7-M04": [
         ("r1", "Combien coûte l'impression avec l'offre A ?"),
@@ -6643,7 +6660,7 @@ REGLES = {
         ("r1", "Quelle est la distance de l'aller-retour jusqu'au parc ?"),
         ("r2", "Quelle distance le groupe a-t-il parcourue au total, en additionnant les distances de tous les cyclistes ?"),
         ("r3", "Quelle distance manque-t-il au groupe pour atteindre son objectif ?"),
-        ("r4", "Combien de petits tours supplémentaires chaque cycliste doit-il effectuer au minimum pour atteindre l'objectif commun ?"),
+        ("r4", "Combien de petits tours supplémentaires chaque cycliste doit-il effectuer au minimum pour atteindre l'objectif du groupe ?"),
     ],
     "P7-M06": [
         ("r1", "Quel est le montant total des recettes de la fête ?"),
@@ -6691,7 +6708,7 @@ REGLES = {
         ('r1', 'Combien de moteurs utilisables possède-t-il ?'),
         ('r2', 'Combien de batteries utilisables possède-t-il ?'),
         ('r3', 'Combien de robots complets peut-il assembler ?'),
-        ('r4', 'Combien de moteurs et de batteries au total manque-t-il pour fabriquer le nombre de robots souhaité ?'),
+        ('r4', 'Combien de moteurs ou de batteries supplémentaires lui manque-t-il pour fabriquer le nombre de robots souhaité ?'),
     ],
     "P7-M14": [
         ("r1", "Combien de vêtements les élèves ont-ils collectés ?"),
@@ -8332,6 +8349,10 @@ def _mc_uniformiser_exercice(exercice):
             if resultat["mathicap_objectif_atteint"]
             else "De combien d'euros la somme disponible est-elle inférieure à l'objectif de don après les frais ?",
         )]
+    if identifiant == "P7-M05":
+        regles = [*regles[:-1], (
+            "r4", "Combien de petits tours supplémentaires chaque cycliste doit-il effectuer au minimum pour atteindre l'objectif du groupe ?",
+        )]
     if identifiant == "P7-M24":
         regles = [*regles[:-1], (
             "r4", _mc_libelle_question_finale_casiers(resultat["mathicap_stock_suffisant"]),
@@ -8415,7 +8436,11 @@ def _mc_uniformiser_exercice(exercice):
     )
     resultat["champs_reponse"] = nouveaux_champs
     resultat["mathicap_questions_uniformisees"] = 3
-    resultat["mathicap_revision_pedagogique"] = "v3.2-lot-n7-simplifie"
+    resultat["mathicap_revision_pedagogique"] = (
+        "v3.2-lot-n7-ajustements-20261117"
+        if identifiant in {"P7-M03", "P7-M05", "P7-M13", "P7-M24"}
+        else "v3.2-lot-n7-simplifie"
+    )
     resultat["mathicap_niveau_pedagogique"] = niveau
     resultat["mathicap_referentiel_pedagogique"] = "MathiCap V3.2 — contre-expertise et cohérence des variantes"
     return resultat
