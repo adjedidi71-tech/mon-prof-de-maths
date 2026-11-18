@@ -8672,6 +8672,165 @@ def _mc_n8_accords(texte):
     return texte
 
 
+
+
+def _mc_n8_r5_detaillee(ex, etapes):
+    """Audit exhaustif N8 : détail court mais complet de la réponse 5.
+
+    Aucun changement des champs, des valeurs attendues ou des calculs générateurs.
+    Les vingt-cinq identifiants sont traités explicitement ; aucun repli silencieux.
+    """
+    nom = ex['id']
+    v = [c['attendu'] for c in ex['champs_reponse']]
+    a = ex.get('_mathicap_audit_nouveau') or {}
+    f = _mc_n8_fr
+    def division(n, taille, objet):
+        q,r=divmod(n,taille)
+        nb=q+(r>0)
+        termes={'lot':('lot entier','lots entiers'),'panneau':('panneau entier','panneaux entiers'),
+                'navette':('navette entière','navettes entières'),'sac':('sac entier','sacs entiers'),
+                'économiseur':('économiseur','économiseurs')}
+        nom_objet=termes[objet][nb!=1]
+        return (f'{n} ÷ {taille} = {q}, reste {r}. '
+                f'Il faut donc {nb} {nom_objet}'
+                + (' (un de plus pour le reste). ' if r else ' (division exacte). ')),nb
+    if nom == 'P8-M01':
+        etapes[4]=etapes[4].replace('Il faut**','Il faut **').replace('supplémentaires.','supplémentaires.')
+    elif nom == 'P8-M02':
+        ex['enonce']=ex['enonce'].replace(
+            'Pour commencer, les organisateurs répartissent les seuls dessins du club. Ils remplissent autant '
+            'de panneaux que possible, puis placent les dessins restants sur un dernier panneau.',
+            'Pour préparer l’exposition, le club répartit d’abord ses propres dessins sur les panneaux. '
+            'Il remplit autant de panneaux que possible, puis place les dessins restants sur un dernier panneau.')
+        ex['enonce']=ex['enonce'].replace('Un collège partenaire apporte ensuite',
+                                       'Dans un second temps, un collège partenaire apporte')
+        m=re.search(r'collège partenaire apporte (\d+) dessins',ex['enonce'])
+        if not m:
+            raise ValueError('Dessins du collège partenaire absents du nouvel énoncé P8-M02')
+        initial=int(v[1]);ajout=int(m[1]);total=initial+ajout
+        cap=int(re.search(r'au maximum (\d+) dessins',ex['enonce'])[1]);q,r=divmod(total,cap)
+        nb=q+(r>0);assert nb==v[4],(nom,nb,v[4])
+        etapes[4]=(f'Dessins du club : {initial} ; dessins du collège partenaire : {ajout}. '
+                    f'Ensemble : {initial} + {ajout} = {total} dessins. '
+                    f'{total} ÷ {cap} = {q}, reste {r}. '
+                    + (f'Il faut {q} panneaux pleins et un dernier panneau pour {r} '+('dessin restant' if r==1 else 'dessins restants')+', '
+                       f'soit {nb} panneaux au minimum.' if r else f'Il faut donc {nb} panneaux remplis exactement.'))
+    elif nom == 'P8-M03':
+        # Le corrigé comporte déjà les deux soldes, la déduction du péage et la soustraction signée.
+        assert 'Différence A − B' in etapes[4]
+    elif nom == 'P8-M04':
+        t=ex['enonce'];eq=re.search(r'(\d+) équipes participent',t);new=re.search(r'(\d+) équipes supplémentaires rejoignent',t)
+        opts=re.search(r'A, (\d+) batteries par boîte à (\d+) € ; B, (\d+) batteries par boîte à (\d+) €',t)
+        if eq and new and opts:
+            total=int(eq[1])+int(new[1]);per=v[0]//int(eq[1]);stock=v[1];need=total*per;missing=max(0,need-stock)
+            packa,costa,packb,costb=map(int,opts.groups())
+            xa,na=division(missing,packa,'lot');xb,nb=division(missing,packb,'lot')
+            ca=na*costa;cb=nb*costb
+            assert min(ca,cb)==v[4]
+            etapes[4]=(f'Besoin des {total} équipes : {total} × {per} = {need} batteries. '
+                f'Stock : {stock} ; manque : {need} − {stock} = {missing}. '
+                f'Offre A : {xa}{na} × {costa} = {ca} €. '
+                f'Offre B : {xb}{nb} × {costb} = {cb} €. '
+                f'On compare {ca} € et {cb} € : coût minimal {f(v[4])} €.')
+    elif nom == 'P8-M05':
+        assert 'réserve minimale' in etapes[4] and 'Solde final' in etapes[4]
+    elif nom == 'P8-M06':
+        assert 'Commande initiale' in etapes[4] and 'Commande complémentaire' in etapes[4]
+    elif nom == 'P8-M07':
+        assert 'Économie par robinet' in etapes[4] and 'arrondit' in etapes[4]
+    elif nom == 'P8-M08':
+        assert 'Détour A' in etapes[4] and 'Détour B' in etapes[4]
+    elif nom == 'P8-M09':
+        # Les bouteilles requises ont été dénombrées en Q4 ; relier division et décision.
+        m=re.search(r'(\d+) ÷ (\d+) : quotient entier',etapes[4])
+        if m:
+            nb,taille=int(m[1]),int(m[2]); phrase,obt=division(nb,taille,'lot')
+            assert obt==v[4]
+            etapes[4]=f'Il faut {nb} bouteilles (question 4). Chaque lot en contient {taille}. {phrase}'
+        else:
+            etapes[4]=re.sub(r'Il faut\*\*','Il faut **',etapes[4])
+    elif nom == 'P8-M10':
+        assert 'Entreprise A' in etapes[4] and 'Entreprise B' in etapes[4]
+    elif nom == 'P8-M11':
+        n=(a['teams']+a['extra'])*a['per'];stock=a['stock']-a['bad']+v[3]*a['pack'];missing=max(0,n-stock)
+        div,boxes=division(missing,a['pack'],'lot');assert boxes==v[4]
+        etapes[4]=(f'Besoins après les inscriptions : ({a["teams"]} + {a["extra"]}) × {a["per"]} = {n} badges. '
+                    f'Stock après la première commande : {a["stock"]-a["bad"]} + {v[3]} × {a["pack"]} = {stock}. '
+                    f'Il manque {n} − {stock} = {missing} badges. {div}')
+    elif nom == 'P8-M12':
+        total=a['n']+a['add']; qa,na=division(total,a['cap_a'],'navette'); qb,nb=division(total,a['cap_b'],'navette')
+        cost_a=na*a['price_a'];cost_b=nb*a['price_b'];assert min(cost_a,cost_b)==v[4]
+        etapes[4]=(f'Nouveau groupe : {a["n"]} + {a["add"]} = {total} personnes. '
+                    f'A ({a["cap_a"]} places) : {qa}{na} × {a["price_a"]} = {cost_a} €. '
+                    f'B ({a["cap_b"]} places) : {qb}{nb} × {a["price_b"]} = {cost_b} €. '
+                    f'On retient le moins cher : {f(v[4])} €.')
+    elif nom == 'P8-M13':
+        assert 'reste' in etapes[4] and 'boîtes supplémentaires' in etapes[4]
+    elif nom == 'P8-M14':
+        besoin=max(0,a['reserved']-(a['start']+a['received']-a['loans']))
+        db,nb=division(besoin,a['box_b'],'lot');ca=((besoin+a['box_a']-1)//a['box_a'])*a['cost_a'];cb=nb*a['cost_b'];assert min(ca,cb)==v[4]
+        etapes[4]=(f'Il manque {besoin} mangas. Offre A : {f(ca)} € (réponse 4). '
+                    f'Offre B : {db}Coût B : {nb} × {a["cost_b"]} = {cb} €. '
+                    f'Comparaison : A {ca} €, B {cb} € ; coût minimal {f(v[4])} €.')
+    elif nom == 'P8-M15':
+        need_m=2*a['target'];need_b=3*a['target'];miss_m=max(0,need_m-a['motors']);miss_b=max(0,need_b-a['batteries'])
+        dm,nm=division(miss_m,a['packmot'],'lot');db,nb=division(miss_b,a['packbat'],'lot')
+        cm=nm*a['costmot'];cb=nb*a['costbat'];assert cm+cb==v[4]
+        etapes[4]=(f'Pour {a["target"]} robots : {a["target"]} × 2 = {need_m} moteurs et '
+                    f'{a["target"]} × 3 = {need_b} batteries. Stocks : {a["motors"]} moteurs et {a["batteries"]} batteries. '
+                    f'Moteurs manquants : {miss_m}. {dm}Coût moteurs : {nm} × {a["costmot"]} = {cm} €. '
+                    f'Batteries manquantes : {miss_b}. {db}Coût batteries : {nb} × {a["costbat"]} = {cb} €. '
+                    f'Coût total : {cm} + {cb} = {v[4]} €.')
+    elif nom == 'P8-M16':
+        assert 'Après' in etapes[4] and 'arrivée' in etapes[4]
+    elif nom == 'P8-M17':
+        assert 'reste' in etapes[4] and 'supplémentaires' in etapes[4]
+    elif nom == 'P8-M18':
+        assert 'Durée totale après détour' in etapes[4]
+    elif nom == 'P8-M19':
+        deficit=v[2]; days=a['days'];pa=a['liters']*days;pb=a['liters_b']*days
+        da,na=division(deficit,pa,'économiseur');db,nb=division(deficit,pb,'économiseur')
+        ca=na*a['price_a'];cb=nb*a['price_b'];assert min(ca,cb)==v[4]
+        etapes[4]=(f'Il manque {deficit} L à économiser pendant {days} jours. '
+                    f'A : {a["liters"]} × {days} = {pa} L par économiseur. {da}Coût A : {na} × {a["price_a"]} = {ca} €. '
+                    f'B : {a["liters_b"]} × {days} = {pb} L par économiseur. {db}Coût B : {nb} × {a["price_b"]} = {cb} €. '
+                    f'On compare : {ca} € contre {cb} €. Minimum : {v[4]} €.')
+    elif nom == 'P8-M20':
+        assert 'Transport A' in etapes[4] and 'Transport B' in etapes[4]
+    elif nom == 'P8-M21':
+        # Un seul type de mission rare est possible, mais autant d'ordinaires que nécessaire.
+        ex['enonce']=ex['enonce'].replace(
+            'Une mission ordinaire rapporte',
+            'Elle peut réaliser autant de missions ordinaires que nécessaire ; chacune rapporte')
+        ex['enonce']=ex['enonce'].replace('Elle peut aussi réussir au plus une mission rare rapportant',
+                                         'Elle peut également accomplir au maximum une mission rare rapportant')
+        manque=v[3];ord_=a['normal'];rare=a['rare']; sans=q0=manque//ord_;r0=manque%ord_;n0=sans+(r0>0)
+        rest=max(0,manque-rare);q1,r1=divmod(rest,ord_);n1=1+q1+(r1>0)
+        assert min(n0,n1)==v[4]
+        etapes[4]=(f'Cristaux encore nécessaires : {manque}. '
+                    f'**Option 1 — missions ordinaires :** {manque} ÷ {ord_} = {q0}, reste {r0}. '
+                    f'Il faut {n0} missions ordinaires. '
+                    f'**Option 2 — une mission rare :** il reste {manque} − {rare} = {rest} cristaux à gagner. '
+                    f'{rest} ÷ {ord_} = {q1}, reste {r1}, soit {q1+(r1>0)} missions ordinaires et 1 rare, '
+                    f'donc {n1} missions au total. Minimum : {v[4]} missions.')
+    elif nom == 'P8-M22':
+        assert 'soustrait' in etapes[4] and 'km' in etapes[4]
+    elif nom == 'P8-M23':
+        manque=v[1];db,nb=division(manque,a['bag_b'],'sac');ca=v[3];cb=nb*a['price_b'];assert min(ca,cb)==v[4]
+        etapes[4]=(f'Masse manquante : {manque} kg. Offre A : {ca} € (réponse 4). '
+                    f'Offre B : {db}Coût B : {nb} × {a["price_b"]} = {cb} €. '
+                    f'On compare : A {ca} €, B {cb} €. Coût minimal : {v[4]} €.')
+    elif nom == 'P8-M24':
+        assert 'Durée autorisée' in etapes[4] and 'Différence' in etapes[4]
+    elif nom == 'P8-M25':
+        manque=v[2];db,nb=division(manque,a['pack_b'],'lot');ca=v[3];cb=nb*a['cost_b'];assert min(ca,cb)==v[4]
+        etapes[4]=(f'Il manque {manque} portions. Offre A : {ca} € (réponse 4). '
+                    f'Offre B : {db}Coût B : {nb} × {a["cost_b"]} = {cb} €. '
+                    f'On compare A {ca} € et B {cb} € : coût minimal {v[4]} €.')
+    else:
+        raise ValueError(f'N8 : réponse 5 non auditée pour {nom}')
+    return etapes
+
 def _mc_n8_polish(ex):
     """Corrections N8 complètes : une réponse suivie de la méthode détaillée.
 
@@ -8710,6 +8869,7 @@ def _mc_n8_polish(ex):
     etapes=_mc_n8_enrichir_dernier(ex,etapes)
     etapes=_mc_n8_details_pour_nouveaux(ex,etapes)
     etapes=_mc_n8_arbitrage_audit(ex,etapes)
+    etapes=_mc_n8_r5_detaillee(ex,etapes)
     sorties=[]
     for i, (champ, detail) in enumerate(zip(champs, etapes), 1):
         valeur=champ['attendu']
