@@ -6,7 +6,7 @@ Difficultés :
     3 = niveau 9
 
 Les exercices sont écrits et conservés : aucune API d'IA n'est appelée.
-Modèles actifs du chapitre : 26 au niveau 7, 10 aux niveaux 8 et 9.
+Modèles actifs du chapitre : 26 au niveau 7 ; 25 aux niveaux 8 et 9.
 """
 
 from copy import deepcopy
@@ -8489,6 +8489,560 @@ def _mc_uniformiser_exercice(exercice):
     return resultat
 
 
+# ================================================================
+# MATHICAP — 30 MODÈLES NOUVEAUX N8/N9 (15 par niveau)
+# Chaque problème est une unité autonome : cinq questions, cinq
+# réponses numériques ou choix, et correction détaillée ordonnée.
+# ID historiques inchangés ; nouvelles références P8/P9-M11...M25.
+# ================================================================
+
+def _mc_new_ceil(a,b):
+    return (a+b-1)//b
+
+
+def _mc_new_problem(level, idx, seed, title, paragraphs, questions, answers, labels, units, competences, steps, audit):
+    model_id=f"P{level}-M{idx:02d}"
+    if not (len(questions)==len(answers)==len(labels)==len(units)==len(competences)==len(steps)==5):
+        raise AssertionError(f"Structure incomplète {model_id}")
+    champs=[]
+    for j,(ans,label,unit,cat) in enumerate(zip(answers,labels,units,competences),1):
+        if isinstance(ans,str):
+            assert ans in ('A','B','C','Oui','Non'),(model_id,j,ans)
+            options=['A','B','C'] if ans in ('A','B','C') else ['Oui','Non']
+            champs.append({'id':f'r{j}','question':j,'libelle':label,'type':'choix','attendu':ans,'options':options,'mathicap_competence':_CATEGORIES[cat]})
+        else:
+            assert isinstance(ans,(int,float)) and math.isfinite(ans),(model_id,j,ans)
+            champs.append({'id':f'r{j}','question':j,'libelle':label,'type':'nombre','attendu':ans,'unite':unit,'mathicap_competence':_CATEGORIES[cat]})
+    stmt=f"**{title}**\n\n"+'\n\n'.join(paragraphs)+'\n\n**Questions**\n\n'+'\n\n'.join(f'{i}. {q}' for i,q in enumerate(questions,1))
+    stmt+='\n\n*Écris tes calculs et ton raisonnement au brouillon. Les champs de réponse sont notés automatiquement ; compare ta méthode avec la correction.*'
+    ans_lines=[]
+    for j,(c,unit) in enumerate(zip(champs,units),1):
+        value=c['attendu']; suffix=f' {unit}' if unit and not isinstance(value,str) else ''
+        ans_lines.append(f"**Question {j} — {c['libelle']} :** {value}{suffix}")
+    correction=("**Réponses attendues — questions de ce problème**\n\n"+'\n\n'.join(ans_lines)
+        +'\n\n**Méthode et calculs détaillés**\n\n'
+        +'\n\n'.join(f'**Étape {j} — {labels[j-1]}**\n\n{step}' for j,step in enumerate(steps,1)))
+    return {'id':model_id,'titre':title,'seed':seed,'enonce':stmt,'correction':correction,
+        'reponse_attendue':None,'champs_reponse':champs,
+        'mathicap_questions_uniformisees':3,'mathicap_revision_pedagogique':'v3.3-30-modeles-n8-n9',
+        'mathicap_niveau_pedagogique':level,'mathicap_referentiel_pedagogique':'Progression N8 autonomie / N9 optimisation',
+        '_mathicap_audit_nouveau':audit}
+
+
+def _mc_new_combo(need,size_a,cost_a,size_b,cost_b,max_a=None,max_b=None,fee_b=0):
+    """Minimise le coût entier sous besoin minimal et bornes éventuelles."""
+    ceiling=need+max(size_a,size_b)*2
+    lim_a=min(max_a if max_a is not None else _mc_new_ceil(ceiling,size_a),30)
+    lim_b=min(max_b if max_b is not None else _mc_new_ceil(ceiling,size_b),30)
+    possibilities=[]
+    for a in range(lim_a+1):
+        for b in range(lim_b+1):
+            if a*size_a+b*size_b>=need:
+                price=a*cost_a+b*cost_b+(fee_b if b else 0)
+                possibilities.append((price,a+b,a,b,a*size_a+b*size_b-need))
+    if not possibilities:raise ValueError('Aucune solution admissible')
+    return min(possibilities)
+
+
+def _mc_new_2d_combo(need_x,need_y,ax,ay,cost_a,bx,by,cost_b,max_a=16,max_b=16):
+    possibilities=[]
+    for a in range(max_a+1):
+        for b in range(max_b+1):
+            if a*ax+b*bx>=need_x and a*ay+b*by>=need_y:
+                possibilities.append((a*cost_a+b*cost_b,a+b,a,b))
+    if not possibilities:raise ValueError('Aucune solution deux ressources')
+    return min(possibilities)
+
+
+def _mc_new_choose_a_b(price_a,price_b):
+    return 'A' if price_a<price_b else ('B' if price_b<price_a else 'C')
+
+
+def _mc_new_n8(idx,seed=None):
+    rng,seed=_p9_rng(seed)
+    model_id=f'P8-M{idx:02d}'
+    if idx==11:
+        # Quantités + conditionnement + extension de commande.
+        teams=rng.randint(5,10); per=rng.randint(5,8); stock=rng.randint(9,25);bad=rng.randint(1,5)
+        pack=rng.choice([6,8,10]); extra=rng.randint(2,4)
+        need=teams*per; usable=stock-bad; deficit=max(0,need-usable)
+        boxes=_mc_new_ceil(deficit,pack); new_need=(teams+extra)*per; extra_boxes=_mc_new_ceil(max(0,new_need-(usable+boxes*pack)),pack)
+        return _mc_new_problem(8,idx,seed,'Les badges du salon des sciences',[
+            f'{teams} équipes de {per} élèves doivent recevoir chacune un badge.',
+            f'Le club possède {stock} badges, dont {bad} sont abîmés. Les badges sont vendus par boîtes de {pack}.',
+            f'Après la commande destinée aux {teams} équipes, {extra} équipes supplémentaires s’inscrivent. Les badges déjà achetés restent disponibles.'
+        ],['Combien de badges faut-il pour les équipes initiales ?', 'Combien de badges du stock sont utilisables ?', 'Combien de badges manque-t-il avant l’achat ?', 'Combien de boîtes faut-il acheter pour les équipes initiales ?', 'Combien de boîtes supplémentaires faut-il commander pour les nouvelles équipes ?'],
+        [need,usable,deficit,boxes,extra_boxes],['Badges nécessaires','Badges utilisables','Badges manquants','Boîtes initiales','Boîtes supplémentaires'],['badges','badges','badges','boîtes','boîtes'],['Q','Q','R','L','L'],[
+            f'{teams} × {per} = {need}.',f'{stock} − {bad} = {usable}.',f'{need} − {usable} = {deficit}.',f'{deficit} ÷ {pack}, en arrondissant au supérieur, donne {boxes} boîtes.',f'Besoin après inscription : ({teams}+{extra})×{per}={new_need}. Stock après la première commande : {usable}+{boxes}×{pack}={usable+boxes*pack}. Il faut encore {_mc_new_ceil(max(0,new_need-(usable+boxes*pack)),pack)} boîtes.'
+        ],dict(kind='n8_badges',teams=teams,per=per,stock=stock,bad=bad,pack=pack,extra=extra))
+    elif idx==12:
+        n=rng.randint(42,88);add=rng.randint(9,19); cap_a=rng.choice([18,24,30]);cap_b=rng.choice([28,36,40]);price_a=rng.randint(85,130);price_b=rng.randint(130,190)
+        # Pour que le nouveau groupe oblige à réviser les deux capacités.
+        add=max(add,_mc_new_ceil(n,cap_a)*cap_a-n+1,_mc_new_ceil(n,cap_b)*cap_b-n+1)
+        a=_mc_new_ceil(n,cap_a)*price_a;b=_mc_new_ceil(n,cap_b)*price_b;nn=n+add;aa=_mc_new_ceil(nn,cap_a)*price_a;bb=_mc_new_ceil(nn,cap_b)*price_b
+        return _mc_new_problem(8,idx,seed,'Les navettes du musée',[
+            f'{n} collégiens doivent se rendre au musée. Le transporteur A propose une navette de {cap_a} places à {price_a} € par navette ; B propose une navette de {cap_b} places à {price_b} €.',
+            f'Une navette ne peut pas dépasser sa capacité. Après le premier devis, {add} participants s’ajoutent au groupe.'
+        ],['Combien de navettes A faut-il pour le groupe initial ?','Quel est le coût total avec A pour le groupe initial ?','Quel est le coût total avec B pour le groupe initial ?','Quel est le coût le plus bas pour le groupe initial ?','Quel est le coût minimal de transport après l’arrivée des nouveaux participants ?'],
+        [_mc_new_ceil(n,cap_a),a,b,min(a,b),min(aa,bb)],['Navettes A','Coût A','Coût B','Coût initial minimal','Coût final minimal'],['navettes','€','€','€','€'],['L','B','B','C','C'],[
+            f'Il faut ⌈{n}/{cap_a}⌉ = {_mc_new_ceil(n,cap_a)} navettes A.',f'{_mc_new_ceil(n,cap_a)} × {price_a} = {a} €.',f'B : ⌈{n}/{cap_b}⌉ = {_mc_new_ceil(n,cap_b)} navettes à {price_b} €, soit {b} €.',f'Minimum entre {a} et {b} : {min(a,b)} €.',f'Nouveau groupe : {nn}. A : ⌈{nn}/{cap_a}⌉ × {price_a} = {aa} € ; B : ⌈{nn}/{cap_b}⌉ × {price_b} = {bb} €. Minimum : {min(aa,bb)} €.'
+        ],dict(kind='n8_navette',n=n,add=add,cap_a=cap_a,cap_b=cap_b,price_a=price_a,price_b=price_b))
+    elif idx==13:
+        sections=rng.randint(4,8); per=rng.randint(9,14); frames=rng.randint(10,30);bad=rng.randint(1,6);box=rng.choice([6,8,10]);price=rng.randint(9,19);add=rng.randint(4,15)
+        need=sections*per;usable=frames-bad;missing=need-usable;boxes=_mc_new_ceil(missing,box)
+        # Calibration : 1, 2, 3 ou 4 nouvelles boîtes réellement nécessaires.
+        spare=usable+boxes*box-need;choice_boxes=rng.randint(1,4)
+        add=spare+(choice_boxes-1)*box+rng.randint(1,box)
+        newboxes=_mc_new_ceil(max(0,need+add-usable-boxes*box),box)
+        return _mc_new_problem(8,idx,seed,'Les cadres de l’exposition',[
+            f'Une exposition comprend {sections} panneaux portant chacun {per} photographies. Chaque photographie doit être encadrée.',
+            f'Le collège possède {frames} cadres, dont {bad} inutilisables. Une boîte apporte {box} cadres pour {price} €.',
+            f'Après la première commande, {add} nouvelles photographies seront ajoutées.'
+        ],['Combien de cadres faut-il pour l’exposition initiale ?','Combien de cadres utilisables le collège possède-t-il ?','Combien de cadres manque-t-il avant les achats ?','Quel est le coût minimal des boîtes nécessaires pour l’exposition initiale ?','Combien de nouvelles boîtes faut-il encore acheter pour les photographies ajoutées ?'],
+        [need,usable,missing,boxes*price,newboxes],['Besoin en cadres','Cadres utilisables','Cadres manquants','Coût initial','Boîtes supplémentaires'],['cadres','cadres','cadres','€','boîtes'],['Q','Q','R','B','L'],[
+            f'{sections} × {per} = {need}.',f'{frames} − {bad} = {usable}.',f'{need} − {usable} = {missing}.',f'Il faut ⌈{missing}/{box}⌉ = {boxes} boîtes, pour {boxes}×{price}={boxes*price} €.',f'Après le premier achat il reste {usable+boxes*box-need} cadres. Il faut {add} nouveaux cadres, donc ⌈max(0,{add}−{usable+boxes*box-need})/{box}⌉ = {newboxes} nouvelles boîtes.'
+        ],dict(kind='n8_cadres',sections=sections,per=per,frames=frames,bad=bad,box=box,price=price,add=add))
+    elif idx==14:
+        start=rng.randint(120,210); received=rng.randint(5,9)*rng.choice([8,10,12]);loans=rng.randint(60,120);reserved=rng.randint(25,55); box_a=rng.choice([8,10]); cost_a=rng.randint(9,14);box_b=rng.choice([12,15]);cost_b=rng.randint(16,22)
+        now=start+received-loans;need=max(5,reserved-now);a=_mc_new_ceil(need,box_a)*cost_a;b=_mc_new_ceil(need,box_b)*cost_b
+        # Recentrer pour que le stock réservé crée un vrai manque.
+        reserved=now+rng.randint(16,65);need=reserved-now;a=_mc_new_ceil(need,box_a)*cost_a;b=_mc_new_ceil(need,box_b)*cost_b
+        return _mc_new_problem(8,idx,seed,'La réserve de mangas du CDI',[
+            f'Le CDI possède {start} mangas. Il reçoit {received} mangas et en prête {loans}.',
+            f'Pour préparer une exposition, il veut disposer de {reserved} mangas en réserve. Il peut acheter des lots A de {box_a} mangas à {cost_a} € ou des lots B de {box_b} mangas à {cost_b} €, sans mélanger les offres.'
+        ],['Combien de mangas le CDI possède-t-il après les arrivées ?','Combien reste-t-il de mangas après les prêts ?','Combien de mangas lui manque-t-il pour préparer sa réserve ?','Combien coûterait l’achat de lots A suffisants ?','Quel est le coût le plus faible entre des lots A ou des lots B pour compléter la réserve ?'],
+        [start+received,now,need,a,min(a,b)],['Mangas après réception','Mangas disponibles','Mangas manquants','Coût des lots A','Coût minimal'],['mangas','mangas','mangas','€','€'],['Q','R','R','B','C'],[
+            f'{start}+{received}={start+received}.',f'{start+received}−{loans}={now}.',f'{reserved}−{now}={need}.',f'A : ⌈{need}/{box_a}⌉ × {cost_a}={a} €.',f'A : {a} € ; B : ⌈{need}/{box_b}⌉ × {cost_b}={b} €. Minimum {min(a,b)} €.'
+        ],dict(kind='n8_manga',start=start,received=received,loans=loans,reserved=reserved,box_a=box_a,cost_a=cost_a,box_b=box_b,cost_b=cost_b))
+    elif idx==15:
+        target=rng.randint(8,13); motors=rng.randint(14,22); batteries=rng.randint(15,26); motper=2;batper=3; packmot=rng.choice([4,5,6]);packbat=rng.choice([5,6,8]);costmot=rng.randint(11,17);costbat=rng.randint(13,21)
+        maxrob=min(motors//motper,batteries//batper);missmot=max(0,target*2-motors);missbat=max(0,target*3-batteries);expense=_mc_new_ceil(missmot,packmot)*costmot+_mc_new_ceil(missbat,packbat)*costbat
+        return _mc_new_problem(8,idx,seed,'Les robots de l’atelier numérique',[
+            f'Le collège dispose de {motors} moteurs utilisables et de {batteries} batteries utilisables. Chaque robot utilise 2 moteurs et 3 batteries.',
+            f'Il souhaite construire {target} robots. Les moteurs supplémentaires se vendent par lots de {packmot} à {costmot} € et les batteries par lots de {packbat} à {costbat} €.'
+        ],['Combien de robots les moteurs permettent-ils de fabriquer ?','Combien de robots les batteries permettent-elles de fabriquer ?','Combien de robots complets sont réalisables actuellement ?','Combien de batteries manque-t-il pour atteindre l’objectif ?','Quel est le coût minimal des lots de moteurs et de batteries supplémentaires nécessaires à l’objectif ?'],
+        [motors//2,batteries//3,maxrob,missbat,expense],['Capacité moteurs','Capacité batteries','Robots réalisables','Batteries manquantes','Coût des composants'],['robots','robots','robots','batteries','€'],['L','L','L','R','B'],[
+            f'{motors} ÷ 2 donne {motors//2} robots.',f'{batteries} ÷ 3 donne {batteries//3} robots.',f'Le minimum entre {motors//2} et {batteries//3} est {maxrob}.',f'{target}×3−{batteries}={target*3-batteries}, donc {missbat} manquantes.',f'Moteurs manquants : max(0,{target}×2−{motors})={missmot}, donc {_mc_new_ceil(missmot,packmot)} lots. Batteries : {missbat}, donc {_mc_new_ceil(missbat,packbat)} lots. Coût = {expense} €.'
+        ],dict(kind='n8_robots',target=target,motors=motors,batteries=batteries,packmot=packmot,packbat=packbat,costmot=costmot,costbat=costbat))
+    elif idx==16:
+        n=rng.randint(25,65);add=rng.randint(8,20);fee_a=rng.randint(60,110);fee_b=rng.randint(110,195);each_a=rng.randint(5,8);each_b=rng.randint(3,6)
+        a=fee_a+n*each_a;b=fee_b+n*each_b;na=fee_a+(n+add)*each_a;nb=fee_b+(n+add)*each_b
+        return _mc_new_problem(8,idx,seed,'Les deux tarifs du cinéma',[
+            f'Pour une séance, {n} élèves vont au cinéma. L’offre A coûte {fee_a} € de réservation puis {each_a} € par élève. L’offre B coûte {fee_b} € de réservation puis {each_b} € par élève.',
+            f'Un second groupe de {add} élèves rejoint la sortie ; les frais de réservation restent inchangés.'
+        ],['Combien coûte l’offre A pour le premier groupe ?','Combien coûte l’offre B pour le premier groupe ?','Quel est le prix le plus bas pour le premier groupe ?','Quel est l’écart entre les deux devis initiaux ?','Quel est le prix le plus bas après l’arrivée du second groupe ?'],
+        [a,b,min(a,b),abs(a-b),min(na,nb)],['Prix A','Prix B','Prix minimal initial','Écart de prix','Prix minimal final'],['€','€','€','€','€'],['B','B','C','R','C'],[
+            f'{fee_a}+{n}×{each_a}={a} €.',f'{fee_b}+{n}×{each_b}={b} €.',f'Minimum({a},{b})={min(a,b)} €.',f'|{a}−{b}|={abs(a-b)} €.',f'Pour {n+add} élèves, A={na} € et B={nb} €. Le plus petit coût est {min(na,nb)} €.'
+        ],dict(kind='n8_cinema',n=n,add=add,fee_a=fee_a,fee_b=fee_b,each_a=each_a,each_b=each_b))
+    elif idx==17:
+        flags=rng.randint(17,37);cut=rng.randint(40,80);roll=rng.choice([400,500,600]);ribbon=3*cut;perroll=roll//ribbon;extra=rng.randint(3,11)
+        while perroll<2:roll+=100;perroll=roll//ribbon
+        nroll=_mc_new_ceil(flags,perroll);extra_roll=_mc_new_ceil(flags+extra,perroll)-nroll
+        return _mc_new_problem(8,idx,seed,'Les fanions du tournoi de lecture',[
+            f'Le collège fabrique {flags} fanions identiques. Chaque fanion utilise trois morceaux de ruban de {cut} cm.',
+            f'Le ruban est vendu par rouleaux de {roll} cm. On ne raccorde jamais deux rouleaux pour un même fanion. Après le premier achat, le club décide de fabriquer {extra} fanions supplémentaires.'
+        ],['Combien de centimètres faut-il pour un fanion ?','Combien de fanions complets peut-on couper dans un rouleau ?','Combien de rouleaux faut-il acheter pour la première commande ?','Combien de centimètres reste-t-il sur le dernier rouleau après les fanions initialement prévus ?','Combien de rouleaux supplémentaires faut-il pour fabriquer les fanions ajoutés ?'],
+        [ribbon,perroll,nroll,roll-(flags-(nroll-1)*perroll)*ribbon,extra_roll],['Ruban par fanion','Fanions par rouleau','Rouleaux initiaux','Chute dernier rouleau','Nouveaux rouleaux'],['cm','fanions','rouleaux','cm','rouleaux'],['Q','L','L','R','L'],[
+            f'3×{cut}={ribbon} cm.',f'{roll} ÷ {ribbon} donne {perroll} fanions entiers.',f'⌈{flags}/{perroll}⌉={nroll} rouleaux.',f'Dernier rouleau : {flags-(nroll-1)*perroll} fanions, donc {roll}−{flags-(nroll-1)*perroll}×{ribbon}={roll-(flags-(nroll-1)*perroll)*ribbon} cm de chute.',f'Pour {flags+extra} fanions il faut {_mc_new_ceil(flags+extra,perroll)} rouleaux au total, soit {extra_roll} de plus.'
+        ],dict(kind='n8_fanions',flags=flags,cut=cut,roll=roll,extra=extra))
+    elif idx==18:
+        km=rng.randint(3,7);pace=rng.choice([9,10,12]); laps=rng.randint(3,6);pause=rng.randint(5,10); detour=rng.randint(2,5);limit=(km*laps*pace+(laps-1)*pause+detour*pace)+rng.choice([-10,-5,10,20])
+        walk=km*laps*pace;breaks=(laps-1)*pause;total=walk+breaks;last=total+detour*pace
+        return _mc_new_problem(8,idx,seed,'Le sentier et les pauses',[
+            f'Une équipe effectue {laps} tours de {km} km à {pace} minutes par kilomètre. Entre deux tours, elle fait une pause de {pause} minutes (aucune pause après le dernier tour).',
+            f'La durée autorisée est {limit} minutes. Le guide propose ensuite un détour supplémentaire de {detour} km parcouru à la même allure.'
+        ],['Quelle distance totale le groupe parcourt-il avant le détour ?','Combien de minutes dure la marche, sans les pauses ?','Combien de minutes durent toutes les pauses ?','Quelle est la durée totale initiale ?','De combien de minutes la durée après détour dépasse-t-elle la limite (résultat positif), ou reste-t-elle en dessous (résultat négatif) ?'],
+        [km*laps,walk,breaks,total,last-limit],['Distance initiale','Durée de marche','Durée des pauses','Durée initiale','Écart à la limite'],['km','min','min','min','min'],['D','D','D','D','R'],[
+            f'{km}×{laps}={km*laps} km.',f'{km*laps}×{pace}={walk} minutes.',f'({laps}−1)×{pause}={breaks} min.',f'{walk}+{breaks}={total} min.',f'Après détour : {total}+{detour}×{pace}={last}. Écart (durée − limite)={last}−{limit}={last-limit} min.'
+        ],dict(kind='n8_rando',km=km,pace=pace,laps=laps,pause=pause,detour=detour,limit=limit))
+    elif idx==19:
+        faucets=rng.randint(4,10);liters=rng.randint(3,7);days=rng.choice([5,6,7])
+        goal=(faucets+rng.randint(2,5))*liters*days-rng.randint(1,liters*days-1)
+        savings=faucets*liters*days; deficit=goal-savings
+        price_a=rng.randint(8,16);liters_b=liters+rng.randint(2,5);price_b=rng.randint(13,25)
+        count_a=_mc_new_ceil(deficit,liters*days);count_b=_mc_new_ceil(deficit,liters_b*days)
+        a=count_a*price_a;b=count_b*price_b
+        return _mc_new_problem(8,idx,seed,'La campagne d’économie d’eau',[
+            f'Le collège a installé {faucets} économiseurs A sur des robinets. Chaque économiseur A fait gagner {liters} litres par jour. On mesure l’économie pendant {days} jours.',
+            f'L’objectif est d’économiser au moins {goal} litres. Pour équiper d’autres robinets, le collège peut choisir le modèle A à {price_a} € l’unité, ou un nouveau modèle B économisant {liters_b} litres par jour, à {price_b} € l’unité. Pour les nouveaux équipements, on choisit un seul modèle.'
+        ],['Combien de litres un économiseur A fait-il économiser pendant toute la période ?','Combien de litres les économiseurs déjà installés font-ils économiser ensemble ?','Combien de litres manque-t-il pour atteindre l’objectif ?','Combien d’économiseurs A supplémentaires faudrait-il au minimum ?','Quel est le coût minimal des nouveaux économiseurs, en choisissant soit seulement A, soit seulement B ?'],
+        [liters*days,savings,deficit,count_a,min(a,b)],['Économie d’un A','Économie totale','Économie manquante','Nombre de A supplémentaires','Coût minimal de l’équipement'],['L','L','L','économiseurs','€'],['Q','Q','R','L','C'],[
+            f'{liters}×{days}={liters*days} L.',f'{faucets}×{liters*days}={savings} L.',f'{goal}−{savings}={deficit} L.',f'⌈{deficit}/{liters*days}⌉={count_a} économiseurs A.',f'Offre A : {count_a}×{price_a}={a} € ; offre B : ⌈{deficit}/({liters_b}×{days})⌉×{price_b}={count_b}×{price_b}={b} €. Choisir le coût minimal : {min(a,b)} €.'
+        ],dict(kind='n8_eau',faucets=faucets,liters=liters,days=days,goal=goal,price_a=price_a,liters_b=liters_b,price_b=price_b))
+    elif idx==20:
+        classes=rng.randint(3,6);per=rng.randint(21,28);teachers=rng.randint(4,8); ticket=rng.randint(5,10); cap=rng.choice([36,40,48]);buscost=rng.randint(100,170);groupbuscost=rng.randint(280,500)
+        n=classes*per+teachers;entry=n*ticket;nb=_mc_new_ceil(n,cap);regular=nb*buscost;plus=groupbuscost if groupbuscost<2*regular else groupbuscost
+        return _mc_new_problem(8,idx,seed,'La sortie au planétarium',[
+            f'{classes} classes de {per} élèves et {teachers} accompagnateurs visitent un planétarium. Chaque billet coûte {ticket} €.',
+            f'Le transporteur A propose des cars de {cap} places pour {buscost} € chacun. Le transporteur B propose un car de grande capacité pour tout le groupe, à un tarif fixe de {groupbuscost} €.'
+        ],['Combien de personnes participent à la sortie ?','Quel est le prix total des entrées ?','Combien de cars A faut-il louer ?','Quel est le budget total avec le transporteur A, billets compris ?','Quel est le budget total minimal en comparant A et B, billets compris ?'],
+        [n,entry,nb,entry+regular,entry+min(regular,groupbuscost)],['Participants','Coût des entrées','Cars A','Budget avec A','Budget minimal'],['personnes','€','cars','€','€'],['Q','B','L','B','C'],[
+            f'{classes}×{per}+{teachers}={n}.',f'{n}×{ticket}={entry} €.',f'⌈{n}/{cap}⌉={nb} cars.',f'{entry}+{nb}×{buscost}={entry+regular} €.',f'A : {entry+regular} € ; B : {entry+groupbuscost} €. Minimum {entry+min(regular,groupbuscost)} €.'
+        ],dict(kind='n8_planet',classes=classes,per=per,teachers=teachers,ticket=ticket,cap=cap,buscost=buscost,groupbuscost=groupbuscost))
+    elif idx==21:
+        start=rng.randint(60,130);win=rng.randint(3,7);reward=rng.randint(10,20)
+        loss=rng.randint(25,55);spent=rng.randint(20,45);goal=rng.randint(240,350)
+        normal=rng.randint(18,27);rare=rng.randint(normal+7,normal+24)
+        gains=win*reward;remaining=start+gains-loss-spent;miss=max(0,goal-remaining)
+        only_normal=_mc_new_ceil(miss,normal)
+        with_rare=1+_mc_new_ceil(max(0,miss-rare),normal)
+        return _mc_new_problem(8,idx,seed,'La quête des cristaux du jeu vidéo',[
+            f'Dans un jeu, Emma possède {start} cristaux. Elle en gagne {reward} pour chacune de {win} missions, en perd {loss} dans un piège puis dépense {spent} cristaux pour un équipement.',
+            f'Elle souhaite posséder {goal} cristaux. Une mission ordinaire rapporte {normal} cristaux. Elle peut aussi réussir au plus une mission rare rapportant {rare} cristaux. Les deux types de missions comptent chacun pour une mission.'
+        ],['Combien de cristaux Emma gagne-t-elle dans les premières missions ?','Combien conserve-t-elle après le piège ?','Combien lui reste-t-il après l’achat ?','Combien de cristaux manque-t-il pour atteindre l’objectif ?','Quel est le nombre minimal de missions supplémentaires en choisissant entre les missions ordinaires et l’unique mission rare possible ?'],
+        [gains,start+gains-loss,remaining,miss,min(only_normal,with_rare)],['Cristaux gagnés','Cristaux après piège','Cristaux restants','Cristaux manquants','Missions minimales'],['cristaux','cristaux','cristaux','cristaux','missions'],['Q','R','R','R','C'],[
+            f'{win}×{reward}={gains}.',f'{start}+{gains}−{loss}={start+gains-loss}.',f'{start+gains-loss}−{spent}={remaining}.',f'{goal}−{remaining}={miss}.',f'Sans rare : ⌈{miss}/{normal}⌉={only_normal} ordinaires. Avec une rare : 1+⌈max(0,{miss}−{rare})/{normal}⌉={with_rare} missions. Minimum : {min(only_normal,with_rare)} missions.'
+        ],dict(kind='n8_jeu',start=start,win=win,reward=reward,loss=loss,spent=spent,goal=goal,normal=normal,rare=rare))
+    elif idx==22:
+        scale=rng.choice([10000,20000,25000]); a=rng.randint(12,30);b=rng.randint(13,31);detour=rng.randint(3,12)
+        km_a=a*scale/100000;km_b=b*scale/100000;new_a=(a+detour)*scale/100000
+        # distances en km arrondies exact au centième grâce aux échelles retenues
+        return _mc_new_problem(8,idx,seed,'La carte du rallye d’orientation',[
+            f'Une carte est à l’échelle 1:{scale}. Le sentier A mesure {a} cm sur la carte et le sentier B {b} cm.',
+            f'Une déviation augmente le sentier A de {detour} cm sur cette même carte. On conserve les mêmes unités de conversion.'
+        ],['Quelle est la longueur réelle du sentier A, en kilomètres ?','Quelle est la longueur réelle du sentier B, en kilomètres ?','Quelle sera la longueur réelle du sentier A après déviation ?','Quel sentier est le plus court après la déviation : A ou B (C s’ils sont égaux) ?','Quelle distance réelle sépare les deux sentiers après la déviation ?'],
+        [km_a,km_b,new_a,_mc_new_choose_a_b(new_a,km_b),abs(new_a-km_b)],['Distance A','Distance B','Distance A modifiée','Sentier le plus court','Écart de distance'],['km','km','km','','km'],['D','D','D','C','D'],[
+            f'{a}×{scale} cm = {km_a} km.',f'{b}×{scale} cm = {km_b} km.',f'({a}+{detour})×{scale} cm = {new_a} km.',f'Comparer {new_a} et {km_b} : réponse {_mc_new_choose_a_b(new_a,km_b)}.',f'|{new_a}−{km_b}|={abs(new_a-km_b)} km.'
+        ],dict(kind='n8_orientation',scale=scale,a=a,b=b,detour=detour))
+    elif idx==23:
+        surface=rng.randint(35,80);qty=rng.randint(2,5);stock=rng.randint(20,60); bag_a=rng.choice([10,15]);price_a=rng.randint(8,14);bag_b=rng.choice([16,20]);price_b=rng.randint(14,23)
+        need=surface*qty;missing=max(0,need-stock);a=_mc_new_ceil(missing,bag_a)*price_a;b=_mc_new_ceil(missing,bag_b)*price_b
+        return _mc_new_problem(8,idx,seed,'Le compost du potager',[
+            f'Le potager comporte {surface} m², avec un besoin de {qty} kg de compost par m².',
+            f'Le collège possède {stock} kg. L’offre A vend des sacs de {bag_a} kg à {price_a} € ; l’offre B des sacs de {bag_b} kg à {price_b} €. On choisit un seul type de sac.'
+        ],['Quelle masse de compost faut-il pour tout le potager ?','Quelle masse manque-t-il après utilisation du stock ?','Combien de sacs A faut-il au minimum ?','Combien coûteraient les sacs A nécessaires ?','Quel est le coût le plus faible entre les deux offres pour compléter le besoin ?'],
+        [need,missing,_mc_new_ceil(missing,bag_a),a,min(a,b)],['Besoin de compost','Compost manquant','Sacs A','Coût A','Coût minimal'],['kg','kg','sacs','€','€'],['Q','R','L','B','C'],[
+            f'{surface}×{qty}={need} kg.',f'{need}−{stock}={missing} kg.',f'⌈{missing}/{bag_a}⌉={_mc_new_ceil(missing,bag_a)} sacs.',f'{_mc_new_ceil(missing,bag_a)}×{price_a}={a} €.',f'B : ⌈{missing}/{bag_b}⌉×{price_b}={b} €. Minimum entre {a} et {b} : {min(a,b)} €.'
+        ],dict(kind='n8_compost',surface=surface,qty=qty,stock=stock,bag_a=bag_a,price_a=price_a,bag_b=bag_b,price_b=price_b))
+    elif idx==24:
+        teams=rng.randint(5,9);matchtime=rng.choice([12,15,18]);courts=rng.choice([2,3,4]); breaktime=rng.choice([3,5]);duration=rng.randint(155,300)
+        matches=teams*(teams-1)//2;slots=_mc_new_ceil(matches,courts);total=slots*matchtime+(slots-1)*breaktime
+        return _mc_new_problem(8,idx,seed,'Le tournoi sur plusieurs terrains',[
+            f'{teams} équipes doivent se rencontrer chacune une seule fois. Une rencontre dure {matchtime} minutes.',
+            f'Le gymnase dispose de {courts} terrains ; il peut accueillir autant de matchs simultanés que de terrains. Entre deux séries de matchs, il y a {breaktime} minutes de pause, jamais après la dernière série.',
+            f'La journée sportive réserve {duration} minutes à ce tournoi.'
+        ],['Combien de rencontres faut-il organiser au total, sans compter deux fois les mêmes équipes ?','Combien de matchs peuvent se dérouler simultanément ?','Combien de séries de matchs faut-il au minimum ?','Quelle est la durée minimale du tournoi, pauses comprises ?','Quel est l’écart signé entre la durée réservée et la durée du tournoi (positif s’il reste du temps, négatif sinon) ?'],
+        [matches,courts,slots,total,duration-total],['Nombre de rencontres','Matchs simultanés','Séries de matchs','Durée du tournoi','Écart de temps'],['matchs','matchs','séries','min','min'],['Q','L','L','D','R'],[
+            f'{teams}×({teams}−1)÷2={matches} rencontres.',f'{courts} terrains donnent {courts} matchs simultanés.',f'⌈{matches}/{courts}⌉={slots} séries.',f'{slots}×{matchtime}+({slots}−1)×{breaktime}={total} min.',f'{duration}−{total}={duration-total} min.'
+        ],dict(kind='n8_tournoi',teams=teams,matchtime=matchtime,courts=courts,breaktime=breaktime,duration=duration))
+    elif idx==25:
+        boxes=rng.randint(12,25);per=rng.randint(8,14); spoiled=rng.randint(7,25);target=rng.randint(220,360);pack_a=rng.choice([10,12]);cost_a=rng.randint(9,15);pack_b=rng.choice([15,18]);cost_b=rng.randint(16,25)
+        stock=boxes*per-spoiled;target=max(target,stock+rng.randint(15,65));missing=target-stock;a=_mc_new_ceil(missing,pack_a)*cost_a;b=_mc_new_ceil(missing,pack_b)*cost_b
+        return _mc_new_problem(8,idx,seed,'La collecte pour la cantine solidaire',[
+            f'Une association reçoit {boxes} cartons de {per} portions alimentaires chacun. {spoiled} portions sont inutilisables.',
+            f'Elle veut disposer de {target} portions. Un supplément peut être acheté en lots A de {pack_a} portions à {cost_a} €, ou en lots B de {pack_b} portions à {cost_b} €. Elle ne mélange pas les lots des deux offres.'
+        ],['Combien de portions ont été reçues initialement ?','Combien de portions utilisables restent après le tri ?','Combien de portions manque-t-il pour atteindre l’objectif ?','Quel serait le coût total en choisissant seulement des lots A ?','Quel est le coût minimal entre les deux offres pour compléter le stock ?'],
+        [boxes*per,stock,missing,a,min(a,b)],['Portions reçues','Portions utilisables','Portions manquantes','Coût A','Coût minimal'],['portions','portions','portions','€','€'],['Q','Q','R','B','C'],[
+            f'{boxes}×{per}={boxes*per}.',f'{boxes*per}−{spoiled}={stock}.',f'{target}−{stock}={missing}.',f'⌈{missing}/{pack_a}⌉×{cost_a}={a} €.',f'B : ⌈{missing}/{pack_b}⌉×{cost_b}={b} €. Minimum : {min(a,b)} €.'
+        ],dict(kind='n8_collecte',boxes=boxes,per=per,spoiled=spoiled,target=target,pack_a=pack_a,cost_a=cost_a,pack_b=pack_b,cost_b=cost_b))
+    raise ValueError(f'Modèle N8 inconnu: {model_id}')
+
+def _mc_new_mix_instance(rng, need_min=35, need_max=95, lo=5, hi=18, fee=0, max_b=None):
+    """Retient un tirage où mélanger les offres améliore strictement les choix purs."""
+    for _ in range(2000):
+        a_size=rng.randint(lo,hi-3);b_size=rng.randint(a_size+2,hi+5)
+        # On génère des prix unitaires comparables, sans gagnant évident.
+        pa=rng.randint(a_size+2,2*a_size+6)
+        pb=rng.randint(b_size+2,2*b_size+8)
+        need=rng.randint(need_min,need_max)
+        try:sol=_mc_new_combo(need,a_size,pa,b_size,pb,max_b=max_b,fee_b=fee)
+        except ValueError:continue
+        purea=_mc_new_ceil(need,a_size)*pa
+        pureb=(_mc_new_ceil(need,b_size)*pb+fee) if max_b is None or _mc_new_ceil(need,b_size)<=max_b else 10**6
+        if sol[2]>=1 and sol[3]>=1 and min(purea,pureb)-sol[0]>=2 and sol[2]+sol[3]<=13:
+            return need,a_size,pa,b_size,pb,sol,purea,pureb
+    raise AssertionError('Pas de variante mixte suffisamment intéressante')
+
+
+def _mc_new_2d_instance(rng):
+    """Deux ressources complémentaires, vrai calcul de combinaison."""
+    for _ in range(2000):
+        needx=rng.randint(19,43);needy=rng.randint(20,43)
+        ax=rng.randint(5,10);ay=rng.randint(1,3)
+        bx=rng.randint(1,3);by=rng.randint(5,10)
+        pa=rng.randint(9,18);pb=rng.randint(9,18)
+        sol=_mc_new_2d_combo(needx,needy,ax,ay,pa,bx,by,pb,max_a=15,max_b=15)
+        cost_a_only=max(_mc_new_ceil(needx,ax),_mc_new_ceil(needy,ay))*pa
+        cost_b_only=max(_mc_new_ceil(needx,bx),_mc_new_ceil(needy,by))*pb
+        if sol[2]>=1 and sol[3]>=1 and min(cost_a_only,cost_b_only)-sol[0]>=5 and sol[2]+sol[3]<=13:
+            return needx,needy,ax,ay,pa,bx,by,pb,sol,cost_a_only,cost_b_only
+    raise AssertionError('Tirage deux ressources instable')
+
+
+def _mc_new_n9(idx,seed=None):
+    rng,seed=_p9_rng(seed)
+    if idx==11:
+        # Besoin construit à partir de mouvements ; combinaison de colis optimale.
+        start=rng.randint(65,130); loan=rng.randint(38,77);received=rng.randint(15,37)
+        net=start+received-loan
+        need,a_size,pa,b_size,pb,sol,purea,pureb=_mc_new_mix_instance(rng,need_min=35,need_max=85)
+        target=net+need
+        return _mc_new_problem(9,idx,seed,'La réserve de bandes dessinées',[
+            f'La bibliothèque possède {start} BD, en reçoit {received} et en prête {loan}. Elle souhaite posséder au moins {target} BD pour un événement.',
+            f'Le fournisseur A vend des colis de {a_size} BD pour {pa} € ; B vend des colis de {b_size} BD pour {pb} €. Les deux formats peuvent être mélangés et chaque colis est indivisible.'
+        ],['Quel stock reste-t-il après les prêts et les réceptions ?','Combien de BD faut-il acquérir au minimum pour atteindre l’objectif ?','Quel serait le coût si tous les colis achetés étaient du format A ?','Quel serait le coût si tous les colis achetés étaient du format B ?','Quel est le coût minimal en autorisant un mélange des colis A et B ?'],
+        [net,need,purea,pureb,sol[0]],['Stock disponible','BD à acquérir','Coût A seul','Coût B seul','Coût optimal'],['BD','BD','€','€','€'],['Q','R','B','B','C'],[
+            f'{start}+{received}−{loan}={net} BD.',f'{target}−{net}={need} BD.',f'⌈{need}/{a_size}⌉×{pa}={purea} €.',f'⌈{need}/{b_size}⌉×{pb}={pureb} €.',f'Rechercher les couples (A,B) couvrant au moins {need} BD. Le meilleur est {sol[2]} colis A et {sol[3]} colis B, pour {sol[2]}×{pa}+{sol[3]}×{pb}={sol[0]} € ; {sol[4]} BD en surplus.'
+        ],dict(kind='n9_bd',start=start,loan=loan,received=received,target=target,a_size=a_size,pa=pa,b_size=b_size,pb=pb))
+    elif idx==12:
+        # Plusieurs recettes possibles, quota de billets adultes et contrainte de places.
+        for _ in range(1000):
+            rows=rng.randint(9,13);per=rng.randint(14,18); reserved=rng.randint(5,15)
+            sold_students=rng.randint(35,68);sold_adults=rng.randint(15,32)
+            usable=rows*per-reserved
+            if usable-sold_students-sold_adults<12:continue
+            price_s=rng.randint(4,7);price_a=rng.randint(8,12);program=rng.choice([1,2]);fixed=rng.randint(180,280)
+            profit=sold_students*(price_s-program)+sold_adults*(price_a-program)-fixed
+            extra_cap=rng.randint(3,7);remaining_seats=usable-sold_students-sold_adults
+            extra_needed=rng.randint(33,75)
+            # Q5: min billets pour gain au moins cible avec au plus extra_cap adultes; place physically possible.
+            combos=[(s+a,-a,s,a) for a in range(extra_cap+1) for s in range(remaining_seats-a+1) if s*(price_s-program)+a*(price_a-program)>=extra_needed]
+            if combos and 2<=min(combos)[2]+min(combos)[3]<=remaining_seats and min(combos)[2]>0 and min(combos)[3]>0:break
+        else:raise AssertionError('spectacle combinaison manquante')
+        best=min(combos);target=profit+extra_needed
+        return _mc_new_problem(9,idx,seed,'Le spectacle solidaire et les dernières places',[
+            f'Une salle a {rows} rangées de {per} places, dont {reserved} réservées et invendables. Le collège a déjà vendu {sold_students} billets élèves à {price_s} € et {sold_adults} billets adultes à {price_a} €.',
+            f'Chaque spectateur reçoit un programme qui coûte {program} €. Les frais fixes du spectacle sont de {fixed} €. Le collège veut porter son bénéfice total à au moins {target} €.',
+            f'Il ne peut encore vendre que {extra_cap} billets adultes au maximum. Les autres billets supplémentaires seraient des billets élèves, dans la limite des places disponibles.'
+        ],['Combien de places peuvent être vendues au total ?','Quel est le bénéfice avec les billets déjà vendus, programmes et frais compris ?','Combien de places vendables restent libres ?','Combien d’euros de bénéfice supplémentaire faut-il obtenir pour atteindre l’objectif ?','Quel est le nombre minimal de billets supplémentaires à vendre en respectant la limite de billets adultes ?'],
+        [usable,profit,remaining_seats,extra_needed,best[0]],['Places vendables','Bénéfice actuel','Places restantes','Bénéfice manquant','Billets supplémentaires'],['places','€','places','€','billets'],['L','B','R','R','L'],[
+            f'{rows}×{per}−{reserved}={usable} places.',f'{sold_students}×({price_s}−{program})+{sold_adults}×({price_a}−{program})−{fixed}={profit} €.',f'{usable}−({sold_students}+{sold_adults})={remaining_seats} places.',f'{target}−{profit}={extra_needed} €.',f'Le billet élève rapporte {price_s-program} € nets, le billet adulte {price_a-program} €. Tester 0 à {extra_cap} billets adultes et compléter avec des billets élèves, en respectant les {remaining_seats} places. Minimum : {best[0]} billets ({best[2]} élèves, {best[3]} adultes).'
+        ],dict(kind='n9_spectacle',rows=rows,per=per,reserved=reserved,sold_students=sold_students,sold_adults=sold_adults,price_s=price_s,price_a=price_a,program=program,fixed=fixed,target=target,extra_cap=extra_cap))
+    elif idx==13:
+        target=rng.randint(10,17);motors=rng.randint(8,18);batteries=rng.randint(14,32)
+        target=max(target,motors//2+1,batteries//3+1)
+        need_m=2*target-motors;need_b=3*target-batteries
+        ms1=rng.choice([4,5,6]);ms2=ms1+rng.choice([2,3]);mp1=rng.randint(10,19);mp2=rng.randint(14,27)
+        bs1=rng.choice([5,6,7]);bs2=bs1+rng.choice([2,3]);bp1=rng.randint(12,21);bp2=rng.randint(16,28)
+        option_m=[(_mc_new_ceil(need_m,ms1)*mp1,'M1'),(_mc_new_ceil(need_m,ms2)*mp2,'M2')]
+        option_b=[(_mc_new_ceil(need_b,bs1)*bp1,'B1'),(_mc_new_ceil(need_b,bs2)*bp2,'B2')]
+        best_m=min(option_m);best_b=min(option_b);cost=best_m[0]+best_b[0]
+        capacity=min(motors//2,batteries//3)
+        return _mc_new_problem(9,idx,seed,'Les fournisseurs du laboratoire robotique',[
+            f'Le laboratoire possède {motors} moteurs et {batteries} batteries. Chaque robot complet nécessite 2 moteurs et 3 batteries. Son objectif est de fabriquer {target} robots.',
+            f'Pour les moteurs : lot M1 de {ms1} moteurs à {mp1} €, ou lot M2 de {ms2} moteurs à {mp2} €.',
+            f'Pour les batteries : lot B1 de {bs1} batteries à {bp1} €, ou lot B2 de {bs2} batteries à {bp2} €.',
+            'Chaque lot est indivisible. Pour un même composant, on choisit un seul format de lot, mais le format des moteurs peut être différent de celui des batteries.'
+        ],['Combien de robots les moteurs actuels permettent-ils de fabriquer ?','Combien de robots les batteries actuelles permettent-elles de fabriquer ?','Combien de robots complets peut-on fabriquer aujourd’hui ?','Combien de batteries supplémentaires faut-il pour atteindre l’objectif ?','Quel est le coût total minimal des lots de moteurs et de batteries nécessaires en comparant les quatre formats disponibles ?'],
+        [motors//2,batteries//3,capacity,need_b,cost],['Robots selon moteurs','Robots selon batteries','Robots complets','Batteries manquantes','Achats au coût minimal'],['robots','robots','robots','batteries','€'],['L','L','L','R','C'],[
+            f'{motors} ÷ 2 = {motors//2} robots.',f'{batteries} ÷ 3 = {batteries//3} robots.',f'Le minimum est {capacity} robots.',f'{target}×3−{batteries}={need_b} batteries.',f'Moteurs manquants : {need_m}. M1 coûte {option_m[0][0]} €, M2 {option_m[1][0]} €. Batteries : B1 coûte {option_b[0][0]} €, B2 {option_b[1][0]} €. Retenir {best_m[1]} et {best_b[1]}, soit {cost} €.'
+        ],dict(kind='n9_robotique',target=target,motors=motors,batteries=batteries,ms1=ms1,ms2=ms2,mp1=mp1,mp2=mp2,bs1=bs1,bs2=bs2,bp1=bp1,bp2=bp2))
+    elif idx==14:
+        for _ in range(200):
+            teams=rng.randint(7,11);duration=rng.choice([10,12,15]);rest=rng.choice([3,4,5]);courts=rng.choice([2,3]);single=rng.randint(45,85)
+            double=rng.randint(single+9,2*single-5)
+            matches=teams*(teams-1)//2
+            def duree(extra):
+                slots=_mc_new_ceil(matches,courts+extra)
+                return slots*duration+(slots-1)*rest
+            initialdur=duree(0);min_dur=duree(3)
+            if min_dur<initialdur-8:break
+        limit=rng.randint(min_dur,initialdur-1)
+        feasible=[]
+        for pack2 in range(2):
+            for singles in range(4):
+                extra=2*pack2+singles
+                if extra<=3 and duree(extra)<=limit:
+                    feasible.append((pack2*double+singles*single,extra,singles,pack2,duree(extra)))
+        assert feasible
+        best=min(feasible)
+        return _mc_new_problem(9,idx,seed,'Le championnat et les terrains à louer',[
+            f'{teams} équipes jouent chacune contre toutes les autres une fois. Chaque match dure {duration} minutes. Entre deux séries de matchs, il faut {rest} minutes de pause, sauf après la dernière.',
+            f'Le gymnase dispose de {courts} terrains. Le championnat doit finir en {limit} minutes au maximum.',
+            f'Pour tout le tournoi, on peut louer un terrain supplémentaire pour {single} €, ou un ensemble de deux terrains pour {double} €. On peut combiner au maximum trois terrains supplémentaires ; au plus un ensemble de deux est proposé.'
+        ],['Combien de matchs distincts faut-il organiser ?','Combien de séries faut-il avec les terrains actuels ?','Quelle serait la durée totale avec les terrains actuels, pauses comprises ?','Combien de minutes faudrait-il gagner sur cette durée initiale pour respecter la limite ?','Quel est le coût minimal de location de terrains supplémentaires, en comparant les terrains seuls et l’ensemble de deux ?'],
+        [matches,_mc_new_ceil(matches,courts),initialdur,initialdur-limit,best[0]],['Nombre de matchs','Séries initiales','Durée initiale','Minutes à gagner','Coût minimal de location'],['matchs','séries','min','min','€'],['Q','L','D','R','C'],[
+            f'{teams}×({teams}−1)÷2={matches} matchs.',f'⌈{matches}/{courts}⌉={_mc_new_ceil(matches,courts)} séries.',f'{_mc_new_ceil(matches,courts)}×{duration}+({_mc_new_ceil(matches,courts)}−1)×{rest}={initialdur} min.',f'{initialdur}−{limit}={initialdur-limit} min.',f'Tester 1 à 3 terrains supplémentaires, par terrain seul à {single} € ou par ensemble de 2 à {double} €. Le moins cher : {best[2]} terrain(s) seul(s) et {best[3]} ensemble(s) de 2, soit {best[1]} terrains ajoutés pour {best[0]} € ; durée {best[4]} min.'
+        ],dict(kind='n9_terrains',teams=teams,duration=duration,rest=rest,courts=courts,limit=limit,single=single,double=double))
+    elif idx==15:
+        # Deux contraintes actives : missions rares limitées et énergie disponible.
+        for _ in range(3000):
+            regular=rng.randint(15,22);rare=rng.randint(33,47)
+            energy_regular=2;energy_rare=rng.choice([4,5]);maxrare=rng.randint(2,3)
+            energy_cap=rng.randint(16,28);needed=rng.randint(100,190)
+            unconstrained=[(r+s,r,s) for r in range(maxrare+1) for s in range(16) if r*rare+s*regular>=needed]
+            feasible=[(r+s,r,s) for r in range(maxrare+1) for s in range(16) if r*rare+s*regular>=needed and r*energy_rare+s*energy_regular<=energy_cap]
+            if not feasible:continue
+            best=min(feasible)
+            if best[1]>0 and best[2]>0 and best[0]>min(unconstrained)[0] and best[0]<=13:break
+        else:raise AssertionError('Mission stratégique sans contrainte énergétique active')
+        gold=rng.randint(45,80);spent=rng.randint(17,34);target=gold-spent+needed
+        return _mc_new_problem(9,idx,seed,'Les missions et la réserve d’énergie du jeu vidéo',[
+            f'Le joueur possède {gold} cristaux et en dépense {spent}. Il veut disposer d’au moins {target} cristaux.',
+            f'Une mission ordinaire rapporte {regular} cristaux et consomme {energy_regular} points d’énergie. Une mission rare rapporte {rare} cristaux et consomme {energy_rare} points d’énergie.',
+            f'Il ne reste qu’au plus {maxrare} missions rares possibles. Le joueur possède {energy_cap} points d’énergie pour toutes les missions supplémentaires, sans possibilité de recharge.'
+        ],['Combien de cristaux garde-t-il après son achat ?','Combien de cristaux doit-il encore gagner au minimum ?','Combien de missions ordinaires faudrait-il si l’énergie et les missions rares n’étaient pas limitées ?','Combien de points d’énergie consommeraient toutes les missions rares encore possibles ?','Quel est le nombre minimal de missions pour atteindre la cible en respectant à la fois l’énergie disponible et la limite des missions rares ?'],
+        [gold-spent,needed,_mc_new_ceil(needed,regular),maxrare*energy_rare,best[0]],['Cristaux restants','Cristaux à gagner','Missions ordinaires sans limite','Énergie pour les rares','Minimum de missions faisables'],['cristaux','cristaux','missions','points','missions'],['R','R','L','Q','C'],[
+            f'{gold}−{spent}={gold-spent} cristaux.',f'{target}−{gold-spent}={needed} cristaux.',f'⌈{needed}/{regular}⌉={_mc_new_ceil(needed,regular)} missions (sans limite d’énergie).',f'{maxrare}×{energy_rare}={maxrare*energy_rare} points.',f'Explorer 0 à {maxrare} rares et compléter par des ordinaires, en vérifiant les cristaux gagnés et l’énergie consommée. Le meilleur plan est {best[1]} rare(s) et {best[2]} ordinaire(s), soit {best[0]} missions, utilisant {best[1]*energy_rare+best[2]*energy_regular} points sur {energy_cap}.'
+        ],dict(kind='n9_missions',gold=gold,spent=spent,target=target,regular=regular,rare=rare,maxrare=maxrare,energy_rare=energy_rare,energy_regular=energy_regular,energy_cap=energy_cap))
+    elif idx==16:
+        rows=rng.randint(10,15);cols=rng.randint(10,16);reserve=rng.randint(10,25);need=rows*cols+reserve
+        # Optimisation sur les formats de boîtes adaptés au grand besoin.
+        for _ in range(1000):
+            a_size=rng.randint(9,15);b_size=rng.randint(16,25)
+            pa=rng.randint(8,14);pb=rng.randint(14,23)
+            sol=_mc_new_combo(need,a_size,pa,b_size,pb)
+            purea=_mc_new_ceil(need,a_size)*pa;pureb=_mc_new_ceil(need,b_size)*pb
+            if sol[2]>=1 and sol[3]>=1 and min(purea,pureb)>sol[0] and sol[2]+sol[3]<=20:break
+        else:raise AssertionError('mosaïque sans combinaison utile')
+        return _mc_new_problem(9,idx,seed,'La grande mosaïque du collège',[
+            f'Une mosaïque comporte {rows} lignes de {cols} carreaux. Le club veut prévoir {reserve} carreaux supplémentaires pour les pertes.',
+            f'La boîte A contient {a_size} carreaux et coûte {pa} €. La boîte B en contient {b_size} et coûte {pb} €. Il est possible de mélanger les deux offres.'
+        ],['Combien de carreaux sont nécessaires pour la mosaïque seule ?','Quel est le besoin total, réserve comprise ?','Quel serait le coût si seuls des lots A étaient achetés ?','Quel serait le coût si seuls des lots B étaient achetés ?','Quel est le coût minimal en combinant librement les boîtes A et B ?'],
+        [rows*cols,need,purea,pureb,sol[0]],['Carreaux de mosaïque','Carreaux nécessaires','Coût lots A','Coût lots B','Coût optimal'],['carreaux','carreaux','€','€','€'],['Q','Q','B','B','C'],[
+            f'{rows}×{cols}={rows*cols}.',f'{rows*cols}+{reserve}={need}.',f'⌈{need}/{a_size}⌉×{pa}={purea} €.',f'⌈{need}/{b_size}⌉×{pb}={pureb} €.',f'Mélange optimal : {sol[2]} boîte(s) A et {sol[3]} boîte(s) B, soit {sol[0]} € au total ; le surplus est de {sol[4]} carreaux.'
+        ],dict(kind='n9_mosaique',rows=rows,cols=cols,reserve=reserve,a_size=a_size,pa=pa,b_size=b_size,pb=pb))
+    elif idx==17:
+        for _ in range(1000):
+            n=rng.randint(60,145);cap_a=rng.randint(16,26);cap_b=rng.randint(29,44);pa=rng.randint(90,140);pb=rng.randint(165,235)
+            sol=_mc_new_combo(n,cap_a,pa,cap_b,pb,max_b=3)
+            purea=_mc_new_ceil(n,cap_a)*pa
+            pureb=_mc_new_ceil(n,cap_b)*pb if _mc_new_ceil(n,cap_b)<=3 else 10**6
+            if sol[2]>=1 and sol[3]>=1 and min(purea,pureb)>sol[0] and sol[3]<=3:break
+        else:raise AssertionError('navettes sans coût mixte utile')
+        return _mc_new_problem(9,idx,seed,'Le transport du festival scolaire',[
+            f'{n} participants doivent rejoindre un festival. Une navette A propose {cap_a} places pour {pa} € ; une navette B propose {cap_b} places pour {pb} €.',
+            'Le collège peut louer autant de navettes A que nécessaire, mais le transporteur ne dispose que de trois navettes B. Les deux formats peuvent être combinés.'
+        ],['Combien de navettes A sont nécessaires si on utilise seulement A ?','Quel serait le coût de la solution utilisant seulement A ?','Quelle est la capacité totale des trois navettes B ?','Combien de participants devraient être transportés par A si les trois B étaient louées ?','Quel est le coût minimal en combinant les deux types de navettes sous la limite de trois B ?'],
+        [_mc_new_ceil(n,cap_a),purea,3*cap_b,max(0,n-3*cap_b),sol[0]],['Navettes A seules','Prix A seul','Capacité des B','Participants non couverts','Coût minimal'],['navettes','€','personnes','personnes','€'],['L','B','L','R','C'],[
+            f'⌈{n}/{cap_a}⌉={_mc_new_ceil(n,cap_a)} navettes A.',f'{_mc_new_ceil(n,cap_a)}×{pa}={purea} €.',f'3×{cap_b}={3*cap_b} places.',f'Maximum(0,{n}−{3*cap_b})={max(0,n-3*cap_b)} personnes.',f'Tester 0, 1, 2 ou 3 navettes B, et compléter avec A en arrondissant au supérieur. Minimum : {sol[2]} A et {sol[3]} B, coût {sol[0]} €.'
+        ],dict(kind='n9_navettes',n=n,cap_a=cap_a,cap_b=cap_b,pa=pa,pb=pb))
+    elif idx==18:
+        fee=rng.randint(15,25)
+        need,a_size,pa,b_size,pb,sol,purea,pureb=_mc_new_mix_instance(rng,need_min=42,need_max=85,fee=fee)
+        return _mc_new_problem(9,idx,seed,'Les accessoires du concours cosplay',[
+            f'Un concours a besoin d’au moins {need} accessoires identiques. Le fournisseur A vend des paquets de {a_size} accessoires pour {pa} €.',
+            f'Le fournisseur B vend des paquets de {b_size} accessoires pour {pb} €. Dès qu’au moins un paquet B est commandé, il facture en plus {fee} € de livraison, une seule fois. Les paquets des deux fournisseurs peuvent être mélangés.'
+        ],['Combien de paquets A faudrait-il si l’on choisissait seulement A ?','Combien coûterait l’achat auprès de A uniquement ?','Combien de paquets B faudrait-il si l’on choisissait seulement B ?','Quel serait le coût total avec B seul, livraison comprise ?','Quel est le coût minimal en combinant les paquets A et B, livraison éventuelle comprise ?'],
+        [_mc_new_ceil(need,a_size),purea,_mc_new_ceil(need,b_size),pureb,sol[0]],['Paquets A seuls','Prix A seul','Paquets B seuls','Prix B livré','Coût minimal'],['paquets','€','paquets','€','€'],['L','B','L','B','C'],[
+            f'⌈{need}/{a_size}⌉={_mc_new_ceil(need,a_size)}.',f'{_mc_new_ceil(need,a_size)}×{pa}={purea} €.',f'⌈{need}/{b_size}⌉={_mc_new_ceil(need,b_size)}.',f'{_mc_new_ceil(need,b_size)}×{pb}+{fee}={pureb} €.',f'Comparer les combinaisons de paquets en comptant {fee} € une seule fois si B est utilisé : optimum {sol[2]} A + {sol[3]} B, coût {sol[0]} €.'
+        ],dict(kind='n9_cosplay',need=need,a_size=a_size,pa=pa,b_size=b_size,pb=pb,fee=fee))
+    elif idx==19:
+        needx,needy,ax,ay,pa,bx,by,pb,sol,ca,cb=_mc_new_2d_instance(rng)
+        return _mc_new_problem(9,idx,seed,'L’engrais du jardin pédagogique',[
+            f'Le jardin a besoin d’au moins {needx} doses d’azote (N) et {needy} doses de potassium (K).',
+            f'Le kit A fournit {ax} doses N et {ay} doses K pour {pa} €. Le kit B fournit {bx} doses N et {by} doses K pour {pb} €. Les kits sont indivisibles ; les deux composants doivent être suffisants.'
+        ],['Quel est le nombre minimal de kits A pour satisfaire le besoin en azote, en ignorant le potassium ?','Quel est le nombre minimal de kits A pour satisfaire le besoin en potassium, en ignorant l’azote ?','Quel serait le coût total en choisissant seulement des kits A suffisants pour les deux besoins ?','Quel serait le coût total en choisissant seulement des kits B suffisants pour les deux besoins ?','Quel est le coût minimal d’un mélange de kits A et B couvrant simultanément les deux besoins ?'],
+        [_mc_new_ceil(needx,ax),_mc_new_ceil(needy,ay),ca,cb,sol[0]],['A pour azote','A pour potassium','Coût A seul','Coût B seul','Coût optimal'],['kits','kits','€','€','€'],['L','L','B','B','C'],[
+            f'⌈{needx}/{ax}⌉={_mc_new_ceil(needx,ax)}.',f'⌈{needy}/{ay}⌉={_mc_new_ceil(needy,ay)}.',f'Maximum des deux besoins en A : {max(_mc_new_ceil(needx,ax),_mc_new_ceil(needy,ay))} kits, coût {ca} €.',f'Maximum(⌈{needx}/{bx}⌉,⌈{needy}/{by}⌉) kits B, coût {cb} €.',f'Explorer les couples A/B admissibles : {sol[2]} kit(s) A et {sol[3]} kit(s) B satisfont les deux minima, coût {sol[0]} €.'
+        ],dict(kind='n9_engrais',needx=needx,needy=needy,ax=ax,ay=ay,pa=pa,bx=bx,by=by,pb=pb))
+    elif idx==20:
+        n,a_size,pa,b_size,pb,sol,purea,pureb=_mc_new_mix_instance(rng,need_min=55,need_max=130,lo=9,hi=26,max_b=3)
+        # Livraison associative en deux types de véhicules : capacité, nombre limité de B.
+        return _mc_new_problem(9,idx,seed,'Les colis de la collecte solidaire',[
+            f'Une association doit transporter {n} cartons alimentaires. Une camionnette A peut transporter {a_size} cartons pour {pa} € par trajet.',
+            f'Un petit camion B transporte {b_size} cartons pour {pb} € par trajet. Seulement 3 trajets du camion B sont possibles ; les trajets des deux véhicules peuvent être combinés.'
+        ],['Combien de trajets A faut-il si on utilise uniquement la camionnette ?','Quel est le coût de tous ces trajets A ?','Combien de cartons peuvent être transportés par trois trajets B ?','Combien de cartons resteraient à transporter par A après ces trois trajets B ?','Quel est le coût minimal des trajets A et B réunis, dans la limite des trois trajets B ?'],
+        [_mc_new_ceil(n,a_size),purea,3*b_size,max(0,n-3*b_size),sol[0]],['Trajets A','Coût A seul','Capacité de trois B','Cartons restants','Coût optimal'],['trajets','€','cartons','cartons','€'],['L','B','L','R','C'],[
+            f'⌈{n}/{a_size}⌉={_mc_new_ceil(n,a_size)} trajets.',f'{_mc_new_ceil(n,a_size)}×{pa}={purea} €.',f'3×{b_size}={3*b_size} cartons.',f'Maximum(0,{n}−{3*b_size})={max(0,n-3*b_size)} cartons.',f'Comparer 0 à 3 trajets B et compléter avec A : solution {sol[2]} trajet(s) A et {sol[3]} B, coût {sol[0]} €.'
+        ],dict(kind='n9_collecte',n=n,a_size=a_size,pa=pa,b_size=b_size,pb=pb))
+    elif idx==21:
+        for _ in range(300):
+            easy=rng.randint(6,11);hard=rng.randint(14,20)
+            time_easy=rng.choice([5,6,7]);time_hard=rng.choice([9,10,11,12]);maxhard=rng.choice([2,3])
+            limit=rng.randint(30,52)
+            options=[(e*easy+h*hard,-(e+h),e,h) for h in range(maxhard+1) for e in range(limit//time_easy+1) if e*time_easy+h*time_hard<=limit]
+            best=max(options)
+            if best[2]>0 and best[3]>0:break
+        score_a=rng.randint(65,105);score_b=rng.randint(100,150)
+        return _mc_new_problem(9,idx,seed,'La manche chronométrée des énigmes',[
+            f'Une équipe a {score_a} points et son adversaire {score_b}. Il reste {limit} minutes pour une manche décisive.',
+            f'Une énigme facile prend {time_easy} minutes et rapporte {easy} points. Une énigme difficile prend {time_hard} minutes et rapporte {hard} points. Il reste au maximum {maxhard} énigmes difficiles, mais suffisamment de faciles.',
+            'Chaque énigme commencée doit être entièrement résolue avant la fin du temps. Les énigmes rapportent leurs points uniquement si elles sont achevées.'
+        ],['Quel écart de points sépare les deux équipes ?','Combien d’énigmes faciles peuvent être entièrement résolues si l’on ne fait que des faciles ?','Combien d’énigmes difficiles peut-on résoudre dans le temps imparti, en respectant leur nombre disponible ?','Combien de points rapporteraient les seules énigmes faciles complètes réalisables dans le temps disponible ?','Quel est le nombre maximal de points supplémentaires possible en combinant librement les énigmes faciles et difficiles pendant la manche ?'],
+        [abs(score_a-score_b),limit//time_easy,min(maxhard,limit//time_hard),(limit//time_easy)*easy,best[0]],['Écart initial','Faciles possibles','Difficiles possibles','Points faciles seuls','Maximum de points'],['points','énigmes','énigmes','points','points'],['R','L','L','Q','C'],[
+            f'|{score_a}−{score_b}|={abs(score_a-score_b)} points.',f'{limit}//{time_easy}={limit//time_easy} faciles.',f'Minimum({maxhard},{limit}//{time_hard})={min(maxhard,limit//time_hard)} difficiles.',f'{limit//time_easy}×{easy}={(limit//time_easy)*easy} points.',f'Explorer 0 à {maxhard} énigmes difficiles ; compléter les minutes restantes en faciles. Maximum : {best[2]} faciles et {best[3]} difficiles, pour {best[0]} points en {best[2]*time_easy+best[3]*time_hard} minutes.'
+        ],dict(kind='n9_enigmes_temps',easy=easy,hard=hard,time_easy=time_easy,time_hard=time_hard,maxhard=maxhard,limit=limit,score_a=score_a,score_b=score_b))
+    elif idx==22:
+        # Paquets avec gaspillage limité : contrainte supplémentaire de surplus.
+        for _ in range(1200):
+            need=rng.randint(55,100);sza=rng.randint(7,11);szb=rng.randint(12,18);pa=rng.randint(7,14);pb=rng.randint(14,23);waste=rng.randint(1,5)
+            feasible=[(a*pa+b*pb,a+b,a,b,a*sza+b*szb-need) for a in range(20) for b in range(20) if need<=a*sza+b*szb<=need+waste]
+            if not feasible:continue
+            best=min(feasible)
+            if best[2]>=1 and best[3]>=1 and best[2]+best[3]<=12:break
+        else:raise AssertionError('expo sans solution avec gaspillage limité')
+        return _mc_new_problem(9,idx,seed,'Les tirages photographiques et les chutes',[
+            f'L’exposition a besoin d’au moins {need} tirages photographiques. Le collège ne peut stocker que {waste} tirages supplémentaires au maximum.',
+            f'Un lot A contient {sza} tirages et coûte {pa} €. Un lot B en contient {szb} et coûte {pb} €. Les deux types peuvent être combinés ; il faut satisfaire la demande sans dépasser le stock maximal.'
+        ],['Combien de tirages faut-il au minimum pour l’exposition ?','Quel est le maximum de tirages autorisé, en comptant le surplus ?','Quel serait le nombre de lots A sans contrainte de surplus ?','Quel serait le nombre de lots B sans contrainte de surplus ?','Quel est le coût minimal des lots A et B combinés en respectant à la fois le minimum et le maximum de tirages ?'],
+        [need,need+waste,_mc_new_ceil(need,sza),_mc_new_ceil(need,szb),best[0]],['Besoin minimal','Stock maximal','Lots A sans limite','Lots B sans limite','Coût admissible minimal'],['tirages','tirages','lots','lots','€'],['Q','Q','L','L','C'],[
+            f'Le besoin est {need} tirages.',f'{need}+{waste}={need+waste} tirages au maximum.',f'⌈{need}/{sza}⌉={_mc_new_ceil(need,sza)}.',f'⌈{need}/{szb}⌉={_mc_new_ceil(need,szb)}.',f'Examiner les couples dont la quantité est entre {need} et {need+waste} : {best[2]} A + {best[3]} B donnent {need+best[4]} tirages pour {best[0]} €.'
+        ],dict(kind='n9_photo',need=need,waste=waste,sza=sza,szb=szb,pa=pa,pb=pb))
+    elif idx==23:
+        for _ in range(300):
+            needx=rng.randint(18,33);needy=rng.randint(18,33)
+            ax=rng.randint(6,10);ay=rng.randint(1,3)
+            bx=rng.randint(1,3);by=rng.randint(7,11)
+            pa=rng.randint(8,17);pb=rng.randint(9,17);max_b=rng.choice([2,3,4])
+            try:
+                best=_mc_new_2d_combo(needx,needy,ax,ay,pa,bx,by,pb,max_a=28,max_b=max_b)
+            except ValueError:
+                continue
+            purea=max(_mc_new_ceil(needx,ax),_mc_new_ceil(needy,ay))*pa
+            if best[2]>0 and best[3]>0 and best[0]<purea:break
+        else:raise AssertionError('Aucune combinaison faisable de coffres énergétiques')
+        return _mc_new_problem(9,idx,seed,'La réserve énergétique du jeu vidéo',[
+            f'Un niveau demande au moins {needx} unités de carburant et {needy} unités de bouclier.',
+            f'Un coffre A fournit {ax} unités de carburant et {ay} de bouclier pour {pa} cristaux. Un coffre B fournit {bx} unités de carburant et {by} de bouclier pour {pb} cristaux.',
+            f'Il ne reste que {max_b} coffres B dans le magasin, mais suffisamment de A. Les coffres sont indivisibles et on peut mélanger les deux types.'
+        ],['Combien de coffres A faut-il pour le carburant seul ?','Combien de coffres B faut-il pour le bouclier seul, si la limite du magasin était ignorée ?','Combien coûterait une solution n’utilisant que A et couvrant les deux ressources ?','Combien de bouclier les coffres B disponibles peuvent-ils donner au maximum ?','Quel est le coût minimal en combinant A et B, avec au plus le nombre de coffres B disponibles ?'],
+        [_mc_new_ceil(needx,ax),_mc_new_ceil(needy,by),purea,max_b*by,best[0]],['A pour carburant','B pour bouclier','Prix A seul','Bouclier maximal avec B','Coût optimal'],['coffres','coffres','cristaux','unités','cristaux'],['L','L','B','L','C'],[
+            f'⌈{needx}/{ax}⌉={_mc_new_ceil(needx,ax)}.',f'⌈{needy}/{by}⌉={_mc_new_ceil(needy,by)}.',f'A seulement : {purea} cristaux pour couvrir les deux ressources.',f'{max_b}×{by}={max_b*by} boucliers.',f'Tester 0 à {max_b} coffres B, compléter par A pour les deux ressources. Le moins cher est {best[2]} A et {best[3]} B, soit {best[0]} cristaux.'
+        ],dict(kind='n9_energy_capped',needx=needx,needy=needy,ax=ax,ay=ay,pa=pa,bx=bx,by=by,pb=pb,max_b=max_b))
+    elif idx==24:
+        people=rng.randint(52,84);extra=rng.randint(5,12)
+        cap_a=people-rng.randint(0,8);upgrade=rng.randint(11,20)
+        cap_b=people+extra+rng.randint(0,9)
+        fee_a=rng.randint(110,210);each_a=rng.randint(3,7)
+        fee_b=rng.randint(110,210);each_b=rng.randint(3,7)
+        upgrade_fee=rng.randint(28,65)
+        def cost_a(n):return fee_a+n*each_a+(upgrade_fee if n>cap_a else 0)
+        def cost_b(n):return fee_b+n*each_b
+        val_a_after=people+extra<=cap_a+upgrade
+        candidates=([cost_a(people+extra)] if val_a_after else [])+[cost_b(people+extra)]
+        best=min(candidates)
+        budget=best-rng.randint(10,75)
+        return _mc_new_problem(9,idx,seed,'La soirée cinéma et les changements de salle',[
+            f'Pour une soirée cinéma, {people} personnes sont inscrites. La salle A possède {cap_a} places : location {fee_a} € puis {each_a} € par spectateur. Une extension de {upgrade} places coûte {upgrade_fee} € supplémentaires si elle est nécessaire.',
+            f'La salle B dispose de {cap_b} places, pour {fee_b} € de réservation puis {each_b} € par spectateur, sans extension. Le collège a {budget} € de budget.',
+            'La capacité de la salle choisie ne peut jamais être dépassée.'
+        ],['Combien de spectateurs sont initialement inscrits ?','Combien de places la salle A peut-elle proposer avec l’extension ?','Quel est le prix complet de A pour le groupe initial (extension comprise si nécessaire) ?','Quel est le prix complet de B pour le groupe initial ?','Si '+str(extra)+' autres spectateurs s’inscrivent, quel est le financement supplémentaire minimal pour choisir la salle admissible la moins chère, en recalculant les deux devis ?'],
+        [people,cap_a+upgrade,cost_a(people),cost_b(people),best-budget],['Spectateurs initiaux','Capacité A étendue','Coût A initial','Coût B initial','Financement après inscriptions'],['personnes','places','€','€','€'],['Q','L','B','B','C'],[
+            f'{people} personnes.',f'{cap_a}+{upgrade}={cap_a+upgrade} places.',f'{fee_a}+{people}×{each_a}'+(f'+{upgrade_fee}' if people>cap_a else '')+f'={cost_a(people)} €.',f'{fee_b}+{people}×{each_b}={cost_b(people)} €.',f'Nouveau groupe {people+extra} : A coûte {cost_a(people+extra)} €'+(' et est admissible' if val_a_after else ' mais sa capacité est insuffisante')+f'; B coûte {cost_b(people+extra)} € et reste admissible. Meilleur devis : {best} € ; budget {budget} € ; manque {best-budget} €.'
+        ],dict(kind='n9_cinema',people=people,extra=extra,budget=budget,fee_a=fee_a,each_a=each_a,cap_a=cap_a,fee_b=fee_b,each_b=each_b,cap_b=cap_b,upgrade=upgrade,upgrade_fee=upgrade_fee))
+    elif idx==25:
+        flags=rng.randint(33,85);side=rng.randint(30,55);base=rng.randint(45,70);perimeter=2*side+base
+        for _ in range(1000):
+            cap_a=rng.randint(5,9);cap_b=rng.randint(10,15)
+            pa=rng.randint(7,16);pb=rng.randint(14,27)
+            sol=_mc_new_combo(flags,cap_a,pa,cap_b,pb)
+            purea=_mc_new_ceil(flags,cap_a)*pa;pureb=_mc_new_ceil(flags,cap_b)*pb
+            if sol[2]>0 and sol[3]>0 and sol[0]<min(purea,pureb):break
+        len_a=cap_a*perimeter+rng.randint(1,perimeter-1)
+        len_b=cap_b*perimeter+rng.randint(1,perimeter-1)
+        return _mc_new_problem(9,idx,seed,'La coupe des rubans pour les fanions',[
+            f'Le collège prépare {flags} fanions triangulaires. Chaque fanion nécessite deux côtés de {side} cm et une base de {base} cm en ruban.',
+            f'Un rouleau A contient {len_a} cm pour {pa} € ; un rouleau B contient {len_b} cm pour {pb} €.',
+            'Un fanion doit être réalisé dans un seul rouleau, sans raccord. Les chutes d’un rouleau ne sont pas reportées sur un autre. On peut mélanger les achats de rouleaux A et B.'
+        ],['Quelle longueur de ruban faut-il pour un fanion ?','Combien de fanions complets produit un rouleau A ?','Combien de fanions complets produit un rouleau B ?','Quel serait le coût en n’achetant que des rouleaux A ?','Quel est le coût minimal en combinant les rouleaux A et B, sans raccord entre rouleaux ?'],
+        [perimeter,cap_a,cap_b,purea,sol[0]],['Ruban par fanion','Capacité A','Capacité B','Coût A seul','Coût optimal'],['cm','fanions','fanions','€','€'],['Q','L','L','B','C'],[
+            f'2×{side}+{base}={perimeter} cm.',f'{len_a}//{perimeter}={cap_a} fanions complets.',f'{len_b}//{perimeter}={cap_b} fanions complets.',f'⌈{flags}/{cap_a}⌉×{pa}={purea} €.',f'Chercher le mélange le moins cher : {sol[2]} rouleau(x) A et {sol[3]} B permettent {sol[2]*cap_a+sol[3]*cap_b} fanions, coût {sol[0]} €.'
+        ],dict(kind='n9_rubans',flags=flags,side=side,base=base,len_a=len_a,len_b=len_b,pa=pa,pb=pb))
+    raise ValueError(f'Modèle N9 inconnu {idx}')
+
+# Points d'entrée nommés : compatibles avec le tirage existant et les tests.
+for _niveau,_fonction in ((8,_mc_new_n8),(9,_mc_new_n9)):
+    for _index in range(11,26):
+        def _fabrique(index=_index,niveau=_niveau):
+            def _modele(seed=None):
+                return _mc_new_n8(index,seed) if niveau==8 else _mc_new_n9(index,seed)
+            _modele.__name__=f'generer_modele_p{niveau}_m{index:02d}'
+            return _modele
+        globals()[f'generer_modele_p{_niveau}_m{_index:02d}']=_fabrique()
+del _niveau,_index,_fonction,_fabrique
+
+
 def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """Tire des modèles distincts, en privilégiant les moins récemment vus.
 
@@ -8498,7 +9052,10 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """
     if difficulte not in BANQUE_PRIORITES:
         raise ValueError("Difficulté attendue : 1, 2 ou 3.")
-    if not isinstance(nombre, int) or not 1 <= nombre <= len(BANQUE_PRIORITES[difficulte]):
+    # 26 modèles N7, 25 N8 et 25 N9 : la banque statique contient seulement
+    # cinq exemples historiques par niveau, remplacés par les générateurs.
+    capacite_reelle = {1: 26, 2: 25, 3: 25}[difficulte]
+    if not isinstance(nombre, int) or isinstance(nombre, bool) or not 1 <= nombre <= capacite_reelle:
         raise ValueError(
             "Nombre d’exercices demandé supérieur aux modèles disponibles pour ce niveau."
         )
@@ -8556,6 +9113,22 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p8_parcours())
         banque.append(generer_modele_p8_boissons())
         banque.append(generer_modele_p8_transport())
+        # Quinze nouveaux modèles, sans suppression des dix modèles existants.
+        banque.append(generer_modele_p8_m11())
+        banque.append(generer_modele_p8_m12())
+        banque.append(generer_modele_p8_m13())
+        banque.append(generer_modele_p8_m14())
+        banque.append(generer_modele_p8_m15())
+        banque.append(generer_modele_p8_m16())
+        banque.append(generer_modele_p8_m17())
+        banque.append(generer_modele_p8_m18())
+        banque.append(generer_modele_p8_m19())
+        banque.append(generer_modele_p8_m20())
+        banque.append(generer_modele_p8_m21())
+        banque.append(generer_modele_p8_m22())
+        banque.append(generer_modele_p8_m23())
+        banque.append(generer_modele_p8_m24())
+        banque.append(generer_modele_p8_m25())
         
 
     if difficulte == 3:
@@ -8576,6 +9149,22 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p9_salles())
         banque.append(generer_modele_p9_drones())
         banque.append(generer_modele_p9_mosaique())
+        # Quinze nouveaux modèles, sans suppression des dix modèles existants.
+        banque.append(generer_modele_p9_m11())
+        banque.append(generer_modele_p9_m12())
+        banque.append(generer_modele_p9_m13())
+        banque.append(generer_modele_p9_m14())
+        banque.append(generer_modele_p9_m15())
+        banque.append(generer_modele_p9_m16())
+        banque.append(generer_modele_p9_m17())
+        banque.append(generer_modele_p9_m18())
+        banque.append(generer_modele_p9_m19())
+        banque.append(generer_modele_p9_m20())
+        banque.append(generer_modele_p9_m21())
+        banque.append(generer_modele_p9_m22())
+        banque.append(generer_modele_p9_m23())
+        banque.append(generer_modele_p9_m24())
+        banque.append(generer_modele_p9_m25())
             
     # Même tirage aléatoire qu'avant en l'absence d'historique utilisable.
     # Chaque nouvelle série privilégie ensuite les modèles les moins récents.
