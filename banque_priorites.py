@@ -8322,6 +8322,248 @@ _MC_N7_REVISIONS_CIBLEES = {
     "P7-M19", "P7-M21", "P7-M23",
 }
 
+
+
+# ================================================================
+# N8 : correction pédagogique compacte, une réponse + sa méthode.
+# Ne modifie jamais le nombre de champs, ni les valeurs attendues.
+# ================================================================
+def _mc_n8_fr(v,decimales=2):
+    if isinstance(v,int) or (isinstance(v,float) and v.is_integer()):
+        return str(int(v))
+    return (f"{v:.{decimales}f}".rstrip('0').rstrip('.')).replace('.',',')
+
+
+def _mc_n8_compacter_texte(texte):
+    texte=re.sub(r'\*\*Expression complète\s*:\*\*\s*', 'Expression complète : ', texte)
+    texte=re.sub(r'\*\*Réponse\s*:\*\*\s*', '', texte)
+    texte=re.sub(r'\*\*Défi final[^*]*\*\*\s*', '', texte)
+    texte=re.sub(r'\*\*Nouveau défi[^*]*\*\*\s*', '', texte)
+    texte=re.sub(r'\n\s*\n+', ' ', texte.strip())
+    texte=re.sub(r'\s+', ' ', texte)
+    texte=re.sub(r'(?<=\d)\.00(?=\s|\D)', ',00', texte)
+    return texte.strip()
+
+
+def _mc_n8_etapes_source(correction):
+    if '**Méthode et calculs détaillés**' in correction:
+        source=correction.split('**Méthode et calculs détaillés**',1)[1]
+    else:
+        source=correction
+    parties=re.split(r'(?m)^\*\*Étape(?:\s*\d+\s*—|\s*:)\s*[^*\n]+\*\*\s*',source)
+    return [_mc_n8_compacter_texte(p) for p in parties[1:] if p.strip()]
+
+
+def _mc_n8_enrichir_dernier(ex,etapes):
+    """Calculs explicites des questions finales, sans modifier les réponses."""
+    nom=ex['id']; q=ex['champs_reponse']; t=ex['enonce']
+    v=[c['attendu'] for c in q]
+    f=_mc_n8_fr
+    audit=ex.get('_mathicap_audit_nouveau',{})
+    if nom=='P8-M03':
+        m=re.search(r'chemin A,? impose désormais un péage de (\d+) pièces',t)
+        if m:
+            peage=int(m[1]);solde_a=v[1]-peage; solde_b=v[2]
+            etapes[4]=(f'Chemin A après péage : {f(v[1])} − {peage} = {f(solde_a)} pièces. '
+                       f'Chemin B inchangé : {f(solde_b)} pièces. '
+                       f'Différence signée A − B : {f(solde_a)} − {f(solde_b)} = {f(v[4])} pièces.')
+            ex['enonce']=ex['enonce'].replace('le chemin A, impose', 'le chemin A impose')
+    if nom=='P8-M10':
+        ex['enonce']=ex['enonce'].replace('l’entreprise A, augmente','l’entreprise A augmente').replace("l'entreprise A, augmente","l'entreprise A augmente")
+    if nom=='P8-M04':
+        # Reconstituer les deux devis à partir du besoin des nouvelles équipes.
+        a=re.search(r'(\d+) équipes participent',t)
+        b=re.search(r'(\d+) équipes supplémentaires rejoignent',t)
+        c=re.search(r'A, (\d+) batteries par boîte à (\d+) € ; B, (\d+) batteries par boîte à (\d+) €',t)
+        if a and b and c:
+            equipes,ajout=int(a[1]),int(b[1]);need_per=v[0]//equipes
+            need=(equipes+ajout)*need_per;stock=v[1];manque=max(0,need-stock)
+            pa,ca,pb,cb=map(int,c.groups())
+            qa=(manque+pa-1)//pa;qb=(manque+pb-1)//pb
+            couta=qa*ca;coutb=qb*cb
+            etapes[4]=(f'Besoin pour {equipes+ajout} équipes : {equipes+ajout} × {need_per} = {need} batteries. '
+                       f'Stock utilisable : {stock} batteries ; il manque {need} − {stock} = {manque} batteries. '
+                       f'Offre A : {qa} boîte(s) entières de {pa} batteries × {ca} € = {couta} €. '
+                       f'Offre B : {qb} boîte(s) entières de {pb} batteries × {cb} € = {coutb} €. '
+                       f'Le coût minimal est {f(min(couta,coutb))} €.')
+        d=re.search(r'boîtes de \d+ batteries, au prix de (\d+) € chacune',t)
+        if d:
+            etapes[3]=f'{f(v[2])} boîte(s) × {d[1]} € = {f(v[3])} €.'
+    elif nom=='P8-M05':
+        m1=re.search(r'(\d+) équipes participent',t)
+        m2=re.search(r'comporte (\d+) postes',t)
+        m3=re.search(r'chaque enveloppe coûte ([\d,.]+)\s*€',t)
+        m4=re.search(r'pochette de matériel à ([\d,.]+)\s*€',t)
+        m5=re.search(r'(\d+) équipes supplémentaires',t)
+        m6=re.search(r'souvenirs peuvent être achetés à ([\d,.]+)\s*€ l.unité',t)
+        m7=re.search(r'lots indivisibles de (\d+) à ([\d,.]+)\s*€',t)
+        m8=re.search(r'conserver au moins \*\*([\d,.]+)\s*€\*\* de réserve',t)
+        if all([m1,m2,m3,m4,m5,m6,m7]):
+            n,postes,ajout=map(lambda m:int(m.group(1)),[m1,m2,m5]); pe=float(m3.group(1).replace(',','.')); pp=float(m4.group(1).replace(',','.'))
+            ps=float(m6.group(1).replace(',','.')); lot=int(m7.group(1)); pl=float(m7.group(2).replace(',','.'))
+            extra=ajout*(postes*pe+pp); total=n+ajout; unites=total*ps; nb=(total+lot-1)//lot; lots=nb*pl
+            reserve=float(m8.group(1).replace(',','.')) if m8 else 0
+            etapes[4]=(f'Achats obligatoires des {ajout} nouvelles équipes : {ajout} × '
+                       f'({postes} × {f(pe)} + {f(pp)}) = {f(extra)} €. '
+                       f'Souvenirs pour {total} équipes : à l’unité {total} × {f(ps)} = {f(unites)} € ; '
+                       f'par lots {nb} × {f(pl)} = {f(lots)} €. '
+                       f'On retient {f(min(unites,lots))} €. '
+                       f'Après les achats initiaux il reste {f(v[2])} €. '
+                       f'Solde final : {f(v[2])} − {f(extra)} − {f(min(unites,lots))} − {f(reserve)} = {f(v[4])} €.')
+    elif nom=='P8-M06':
+        a=re.search(r'(\d+) nouvelles équipes',t)
+        b=re.search(r'coûtent (\d+)\s*€ chacun à l.unité',t)
+        c=re.search(r'(\d+)\s*€ par lot indivisible de (\d+) kits',t)
+        d=re.search(r'budget de\s*\*\*(\d+)\s*€',t)
+        if all([a,b,c,d]):
+            n,pu,lotprix,taille,budget=int(a[1]),int(b[1]),int(c[1]),int(c[2]),int(d[1])
+            lotnb=(n+taille-1)//taille; cu=n*pu; cl=lotnb*lotprix
+            etapes[4]=(f'Commande initiale : {f(v[2])} € (remise et livraison déjà comptées). '
+                       f'Commande complémentaire distincte, sans nouvelle remise ni frais de livraison : '
+                       f'{n} kits à l’unité × {pu} € = {cu} € ; ou {lotnb} lot(s) de {taille} kits '
+                       f'à {lotprix} € = {cl} €. Le moins cher coûte {min(cu,cl)} €. '
+                       f'Coût des deux commandes : {f(v[2])} + {min(cu,cl)} = {f(v[2]+min(cu,cl))} €. '
+                       f'Financement à trouver : max(0, {f(v[2]+min(cu,cl))} − {budget}) = {f(v[4])} €.')
+            ex['enonce']=re.sub(r'(La réduction et la livraison de la commande initiale restent inchangées\.)',
+                     ('La commande initiale conserve sa réduction et ses frais de livraison, déjà inclus dans son prix. '
+                      'Les kits des nouvelles équipes font l’objet d’une commande complémentaire distincte, '
+                      'sans nouvelle remise ni frais de livraison supplémentaires.'),ex['enonce'])
+    elif nom=='P8-M07':
+        a=re.search(r'Dans .*?, (\d+) robinets',t)
+        b=re.search(r'au moins ([\d,.]+)\s*L',t)
+        if a and b:
+            n=int(a[1]); objectif=float(b[1].replace(',','.')); par=v[3]/n; manque=max(0,objectif-v[3])
+            etapes[4]=(f'Économie par robinet sur la période : {f(v[3])} ÷ {n} = {f(par)} L. '
+                       f'Objectif total : {f(objectif)} L ; les {n} robinets économisent déjà {f(v[3])} L. '
+                       f'Économie restant à réaliser : {f(objectif)} − {f(v[3])} = {f(manque)} L. '
+                       f'Nombre de robinets supplémentaires : {f(manque)} ÷ {f(par)} = '
+                       f'{f(manque/par)} ; on arrondit à l’entier supérieur : {f(v[4])} robinets.')
+    elif nom=='P8-M08':
+        a=re.search(r'détour A de ([\d,.]+)\s*km.*?pause de (\d+) minutes',t,re.S)
+        b=re.search(r'sentier B de ([\d,.]+)\s*km sans pause',t)
+        c=re.search(r'allure régulière de (\d+) minutes',t)
+        d=re.search(r'en \*\*(\d+) minutes au maximum',t)
+        if all([a,b,c,d]):
+            ka=float(a[1].replace(',','.'));pa=int(a[2]);kb=float(b[1].replace(',','.')); pace=int(c[1]);limit=int(d[1]);da=ka*pace+pa;db=kb*pace; total=v[3]+min(da,db)
+            etapes[4]=(f'Détour A : {f(ka)} × {pace} + {pa} = {f(da)} min. '
+                       f'Détour B : {f(kb)} × {pace} = {f(db)} min. '
+                       f'On choisit le plus rapide ({f(min(da,db))} min). '
+                       f'Durée totale : {f(v[3])} + {f(min(da,db))} = {f(total)} min. '
+                       f'Différence avec la limite : {limit} − {f(total)} = {f(v[4])} min.')
+    elif nom=='P8-M10':
+        m=re.search(r'augmente ses frais fixes de (\d+)\s*€',t)
+        if m:
+            hausse=int(m[1]); etapes[4]=(f'Nouveau coût A : {f(v[1])} + {hausse} = {f(v[1]+hausse)} €. '
+                       f'Le prix B reste {f(v[2])} €. Différence coût A − coût B : '
+                       f'{f(v[1]+hausse)} − {f(v[2])} = {f(v[4])} €.')
+    elif nom=='P8-M11' and audit:
+        x=audit;teams=x['teams']; per=x['per'];extra=x['extra'];pack=x['pack']
+        usable=x['stock']-x['bad'];initialboxes=v[3];after=usable+initialboxes*pack;need=(teams+extra)*per;missing=max(0,need-after)
+        etapes[4]=(f'Pour {teams+extra} équipes il faut {teams+extra} × {per} = {need} badges. '
+                   f'Après la première commande, {usable} + {initialboxes} × {pack} = {after} badges sont disponibles. '
+                   f'Il manque {need} − {after} = {missing} badges. '
+                   f'Chaque boîte contient {pack} badges : {missing} ÷ {pack} impose {f(v[4])} boîtes supplémentaires, en arrondissant au supérieur.')
+    elif nom=='P8-M13' and audit:
+        x=audit;boite=x['box']; add=x['add']; utilisables=x['frames']-x['bad']; besoin=x['sections']*x['per']
+        n=(max(0,besoin-utilisables)+boite-1)//boite
+        stock=utilisables+n*boite;reste=stock-besoin; manque=max(0,add-reste)
+        etapes[4]=(f'Après l’achat initial, il reste {stock} − {besoin} = {reste} cadres. '
+                   f'Pour les {add} nouvelles photos, il manque {add} − {reste} = {manque} cadres. '
+                   f'Les boîtes contenant {boite} cadres, il faut {f(v[4])} boîte(s) supplémentaire(s), en arrondissant {manque} ÷ {boite} au supérieur.')
+    elif nom=='P8-M15' and audit:
+        x=audit;nm=max(0,x['target']*2-x['motors']);nb=max(0,x['target']*3-x['batteries'])
+        lm=(nm+x['packmot']-1)//x['packmot'];lb=(nb+x['packbat']-1)//x['packbat']
+        etapes[4]=(f'Pour {x["target"]} robots, il faut {x["target"]} × 2 = {x["target"]*2} moteurs '
+                   f'et {x["target"]} × 3 = {x["target"]*3} batteries. '
+                   f'Le stock contient {x["motors"]} moteurs et {x["batteries"]} batteries. '
+                   f'Moteurs manquants : {nm}, soit {lm} lot(s) de {x["packmot"]}, à {x["costmot"]} € le lot : {lm*x["costmot"]} €. '
+                   f'Batteries manquantes : {nb}, soit {lb} lot(s) de {x["packbat"]}, à {x["costbat"]} € le lot : {lb*x["costbat"]} €. '
+                   f'Coût des deux achats : {lm*x["costmot"]} + {lb*x["costbat"]} = {f(v[4])} €.')
+    elif nom=='P8-M19' and audit:
+        x=audit; manque=v[2];eco_a=x['liters']*x['days'];eco_b=x['liters_b']*x['days']
+        nb_a=(manque+eco_a-1)//eco_a;nb_b=(manque+eco_b-1)//eco_b
+        total_a=nb_a*x['price_a']; total_b=nb_b*x['price_b']
+        etapes[4]=(f'Pour économiser encore {manque} L, le modèle A économise {eco_a} L par appareil '
+                   f'sur {x["days"]} jours : il en faut {nb_a}, coût {nb_a} × {x["price_a"]} = {total_a} €. '
+                   f'Le modèle B économise {eco_b} L par appareil : il en faut {nb_b}, coût '
+                   f'{nb_b} × {x["price_b"]} = {total_b} €. Le coût minimal est {f(v[4])} €.')
+    elif nom=='P8-M18' and audit:
+        km,pace,laps,pause,detour,limit=(audit[k] for k in ('km','pace','laps','pause','detour','limit'))
+        after=v[3]+detour*pace
+        etapes[4]=(f'Le détour prend {detour} × {pace} = {detour*pace} min. '
+                    f'Durée totale après détour : {v[3]} + {detour*pace} = {after} min. '
+                    f'Différence entre durée et limite : {after} − {limit} = {f(v[4])} min.')
+        ex['enonce']=ex['enonce'].replace(
+            'De combien de minutes la durée après détour dépasse-t-elle la limite (résultat positif), ou reste-t-elle en dessous (résultat négatif) ?',
+            'Quelle est la différence, en minutes, entre la durée après le détour et la limite autorisée ?')
+    elif nom=='P8-M20' and audit:
+        n,cap,price,entry,carprice=(int(audit[k]) for k in ('classes','cap','ticket','ticket','buscost')) if False else (v[0],int(audit['cap']),int(audit['ticket']),v[1],int(audit['buscost']))
+        quotient,reste=divmod(n,cap)
+        etapes[2]=(f'{n} ÷ {cap} = {quotient}, reste {reste}. '
+                   +(f'{quotient} cars ne suffisent pas pour les {reste} dernières personnes, donc il faut {quotient+1} cars.' if reste else f'La division est exacte : {quotient} cars suffisent.') )
+        montantb=int(audit['groupbuscost']); coutb=entry+montantb
+        etapes[4]=(f'Transport A : {v[2]} cars × {carprice} = {v[2]*carprice} €. '
+                   f'Billets + transport A : {entry} + {v[2]*carprice} = {v[3]} €. '
+                   f'Transport B : un car à {montantb} €. '
+                   f'Billets + transport B : {entry} + {montantb} = {coutb} €. '
+                   f'On compare {v[3]} € et {coutb} € : le budget minimal est {v[4]} €.')
+    return etapes
+
+
+def _mc_n8_polish(ex):
+    """Une correction par question N8, concise, explicite, sans bloc de réponses doublé."""
+    if int(ex.get('mathicap_niveau_pedagogique', 0))!=8:
+        return ex
+    champs=ex.get('champs_reponse',[])
+    if len(champs)!=5:
+        raise ValueError('N8 : cinq champs requis pour '+ex.get('id','?'))
+    etapes=_mc_n8_etapes_source(ex.get('correction',''))
+    if len(etapes)!=5:
+        raise ValueError(f"N8 {ex['id']} : {len(etapes)} étapes, cinq attendues")
+    f=_mc_n8_fr
+    if ex['id']=='P8-M01':
+        e3=champs[2]['attendu'];e4=champs[3]['attendu']
+        reserve=e3-e4
+        etapes[2]=f"Recettes {f(champs[0]['attendu'])} € − dépenses {f(champs[1]['attendu'])} € = {f(e3)} €."
+        etapes[3]=(f"Bénéfice {f(e3)} € − réserve {f(reserve)} € = {f(e4)} € à partager. "
+                   +etapes[3])
+    if ex['id']=='P8-M04':
+        t=ex['enonce'];a=re.search(r'boîtes de (\d+) batteries, au prix de (\d+) € chacune',t)
+        if a:
+            paquet,prix=int(a[1]),int(a[2]);need=max(0,champs[0]['attendu']-champs[1]['attendu'])
+            quotient,reste=divmod(need,paquet)
+            etapes[2]=(f'Batteries manquantes : {champs[0]["attendu"]} − {champs[1]["attendu"]} = {need}. '
+                      f'Une boîte contient {paquet} batteries. Division : {need} ÷ {paquet} = '
+                      f'{quotient}, reste {reste}. '
+                      f'Il faut {champs[2]["attendu"]} boîtes entières au minimum.')
+            etapes[3]=(f'{champs[2]["attendu"]} × {prix} = {f(champs[3]["attendu"])} €.')
+        else:
+            old=etapes[:]
+            etapes[2]=old[2]+' '+re.split(r'Coût :',old[3])[0]
+            etapes[3]=f"{f(champs[2]['attendu'])} boîte(s) × prix par boîte = {f(champs[3]['attendu'])} €."
+    etapes=_mc_n8_enrichir_dernier(ex,etapes)
+    # Correction compacte : la réponse chiffrée figure au début de son propre calcul.
+    sorties=[]
+    for i,(champ,exp) in enumerate(zip(champs,etapes),1):
+        x=champ['attendu'];texte=f(x) if isinstance(x,(int,float)) and not isinstance(x,bool) else str(x)
+        unite=champ.get('unite','')
+        valeur=texte+((' '+unite) if unite else '')
+        libelle=champ.get('libelle',f'Question {i}').strip().rstrip('?').rstrip(':').strip()
+        sorties.append(f"**Réponse {i} — {libelle} : {valeur}.** {exp}")
+    ex['correction']='\n\n'.join(sorties)
+    ex['correction']=re.sub(r'(?<=\d)\.(?=\d)', ',', ex['correction'])
+    ex['correction']=re.sub(r'⌈([^⌉]+)⌉', lambda m: 'arrondi à l’entier supérieur de ('+m.group(1).replace('/', ' ÷ ')+')', ex['correction'])
+    # Accord des unités au singulier dans les corrections.
+    for pluriel,singulier in [('boîtes','boîte'),('rouleaux','rouleau'),('lots','lot'),('cars','car'),('navettes','navette'),('économiseurs','économiseur'),('sacs','sac'),('bouteilles','bouteille')]:
+        ex['correction']=re.sub(r'\b1 '+pluriel+r'\b', '1 '+singulier, ex['correction'])
+    ex['correction']=ex['correction'].replace('1 nouvelles boîtes','1 nouvelle boîte').replace('1 boîte(s)','1 boîte').replace('1 lot(s)','1 lot')
+    ex['correction']=re.sub(r'(\d+) boîte\(s\)', lambda m: m.group(1)+' '+('boîte' if m.group(1)=='1' else 'boîtes'), ex['correction'])
+    ex['correction']=re.sub(r'(\d+) lot\(s\)', lambda m: m.group(1)+' '+('lot' if m.group(1)=='1' else 'lots'), ex['correction'])
+    ex['enonce']=re.sub(r'\n{3,}', '\n\n', ex['enonce'])
+    ex['enonce']=re.sub(r'(?<=\d)\.(?=\d)', ',', ex['enonce'])
+    ex['mathicap_revision_corrections']='2026-11-18-n8-relecture-detaillee'
+    return ex
+
 def _mc_uniformiser_exercice(exercice):
     """Retourne une COPIE structurée, sans altérer l'exercice historique source."""
     if not isinstance(exercice, dict) or exercice.get("id") not in REGLES:
@@ -8486,7 +8728,7 @@ def _mc_uniformiser_exercice(exercice):
     )
     resultat["mathicap_niveau_pedagogique"] = niveau
     resultat["mathicap_referentiel_pedagogique"] = "MathiCap V3.2 — contre-expertise et cohérence des variantes"
-    return resultat
+    return _mc_n8_polish(resultat)
 
 
 # ================================================================
@@ -8522,11 +8764,11 @@ def _mc_new_problem(level, idx, seed, title, paragraphs, questions, answers, lab
     correction=("**Réponses attendues — questions de ce problème**\n\n"+'\n\n'.join(ans_lines)
         +'\n\n**Méthode et calculs détaillés**\n\n'
         +'\n\n'.join(f'**Étape {j} — {labels[j-1]}**\n\n{step}' for j,step in enumerate(steps,1)))
-    return {'id':model_id,'titre':title,'seed':seed,'enonce':stmt,'correction':correction,
+    return _mc_n8_polish({'id':model_id,'titre':title,'seed':seed,'enonce':stmt,'correction':correction,
         'reponse_attendue':None,'champs_reponse':champs,
         'mathicap_questions_uniformisees':3,'mathicap_revision_pedagogique':'v3.3-30-modeles-n8-n9',
         'mathicap_niveau_pedagogique':level,'mathicap_referentiel_pedagogique':'Progression N8 autonomie / N9 optimisation',
-        '_mathicap_audit_nouveau':audit}
+        '_mathicap_audit_nouveau':audit})
 
 
 def _mc_new_combo(need,size_a,cost_a,size_b,cost_b,max_a=None,max_b=None,fee_b=0):
