@@ -8452,11 +8452,21 @@ def _mc_n8_enrichir_dernier(ex,etapes):
                        f'Durée totale : {f(v[3])} + {f(min(da,db))} = {f(total)} min. '
                        f'Différence avec la limite : {limit} − {f(total)} = {f(v[4])} min.')
     elif nom=='P8-M10':
-        m=re.search(r'augmente ses frais fixes de (\d+)\s*€',t)
-        if m:
-            hausse=int(m[1]); etapes[4]=(f'Nouveau coût A : {f(v[1])} + {hausse} = {f(v[1]+hausse)} €. '
-                       f'Le prix B reste {f(v[2])} €. Différence coût A − coût B : '
-                       f'{f(v[1]+hausse)} − {f(v[2])} = {f(v[4])} €.')
+        m=re.search(r'l[’\']entreprise ([AB]),? augmente ses frais fixes de (\d+)\s*€',t,re.I)
+        if not m:
+            raise ValueError('Entreprise concernée par la hausse introuvable pour P8-M10')
+        entreprise, hausse = m[1], int(m[2])
+        ex['champs_reponse'][4]['libelle'] = 'Écart signé coût A − coût B'
+        prix_a, prix_b = v[1], v[2]
+        nouveau_a = prix_a + (hausse if entreprise=='A' else 0)
+        nouveau_b = prix_b + (hausse if entreprise=='B' else 0)
+        if nouveau_a-nouveau_b != v[4]:
+            raise ValueError(f'P8-M10 : écart calculé incohérent : {nouveau_a-nouveau_b} != {v[4]}')
+        etapes[4]=(f'L’entreprise {entreprise} augmente ses frais fixes de {hausse} €. '
+                   f'Entreprise A : {f(prix_a)}' + (f' + {hausse} = {f(nouveau_a)} €.' if entreprise=='A' else ' € (inchangé).') + ' '
+                   f'Entreprise B : {f(prix_b)}' + (f' + {hausse} = {f(nouveau_b)} €.' if entreprise=='B' else ' € (inchangé).') + ' '
+                   f'Différence signée coût A − coût B : {f(nouveau_a)} − {f(nouveau_b)} = {f(v[4])} €.')
+        ex['enonce']=re.sub(r'(l[’\']entreprise [AB]), augmente',r'\1 augmente',ex['enonce'],flags=re.I)
     elif nom=='P8-M11' and audit:
         x=audit;teams=x['teams']; per=x['per'];extra=x['extra'];pack=x['pack']
         usable=x['stock']-x['bad'];initialboxes=v[3];after=usable+initialboxes*pack;need=(teams+extra)*per;missing=max(0,need-after)
@@ -8501,7 +8511,10 @@ def _mc_n8_enrichir_dernier(ex,etapes):
         n,cap,price,entry,carprice=(int(audit[k]) for k in ('classes','cap','ticket','ticket','buscost')) if False else (v[0],int(audit['cap']),int(audit['ticket']),v[1],int(audit['buscost']))
         quotient,reste=divmod(n,cap)
         etapes[2]=(f'{n} ÷ {cap} = {quotient}, reste {reste}. '
-                   +(f'{quotient} cars ne suffisent pas pour les {reste} dernières personnes, donc il faut {quotient+1} cars.' if reste else f'La division est exacte : {quotient} cars suffisent.') )
+                   +(f'{quotient} cars transportent {quotient} × {cap} = {quotient*cap} personnes. '
+                     f'Il reste {reste} '+('personne' if reste==1 else 'personnes')+
+                     f' à transporter, donc un car supplémentaire est nécessaire : {quotient} + 1 = {quotient+1} cars.'
+                     if reste else f'La division est exacte : {quotient} cars suffisent.'))
         montantb=int(audit['groupbuscost']); coutb=entry+montantb
         etapes[4]=(f'Transport A : {v[2]} cars × {carprice} = {v[2]*carprice} €. '
                    f'Billets + transport A : {entry} + {v[2]*carprice} = {v[3]} €. '
@@ -8509,6 +8522,154 @@ def _mc_n8_enrichir_dernier(ex,etapes):
                    f'Billets + transport B : {entry} + {montantb} = {coutb} €. '
                    f'On compare {v[3]} € et {coutb} € : le budget minimal est {v[4]} €.')
     return etapes
+
+
+def _mc_n8_arbitrage_audit(ex, etapes):
+    """Correctifs ciblés des audits Claude/Gemini, sans modifier les notes automatiques."""
+    nom=ex['id']; v=[c['attendu'] for c in ex['champs_reponse']]
+    a=ex.get('_mathicap_audit_nouveau') or {}
+    f=_mc_n8_fr
+    # Un signe ou un quotient est expliqué dans la méthode, pas dissimulé dans un résultat.
+    if nom=='P8-M03':
+        t=ex['enonce']
+        m=re.search(r'le chemin ([AB]),? impose désormais un péage de (\d+) pièces',t,re.I)
+        if m:
+            chemin,peage=m[1],int(m[2])
+            solde_a=v[1]-(peage if chemin=='A' else 0)
+            solde_b=v[2]-(peage if chemin=='B' else 0)
+            if solde_a-solde_b != v[4]: raise ValueError('P8-M03 : erreur sur écart signé')
+            ex['enonce']=re.sub(r'le chemin ([AB]),? impose désormais un péage de (\d+) pièces',
+                lambda x:f'le chemin {x[1]} impose un péage supplémentaire de {x[2]} pièces, '
+                         'qui s’ajoute à son prix d’entrée éventuel', t,flags=re.I)
+            etapes[4]=(f'Avant le péage, le solde du chemin A est de {f(v[1])} pièces et celui du chemin B de {f(v[2])} pièces. '
+                       + (f'Le chemin {chemin} subit le péage de {peage} pièces. ')
+                       + (f'Nouveau solde A : {f(v[1])} − {peage} = {f(solde_a)} pièces. ' if chemin=='A' else f'Le solde A reste de {f(solde_a)} pièces. ')
+                       + (f'Nouveau solde B : {f(v[2])} − {peage} = {f(solde_b)} pièces. ' if chemin=='B' else f'Le solde B reste de {f(solde_b)} pièces. ')
+                       + f'Différence A − B : {f(solde_a)} − {f(solde_b)} = {f(v[4])} pièces.')
+    elif nom=='P8-M05':
+        t=ex['enonce']
+        t=re.sub(r'\b1 équipes supplémentaires\b','1 équipe supplémentaire',t)
+        t=t.replace('1 équipe supplémentaire rejoignent','1 équipe supplémentaire rejoint')
+        ex['enonce']=t
+        # La réserve est un montant bloqué, distinct des achats nouveaux.
+        m=re.search(r'conserver au moins \*\*([\d,.]+)\s*€\*\* de réserve',t)
+        if m:
+            reserve=float(m[1].replace(',','.'))
+            # Les autres montants sont déjà détaillés dans la méthode originale.
+            etapes[4]=etapes[4].replace(
+                'Solde final :',f'La réserve minimale de {f(reserve)} € doit rester disponible et ne peut servir à payer les achats. Solde final après mise de côté de cette réserve :')
+    elif nom=='P8-M06':
+        # La quantité inutilisée doit être calculée pour CHAQUE tirage, pas figée à 5 kits.
+        m=re.search(r'(\d+) nouvelles équipes',ex['enonce'])
+        if m:
+            nouveaux=int(m[1]);lots=(nouveaux+2)//3;livres=lots*3;surplus=livres-nouveaux
+            justification=(f'Les lots sont indivisibles : {lots} lot'+('' if lots==1 else 's')+
+                           f' de trois kits fournissent {livres} kits pour {nouveaux} équipes. '+
+                           (f'Il reste {surplus} kit'+('' if surplus==1 else 's')+' inutilisé'+('' if surplus==1 else 's')+'. '
+                            if surplus else 'Aucun kit n’est inutilisé. ')+
+                           'Les lots et l’achat à l’unité ne peuvent pas être mélangés. ')
+            etapes[4]=re.sub(r'(Le moins cher coûte [\d,.]+ €\.)',
+                             lambda a: justification + a[1],etapes[4])
+    elif nom=='P8-M11' and a:
+        ex['enonce']=re.sub(r'\b1 autres équipes de\b','1 autre équipe de',ex['enonce'])
+        manque=v[2];pack=a['pack'];q,r=divmod(manque,pack)
+        etapes[3]=(f'Il manque {manque} badges ; une boîte en contient {pack}. '
+                   f'{manque} ÷ {pack} = {q}, reste {r}. '
+                   f'Il faut {q} boîtes complètes'+(f' et une boîte pour les {r} badges restants, soit {v[3]} boîtes.' if r else f', soit {v[3]} boîtes.'))
+    elif nom=='P8-M17' and a:
+        # Le dernier rouleau peut conserver une chute réutilisable pour la commande suivante.
+        pass
+    elif nom=='P8-M18':
+        # Question directe et convention mathématique intrinsèque (différence dans un ordre donné).
+        ex['enonce']=ex['enonce'].replace(
+            'Quelle est la différence, en minutes, entre la durée après le détour et la limite autorisée ?',
+            'Calcule la différence en minutes : durée après le détour − durée autorisée.')
+    elif nom=='P8-M19' and a:
+        etapes[0]=(f'Un économiseur A épargne {a["liters"]} L par jour pendant {a["days"]} jours : '
+                   f'{a["liters"]} × {a["days"]} = {f(v[0])} L.')
+        etapes[1]=(f'Il y a {a["faucets"]} économiseurs : '
+                   f'{a["faucets"]} × {f(v[0])} = {f(v[1])} L économisés ensemble.')
+        etapes[2]=(f'Il faut atteindre {a["goal"]} L, alors que les économiseurs ont déjà économisé {f(v[1])} L : '
+                   f'{a["goal"]} − {f(v[1])} = {f(v[2])} L manquants.')
+        missing=int(v[2]);par=int(v[0]);q,r=divmod(missing,par)
+        etapes[3]=(f'Il manque {missing} L et chaque nouvel économiseur A apporte {par} L pendant la période. '
+                   f'{missing} ÷ {par} = {q}, reste {r}. '
+                   f'Il faut {v[3]} '+('économiseur' if v[3]==1 else 'économiseurs')+' A pour atteindre ou dépasser le seuil.')
+    elif nom=='P8-M15' and a:
+        motors,batteries=a['motors'],a['batteries']
+        qm,rm=divmod(motors,2);qb,rb=divmod(batteries,3)
+        etapes[0]=(f'Chaque robot nécessite 2 moteurs. {motors} ÷ 2 = {qm}, reste {rm} moteur(s). '
+                   f'Il est donc possible de fabriquer {qm} robots avec les moteurs disponibles.')
+        etapes[1]=(f'Chaque robot nécessite 3 batteries. {batteries} ÷ 3 = {qb}, reste {rb} batterie(s). '
+                   f'Il est donc possible de fabriquer {qb} robots avec les batteries disponibles.')
+        etapes[2]=(f'La fabrication est limitée par le composant disponible en plus petite quantité : '
+                   f'minimum de {qm} et {qb} = {f(v[2])} robots complets.')
+        besoin=a['target']*3
+        etapes[3]=(f'Pour {a["target"]} robots, le besoin est de {a["target"]} × 3 = {besoin} batteries. '
+                   f'Le stock contient {batteries} batteries : il manque {besoin} − {batteries} = {f(v[3])} batteries.')
+    elif nom=='P8-M20':
+        pass
+    elif nom=='P8-M25' and a:
+        total=a['boxes']*a['per'];usable=total-a['spoiled'];manque=a['target']-usable
+        na,ra=divmod(manque,a['pack_a']);qa=na+(1 if ra else 0)
+        nb,rb=divmod(manque,a['pack_b']);qb=nb+(1 if rb else 0)
+        ca=qa*a['cost_a'];cb=qb*a['cost_b']
+        etapes[0]=(f'L’association a reçu {a["boxes"]} cartons contenant chacun {a["per"]} portions : '
+                   f'{a["boxes"]} × {a["per"]} = {total} portions reçues.')
+        etapes[1]=(f'On écarte les {a["spoiled"]} portions inutilisables : '
+                   f'{total} − {a["spoiled"]} = {usable} portions disponibles.')
+        etapes[2]=(f'L’objectif est de {a["target"]} portions. '
+                   f'{a["target"]} − {usable} = {manque} portions manquantes.')
+        etapes[3]=(f'Un lot A contient {a["pack_a"]} portions. '
+                   f'{manque} ÷ {a["pack_a"]} = {na}, reste {ra}. '
+                   f'Il faut {qa} lots entiers pour couvrir le besoin. '
+                   f'Coût avec A : {qa} × {a["cost_a"]} = {ca} €.')
+        etapes[4]=(f'Offre A : {qa} lots × {a["cost_a"]} = {ca} €. '
+                   f'Offre B : {manque} ÷ {a["pack_b"]} = {nb}, reste {rb}, '
+                   f'donc {qb} lots entiers à {a["cost_b"]} €, soit {qb} × {a["cost_b"]} = {cb} €. '
+                   f'On compare les deux coûts : le minimum est {f(min(ca,cb))} €.')
+    elif nom=='P8-M22':
+        ex['enonce']=ex['enonce'].replace('Quelle distance réelle sépare les deux sentiers après la déviation ?',
+                                       'Quelle est la différence entre les longueurs réelles des deux sentiers après la déviation ?')
+        etapes[0]='1 km = 1 000 m = 100 000 cm. '+etapes[0]
+    elif nom=='P8-M24':
+        pass
+    # Nettoyer les accords identifiés dans les énoncés de cette édition.
+    ex['enonce']=re.sub(r'\b1 équipes supplémentaires\b','1 équipe supplémentaire',ex['enonce'])
+    ex['enonce']=re.sub(r'\b1 nouvelles équipes\b','1 nouvelle équipe',ex['enonce'])
+    ex['enonce']=re.sub(r'\b1 sont inutilisables\b','1 est inutilisable',ex['enonce'])
+    ex['enonce']=re.sub(r'\b1 sont défectueuses\b','1 est défectueuse',ex['enonce'])
+    ex['enonce']=re.sub(r'\b1 personne\(s\)\b','1 personne',ex['enonce'])
+    ex['correction']=re.sub(r'\b1 équipes supplémentaires\b','1 équipe supplémentaire',ex.get('correction',''))
+    return etapes
+
+
+def _mc_n8_accords(texte):
+    """Accords au singulier dans les variables numériques des exercices N8 seulement."""
+    texte=texte.replace('des 1 nouvelles équipes', 'de la nouvelle équipe')
+    texte=texte.replace('des 1 équipes supplémentaires', 'de l’équipe supplémentaire')
+    texte=re.sub(r'\b1 nouvelles équipes\b','1 nouvelle équipe',texte)
+    texte=re.sub(r'\b1 équipes supplémentaires\b','1 équipe supplémentaire',texte)
+    texte=re.sub(r'\b1 autres équipes\b','1 autre équipe',texte)
+    texte=re.sub(r'\bdont 1 sont abîmés\b','dont 1 est abîmé',texte)
+    texte=re.sub(r'\bdont 1 sont inutilisables\b','dont 1 est inutilisable',texte)
+    texte=re.sub(r'\bdont 1 sont défectueuses\b','dont 1 est défectueuse',texte)
+    texte=re.sub(r'\bdont 1 inutilisables\b','dont 1 inutilisable',texte)
+    couples={
+      'cadres':'cadre','badges':'badge','moteurs':'moteur','batteries':'batterie',
+      'boîtes':'boîte','sacs':'sac','fanions':'fanion','équipes':'équipe','lots':'lot',
+      'rouleaux':'rouleau','cars':'car','navettes':'navette','élèves':'élève',
+      'personnes':'personne','portions':'portion','économiseurs':'économiseur',
+      'bouteilles':'bouteille','rencontres':'rencontre','terrains':'terrain',
+      'équipes':'équipe','groupes':'groupe','kits':'kit','jeux':'jeu',
+    }
+    for pluriel,singulier in couples.items():
+        texte=re.sub(r'(?<!\d)1\s+'+pluriel+r'\b', '1 '+singulier, texte)
+    texte=re.sub(r'\b1 ([\wÀ-ÿ-]+) supplémentaires\b',r'1 \1 supplémentaire',texte)
+    texte=re.sub(r'\b1 ([\wÀ-ÿ-]+) entières\b',r'1 \1 entière',texte)
+    texte=re.sub(r'\b1 ([\wÀ-ÿ-]+) entiers\b',r'1 \1 entier',texte)
+    texte=re.sub(r'\b1 (\w+) défectueuses\b',r'1 \1 défectueuse',texte)
+    return texte
 
 
 def _mc_n8_polish(ex):
@@ -8548,6 +8709,7 @@ def _mc_n8_polish(ex):
             etapes[3] = f"Le montant de l'achat des {f(champs[2]['attendu'])} boîtes est de {f(champs[3]['attendu'])} €."
     etapes=_mc_n8_enrichir_dernier(ex,etapes)
     etapes=_mc_n8_details_pour_nouveaux(ex,etapes)
+    etapes=_mc_n8_arbitrage_audit(ex,etapes)
     sorties=[]
     for i, (champ, detail) in enumerate(zip(champs, etapes), 1):
         valeur=champ['attendu']
@@ -8567,6 +8729,19 @@ def _mc_n8_polish(ex):
         ex['correction']=re.sub(r'\b1 '+pluriel+r'\b', '1 '+singulier, ex['correction'])
     ex['correction']=ex['correction'].replace('1 nouvelles boîtes','1 nouvelle boîte')
     ex['correction']=ex['correction'].replace('1 boîte entière(s)','1 boîte entière')
+    ex['correction']=re.sub(r'\b1 sont inutilisables\b','1 est inutilisable',ex['correction'])
+    ex['correction']=re.sub(r'\b1 nouveaux? (équipes|boîtes)\b',lambda m:'1 nouvelle '+ ('équipe' if m[1]=='équipes' else 'boîte'),ex['correction'])
+    ex['correction']=re.sub(r'\b1 dernières personnes\b','1 dernière personne',ex['correction'])
+    ex['correction']=re.sub(r'(?<!\d)(\d+) personne\(s\)',lambda m:m[1]+(' personne' if m[1]=='1' else ' personnes'),ex['correction'])
+    ex['correction']=re.sub(r'(?<!\d)(\d+) moteur\(s\)',lambda m:m[1]+(' moteur' if m[1]=='1' else ' moteurs'),ex['correction'])
+    ex['correction']=re.sub(r'(?<!\d)(\d+) batterie\(s\)',lambda m:m[1]+(' batterie' if m[1]=='1' else ' batteries'),ex['correction'])
+    ex['correction']=re.sub(r'\b(\d+) dernière(s)? personnes\b',lambda m:m[1]+(' dernière personne' if m[1]=='1' else ' dernières personnes'),ex['correction'])
+    ex['correction']=re.sub(r'\b(remplir|faut|entièrement)(?=\d)',r'\1 ',ex['correction'])
+    ex['correction']=re.sub(r'\b(\d+) boîtes entière\(s\)\b',lambda m:m[1]+' boîtes entières',ex['correction'])
+    ex['correction']=re.sub(r'\b(\d+) nouvelle\(s\) équipe\(s\)\b',lambda m:m[1]+(' nouvelle équipe' if m[1]=='1' else ' nouvelles équipes'),ex['correction'])
+    ex['correction']=re.sub(r'\b1 cadres\b','1 cadre',ex['correction'])
+    ex['correction']=re.sub(r'\b1 fanions\b','1 fanion',ex['correction'])
+    ex['correction']=re.sub(r'(\d)([A-Za-zÀ-ÿ])',r'\1 \2',ex['correction'])
     ex['correction']=ex['correction'].replace('1 boîte(s) entière(s)','1 boîte entière')
     ex['correction']=ex['correction'].replace('2 boîtes entière(s)','2 boîtes entières')
     ex['correction']=re.sub(r'\.\*\*(?=[A-ZÉ])', '. **', ex['correction'])
@@ -8575,7 +8750,9 @@ def _mc_n8_polish(ex):
     ex['correction']=re.sub(r'\n{3,}','\n\n', ex['correction'])
     ex['enonce']=re.sub(r'\n{3,}','\n\n',ex['enonce'])
     ex['enonce']=re.sub(r'(?<=\d)\.(?=\d)', ',', ex['enonce'])
-    ex['mathicap_revision_corrections']='2026-11-18-n8-retour-corrections-detaillees'
+    ex['enonce']=_mc_n8_accords(ex['enonce'])
+    ex['correction']=_mc_n8_accords(ex['correction'])
+    ex['mathicap_revision_corrections']='2026-11-18-n8-audits-claude-gemini'
     return ex
 
 
@@ -8715,12 +8892,16 @@ def _mc_n8_details_pour_nouveaux(ex, etapes):
                    f"Coût minimal : {f(v[4])} €.")
     elif n=='P8-M24':
         teams, courts, matchtime, pause=a['teams'],a['courts'],a['matchtime'],a['breaktime']
-        matches=teams*(teams-1)//2;series=(matches+courts-1)//courts
-        etapes[0]=(f"Chaque équipe joue contre les {teams-1} autres. "
-                   f"{teams} × ({teams} − 1) ÷ 2 = {matches} rencontres, car chaque match serait sinon compté deux fois.")
-        etapes[2]=(f"Il faut programmer {matches} matchs sur {courts} terrains : "
-                   f"{matches} ÷ {courts} = {matches//courts}, reste {matches%courts}. "
-                   f"On retient {series} séries de matchs.")
+        simultanes=min(courts,teams//2)
+        matches=teams*(teams-1)//2;series=(matches+simultanes-1)//simultanes
+        etapes[0]=(f"Chaque équipe affronte les {teams-1} autres, mais chaque rencontre serait comptée deux fois. "
+                   f"{teams} × ({teams} − 1) ÷ 2 = {matches} rencontres.")
+        etapes[1]=(f"Deux équipes distinctes sont nécessaires par match : {teams} ÷ 2 donne "
+                   f"{teams//2} matchs simultanés au maximum (avec éventuellement une équipe au repos). "
+                   f"Le gymnase a {courts} terrains : on retient le plus petit des deux nombres, {simultanes} matchs.")
+        etapes[2]=(f"Il faut programmer {matches} matchs par séries d’au plus {simultanes} : "
+                   f"{matches} ÷ {simultanes} = {matches//simultanes}, reste {matches%simultanes}. "
+                   f"On retient {series} séries de matchs" + (" (la dernière est incomplète)." if matches%simultanes else "."))
         etapes[3]=(f"Durée des matchs : {series} × {matchtime} = {series*matchtime} min. "
                    f"Il y a {series} − 1 = {series-1} pauses de {pause} min, soit {(series-1)*pause} min. "
                    f"Durée totale : {series*matchtime} + {(series-1)*pause} = {f(v[3])} min.")
@@ -8984,9 +9165,9 @@ def _mc_new_n8(idx,seed=None):
         need=teams*per; usable=stock-bad; deficit=max(0,need-usable)
         boxes=_mc_new_ceil(deficit,pack); new_need=(teams+extra)*per; extra_boxes=_mc_new_ceil(max(0,new_need-(usable+boxes*pack)),pack)
         return _mc_new_problem(8,idx,seed,'Les badges du salon des sciences',[
-            f'{teams} équipes de {per} élèves doivent recevoir chacune un badge.',
+            f'{teams} équipes de {per} élèves participent. Chaque élève doit recevoir un badge.',
             f'Le club possède {stock} badges, dont {bad} sont abîmés. Les badges sont vendus par boîtes de {pack}.',
-            f'Après la commande destinée aux {teams} équipes, {extra} équipes supplémentaires s’inscrivent. Les badges déjà achetés restent disponibles.'
+            f'Après la commande destinée aux {teams} équipes, {extra} autres équipes de {per} élèves s’inscrivent. Les badges déjà achetés restent disponibles.'
         ],['Combien de badges faut-il pour les équipes initiales ?', 'Combien de badges du stock sont utilisables ?', 'Combien de badges manque-t-il avant l’achat ?', 'Combien de boîtes faut-il acheter pour les équipes initiales ?', 'Combien de boîtes supplémentaires faut-il commander pour les nouvelles équipes ?'],
         [need,usable,deficit,boxes,extra_boxes],['Badges nécessaires','Badges utilisables','Badges manquants','Boîtes initiales','Boîtes supplémentaires'],['badges','badges','badges','boîtes','boîtes'],['Q','Q','R','L','L'],[
             f'{teams} × {per} = {need}.',f'{stock} − {bad} = {usable}.',f'{need} − {usable} = {deficit}.',f'{deficit} ÷ {pack}, en arrondissant au supérieur, donne {boxes} boîtes.',f'Besoin après inscription : ({teams}+{extra})×{per}={new_need}. Stock après la première commande : {usable}+{boxes}×{pack}={usable+boxes*pack}. Il faut encore {_mc_new_ceil(max(0,new_need-(usable+boxes*pack)),pack)} boîtes.'
@@ -9132,14 +9313,14 @@ def _mc_new_n8(idx,seed=None):
         ],dict(kind='n8_compost',surface=surface,qty=qty,stock=stock,bag_a=bag_a,price_a=price_a,bag_b=bag_b,price_b=price_b))
     elif idx==24:
         teams=rng.randint(5,9);matchtime=rng.choice([12,15,18]);courts=rng.choice([2,3,4]); breaktime=rng.choice([3,5]);duration=rng.randint(155,300)
-        matches=teams*(teams-1)//2;slots=_mc_new_ceil(matches,courts);total=slots*matchtime+(slots-1)*breaktime
+        matches=teams*(teams-1)//2; matchs_simultanes=min(courts,teams//2);slots=_mc_new_ceil(matches,matchs_simultanes);total=slots*matchtime+(slots-1)*breaktime
         return _mc_new_problem(8,idx,seed,'Le tournoi sur plusieurs terrains',[
             f'{teams} équipes doivent se rencontrer chacune une seule fois. Une rencontre dure {matchtime} minutes.',
-            f'Le gymnase dispose de {courts} terrains ; il peut accueillir autant de matchs simultanés que de terrains. Entre deux séries de matchs, il y a {breaktime} minutes de pause, jamais après la dernière série.',
+            f'Le gymnase dispose de {courts} terrains. Chaque équipe ne peut disputer qu’un seul match à la fois. Entre deux séries de matchs, il y a {breaktime} minutes de pause, jamais après la dernière série.',
             f'La journée sportive réserve {duration} minutes à ce tournoi.'
         ],['Combien de rencontres faut-il organiser au total, sans compter deux fois les mêmes équipes ?','Combien de matchs peuvent se dérouler simultanément ?','Combien de séries de matchs faut-il au minimum ?','Quelle est la durée minimale du tournoi, pauses comprises ?','Quel est l’écart signé entre la durée réservée et la durée du tournoi (positif s’il reste du temps, négatif sinon) ?'],
-        [matches,courts,slots,total,duration-total],['Nombre de rencontres','Matchs simultanés','Séries de matchs','Durée du tournoi','Écart de temps'],['matchs','matchs','séries','min','min'],['Q','L','L','D','R'],[
-            f'{teams}×({teams}−1)÷2={matches} rencontres.',f'{courts} terrains donnent {courts} matchs simultanés.',f'⌈{matches}/{courts}⌉={slots} séries.',f'{slots}×{matchtime}+({slots}−1)×{breaktime}={total} min.',f'{duration}−{total}={duration-total} min.'
+        [matches,matchs_simultanes,slots,total,duration-total],['Nombre de rencontres','Matchs simultanés','Séries de matchs','Durée du tournoi','Écart de temps'],['matchs','matchs','séries','min','min'],['Q','L','L','D','R'],[
+            f'{teams}×({teams}−1)÷2={matches} rencontres.',f'Il faut deux équipes distinctes par match : {teams} équipes permettent {teams//2} rencontres à la fois. Le gymnase dispose de {courts} terrains ; on retient le plus petit des deux nombres, soit {matchs_simultanes} matchs simultanés.',f'{matches} ÷ {matchs_simultanes} impose {slots} séries.',f'{slots}×{matchtime}+({slots}−1)×{breaktime}={total} min.',f'{duration}−{total}={duration-total} min.'
         ],dict(kind='n8_tournoi',teams=teams,matchtime=matchtime,courts=courts,breaktime=breaktime,duration=duration))
     elif idx==25:
         boxes=rng.randint(12,25);per=rng.randint(8,14); spoiled=rng.randint(7,25);target=rng.randint(220,360);pack_a=rng.choice([10,12]);cost_a=rng.randint(9,15);pack_b=rng.choice([15,18]);cost_b=rng.randint(16,25)
