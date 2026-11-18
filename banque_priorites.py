@@ -8335,13 +8335,14 @@ def _mc_n8_fr(v,decimales=2):
 
 
 def _mc_n8_compacter_texte(texte):
-    texte=re.sub(r'\*\*Expression complète\s*:\*\*\s*', 'Expression complète : ', texte)
-    texte=re.sub(r'\*\*Réponse\s*:\*\*\s*', '', texte)
-    texte=re.sub(r'\*\*Défi final[^*]*\*\*\s*', '', texte)
-    texte=re.sub(r'\*\*Nouveau défi[^*]*\*\*\s*', '', texte)
-    texte=re.sub(r'\n\s*\n+', ' ', texte.strip())
-    texte=re.sub(r'\s+', ' ', texte)
-    texte=re.sub(r'(?<=\d)\.00(?=\s|\D)', ',00', texte)
+    """Préserve les paragraphes du raisonnement au lieu de les aplatir en un résumé."""
+    texte = re.sub(r'\*\*Expression complète\s*:\*\*\s*', 'Expression complète : ', texte)
+    texte = re.sub(r'\*\*Réponse\s*:\*\*\s*', '', texte)
+    texte = re.sub(r'\*\*Défi final[^*]*\*\*\s*', '', texte)
+    texte = re.sub(r'\*\*Nouveau défi[^*]*\*\*\s*', '', texte)
+    texte = re.sub(r'\n[ \t]*\n+', '\n\n', texte.strip())
+    texte = re.sub(r'(?<!\n)\n(?!\n)', ' ', texte)
+    texte = re.sub(r'[ \t]{2,}', ' ', texte)
     return texte.strip()
 
 
@@ -8511,58 +8512,231 @@ def _mc_n8_enrichir_dernier(ex,etapes):
 
 
 def _mc_n8_polish(ex):
-    """Une correction par question N8, concise, explicite, sans bloc de réponses doublé."""
-    if int(ex.get('mathicap_niveau_pedagogique', 0))!=8:
+    """Corrections N8 complètes : une réponse suivie de la méthode détaillée.
+
+    Ne change ni les questions, ni les champs ni les valeurs attendues.
+    Le format ne comporte aucun tableau de réponses redondant.
+    """
+    if int(ex.get('mathicap_niveau_pedagogique', 0)) != 8:
         return ex
-    champs=ex.get('champs_reponse',[])
-    if len(champs)!=5:
-        raise ValueError('N8 : cinq champs requis pour '+ex.get('id','?'))
-    etapes=_mc_n8_etapes_source(ex.get('correction',''))
-    if len(etapes)!=5:
+    champs = ex.get('champs_reponse', [])
+    if len(champs) != 5:
+        raise ValueError('N8 : cinq champs requis pour ' + ex.get('id', '?'))
+    etapes = _mc_n8_etapes_source(ex.get('correction',''))
+    if len(etapes) != 5:
         raise ValueError(f"N8 {ex['id']} : {len(etapes)} étapes, cinq attendues")
-    f=_mc_n8_fr
-    if ex['id']=='P8-M01':
-        e3=champs[2]['attendu'];e4=champs[3]['attendu']
-        reserve=e3-e4
-        etapes[2]=f"Recettes {f(champs[0]['attendu'])} € − dépenses {f(champs[1]['attendu'])} € = {f(e3)} €."
-        etapes[3]=(f"Bénéfice {f(e3)} € − réserve {f(reserve)} € = {f(e4)} € à partager. "
-                   +etapes[3])
-    if ex['id']=='P8-M04':
-        t=ex['enonce'];a=re.search(r'boîtes de (\d+) batteries, au prix de (\d+) € chacune',t)
-        if a:
-            paquet,prix=int(a[1]),int(a[2]);need=max(0,champs[0]['attendu']-champs[1]['attendu'])
+    f = _mc_n8_fr
+    if ex['id'] == 'P8-M01':
+        e3=champs[2]['attendu']; e4=champs[3]['attendu']; reserve=e3-e4
+        etapes[2] = (f"Recettes : {f(champs[0]['attendu'])} € ; dépenses : {f(champs[1]['attendu'])} €. "
+                     f"{f(champs[0]['attendu'])} − {f(champs[1]['attendu'])} = {f(e3)} € de bénéfice avant réserve.")
+        etapes[3] = (f"Bénéfice : {f(e3)} €. Réserve mise de côté : {f(reserve)} €. "
+                     f"Somme à partager : {f(e3)} − {f(reserve)} = {f(e4)} €. " + etapes[3])
+    if ex['id'] == 'P8-M04':
+        t=ex['enonce']
+        match=re.search(r'boîtes de (\d+) batteries, au prix de (\d+) € chacune', t)
+        if match:
+            paquet, prix=int(match[1]), int(match[2]); need=max(0,champs[0]['attendu']-champs[1]['attendu'])
             quotient,reste=divmod(need,paquet)
-            etapes[2]=(f'Batteries manquantes : {champs[0]["attendu"]} − {champs[1]["attendu"]} = {need}. '
-                      f'Une boîte contient {paquet} batteries. Division : {need} ÷ {paquet} = '
-                      f'{quotient}, reste {reste}. '
-                      f'Il faut {champs[2]["attendu"]} boîtes entières au minimum.')
-            etapes[3]=(f'{champs[2]["attendu"]} × {prix} = {f(champs[3]["attendu"])} €.')
+            etapes[2]=(f"Besoin : {f(champs[0]['attendu'])} batteries ; stock utilisable : {f(champs[1]['attendu'])}. "
+                       f"Il manque {f(champs[0]['attendu'])} − {f(champs[1]['attendu'])} = {need} batteries. "
+                       f"Chaque boîte contient {paquet} batteries. {need} ÷ {paquet} = {quotient}, reste {reste}. "
+                       f"Il faut donc {f(champs[2]['attendu'])} boîte(s) entière(s), en arrondissant au supérieur si nécessaire.")
+            etapes[3] = f"{f(champs[2]['attendu'])} boîte(s) × {prix} € = {f(champs[3]['attendu'])} €."
         else:
-            old=etapes[:]
-            etapes[2]=old[2]+' '+re.split(r'Coût :',old[3])[0]
-            etapes[3]=f"{f(champs[2]['attendu'])} boîte(s) × prix par boîte = {f(champs[3]['attendu'])} €."
+            etapes[2] = etapes[2] + ' ' + re.split(r'Coût :',etapes[3])[0]
+            etapes[3] = f"Le montant de l'achat des {f(champs[2]['attendu'])} boîtes est de {f(champs[3]['attendu'])} €."
     etapes=_mc_n8_enrichir_dernier(ex,etapes)
-    # Correction compacte : la réponse chiffrée figure au début de son propre calcul.
+    etapes=_mc_n8_details_pour_nouveaux(ex,etapes)
     sorties=[]
-    for i,(champ,exp) in enumerate(zip(champs,etapes),1):
-        x=champ['attendu'];texte=f(x) if isinstance(x,(int,float)) and not isinstance(x,bool) else str(x)
-        unite=champ.get('unite','')
-        valeur=texte+((' '+unite) if unite else '')
-        libelle=champ.get('libelle',f'Question {i}').strip().rstrip('?').rstrip(':').strip()
-        sorties.append(f"**Réponse {i} — {libelle} : {valeur}.** {exp}")
+    for i, (champ, detail) in enumerate(zip(champs, etapes), 1):
+        valeur=champ['attendu']
+        fmt=f(valeur) if isinstance(valeur,(int,float)) and not isinstance(valeur,bool) else str(valeur)
+        unite=champ.get('unite','') or ''
+        rep=fmt + ((' '+unite) if unite else '')
+        libelle=champ.get('libelle', f'Question {i}').strip().rstrip('?: ')
+        # La méthode n'est pas raccourcie en une unique ligne de résultats.
+        detail=_mc_n8_numeriques_lisibles(detail)
+        detail=re.sub(r'\s*\*\*', '**', detail)
+        sorties.append(f"**Réponse {i} — {libelle} : {rep}**\n\n{detail}")
     ex['correction']='\n\n'.join(sorties)
-    ex['correction']=re.sub(r'(?<=\d)\.(?=\d)', ',', ex['correction'])
-    ex['correction']=re.sub(r'⌈([^⌉]+)⌉', lambda m: 'arrondi à l’entier supérieur de ('+m.group(1).replace('/', ' ÷ ')+')', ex['correction'])
-    # Accord des unités au singulier dans les corrections.
-    for pluriel,singulier in [('boîtes','boîte'),('rouleaux','rouleau'),('lots','lot'),('cars','car'),('navettes','navette'),('économiseurs','économiseur'),('sacs','sac'),('bouteilles','bouteille')]:
+    ex['correction']=_mc_n8_numeriques_lisibles(ex['correction'])
+    for pluriel,singulier in [('boîtes','boîte'),('rouleaux','rouleau'),('lots','lot'),
+                               ('cars','car'),('navettes','navette'),('économiseurs','économiseur'),
+                               ('sacs','sac'),('bouteilles','bouteille')]:
         ex['correction']=re.sub(r'\b1 '+pluriel+r'\b', '1 '+singulier, ex['correction'])
-    ex['correction']=ex['correction'].replace('1 nouvelles boîtes','1 nouvelle boîte').replace('1 boîte(s)','1 boîte').replace('1 lot(s)','1 lot')
-    ex['correction']=re.sub(r'(\d+) boîte\(s\)', lambda m: m.group(1)+' '+('boîte' if m.group(1)=='1' else 'boîtes'), ex['correction'])
-    ex['correction']=re.sub(r'(\d+) lot\(s\)', lambda m: m.group(1)+' '+('lot' if m.group(1)=='1' else 'lots'), ex['correction'])
-    ex['enonce']=re.sub(r'\n{3,}', '\n\n', ex['enonce'])
+    ex['correction']=ex['correction'].replace('1 nouvelles boîtes','1 nouvelle boîte')
+    ex['correction']=ex['correction'].replace('1 boîte entière(s)','1 boîte entière')
+    ex['correction']=ex['correction'].replace('1 boîte(s) entière(s)','1 boîte entière')
+    ex['correction']=ex['correction'].replace('2 boîtes entière(s)','2 boîtes entières')
+    ex['correction']=re.sub(r'\.\*\*(?=[A-ZÉ])', '. **', ex['correction'])
+    ex['correction']=re.sub(r'(\d+) boîte\(s\)', lambda m:m[1]+(' boîte' if m[1]=='1' else ' boîtes'), ex['correction'])
+    ex['correction']=re.sub(r'(\d+) lot\(s\)', lambda m:m[1]+(' lot' if m[1]=='1' else ' lots'), ex['correction'])
+    ex['correction']=re.sub(r'\n{3,}','\n\n', ex['correction'])
+    ex['enonce']=re.sub(r'\n{3,}','\n\n',ex['enonce'])
     ex['enonce']=re.sub(r'(?<=\d)\.(?=\d)', ',', ex['enonce'])
-    ex['mathicap_revision_corrections']='2026-11-18-n8-relecture-detaillee'
+    ex['mathicap_revision_corrections']='2026-11-18-n8-retour-corrections-detaillees'
     return ex
+
+
+def _mc_n8_numeriques_lisibles(texte):
+    """Evite les nombres flottants tels que 0,1999999999999996 dans une méthode."""
+    def nettoie(m):
+        x=round(float(m[0].replace(',','.')), 4)
+        return (f'{x:.4f}'.rstrip('0').rstrip('.')).replace('.', ',')
+    # Uniquement les développements décimaux anormalement longs, pas les grands entiers.
+    texte=re.sub(r'(?<![\d,.])-?\d+[.,]\d{7,}(?!\d)', nettoie, texte)
+    texte=re.sub(r'(?<=\d)\.(?=\d)', ',', texte)
+    return texte
+
+
+def _mc_n8_details_pour_nouveaux(ex, etapes):
+    """Déplie les arrondis et réemploie les paramètres exacts de nouveaux modèles N8."""
+    a=ex.get('_mathicap_audit_nouveau') or {}
+    n=ex['id'];v=[c['attendu'] for c in ex['champs_reponse']]
+    f=_mc_n8_fr
+    if n=='P8-M12':
+        personnes,ca,cb,pa,pb=a['n'],a['cap_a'],a['cap_b'],a['price_a'],a['price_b']
+        na=(personnes+ca-1)//ca;nb=(personnes+cb-1)//cb
+        etapes[0]=(f"Le véhicule A contient {ca} personnes. {personnes} ÷ {ca} donne {personnes//ca} "
+                   f"véhicules complets et {personnes%ca} personne(s) de reste. "
+                   f"On compte donc {na} navettes pour transporter tout le monde.")
+        etapes[1]=f"Coût des {na} navettes A : {na} × {pa} = {na*pa} €."
+        etapes[2]=(f"Le véhicule B contient {cb} personnes. {personnes} ÷ {cb} donne {personnes//cb} "
+                   f"avec un reste de {personnes%cb} ; on retient {nb} navettes. "
+                   f"Coût : {nb} × {pb} = {nb*pb} €.")
+        etapes[3]=f"Offre A : {na*pa} €. Offre B : {nb*pb} €. Le moins cher coûte {f(v[3])} €."
+        total=personnes+a['add'];na2=(total+ca-1)//ca;nb2=(total+cb-1)//cb
+        etapes[4]=(f"Après l'ajout, {personnes} + {a['add']} = {total} personnes. "
+                   f"A : {total} ÷ {ca} impose {na2} navettes, soit {na2} × {pa} = {na2*pa} €. "
+                   f"B : {total} ÷ {cb} impose {nb2} navettes, soit {nb2} × {pb} = {nb2*pb} €. "
+                   f"On choisit {f(v[4])} €, le plus petit des deux montants.")
+    elif n=='P8-M13':
+        initial=a['sections']*a['per']; usable=a['frames']-a['bad'];missing=max(0,initial-usable)
+        first=(missing+a['box']-1)//a['box'];firstcost=first*a['price']
+        rest=usable+first*a['box']-initial;add_missing=max(0,a['add']-rest)
+        more=(add_missing+a['box']-1)//a['box']
+        etapes[0]=f"{a['sections']} panneaux × {a['per']} photographies = {initial} cadres nécessaires."
+        etapes[1]=f"Sur {a['frames']} cadres, {a['bad']} sont inutilisables : {a['frames']} − {a['bad']} = {usable} cadres utilisables."
+        etapes[2]=f"Il manque {initial} − {usable} = {missing} cadres pour l'exposition initiale."
+        etapes[3]=(f"Une boîte contient {a['box']} cadres. {missing} ÷ {a['box']} = {missing//a['box']}, "
+                   f"reste {missing%a['box']}. Il faut donc {first} boîtes entières. "
+                   f"Coût : {first} × {a['price']} = {firstcost} €.")
+        etapes[4]=(f"La première commande laisse {usable} + {first} × {a['box']} − {initial} "
+                   f"= {rest} cadres. Pour {a['add']} nouvelles photos, "
+                   f"il manque encore {a['add']} − {rest} = {add_missing} cadres. "
+                   f"{add_missing} ÷ {a['box']} donne {add_missing//a['box']} avec un reste de "
+                   f"{add_missing%a['box']} : il faut {more} boîtes supplémentaires.")
+    elif n=='P8-M14':
+        after=a['start']+a['received']; available=after-a['loans']; shortage=max(0,a['reserved']-available)
+        na=(shortage+a['box_a']-1)//a['box_a'];nb=(shortage+a['box_b']-1)//a['box_b']
+        ca=na*a['cost_a'];cb=nb*a['cost_b']
+        etapes[0]=f"Le CDI reçoit {a['received']} mangas : {a['start']} + {a['received']} = {after} mangas."
+        etapes[1]=f"Après les {a['loans']} prêts, il reste {after} − {a['loans']} = {available} mangas."
+        etapes[2]=f"Il faut {a['reserved']} mangas ; il en reste {available}. Manque : {a['reserved']} − {available} = {shortage} mangas."
+        etapes[3]=(f"L'offre A contient {a['box_a']} mangas par lot. {shortage} ÷ {a['box_a']} = {shortage//a['box_a']}, "
+                   f"reste {shortage%a['box_a']}. Il faut donc {na} lots entiers. "
+                   f"Coût A : {na} × {a['cost_a']} = {ca} €.")
+        etapes[4]=(f"L'offre B contient {a['box_b']} mangas par lot : {shortage} ÷ {a['box_b']} "
+                   f"impose {nb} lots entiers. Coût B : {nb} × {a['cost_b']} = {cb} €. "
+                   f"On compare A ({ca} €) et B ({cb} €) : coût minimal {min(ca,cb)} €.")
+    elif n=='P8-M16':
+        count=a['n'];new_n=count+a['add']
+        ca=a['fee_a']+count*a['each_a'];cb=a['fee_b']+count*a['each_b']
+        ca2=a['fee_a']+new_n*a['each_a'];cb2=a['fee_b']+new_n*a['each_b']
+        etapes[0]=(f"Frais fixes {a['fee_a']} € et {a['each_a']} € par élève : "
+                   f"{a['fee_a']} + {count} × {a['each_a']} = {ca} €.")
+        etapes[1]=(f"Frais fixes {a['fee_b']} € et {a['each_b']} € par élève : "
+                   f"{a['fee_b']} + {count} × {a['each_b']} = {cb} €.")
+        etapes[2]=f"On compare {ca} € (A) et {cb} € (B). Le tarif le plus faible est {min(ca,cb)} €."
+        etapes[3]=f"Écart entre les deux devis : {max(ca,cb)} − {min(ca,cb)} = {abs(ca-cb)} €."
+        etapes[4]=(f"Après l'arrivée du second groupe : {count} + {a['add']} = {new_n} élèves. "
+                   f"A : {a['fee_a']} + {new_n} × {a['each_a']} = {ca2} €. "
+                   f"B : {a['fee_b']} + {new_n} × {a['each_b']} = {cb2} €. "
+                   f"Le tarif minimal est {min(ca2,cb2)} €.")
+    elif n=='P8-M21':
+        earned=a['win']*a['reward'];after_trap=a['start']+earned-a['loss'];after_purchase=after_trap-a['spent']
+        shortage=max(0,a['goal']-after_purchase)
+        normals=(shortage+a['normal']-1)//a['normal']
+        rest=max(0,shortage-a['rare']); withrare=1+(rest+a['normal']-1)//a['normal']
+        etapes[0]=f"{a['win']} missions × {a['reward']} cristaux = {earned} cristaux gagnés."
+        etapes[1]=(f"Après le piège : {a['start']} + {earned} − {a['loss']} = "
+                   f"{after_trap} cristaux.")
+        etapes[2]=f"Après l'achat : {after_trap} − {a['spent']} = {after_purchase} cristaux."
+        etapes[3]=f"Objectif {a['goal']} cristaux ; il manque {a['goal']} − {after_purchase} = {shortage} cristaux."
+        etapes[4]=(f"Avec seulement des missions ordinaires : {shortage} ÷ {a['normal']} = "
+                   f"{shortage//a['normal']}, reste {shortage%a['normal']} ; il faut {normals} missions. "
+                   f"Avec une mission rare (+{a['rare']} cristaux), il reste {rest} cristaux à gagner. "
+                   f"Il faut alors {1} mission rare et {rest//a['normal']} missions ordinaires"
+                   + (f", plus une pour le reste de {rest%a['normal']} cristaux" if rest%a['normal'] else '')
+                   + f", soit {withrare} missions au total. On retient le minimum : {min(normals,withrare)} missions.")
+    elif n=='P8-M17':
+        flags,taille,roll,extra=a['flags'],a['cut']*3,a['roll'],a['extra']
+        par=roll//taille;reste=roll%taille
+        rouleaux=(flags+par-1)//par; q,rem=divmod(flags,par)
+        last=par if rem==0 else rem
+        new_total=flags+extra; nb=(new_total+par-1)//par
+        etapes[0]=f"Un fanion utilise 3 morceaux de {a['cut']} cm : 3 × {a['cut']} = {taille} cm."
+        etapes[1]=(f"Le rouleau mesure {roll} cm. {roll} ÷ {taille} = {par}, reste {reste} cm. "
+                   f"On peut découper {par} fanions complets par rouleau, sans raccord.")
+        etapes[2]=(f"Pour {flags} fanions, {flags} ÷ {par} = {q}, reste {rem}. "
+                   f"{'Il faut un rouleau supplémentaire pour les derniers fanions.' if rem else 'La division est exacte.'} "
+                   f"Il faut donc {rouleaux} rouleaux au minimum.")
+        etapes[3]=(f"Le dernier rouleau fournit {last} fanions. Ruban utilisé : {last} × {taille} = {last*taille} cm. "
+                   f"Chute : {roll} − {last*taille} = {f(v[3])} cm.")
+        etapes[4]=(f"Après la nouvelle demande : {flags} + {extra} = {new_total} fanions. "
+                   f"{new_total} ÷ {par} = {new_total//par}, reste {new_total%par}. "
+                   f"Il faut {nb} rouleaux au total, contre {rouleaux} auparavant. "
+                   f"Rouleaux supplémentaires : {nb} − {rouleaux} = {f(v[4])}.")
+    elif n=='P8-M22':
+        scale,ma,mb,detour=a['scale'],a['a'],a['b'],a['detour']
+        # 100 000 cm dans 1 km
+        etapes[0]=(f"À l'échelle 1:{scale}, {ma} cm sur la carte représentent "
+                   f"{ma} × {scale} = {ma*scale} cm en réalité. "
+                   f"{ma*scale} ÷ 100 000 = {f(v[0])} km.")
+        etapes[1]=(f"Pour B : {mb} × {scale} = {mb*scale} cm, puis "
+                   f"{mb*scale} ÷ 100 000 = {f(v[1])} km.")
+        etapes[2]=(f"Après la déviation, A mesure {ma} + {detour} = {ma+detour} cm sur la carte. "
+                   f"{ma+detour} × {scale} = {(ma+detour)*scale} cm ; "
+                   f"{(ma+detour)*scale} ÷ 100 000 = {f(v[2])} km.")
+        etapes[3]=(f"Après déviation, A mesure {f(v[2])} km et B mesure {f(v[1])} km. "
+                   f"Le plus court est le sentier {v[3]}.")
+        etapes[4]=(f"On soustrait la plus petite distance de la plus grande : "
+                   f"{f(max(v[2],v[1]))} − {f(min(v[2],v[1]))} = {f(v[4])} km.")
+    elif n=='P8-M23':
+        besoin=a['surface']*a['qty'];manque=besoin-a['stock'];na=(manque+a['bag_a']-1)//a['bag_a'];nb=(manque+a['bag_b']-1)//a['bag_b']
+        etapes[2]=(f"Il manque {manque} kg. Un sac A contient {a['bag_a']} kg. "
+                   f"{manque} ÷ {a['bag_a']} donne {manque//a['bag_a']} avec un reste de "
+                   f"{manque%a['bag_a']} kg ; il faut donc {na} sacs complets.")
+        etapes[3]=f"Avec l'offre A, {na} sacs × {a['price_a']} € = {na*a['price_a']} €."
+        etapes[4]=(f"Offre A : {na} × {a['price_a']} = {na*a['price_a']} €. "
+                   f"Offre B : {manque} ÷ {a['bag_b']} nécessite {nb} sacs ; "
+                   f"{nb} × {a['price_b']} = {nb*a['price_b']} €. "
+                   f"Coût minimal : {f(v[4])} €.")
+    elif n=='P8-M24':
+        teams, courts, matchtime, pause=a['teams'],a['courts'],a['matchtime'],a['breaktime']
+        matches=teams*(teams-1)//2;series=(matches+courts-1)//courts
+        etapes[0]=(f"Chaque équipe joue contre les {teams-1} autres. "
+                   f"{teams} × ({teams} − 1) ÷ 2 = {matches} rencontres, car chaque match serait sinon compté deux fois.")
+        etapes[2]=(f"Il faut programmer {matches} matchs sur {courts} terrains : "
+                   f"{matches} ÷ {courts} = {matches//courts}, reste {matches%courts}. "
+                   f"On retient {series} séries de matchs.")
+        etapes[3]=(f"Durée des matchs : {series} × {matchtime} = {series*matchtime} min. "
+                   f"Il y a {series} − 1 = {series-1} pauses de {pause} min, soit {(series-1)*pause} min. "
+                   f"Durée totale : {series*matchtime} + {(series-1)*pause} = {f(v[3])} min.")
+        etapes[4]=(f"Durée autorisée : {a['duration']} min ; durée du tournoi : {f(v[3])} min. "
+                   f"Différence (limite − durée) : {a['duration']} − {f(v[3])} = {f(v[4])} min.")
+    elif n=='P8-M25':
+        manque=a['target']-(a['boxes']*a['per']-a['spoiled'])
+        na=(manque+a['pack_a']-1)//a['pack_a'];nb=(manque+a['pack_b']-1)//a['pack_b']
+        etapes[3]=(f"Il manque {manque} portions. Avec {a['pack_a']} portions par lot A, "
+                   f"il faut {na} lots entiers. {na} × {a['cost_a']} = {na*a['cost_a']} €.")
+        etapes[4]=(f"Offre A : {na} × {a['cost_a']} = {na*a['cost_a']} €. "
+                   f"Offre B : {nb} lots entiers de {a['pack_b']} portions, "
+                   f"soit {nb} × {a['cost_b']} = {nb*a['cost_b']} €. "
+                   f"On retient le coût minimal : {f(v[4])} €.")
+    return etapes
+
 
 def _mc_uniformiser_exercice(exercice):
     """Retourne une COPIE structurée, sans altérer l'exercice historique source."""
