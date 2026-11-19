@@ -9078,6 +9078,321 @@ def _mc_n8_modele_eleve_20261119(ex, etapes):
     return ex
 
 
+
+def _mc_n8_revision_fusionnee_20261119(ex):
+    """Fusion finale N8 : modèle pédagogique validé, ajustements de novembre.
+
+    Elle reçoit l'exercice N8 déjà audité et conservant tous ses champs. Les
+    nouveaux corrigés exploitent les mêmes paramètres que le tirage et
+    réutilisent les réponses précédentes plutôt que de répéter les calculs.
+    P8-M18 : question Oui/Non, conversion après les anciens audits numériques.
+    """
+    import re
+    from math import ceil
+    nom=ex['id']
+    if not nom.startswith('P8-M'):
+        return ex
+    champs=ex['champs_reponse'];v=[c['attendu'] for c in champs]
+    a=ex.get('_mathicap_audit_nouveau') or {}
+    f=_mc_n8_fr
+    pieces=re.findall(r'(?ms)^\*\*Réponse ([1-5]) — (.*?)\*\*\n\n(.*?)(?=^\*\*Réponse [1-5] — |\Z)',ex['correction'])
+    if len(pieces)!=5:
+        raise AssertionError('Fusion N8 : cinq réponses introuvables '+nom)
+    labels=[p[1] for p in pieces]
+    d=[p[2].strip() for p in pieces]
+    def u(n,unite):
+        return f'{n} {unite}' if n!=1 else f'{n} {unite[:-1] if unite.endswith("s") else unite}'
+    def div(num,den,unite):
+        q,r=divmod(int(num),int(den)); k=q+(r>0)
+        return f'{num} ÷ {den} = {q}, reste {r}. Il faut **{u(k,unite)}**.',k
+    def opt(name,cost_1,cost_2):
+        gagnant='A' if cost_1 < cost_2 else ('B' if cost_2 < cost_1 else None)
+        return (f'**{name} minimal : {f(min(cost_1,cost_2))} € — '
+                +(f"l’offre {gagnant} est la moins chère.**" if gagnant else 'les deux offres coûtent le même prix.**'))
+    # Normalisation minimale : garder les expressions expressément demandées
+    # dans l'énoncé, mais éliminer les doublons et erreurs typographiques.
+    for i,t in enumerate(d):
+        t=re.sub(r'\*\*Détour \*\*([AB]) :\*\*\*\*',r'**Détour \1 :**',t)
+        t=re.sub(r'\*\*Entreprise \*\*([AB]) :\*\*\*\*',r'**Entreprise \1 :**',t)
+        t=re.sub(r'(?<![A-Za-zÀ-ÿ])(remplir|entièrement|Il faut|soit)(?=\d)',r'\1 ',t)
+        t=re.sub(r'\b(\d+)\s+lot\(s\)',lambda m:u(int(m[1]),'lots'),t)
+        t=re.sub(r'\b(\d+)\s+boîte\(s\)',lambda m:u(int(m[1]),'boîtes'),t)
+        d[i]=t.strip()
+    # Modèles historiques. Conserver les expressions réellement demandées.
+    if nom=='P8-M01':
+        d[2]=f'{f(v[0])} − {f(v[1])} = **{f(v[2])} €**.'
+        match=re.search(r'Réserve mise de côté : ([\d,.]+) €.*?Il faut partager ([\d,.]+) € entre (\d+) clubs',d[3],re.S)
+        if match:
+            reserve=float(match[1].replace(',','.')); partage=float(match[2].replace(',','.')); n=int(match[3])
+            assert abs(v[2]-reserve-partage)<0.011 and abs(partage-v[3])<0.011
+            d[3]=(f'{f(v[2])} − {f(reserve)} = {f(partage)} € à partager.\n'
+                  f'{f(partage)} ÷ {n} = **{f(round(partage/n,2))} € par club**.')
+        else:
+            raise ValueError('P8-M01 : montant de réserve ou nombre de clubs introuvable')
+    elif nom=='P8-M02':
+        q3=re.search(r'(\d+)\s*[:÷]\s*(\d+)\s*[—,\s]*Quotient\s*:\s*(\d+)\s*[—,\s]*Reste\s*:\s*(\d+)',d[2],re.I)
+        if not q3:
+            q3=re.search(r'(\d+)\s*÷\s*(\d+)\s*=\s*(\d+), reste\s*(\d+)',d[2])
+        if q3:
+            n,p,q,r=map(int,q3.groups());d[2]=f'{n} ÷ {p} = {q}, reste {r}.\n**{q} panneaux entièrement remplis**.'
+            d[3]=f'Il reste **{r} dessins** sur le dernier panneau (réponse 3).'
+        # Q5 : calcul en lignes, pas de paragraphe compact.
+        r5=re.search(r'Ensemble\s*:\s*(\d+)\s*\+\s*(\d+)\s*=\s*(\d+) dessins.*?(\d+)\s*÷\s*(\d+)\s*=\s*(\d+), reste\s*(\d+)',d[4],re.S)
+        if r5:
+            x,y,total,check,cap,q,r=map(int,r5.groups())
+            if total==check:
+                n=q+(r>0)
+                d[4]=(f'Dessins du club et du collège partenaire : {x} + {y} = {total} dessins.\n'
+                      f'{total} ÷ {cap} = {q}, reste {r}.\n'
+                      f'Il faut donc **{n} panneaux**'+(' (dont un pour les dessins restants).' if r else '.') )
+    elif nom=='P8-M03':
+        d[0]=d[0].replace('Expression complète :','Solde :')
+        # Éviter de recalculer missions, bonus et potions : les totaux figurent au-dessus.
+        match=re.search(r'Avec le bonus : [^\n]*= ([\d,.]+) pièces.*?Coût des potions : [^\n]*= ([\d,.]+) pièces.*?Solde : (\d+) \+',d[0],re.S)
+        if match:
+            gains=float(match[1].replace(',','.')); potions=float(match[2].replace(',','.'))
+            depart=float(match[3]);assert abs(depart+gains-potions-v[0])<0.011
+            d[0]=re.sub(r'Solde :[^\n]+',f'Solde : {f(depart)} + {f(gains)} − {f(potions)} = **{f(v[0])} pièces**.',d[0])
+        # retirer une conclusion dupliquée après la meilleure option
+        d[3]=re.sub(r'\n\nIl permet de terminer.*','',d[3],flags=re.S).strip()
+        d[3]=re.sub(r'Différence\s*:\s*(\d+) pièces\.','Différence : '+f'{f(abs(v[1]-v[2]))} pièces.',d[3])
+        # Le péage peut s'appliquer à A ou B suivant le tirage.
+        m=re.search(r'chemin ([AB]) subit le péage de (\d+) pièces',d[4],re.I)
+        if m:
+            cible,peage=m[1],int(m[2]); av,bv=v[1],v[2]
+            new_a=av-peage if cible=='A' else av
+            new_b=bv-peage if cible=='B' else bv
+            assert new_a-new_b==v[4],(nom,'écart signé')
+            d[4]=(f'**Chemin A :** {f(av)}' + (f' − {peage} (péage) = {f(new_a)}' if cible=='A' else ' (réponse 2)') + ' pièces.\n'
+                  f'**Chemin B :** {f(bv)}' + (f' − {peage} (péage) = {f(new_b)}' if cible=='B' else ' (réponse 3)') + ' pièces.\n'
+                  f'Écart A − B : {f(new_a)} − {f(new_b)} = **{f(v[4])} pièces**.'
+                  + (f' Le signe négatif signifie que A laisse {f(abs(v[4]))} pièces de moins que B.' if v[4]<0 else ''))
+    elif nom=='P8-M04':
+        # Pour une équipe, puis pour toutes ; ne pas répéter la formule complète.
+        ch=re.search(r'Pour une équipe : ([^\n]+) = (\d+) batteries',d[0])
+        total=re.search(r'Expression complète : (\d+) × .* = (\d+) batteries',d[0])
+        if ch and total:
+            par=int(ch[2]);equipes=int(total[1]);assert equipes*par==v[0]
+            d[0]=f'Pour une équipe : {ch[1]} = {par} batteries.\n{equipes} × {par} = **{v[0]} batteries**.'
+        # Formuler avec boîtes pour les deux offres, quelle que soit leur capacité.
+        r5=d[4];offers={}
+        for lettre in 'AB':
+            m=re.search(r'\*\*Offre '+lettre+r'\s*:\*\*\s*(\d+) ÷ (\d+) = (\d+), reste (\d+).*?(\d+) × (\d+) = ([\d,.]+) €',r5,re.S)
+            if m:
+                manque,taille,quot,rest,boites,prix,cout=m.groups()
+                manque,taille,quot,rest,boites,prix=map(int,(manque,taille,quot,rest,boites,prix))
+                assert boites==quot+(rest>0)
+                offers[lettre]=(manque,taille,quot,rest,boites,prix,boites*prix)
+        if len(offers)==2:
+            oa,ob=offers['A'],offers['B'];assert min(oa[-1],ob[-1])==v[4]
+            quant=re.search(r'Besoin des (\d+) équipes : (\d+) × (\d+) = (\d+) batteries\. Stock : (\d+) ; manque : (\d+) − (\d+) = (\d+)',r5)
+            if not quant: raise ValueError('P8-M04 : besoin de batteries introuvable')
+            eq,eq2,par,besoin,stock,besoin2,stock2,manque=map(int,quant.groups())
+            assert eq==eq2 and besoin==besoin2==eq*par and stock==stock2 and manque==oa[0]
+            def fmt_offre(lettre,data):
+                manque,taille,q,r,b,prix,cout=data
+                return (f'**Offre {lettre} :** {manque} ÷ {taille} = {q}, reste {r}. Il faut **{u(b,"boîtes")}**.\n'
+                        f'Coût : {b} × {prix} = **{cout} €**.')
+            d[4]=(f'Pour {eq} équipes : {eq} × {par} = {besoin} batteries.\n'
+                  f'Il manque {besoin} − {stock} = {manque} batteries.\n\n'
+                  +fmt_offre('A',oa)+'\n\n'+fmt_offre('B',ob)+'\n\n'+opt('Coût',oa[-1],ob[-1]))
+            # Le texte de l'énoncé parle d'offres de boîtes, même pour B.
+            ex['enonce']=re.sub(r'(?i)offre B :?\s*des lots', 'offre B : des boîtes',ex['enonce'])
+            ex['enonce']=ex['enonce'].replace('lots de batteries B','boîtes de batteries B')
+    elif nom=='P8-M05':
+        # Corriger l'accord du nombre variable d'équipes dans le défi.
+        ex['enonce']=ex['enonce'].replace("1 équipe supplémentaire s'inscrivent. Chacune doit", "1 équipe supplémentaire s'inscrit. Elle doit")
+        ex['enonce']=ex['enonce'].replace("1 nouvelle équipe s'inscrivent. Chacune doit", "1 nouvelle équipe s'inscrit. Elle doit")
+        # Une valeur négative désigne ici un financement manquant.
+        if v[4]<0:
+            d[4]+=f'\n**Le solde est négatif : il manque {f(abs(v[4]))} €** pour les achats et la réserve.'
+        elif v[4]>0:
+            d[4]+=f'\n**Il reste {f(v[4])} €** après les achats et la réserve.'
+        else:
+            d[4]+='\n**Le budget couvre exactement les achats et la réserve.**'
+        d[4]=re.sub(r'Après les achats initiaux il reste ([\d,.]+) €\.',r'Argent disponible : \1 € (réponse 3).',d[4])
+    elif nom=='P8-M06':
+        d[3]=re.sub(r'\bLe budget est suffisant\..*','',d[3]).strip() if v[3] in ('Oui','Non') else d[3]
+    elif nom=='P8-M07':
+        d[3]=re.sub(r'\s*Expression complète\s*:[^\n]*','',d[3]).strip()
+    elif nom=='P8-M08':
+        d[4]=re.sub(r'\*\*Détour \*\*([AB]) :\*\*\*\*',r'**Détour \1 :**',d[4])
+        if v[4]<0:
+            d[4]+=f'\n**La durée dépasse la limite de {f(abs(v[4]))} min.**'
+    elif nom=='P8-M09':
+        d[1]=re.sub(r'\s*Expression complète\s*:[^\n]*','',d[1]).strip()
+        mm=re.search(r'(\d+)\s*[:÷]\s*(\d+)\s*[—,\s]*Quotient\s*:\s*(\d+)\s*[—,\s]*Reste\s*:\s*(\d+)',d[2],re.I)
+        if mm:
+            n,p,q,r=map(int,mm.groups());d[2]=f'{n} ÷ {p} = {q}, reste {r}.\n**{q} bouteilles entièrement remplies.**'
+            d[3]=f'Il reste **{r} cL** dans la dernière bouteille (réponse 3).'
+            # Le total de bouteilles est calculé dans R5 : R4 ne le donne plus.
+            nb_bout=q+(r>0)
+            d[4]=re.sub(r'^Il faut \d+ bouteilles \(question 4\)\. ',
+                         f'Bouteilles nécessaires : {q} + 1 = {nb_bout}. ',d[4])
+        d[4]=re.sub(r'\s*\(un de plus pour le reste\)','',d[4])
+    elif nom=='P8-M10':
+        t=d[4]
+        t=t.replace('**Entreprise **A :****','**Entreprise A :**').replace('**Entreprise **B :****','**Entreprise B :**')
+        if v[4]<0:
+            t+=f'\n**Le coût A est inférieur de {f(abs(v[4]))} € au coût B.**'
+        d[4]=t
+    # Modèles N8 récents : formule source exacte pour éviter les corrections rigides.
+    elif nom=='P8-M11':
+        d[:4]=[f"{a['teams']} × {a['per']} = **{v[0]} badges**.",
+                 f"{a['stock']} − {a['bad']} = **{v[1]} badges**.",
+                 f"{v[0]} − {v[1]} = **{v[2]} badges**.",
+                 div(v[2],a['pack'],'boîtes')[0]]
+        total=(a['teams']+a['extra'])*a['per'];reste=max(0,total-(v[1]+v[3]*a['pack']))
+        calc,nb=div(reste,a['pack'],'boîtes');assert nb==v[4]
+        d[4]=(f"Nouveau besoin : ({a['teams']} + {a['extra']}) × {a['per']} = {total} badges.\n"
+              f"Stock après achat : {v[1]} + {v[3]} × {a['pack']} = {v[1]+v[3]*a['pack']} badges.\n"
+              f"Il manque {total} − {v[1]+v[3]*a['pack']} = {reste} badges.\n{calc}")
+    elif nom=='P8-M12':
+        calc,nb=div(a['n'],a['cap_a'],'navettes');assert nb==v[0]
+        d[0]=calc
+        d[1]=f"{v[0]} × {a['price_a']} = **{v[1]} €**."
+        calc2,nb2=div(a['n'],a['cap_b'],'navettes')
+        assert nb2*a['price_b']==v[2]
+        d[2]=calc2+f"\nCoût : {nb2} × {a['price_b']} = **{v[2]} €**."
+        d[3]=f"Offre A : {v[1]} € (réponse 2). Offre B : {v[2]} € (réponse 3).\n**Coût minimal : {v[3]} €.**"
+        # R5 déjà détaillée pour chaque offre et calculée dans la banque source.
+    elif nom=='P8-M13':
+        d[0]=f"{a['sections']} × {a['per']} = **{v[0]} cadres**."
+        d[1]=f"{a['frames']} − {a['bad']} = **{v[1]} cadres**."
+        d[2]=f"{v[0]} − {v[1]} = **{v[2]} cadres**."
+        calc,nb=div(v[2],a['box'],'boîtes')
+        d[3]=calc+f"\nCoût : {nb} × {a['price']} = **{v[3]} €**."
+        dispo=v[1]+nb*a['box'];rest=dispo-v[0]; manque=max(0,a['add']-rest)
+        calc,nb_new=div(manque,a['box'],'boîtes');assert nb_new==v[4]
+        d[4]=(f"Cadres disponibles après achat : {v[1]} + {nb} × {a['box']} = {dispo}.\n"
+              f"Cadres restants : {dispo} − {v[0]} = {rest}.\n"
+              f"Pour {a['add']} nouvelles photos, il manque {a['add']} − {rest} = {manque} cadres.\n{calc}")
+    elif nom=='P8-M14':
+        d[:3]=[f"{a['start']} + {a['received']} = **{v[0]} mangas**.",
+                 f"{v[0]} − {a['loans']} = **{v[1]} mangas**.",
+                 f"{a['reserved']} − {v[1]} = **{v[2]} mangas**."]
+        calc,nb=div(v[2],a['box_a'],'lots')
+        d[3]=calc+f"\nCoût : {nb} × {a['cost_a']} = **{v[3]} €**."
+    elif nom=='P8-M15':
+        qm,rm=divmod(a['motors'],2);qb,rb=divmod(a['batteries'],3)
+        d[0]=f"{a['motors']} ÷ 2 = {qm}, reste {rm}.\n**{v[0]} robots** avec les moteurs."
+        d[1]=f"{a['batteries']} ÷ 3 = {qb}, reste {rb}.\n**{v[1]} robots** avec les batteries."
+        d[2]=f"Le plus petit nombre est {min(v[0],v[1])} : **{v[2]} robots complets**."
+        # Conserver R4/R5 de la dernière version, déjà corrigée pour tous les lots.
+    elif nom=='P8-M16':
+        d[:4]=[f"{a['fee_a']} + {a['n']} × {a['each_a']} = **{v[0]} €**.",
+                f"{a['fee_b']} + {a['n']} × {a['each_b']} = **{v[1]} €**.",
+                f"Tarif A : {v[0]} € (réponse 1). Tarif B : {v[1]} € (réponse 2).\n**Prix minimal : {v[2]} €.**",
+                f"{max(v[0],v[1])} − {min(v[0],v[1])} = **{v[3]} €**."]
+        nn=a['n']+a['add'];ca=a['fee_a']+nn*a['each_a'];cb=a['fee_b']+nn*a['each_b']
+        assert min(ca,cb)==v[4]
+        d[4]=(f"Nouveau groupe : {a['n']} + {a['add']} = {nn} élèves.\n\n"
+              f"**Tarif A :** {a['fee_a']} + {nn} × {a['each_a']} = **{ca} €**.\n\n"
+              f"**Tarif B :** {a['fee_b']} + {nn} × {a['each_b']} = **{cb} €**.\n\n"
+              f"{opt('Prix',ca,cb)}")
+    elif nom=='P8-M17':
+        riban=3*a['cut'];quot,reste=divmod(a['roll'],riban)
+        assert riban==v[0] and quot==v[1]
+        d[0]=f"3 × {a['cut']} = **{riban} cm**."
+        d[1]=f"{a['roll']} ÷ {riban} = {quot}, reste {reste}.\n**{quot} fanions** par rouleau."
+        calc,n=div(a['flags'],quot,'rouleaux'); assert n==v[2]
+        d[2]=calc
+        last=a['flags']-(n-1)*quot
+        d[3]=(f"Sur le dernier rouleau : {last} fanion{'s' if last>1 else ''}.\n"
+              f"{a['roll']} − {last} × {riban} = **{v[3]} cm** restants.")
+        nn=a['flags']+a['extra'];calc,nt=div(nn,quot,'rouleaux');assert nt-n==v[4]
+        d[4]=(f"Nouveau total : {a['flags']} + {a['extra']} = {nn} fanions.\n"
+              f"{calc}\nRouleaux déjà achetés : {n} (réponse 3).\n"
+              f"Rouleaux supplémentaires : {nt} − {n} = **{v[4]}**.")
+    elif nom=='P8-M18':
+        d[0]=f"{a['km']} × {a['laps']} = **{v[0]} km**."
+        d[1]=f"{v[0]} × {a['pace']} = **{v[1]} min**."
+        d[2]=f"({a['laps']} − 1) × {a['pause']} = **{v[2]} min**."
+        d[3]=f"{v[1]} + {v[2]} = **{v[3]} min**."
+        apres=v[3]+a['detour']*a['pace'];correct='Oui' if apres<=a['limit'] else 'Non'
+        # Modifier ensemble question, champ, type de réponse et corrigé.
+        ex['enonce']=re.sub(r'La durée autorisée est (\d+) minutes\.',r'La durée maximale autorisée est \1 minutes.',ex['enonce'])
+        ex['enonce']=re.sub(r'Calcule la différence en minutes : durée après le détour − durée autorisée\.',
+                 'Après le détour proposé par le guide, la durée maximale autorisée est-elle respectée ? Réponds par Oui ou Non.',ex['enonce'])
+        ch=champs[4];ch['attendu']=correct;ch['type']='choix';ch['options']=['Oui','Non'];ch['libelle']='Durée maximale respectée';ch.pop('unite',None)
+        labels[4]='Durée maximale respectée'
+        d[4]=(f"Détour : {a['detour']} × {a['pace']} = **{a['detour']*a['pace']} min**.\n"
+              f"Durée totale : {v[3]} + {a['detour']*a['pace']} = **{apres} min** (réponse 4).\n"
+              f"Durée maximale : {a['limit']} min.\n"
+              f"**{'Oui' if correct=='Oui' else 'Non'}**, car {apres} {'≤' if correct=='Oui' else '>'} {a['limit']} min.")
+    elif nom=='P8-M19':
+        days=a['days'];ea=a['liters']*days
+        d[0]=f"{a['liters']} × {days} = **{v[0]} L**."
+        d[1]=f"{a['faucets']} × {ea} = **{v[1]} L**."
+        d[2]=f"{a['goal']} − {v[1]} = **{v[2]} L**. Il reste {v[2]} L à économiser."
+        # R4 et R5 : modèle personnel validé (déjà dans la banque).
+    elif nom=='P8-M20':
+        d[0]=f"{a['classes']} × {a['per']} + {a['teachers']} = **{v[0]} personnes**."
+        d[1]=f"{v[0]} × {a['ticket']} = **{v[1]} €**."
+        q,r=divmod(v[0],a['cap']);assert q+(r>0)==v[2]
+        d[2]=f"{v[0]} ÷ {a['cap']} = {q}, reste {r}.\nIl faut donc **{u(v[2],'cars')}**."
+        d[3]=f"Transport A : {v[2]} × {a['buscost']} = {v[2]*a['buscost']} €.\nTotal : {v[1]} + {v[2]*a['buscost']} = **{v[3]} €**."
+        totalb=v[1]+a['groupbuscost'];assert min(v[3],totalb)==v[4]
+        d[4]=(f"**Transport A :** {v[3]} € (réponse 4).\n\n"
+              f"**Transport B :** {v[1]} + {a['groupbuscost']} = **{totalb} €**.\n\n"
+              f"**Budget minimal : {v[4]} € — le transporteur {'A' if v[3]<totalb else 'B' if totalb<v[3] else 'A ou B'}"
+              +(' est le moins cher.**' if v[3]!=totalb else ' coûte le même prix.**'))
+    elif nom=='P8-M21':
+        d[0]=f"{a['win']} × {a['reward']} = **{v[0]} cristaux**."
+        d[1]=f"{a['start']} + {v[0]} − {a['loss']} = **{v[1]} cristaux**."
+        d[2]=f"{v[1]} − {a['spent']} = **{v[2]} cristaux**."
+        d[3]=f"{a['goal']} − {v[2]} = **{v[3]} cristaux**."
+        # R5 comparative déjà conforme, mais conclusion plus explicite.
+        d[4]=d[4].replace(f'**Minimum : {v[4]} missions.**',f'**Minimum : {v[4]} missions supplémentaires.**')
+    elif nom=='P8-M22':
+        # Une différence de longueurs, pas la distance spatiale entre deux chemins.
+        ex['enonce']=ex['enonce'].replace('Quelle distance réelle sépare les deux sentiers après la déviation ?',
+                'Quelle est la différence entre les longueurs réelles des deux sentiers après la déviation ?')
+        def km(q):return f(round(q,5))
+        d[0]=f"{a['a']} × {a['scale']} ÷ 100 000 = **{km(v[0])} km**."
+        d[1]=f"{a['b']} × {a['scale']} ÷ 100 000 = **{km(v[1])} km**."
+        d[2]=f"({a['a']} + {a['detour']}) × {a['scale']} ÷ 100 000 = **{km(v[2])} km**."
+        choisi=v[3];d[3]=(f"Sentier A : {km(v[2])} km ; sentier B : {km(v[1])} km.\n"
+                            f"**{'Les sentiers sont aussi longs.' if choisi=='C' else 'Le sentier '+choisi+' est le plus court.'}**")
+        d[4]=f"{km(max(v[2],v[1]))} − {km(min(v[2],v[1]))} = **{km(v[4])} km**."
+    elif nom=='P8-M23':
+        d[0]=f"{a['surface']} × {a['qty']} = **{v[0]} kg**."
+        d[1]=f"{v[0]} − {a['stock']} = **{v[1]} kg**."
+        calc,nb=div(v[1],a['bag_a'],'sacs');assert nb==v[2]
+        d[2]=calc
+        d[3]=f"{v[2]} × {a['price_a']} = **{v[3]} €**."
+    elif nom=='P8-M24':
+        d[0]=f"{a['teams']} × ({a['teams']} − 1) ÷ 2 = **{v[0]} matchs**."
+        d[1]=f"{a['teams']} équipes permettent {a['teams']//2} matchs à la fois.\nTerrains disponibles : {a['courts']}. Il faut retenir **{v[1]} matchs simultanés**."
+        calc,nb=div(v[0],v[1],'séries');assert nb==v[2]
+        d[2]=calc
+        d[3]=(f"Matchs : {v[2]} × {a['matchtime']} = {v[2]*a['matchtime']} min.\n"
+              f"Pauses : ({v[2]} − 1) × {a['breaktime']} = {(v[2]-1)*a['breaktime']} min.\n"
+              f"Total : {v[2]*a['matchtime']} + {(v[2]-1)*a['breaktime']} = **{v[3]} min**.")
+        d[4]=f"{a['duration']} − {v[3]} = **{v[4]} min**." + (f" Il manque {abs(v[4])} min." if v[4]<0 else f" Il reste {v[4]} min." if v[4]>0 else ' La durée est exactement suffisante.')
+    elif nom=='P8-M25':
+        d[0]=f"{a['boxes']} × {a['per']} = **{v[0]} portions**."
+        d[1]=f"{v[0]} − {a['spoiled']} = **{v[1]} portions**."
+        d[2]=f"{a['target']} − {v[1]} = **{v[2]} portions**."
+        calc,nb=div(v[2],a['pack_a'],'lots')
+        d[3]=calc+f"\nCoût : {nb} × {a['cost_a']} = **{v[3]} €**."
+    # Harmonisation des accords de l'énoncé, sans réécrire les énoncés hors N8.
+    ex['enonce']=_mc_n8_accords(ex['enonce'])
+    ex['enonce']=re.sub(r"\b1 équipe supplémentaire s'inscrivent\. Chacune", "1 équipe supplémentaire s'inscrit. Elle",ex['enonce'])
+    # Deux espaces avant les sauts simples : vrais retours à la ligne Markdown,
+    # sans l'espacement vertical des paragraphes vides.
+    d=[re.sub(r'(?<!\n)\n(?!\n)','  \n',re.sub(r'\n{3,}','\n\n',t.strip())) for t in d]
+    for i,t in enumerate(d):
+        if not t:
+            raise ValueError(f'Fusion N8 {nom} : réponse {i+1} vide')
+        if 'Expression complète' in t and nom not in ('P8-M05',):
+            t=t.replace('Expression complète :','Calcul :')
+        # Si une soustraction de résultat a une valeur négative, conserver le signe.
+        d[i]=t
+    ex['correction']='\n\n'.join(f'**Réponse {i+1} — {labels[i]}**\n\n{d[i]}' for i in range(5))
+    ex['mathicap_revision_corrections']='2026-11-19-n8-fusion-complete'
+    return ex
+
 def _mc_n8_polish(ex):
     """Corrections N8 complètes : une réponse suivie de la méthode détaillée.
 
@@ -9160,7 +9475,7 @@ def _mc_n8_polish(ex):
     ex['enonce']=_mc_n8_accords(ex['enonce'])
     ex['correction']=_mc_n8_accords(ex['correction'])
     ex['mathicap_revision_corrections']='2026-11-18-n8-audits-claude-gemini'
-    return _mc_n8_modele_eleve_20261119(ex, etapes)
+    return _mc_n8_revision_fusionnee_20261119(_mc_n8_modele_eleve_20261119(ex, etapes))
 
 
 def _mc_n8_numeriques_lisibles(texte):
