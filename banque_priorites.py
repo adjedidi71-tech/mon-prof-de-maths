@@ -8805,13 +8805,13 @@ def _mc_n8_r5_detaillee(ex, etapes):
         ex['enonce']=ex['enonce'].replace('Elle peut aussi réussir au plus une mission rare rapportant',
                                          'Elle peut également accomplir au maximum une mission rare rapportant')
         manque=v[3];ord_=a['normal'];rare=a['rare']; sans=q0=manque//ord_;r0=manque%ord_;n0=sans+(r0>0)
-        rest=max(0,manque-rare);q1,r1=divmod(rest,ord_);n1=1+q1+(r1>0)
+        rest=max(0,manque-rare);q1,r1=divmod(rest,ord_);n1=1+a.get("preparation",0)+q1+(r1>0)
         assert min(n0,n1)==v[4]
         etapes[4]=(f'Cristaux encore nécessaires : {manque}. '
                     f'**Option 1 — missions ordinaires :** {manque} ÷ {ord_} = {q0}, reste {r0}. '
                     f'Il faut {n0} missions ordinaires. '
                     f'**Option 2 — une mission rare :** il reste {manque} − {rare} = {rest} cristaux à gagner. '
-                    f'{rest} ÷ {ord_} = {q1}, reste {r1}, soit {q1+(r1>0)} missions ordinaires et 1 rare, '
+                    f'{rest} ÷ {ord_} = {q1}, reste {r1}, soit {q1+(r1>0)} missions ordinaires, 1 préparation et 1 rare, '
                     f'donc {n1} missions au total. Minimum : {v[4]} missions.')
     elif nom == 'P8-M22':
         assert 'soustrait' in etapes[4] and 'km' in etapes[4]
@@ -8952,14 +8952,14 @@ def _mc_n8_modele_eleve_20261119(ex, etapes):
     elif nom == 'P8-M21':
         manque=v[3];ord_=a['normal'];rare=a['rare']
         q,r=divmod(manque,ord_);n=q+(r>0)
-        reste=max(0,manque-rare);q2,r2=divmod(reste,ord_);n2=1+q2+(r2>0)
+        reste=max(0,manque-rare);q2,r2=divmod(reste,ord_);n2=1+a.get("preparation",0)+q2+(r2>0)
         assert min(n,n2)==v[4]
         etapes[4]=(f"Cristaux manquants : **{manque}** (réponse 4).\n\n"
                     f"**Missions ordinaires seules :** {manque} ÷ {ord_} = {q}, reste {r}. "
                     f"Il faut **{n} missions**.\n\n"
                     f"**Avec une mission rare :** {manque} − {rare} = {reste} cristaux à gagner. "
                     f"{reste} ÷ {ord_} = {q2}, reste {r2}. "
-                    f"Il faut {q2+(r2>0)} missions ordinaires et 1 rare, soit **{n2} missions**.\n\n"
+                    f"Il faut {q2+(r2>0)} missions ordinaires, 1 préparation et 1 rare, soit **{n2} missions**.\n\n"
                     f"**Minimum : {v[4]} missions.**")
     elif nom == 'P8-M06':
         t=ex['enonce']
@@ -9174,6 +9174,22 @@ def _mc_n8_revision_fusionnee_20261119(ex):
         if ch and total:
             par=int(ch[2]);equipes=int(total[1]);assert equipes*par==v[0]
             d[0]=f'Pour une équipe : {ch[1]} = {par} batteries.\n{equipes} × {par} = **{v[0]} batteries**.'
+        # R3 doit montrer la division du manque par le contenu d'une boîte,
+        # pour tous les tirages (reste nul ou non, singulier ou pluriel).
+        m_boite=re.search(r'acheter de nouvelles boîtes de (\d+) batteries', ex['enonce'])
+        if not m_boite:
+            raise ValueError('P8-M04 : capacité des boîtes introuvable')
+        taille_boite=int(m_boite[1])
+        manque_batteries=max(0,int(v[0])-int(v[1]))
+        q_boites,r_boites=divmod(manque_batteries,taille_boite)
+        nb_boites=q_boites+(r_boites>0)
+        assert nb_boites==v[2],('P8-M04 R3',nb_boites,v[2])
+        if manque_batteries:
+            d[2]=(f'Batteries manquantes : {v[0]} − {v[1]} = {manque_batteries} (réponses 1 et 2).\n'
+                  f'{manque_batteries} ÷ {taille_boite} = {q_boites}, reste {r_boites}. '
+                  f'Il faut donc **{u(nb_boites,"boîtes")}**.')
+        else:
+            d[2]='Le stock suffit : **aucune boîte supplémentaire nécessaire**.'
         # Formuler avec boîtes pour les deux offres, quelle que soit leur capacité.
         r5=d[4];offers={}
         for lettre in 'AB':
@@ -9557,7 +9573,7 @@ def _mc_n8_details_pour_nouveaux(ex, etapes):
         earned=a['win']*a['reward'];after_trap=a['start']+earned-a['loss'];after_purchase=after_trap-a['spent']
         shortage=max(0,a['goal']-after_purchase)
         normals=(shortage+a['normal']-1)//a['normal']
-        rest=max(0,shortage-a['rare']); withrare=1+(rest+a['normal']-1)//a['normal']
+        rest=max(0,shortage-a['rare']); withrare=1+a.get('preparation',0)+(rest+a['normal']-1)//a['normal']
         etapes[0]=f"{a['win']} missions × {a['reward']} cristaux = {earned} cristaux gagnés."
         etapes[1]=(f"Après le piège : {a['start']} + {earned} − {a['loss']} = "
                    f"{after_trap} cristaux.")
@@ -9568,7 +9584,7 @@ def _mc_n8_details_pour_nouveaux(ex, etapes):
                    f"Avec une mission rare (+{a['rare']} cristaux), il reste {rest} cristaux à gagner. "
                    f"Il faut alors {1} mission rare et {rest//a['normal']} missions ordinaires"
                    + (f", plus une pour le reste de {rest%a['normal']} cristaux" if rest%a['normal'] else '')
-                   + f", soit {withrare} missions au total. On retient le minimum : {min(normals,withrare)} missions.")
+                   + f", plus 1 préparation, soit {withrare} missions au total. On retient le minimum : {min(normals,withrare)} missions.")
     elif n=='P8-M17':
         flags,taille,roll,extra=a['flags'],a['cut']*3,a['roll'],a['extra']
         par=roll//taille;reste=roll%taille
@@ -10115,7 +10131,7 @@ def _mc_new_n8(idx,seed=None):
         nroll=_mc_new_ceil(flags,perroll);extra_roll=_mc_new_ceil(flags+extra,perroll)-nroll
         return _mc_new_problem(8,idx,seed,'Les fanions du tournoi de lecture',[
             f'Le collège fabrique {flags} fanions identiques. Chaque fanion utilise trois morceaux de ruban de {cut} cm.',
-            f'Le ruban est vendu par rouleaux de {roll} cm. On ne raccorde jamais deux rouleaux pour un même fanion. Après le premier achat, le club décide de fabriquer {extra} fanions supplémentaires.'
+            f'Le ruban est vendu par rouleaux de {roll} cm. On ne raccorde jamais deux rouleaux. Après le premier achat, le club décide de fabriquer {extra} fanions supplémentaires.'
         ],['Combien de centimètres faut-il pour un fanion ?','Combien de fanions complets peut-on couper dans un rouleau ?','Combien de rouleaux faut-il acheter pour la première commande ?','Combien de centimètres reste-t-il sur le dernier rouleau après les fanions initialement prévus ?','Combien de rouleaux supplémentaires faut-il pour fabriquer les fanions ajoutés ?'],
         [ribbon,perroll,nroll,roll-(flags-(nroll-1)*perroll)*ribbon,extra_roll],['Ruban par fanion','Fanions par rouleau','Rouleaux initiaux','Chute dernier rouleau','Nouveaux rouleaux'],['cm','fanions','rouleaux','cm','rouleaux'],['Q','L','L','R','L'],[
             f'3×{cut}={ribbon} cm.',f'{roll} ÷ {ribbon} donne {perroll} fanions entiers.',f'⌈{flags}/{perroll}⌉={nroll} rouleaux.',f'Dernier rouleau : {flags-(nroll-1)*perroll} fanions, donc {roll}−{flags-(nroll-1)*perroll}×{ribbon}={roll-(flags-(nroll-1)*perroll)*ribbon} cm de chute.',f'Pour {flags+extra} fanions il faut {_mc_new_ceil(flags+extra,perroll)} rouleaux au total, soit {extra_roll} de plus.'
@@ -10155,19 +10171,46 @@ def _mc_new_n8(idx,seed=None):
             f'{classes}×{per}+{teachers}={n}.',f'{n}×{ticket}={entry} €.',f'⌈{n}/{cap}⌉={nb} cars.',f'{entry}+{nb}×{buscost}={entry+regular} €.',f'A : {entry+regular} € ; B : {entry+groupbuscost} €. Minimum {entry+min(regular,groupbuscost)} €.'
         ],dict(kind='n8_planet',classes=classes,per=per,teachers=teachers,ticket=ticket,cap=cap,buscost=buscost,groupbuscost=groupbuscost))
     elif idx==21:
-        start=rng.randint(60,130);win=rng.randint(3,7);reward=rng.randint(10,20)
-        loss=rng.randint(25,55);spent=rng.randint(20,45);goal=rng.randint(240,350)
-        normal=rng.randint(18,27);rare=rng.randint(normal+7,normal+24)
-        gains=win*reward;remaining=start+gains-loss-spent;miss=max(0,goal-remaining)
-        only_normal=_mc_new_ceil(miss,normal)
-        with_rare=1+_mc_new_ceil(max(0,miss-rare),normal)
+        # Une mission de préparation (sans gain) est nécessaire avant la rare.
+        # Cette contrainte rend les deux stratégies compétitives. Pour chaque seed,
+        # une des stratégies est choisie comme gagnante, sans égalité.
+        # Les anciennes Q1-Q4 restent de même type ; Q5 reste une réponse numérique.
+        strategie_voulue=rng.choice(('ordinaires','mixte'))
+        for _tentative in range(500):
+            start=rng.randint(60,130);win=rng.randint(3,7);reward=rng.randint(10,20)
+            loss=rng.randint(25,55);spent=rng.randint(20,45);goal=rng.randint(240,350)
+            normal=rng.randint(18,27)
+            gains=win*reward;remaining=start+gains-loss-spent;miss=max(0,goal-remaining)
+            nb_ordinaires=_mc_new_ceil(miss,normal)
+            reste_division=miss-(nb_ordinaires-1)*normal
+            # Un reste assez grand permet de rendre la stratégie ordinaire strictement gagnante
+            # tout en gardant la mission rare plus rémunératrice qu'une ordinaire.
+            if nb_ordinaires<4 or reste_division<9:
+                continue
+            if strategie_voulue=='ordinaires':
+                rare=normal+rng.randint(7,reste_division-1)
+            else:
+                # Une rare plus rémunératrice compense ici ses deux missions
+                # (préparation + rare), et gagne strictement.
+                rare=2*normal+reste_division+rng.randint(0, max(0,normal//3))
+            only_normal=nb_ordinaires
+            with_rare=2+_mc_new_ceil(max(0,miss-rare),normal)
+            if (only_normal<with_rare and strategie_voulue=='ordinaires') or (with_rare<only_normal and strategie_voulue=='mixte'):
+                break
+        else:
+            raise AssertionError('Impossible de construire un tirage différencié P8-M21')
         return _mc_new_problem(8,idx,seed,'La quête des cristaux du jeu vidéo',[
             f'Dans un jeu, Emma possède {start} cristaux. Elle en gagne {reward} pour chacune de {win} missions, en perd {loss} dans un piège puis dépense {spent} cristaux pour un équipement.',
-            f'Elle souhaite posséder {goal} cristaux. Une mission ordinaire rapporte {normal} cristaux. Elle peut aussi réussir au plus une mission rare rapportant {rare} cristaux. Les deux types de missions comptent chacun pour une mission.'
-        ],['Combien de cristaux Emma gagne-t-elle dans les premières missions ?','Combien conserve-t-elle après le piège ?','Combien lui reste-t-il après l’achat ?','Combien de cristaux manque-t-il pour atteindre l’objectif ?','Quel est le nombre minimal de missions supplémentaires en choisissant entre les missions ordinaires et l’unique mission rare possible ?'],
+            f'Elle souhaite posséder {goal} cristaux. Elle peut accomplir autant de missions ordinaires que nécessaire : chacune rapporte {normal} cristaux.',
+            f'Elle peut aussi tenter au maximum une mission rare rapportant {rare} cristaux. Mais, avant cette mission rare, elle doit réussir une mission de préparation qui ne rapporte aucun cristal. La préparation et la mission rare comptent chacune pour une mission.'
+        ],['Combien de cristaux Emma gagne-t-elle dans les premières missions ?','Combien conserve-t-elle après le piège ?','Combien lui reste-t-il après l’achat ?','Combien de cristaux manque-t-il pour atteindre l’objectif ?','Quel est le nombre minimal de missions supplémentaires, en comparant les missions ordinaires seules à la préparation suivie d’une mission rare et, si besoin, de missions ordinaires ?'],
         [gains,start+gains-loss,remaining,miss,min(only_normal,with_rare)],['Cristaux gagnés','Cristaux après piège','Cristaux restants','Cristaux manquants','Missions minimales'],['cristaux','cristaux','cristaux','cristaux','missions'],['Q','R','R','R','C'],[
-            f'{win}×{reward}={gains}.',f'{start}+{gains}−{loss}={start+gains-loss}.',f'{start+gains-loss}−{spent}={remaining}.',f'{goal}−{remaining}={miss}.',f'Sans rare : ⌈{miss}/{normal}⌉={only_normal} ordinaires. Avec une rare : 1+⌈max(0,{miss}−{rare})/{normal}⌉={with_rare} missions. Minimum : {min(only_normal,with_rare)} missions.'
-        ],dict(kind='n8_jeu',start=start,win=win,reward=reward,loss=loss,spent=spent,goal=goal,normal=normal,rare=rare))
+            f'{win} × {reward} = {gains}.',f'{start} + {gains} − {loss} = {start+gains-loss}.',
+            f'{start+gains-loss} − {spent} = {remaining}.',f'{goal} − {remaining} = {miss}.',
+            f'Ordinaires seules : {miss} ÷ {normal} nécessite {only_normal} missions. '
+            f'Avec préparation et rare : 2 + plafond(({miss} − {rare}) ÷ {normal}) = {with_rare} missions. '
+            f'Minimum : {min(only_normal,with_rare)} missions.'
+        ],dict(kind='n8_jeu',start=start,win=win,reward=reward,loss=loss,spent=spent,goal=goal,normal=normal,rare=rare,preparation=1,strategie_gagnante=strategie_voulue))
     elif idx==22:
         scale=rng.choice([10000,20000,25000]); a=rng.randint(12,30);b=rng.randint(13,31);detour=rng.randint(3,12)
         km_a=a*scale/100000;km_b=b*scale/100000;new_a=(a+detour)*scale/100000
@@ -10518,6 +10561,134 @@ for _niveau,_fonction in ((8,_mc_new_n8),(9,_mc_new_n9)):
 del _niveau,_index,_fonction,_fabrique
 
 
+
+# ================================================================
+# N8 — Remplacement pédagogique de P8-M21 (missions rares).
+# On NE réutilise PAS l'identifiant P8-M21 : il demeure réservé
+# aux séries historiques. Seul P8-M26 est tiré dans les nouvelles séries.
+# ================================================================
+def generer_modele_p8_m26_portails(seed=None):
+    """Deux portails, un seul permet d'atteindre l'objectif.
+
+    Les nombres sont construits pour rendre A et B gagnants à parts
+    approximativement égales et ne jamais produire de double réponse.
+    Une seule partie bonus est possible ; aucun coût d'accès, préparation
+    ni durée ajoutée. Les cinq champs se corrigent automatiquement.
+    """
+    rng, seed = _p9_rng(seed)
+    gagnant_voulu = rng.choice(('A', 'B'))
+    depart = rng.randint(55, 105)
+    nb_victoires = rng.randint(3, 6)
+    recompense = rng.randint(12, 19)
+    perte_piege = rng.randint(14, 32)
+    prix_objet = rng.randint(12, 30)
+    gains_depart = nb_victoires * recompense
+    apres_piege = depart + gains_depart - perte_piege
+    actuel = apres_piege - prix_objet
+    assert actuel > 0
+
+    for _ in range(500):
+        manches_a = rng.randint(2, 4)
+        manches_b = rng.randint(2, 4)
+        gain_a = rng.randint(12, 23)
+        gain_b = rng.randint(12, 23)
+        bonus_a = rng.randint(8, 29)
+        bonus_b = rng.randint(8, 29)
+        total_a = manches_a * gain_a + bonus_a
+        total_b = manches_b * gain_b + bonus_b
+        difference = abs(total_a - total_b)
+        if 12 <= difference <= 43 and min(total_a, total_b) >= 43:
+            break
+    else:
+        raise AssertionError('P8-M26 : tirage de deux portails impossible')
+
+    if (total_a > total_b) != (gagnant_voulu == 'A'):
+        manches_a, manches_b = manches_b, manches_a
+        gain_a, gain_b = gain_b, gain_a
+        bonus_a, bonus_b = bonus_b, bonus_a
+        total_a, total_b = total_b, total_a
+    assert (total_a > total_b) == (gagnant_voulu == 'A')
+
+    # La cible se situe strictement entre les deux récompenses :
+    # un seul portail atteint l'objectif et aucune égalité n'est possible.
+    manque = rng.randint(min(total_a,total_b)+1, max(total_a,total_b))
+    objectif = actuel + manque
+    gagnant = 'A' if total_a >= manque else 'B'
+    assert gagnant == gagnant_voulu and (total_a >= manque) != (total_b >= manque)
+
+    titre = 'Les deux portails du jeu vidéo'
+    questions = [
+        'Combien de cristaux gagne-t-elle grâce à ses premières victoires ?',
+        'Combien de cristaux possède-t-elle après le piège ?',
+        'Combien de cristaux lui reste-t-il après son achat ?',
+        'Combien de cristaux lui manque-t-il pour atteindre son objectif ?',
+        'Quel portail, A ou B, lui permet d’atteindre son objectif ?'
+    ]
+    paragraphes = [
+        f'Dans un jeu vidéo, Lina possède {depart} cristaux. Elle remporte {nb_victoires} épreuves, '
+        f'qui rapportent chacune {recompense} cristaux. Elle perd ensuite {perte_piege} cristaux dans un piège '
+        f'et achète un équipement pour {prix_objet} cristaux.',
+        f'Lina souhaite posséder au moins {objectif} cristaux. Elle peut choisir un seul des deux portails suivants :',
+        f'Portail A : {manches_a} défis rapportant chacun {gain_a} cristaux, puis un bonus final de {bonus_a} cristaux.',
+        f'Portail B : {manches_b} défis rapportant chacun {gain_b} cristaux, puis un bonus final de {bonus_b} cristaux.',
+        'Lina doit terminer tous les défis du portail choisi pour obtenir le bonus. '
+        'Elle ne peut pas emprunter les deux portails.'
+    ]
+    champs_spec = [
+        ('Cristaux gagnés', gains_depart, 'cristaux', 'Q'),
+        ('Cristaux après le piège', apres_piege, 'cristaux', 'R'),
+        ('Cristaux restants', actuel, 'cristaux', 'R'),
+        ('Cristaux manquants', manque, 'cristaux', 'R'),
+        ('Portail qui atteint l’objectif', gagnant, '', 'C')
+    ]
+    champs = []
+    for i,(libelle,valeur,unite,cat) in enumerate(champs_spec, 1):
+        ch = dict(id=f'r{i}', question=i, libelle=libelle,
+                  mathicap_competence=_CATEGORIES[cat], attendu=valeur)
+        if isinstance(valeur, str):
+            ch.update(type='choix', options=['A','B'])
+        else:
+            ch.update(type='nombre', unite=unite)
+        champs.append(ch)
+    enonce = ('**' + titre + '**\n\n' + '\n\n'.join(paragraphes)
+              + '\n\n**Questions**\n\n'
+              + '\n\n'.join(f'{i}. {q}' for i,q in enumerate(questions, 1))
+              + '\n\n*Écris tes calculs au brouillon ; compare-les ensuite avec les corrections.*')
+    morceaux = [
+        ('Cristaux gagnés', f'{nb_victoires} × {recompense} = **{gains_depart} cristaux**.'),
+        ('Cristaux après le piège', f'{depart} + {gains_depart} − {perte_piege} = **{apres_piege} cristaux**.'),
+        ('Cristaux restants', f'{apres_piege} − {prix_objet} = **{actuel} cristaux**.'),
+        ('Cristaux manquants', f'{objectif} − {actuel} = **{manque} cristaux**.'),
+        ('Portail qui atteint l’objectif',
+         f'Il manque **{manque} cristaux** (réponse 4).\n\n'
+         f'**Portail A :** {manches_a} × {gain_a} + {bonus_a} = **{total_a} cristaux**.\n\n'
+         f'**Portail B :** {manches_b} × {gain_b} + {bonus_b} = **{total_b} cristaux**.\n\n'
+         f'**Seul le portail {gagnant} permet d’atteindre l’objectif.**')
+    ]
+    correction = '\n\n'.join(
+        f'**Réponse {i} — {lib}**\n\n{detail}'
+        for i,(lib,detail) in enumerate(morceaux,1)
+    )
+    return {
+        'id': 'P8-M26', 'titre': titre, 'seed': seed,
+        'enonce': enonce, 'correction': correction,
+        'reponse_attendue': None, 'champs_reponse': champs,
+        'mathicap_questions_uniformisees': 3,
+        'mathicap_revision_pedagogique': '2026-11-19-remplacement-p8-m21-par-p8-m26',
+        'mathicap_niveau_pedagogique': 8,
+        'mathicap_referentiel_pedagogique': 'MathiCap N8 — comparaison et décision',
+        'mathicap_revision_corrections': '2026-11-19-modele-compact-valide',
+        '_mathicap_audit_nouveau': {
+            'kind': 'n8_portails', 'depart': depart, 'nb_victoires': nb_victoires,
+            'recompense': recompense, 'perte_piege': perte_piege,
+            'prix_objet': prix_objet, 'actuel': actuel, 'objectif': objectif,
+            'manches_a': manches_a, 'gain_a': gain_a, 'bonus_a': bonus_a,
+            'manches_b': manches_b, 'gain_b': gain_b, 'bonus_b': bonus_b,
+            'total_a': total_a, 'total_b': total_b,
+            'portail_gagnant': gagnant
+        }
+    }
+
 def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """Tire des modèles distincts, en privilégiant les moins récemment vus.
 
@@ -10527,9 +10698,9 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """
     if difficulte not in BANQUE_PRIORITES:
         raise ValueError("Difficulté attendue : 1, 2 ou 3.")
-    # 26 modèles N7, 24 N8 et 26 N9 : la banque statique contient seulement
+    # 26 modèles N7, 22 N8 et 28 N9 : la banque statique contient seulement
     # cinq exemples historiques par niveau, remplacés par les générateurs.
-    capacite_reelle = {1: 26, 2: 24, 3: 26}[difficulte]
+    capacite_reelle = {1: 26, 2: 22, 3: 28}[difficulte]
     if not isinstance(nombre, int) or isinstance(nombre, bool) or not 1 <= nombre <= capacite_reelle:
         raise ValueError(
             "Nombre d’exercices demandé supérieur aux modèles disponibles pour ce niveau."
@@ -10581,8 +10752,6 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p8_clubs())
         banque.append(generer_modele_p8_manga())
         banque.append(generer_modele_p8_robotique())
-        banque.append(generer_modele_p8_jeu_piste())
-        banque.append(generer_modele_p8_kits())
         banque.append(generer_modele_p8_eau())
         banque.append(generer_modele_p8_parcours())
         banque.append(generer_modele_p8_boissons())
@@ -10598,7 +10767,9 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p8_m18())
         banque.append(generer_modele_p8_m19())
         banque.append(generer_modele_p8_m20())
-        banque.append(generer_modele_p8_m21())
+        # P8-M21 (ancienne quête) reste accessible pour les anciennes séries.
+        # P8-M26 le remplace dans les nouvelles séries N8 sans réutiliser son ID.
+        banque.append(generer_modele_p8_m26_portails())
         banque.append(generer_modele_p8_m22())
         banque.append(generer_modele_p8_m23())
         banque.append(generer_modele_p8_m24())
@@ -10645,8 +10816,17 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         aventure['mathicap_niveau_pedagogique'] = 9
         aventure['mathicap_reclassement'] = 'N8 vers N9 le 2026-11-19'
         banque.append(aventure)
+        # Reclassés en N9 sans renommer ni changer les anciens générateurs.
+        # Les identifiants P8-M05 et P8-M06 restent ceux des séries sauvegardées.
+        for modele,identifiant in (
+            (generer_modele_p8_jeu_piste(), 'P8-M05'),
+            (generer_modele_p8_kits(), 'P8-M06'),
+        ):
+            assert modele['id'] == identifiant
+            modele['mathicap_niveau_pedagogique'] = 9
+            modele['mathicap_reclassement'] = 'N8 vers N9 le 2026-11-19'
+            banque.append(modele)
 
-            
     # Même tirage aléatoire qu'avant en l'absence d'historique utilisable.
     # Chaque nouvelle série privilégie ensuite les modèles les moins récents.
     # Les entrées absentes de l'historique sont prioritaires ; les égalités
