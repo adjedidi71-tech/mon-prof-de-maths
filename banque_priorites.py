@@ -6,7 +6,7 @@ Difficultés :
     3 = niveau 9
 
 Les exercices sont écrits et conservés : aucune API d'IA n'est appelée.
-Modèles actifs du chapitre : 26 au niveau 7 ; 25 aux niveaux 8 et 9.
+Modèles actifs du chapitre : 26 au niveau 7 ; 24 au niveau 8 ; 26 au niveau 9.
 """
 
 from copy import deepcopy
@@ -9641,6 +9641,162 @@ def _mc_n8_details_pour_nouveaux(ex, etapes):
     return etapes
 
 
+# ================================================================
+# MATHICAP — LOT NOVEMBRE 2026 : QUESTIONS ET CORRIGÉS VALIDÉS
+# P8-M03 reste identifiable dans les séries historiques (ID conservé).
+# Les modifications suivantes sont appliquées APRÈS l'uniformisation
+# pour ne pas interférer avec les règles historiques de la banque.
+# ================================================================
+
+def _mc_finaliser_questions_n8_20261119(ex):
+    if ex.get('mathicap_niveau_pedagogique') != 8:
+        return ex
+    nom = ex.get('id')
+    if nom not in ('P8-M05', 'P8-M08', 'P8-M10'):
+        return ex
+    champs=ex['champs_reponse']
+    assert len(champs)==5
+    enonce=ex['enonce']; corr=ex['correction']
+
+    if nom=='P8-M05':
+        q_old=("Après l'arrivée des équipes supplémentaires, quel est le SOLDE SIGNÉ "
+               "du budget en achetant les souvenirs au coût minimal et en conservant "
+               "la réserve ? Un solde négatif indique un financement manquant.")
+        q_new=("Combien d'argent reste-t-il après avoir équipé les nouvelles équipes, "
+               "acheté les souvenirs au prix le plus bas et conservé la réserve ? "
+               "Si le budget ne suffit pas, écris un nombre négatif.")
+        if q_old not in enonce: raise ValueError('P8-M05 : ancienne Q5 introuvable')
+        enonce=enonce.replace(q_old,q_new)
+        champs[4]['libelle']='Argent restant après tous les achats'
+        corr=corr.replace('**Réponse 5 — Solde signé après nouvelles équipes et souvenirs**',
+                          '**Réponse 5 — Argent restant après tous les achats**')
+        # Correction d'accord dynamique, lorsque le tirage produit une seule équipe.
+        enonce=re.sub(r'\b1 équipe supplémentaire s’inscrivent\. Chacune',
+                      '1 équipe supplémentaire s’inscrit. Elle',enonce)
+        enonce=re.sub(r"\b1 équipe supplémentaire s'inscrivent\. Chacune",
+                      "1 équipe supplémentaire s'inscrit. Elle",enonce)
+        # En Q2, inutile de répéter une expression globale qui n'est pas demandée.
+        debut='**Réponse 2 —'; fin='**Réponse 3 —'
+        i=corr.index(debut); j=corr.index(fin,i)
+        r2=corr[i:j]
+        match=re.search(r'Expression complète\s*:\s*[^\n]*?=\s*([\d,.]+)\s*€\.',r2)
+        if match:
+            vals=[]
+            for etiquette in ('Enveloppes','Pochettes','Signalisation'):
+                mm=re.search(etiquette+r'\s*:\s*[^\n]*?([\d,.]+)\s*€\.',r2)
+                if mm: vals.append(mm[1])
+            if len(vals)!=3:
+                raise ValueError('P8-M05 : postes de dépenses Q2 introuvables')
+            expected=float(champs[1]['attendu'])
+            if abs(sum(float(x.replace(',','.')) for x in vals)-expected)>1e-7:
+                raise ValueError('P8-M05 : somme de dépenses incohérente')
+            total=_mc_n8_fr(expected)
+            r2=r2[:match.start()]+f"Total : {' + '.join(vals)} = **{total} €**."+r2[match.end():]
+            corr=corr[:i]+r2+corr[j:]
+        if 'Expression complète' in corr[corr.index(debut):corr.index(fin)]:
+            raise ValueError('P8-M05 : expression redondante Q2')
+
+    if nom=='P8-M10':
+        old=re.search(r'5\. Après la hausse, quelle est la différence signée[^\n]+',enonce)
+        if old is None:raise ValueError('P8-M10 : ancienne Q5 introuvable')
+        enonce=enonce[:old.start()]+(
+            "5. Après l’augmentation, soustrais le prix de l’entreprise B "
+            "à celui de l’entreprise A. Quel résultat obtiens-tu ?"
+        )+enonce[old.end():]
+        # Convertir l'expression en calcul simple, et éliminer les artefacts Markdown.
+        haut=re.search(r"l[’']entreprise ([AB]) augmente ses frais fixes de (\d+) €", enonce, re.I)
+        if not haut: raise ValueError('P8-M10 : entreprise augmentée introuvable')
+        entreprise,augmentation=haut[1],int(haut[2])
+        init_a,init_b=(int(champs[i]['attendu']) for i in (1,2))
+        prix_a=init_a+(augmentation if entreprise=='A' else 0)
+        prix_b=init_b+(augmentation if entreprise=='B' else 0)
+        difference=prix_a-prix_b
+        if difference!=champs[4]['attendu']:
+            raise ValueError(f'P8-M10 : écart automatique incohérent {difference} != {champs[4]["attendu"]}')
+        champs[4]['libelle']='Prix A moins prix B'
+        conclusion=(f"Le résultat négatif signifie que l'entreprise A coûte {abs(difference)} € de moins que B."
+                    if difference<0 else
+                    f"Le résultat positif signifie que l'entreprise A coûte {difference} € de plus que B."
+                    if difference>0 else 'Les deux entreprises coûtent le même prix.')
+        r5=(f"**Réponse 5 — Comparaison des prix**\n\n"
+            f"L’entreprise {entreprise} augmente ses frais fixes de {augmentation} €.\n\n"
+            f"**Entreprise A :** {init_a} € (inchangé).\n\n" if entreprise=='B' else
+            f"**Réponse 5 — Comparaison des prix**\n\n"
+            f"L’entreprise {entreprise} augmente ses frais fixes de {augmentation} €.\n\n"
+            f"**Entreprise A :** {init_a} + {augmentation} = **{prix_a} €**.\n\n")
+        r5+=(f"**Entreprise B :** {init_b} + {augmentation} = **{prix_b} €**.\n\n"
+             if entreprise=='B' else f"**Entreprise B :** {init_b} € (inchangé).\n\n")
+        r5+=f"Différence : {prix_a} − {prix_b} = **{difference} €**.\n\n{conclusion}"
+        corr=corr[:corr.index('**Réponse 5 —')]+r5
+
+    if nom=='P8-M08':
+        # Seul le sentier le plus rapide doit respecter la durée maximale.
+        # La durée limite est recalée entre les deux durées réelles,
+        # sans changement des valeurs Q1 à Q4.
+        md=re.search(r'\*\*Nouveau défi :\*\*.*?(?=\n\n5\.)',enonce,re.S)
+        if not md: raise ValueError('P8-M08 : défi A/B introuvable')
+        defi=md.group()
+        detail=re.search(
+            r'détour A de ([\d,.]+) km.*?pause de (\d+) minutes.*?sentier B de ([\d,.]+) km sans pause',
+            defi, re.S | re.I)
+        if not detail: raise ValueError('P8-M08 : durées A/B introuvables')
+        km_a=float(detail[1].replace(',','.'))
+        pause_a=int(detail[2]);km_b=float(detail[3].replace(',','.'))
+        duree_base=int(champs[3]['attendu'])
+        rythme_match=re.search(r'allure régulière de (\d+) minutes par kilomètre',enonce)
+        if not rythme_match: raise ValueError('P8-M08 : allure non trouvée')
+        rythme=int(rythme_match[1])
+        mins_a=round(km_a*rythme)+pause_a
+        mins_b=round(km_b*rythme)
+        total_a=duree_base+mins_a
+        total_b=duree_base+mins_b
+        if total_a==total_b:raise ValueError('P8-M08 : les deux sentiers sont exactement aussi longs')
+        rapide=min(total_a,total_b);lent=max(total_a,total_b)
+        limite=rapide+(lent-rapide)//2
+        assert rapide<=limite<lent
+        unique='A' if total_a<total_b else 'B'
+        # Supprimer l'ancien détour générique qui doublonnait le défi final.
+        ancien_detour=re.search(r'Après le parcours, ils envisagent un détour d.observation de [^\n]+\n\n',enonce)
+        if not ancien_detour:raise ValueError('P8-M08 : ancien détour introuvable')
+        enonce=enonce[:ancien_detour.start()]+enonce[ancien_detour.end():]
+        enonce,n_limite=re.subn(
+            r'Le groupe souhaite terminer le parcours en \*\*\d+ minutes au maximum\*\*, pauses comprises\.',
+            f'La durée maximale autorisée pour toute la randonnée, détour compris, est de **{limite} minutes**.',enonce)
+        if n_limite!=1:raise ValueError('P8-M08 : limite autorisée introuvable')
+        nouveau=(f"**Nouveau défi :** après le parcours, deux sentiers d'observation sont proposés, "
+                 f"à la même allure :\n- **Sentier A :** {detail[1]} km de marche avec une pause de {pause_a} minutes ;\n"
+                 f"- **Sentier B :** {detail[3]} km de marche, sans pause.\n\n"
+                 "Les pauses habituelles entre les tours sont conservées.")
+        enonce=enonce.replace(defi,nouveau)
+        vieille_q=re.search(r'5\. Quelle marge de temps SIGNÉE[^\n]+',enonce)
+        if not vieille_q:raise ValueError('P8-M08 : ancienne Q5 introuvable')
+        enonce=enonce[:vieille_q.start()]+(
+            "5. Quel sentier permet de terminer la randonnée sans dépasser la durée maximale autorisée : "
+            "A ou B ? Justifie ton choix par des calculs."
+        )+enonce[vieille_q.end():]
+        champ=champs[4]
+        champ['attendu']=unique
+        champ['type']='choix'
+        champ['options']=['A','B']
+        champ.pop('unite',None)
+        champ['libelle']='Sentier respectant la durée maximale'
+        # Garder le texte de correction lisible, avec une comparaison A/B explicite.
+        r5=(f'**Réponse 5 — Sentier respectant la durée maximale**\n\n'
+             f'**Sentier A :** {detail[1]} × {rythme} + {pause_a} = **{mins_a} min**.  \n'
+             f'Durée totale : {duree_base} + {mins_a} = **{total_a} min**.\n\n'
+             f'**Sentier B :** {detail[3]} × {rythme} = **{mins_b} min**.  \n'
+             f'Durée totale : {duree_base} + {mins_b} = **{total_b} min**.\n\n'
+             f'Durée maximale : **{limite} min**.\n\n'
+             f'**Le sentier {unique} respecte la durée maximale** '
+             f'({rapide} ≤ {limite}, mais {lent} > {limite}).')
+        corr=corr[:corr.index('**Réponse 5 —')]+r5
+        ex['mathicap_parcours_q5']={'sentier':unique,'temps_a':total_a,'temps_b':total_b,
+                                   'limite':limite,'min_a':mins_a,'min_b':mins_b}
+    ex['enonce']=enonce
+    ex['correction']=corr
+    ex['mathicap_lot_20261119']='24-N8-26-N9'
+    return ex
+
 def _mc_uniformiser_exercice(exercice):
     """Retourne une COPIE structurée, sans altérer l'exercice historique source."""
     if not isinstance(exercice, dict) or exercice.get("id") not in REGLES:
@@ -9805,7 +9961,7 @@ def _mc_uniformiser_exercice(exercice):
     )
     resultat["mathicap_niveau_pedagogique"] = niveau
     resultat["mathicap_referentiel_pedagogique"] = "MathiCap V3.2 — contre-expertise et cohérence des variantes"
-    return _mc_n8_polish(resultat)
+    return _mc_finaliser_questions_n8_20261119(_mc_n8_polish(resultat))
 
 
 # ================================================================
@@ -10371,9 +10527,9 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """
     if difficulte not in BANQUE_PRIORITES:
         raise ValueError("Difficulté attendue : 1, 2 ou 3.")
-    # 26 modèles N7, 25 N8 et 25 N9 : la banque statique contient seulement
+    # 26 modèles N7, 24 N8 et 26 N9 : la banque statique contient seulement
     # cinq exemples historiques par niveau, remplacés par les générateurs.
-    capacite_reelle = {1: 26, 2: 25, 3: 25}[difficulte]
+    capacite_reelle = {1: 26, 2: 24, 3: 26}[difficulte]
     if not isinstance(nombre, int) or isinstance(nombre, bool) or not 1 <= nombre <= capacite_reelle:
         raise ValueError(
             "Nombre d’exercices demandé supérieur aux modèles disponibles pour ce niveau."
@@ -10424,7 +10580,6 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         ]
         banque.append(generer_modele_p8_clubs())
         banque.append(generer_modele_p8_manga())
-        banque.append(generer_modele_p8_jeu_video())
         banque.append(generer_modele_p8_robotique())
         banque.append(generer_modele_p8_jeu_piste())
         banque.append(generer_modele_p8_kits())
@@ -10484,6 +10639,13 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p9_m23())
         banque.append(generer_modele_p9_m24())
         banque.append(generer_modele_p9_m25())
+        # Modèle reclassé sans renommer son identifiant historique P8-M03 :
+        # les réponses sauvegardées d'anciennes séries demeurent identifiables.
+        aventure = generer_modele_p8_jeu_video()
+        aventure['mathicap_niveau_pedagogique'] = 9
+        aventure['mathicap_reclassement'] = 'N8 vers N9 le 2026-11-19'
+        banque.append(aventure)
+
             
     # Même tirage aléatoire qu'avant en l'absence d'historique utilisable.
     # Chaque nouvelle série privilégie ensuite les modèles les moins récents.
