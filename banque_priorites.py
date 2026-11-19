@@ -8831,6 +8831,253 @@ def _mc_n8_r5_detaillee(ex, etapes):
         raise ValueError(f'N8 : réponse 5 non auditée pour {nom}')
     return etapes
 
+# MathiCap N8 : présentation pédagogique approuvée le 19/11/2026.
+# Ce traitement ne touche qu'au texte de correction et uniquement au niveau 8.
+def _mc_n8_modele_eleve_20261119(ex, etapes):
+    """Une réponse, ses calculs, puis éventuellement une conclusion courte.
+
+    Les valeurs sont celles des champs déjà évalués ; les données utiles sont celles
+    du générateur et non un raisonnement reconstruit à partir des seules réponses.
+    """
+    nom = ex['id']
+    if not nom.startswith('P8-M'):
+        return ex
+    import re
+    # Partir du texte déjà corrigé (accords, valeurs, signes) par _mc_n8_polish.
+    # Ne pas utiliser les étapes brutes qui contiennent encore des gabarits "boîte(s)".
+    etapes = re.split(r'(?m)^\*\*Réponse [1-5] — [^\n]*?\*\*\n\n', ex['correction'])[1:]
+    if len(etapes) != 5:
+        raise ValueError('Cinq corrections détaillées attendues pour ' + ex['id'])
+    champs = ex['champs_reponse']
+    v = [c['attendu'] for c in champs]
+    a = ex.get('_mathicap_audit_nouveau') or {}
+    f = _mc_n8_fr
+
+    def division(n, p, unite):
+        q,r = divmod(n,p)
+        nb = q + (r > 0)
+        phrase = f'{n} ÷ {p} = {q}, reste {r}.'
+        if r:
+            phrase += f' Il faut donc **{nb} {unite}**.'
+        else:
+            phrase += f' Il faut donc **{nb} {unite}** (division exacte).'
+        return phrase, nb
+
+    # La campagne d'économie d'eau est le modèle de présentation validé.
+    if nom == 'P8-M19':
+        manque,jours = v[2],a['days']
+        ea,eb = a['liters']*jours,a['liters_b']*jours
+        qa,na = divmod(manque,ea); nb_a = qa+(na>0)
+        qb,rb = divmod(manque,eb); nb_b = qb+(rb>0)
+        cout_a,cout_b=nb_a*a['price_a'], nb_b*a['price_b']
+        assert (ea,v[0],v[1],nb_a,min(cout_a,cout_b)) == (v[0],v[0],v[1],v[3],v[4])
+        etapes[0] = f"{a['liters']} × {jours} = {ea} L."
+        etapes[1] = (f"{a['faucets']} économiseurs sont installés.\n"
+                     f"{a['faucets']} × {ea} = {v[1]} L. Économie totale : **{v[1]} L**.")
+        etapes[2] = (f"Objectif : {a['goal']} L.\n"
+                     f"{a['goal']} − {v[1]} = {manque} L. Il reste **{manque} L** à économiser.")
+        etapes[3] = (f"Un économiseur A permet d'économiser {ea} L.\n"
+                     f"{manque} ÷ {ea} = {qa}, reste {na}.\n"
+                     f"Il faut donc **{nb_a} économiseur{'s' if nb_a>1 else ''} A supplémentaire{'s' if nb_a>1 else ''}**.")
+        note_b = (f"{eb} L ≥ {manque} L : **1 économiseur suffit**."
+                  if nb_b == 1 else
+                  f"{manque} ÷ {eb} = {qb}, reste {rb}. Il faut **{nb_b} économiseurs**.")
+        gagnant='A' if cout_a < cout_b else ('B' if cout_b < cout_a else 'A ou B')
+        etapes[4] = (f"Il reste **{manque} L** à économiser.\n\n"
+                     f"**Modèle A :** {nb_a} économiseur{'s' if nb_a>1 else ''} (réponse 4). "
+                     f"Coût : {nb_a} × {a['price_a']} = **{cout_a} €**.\n\n"
+                     f"**Modèle B :** Économie : {a['liters_b']} × {jours} = {eb} L par économiseur. "
+                     f"{note_b} Coût : {nb_b} × {a['price_b']} = **{cout_b} €**.\n\n"
+                     f"**Coût minimal : {v[4]} € — "
+                     + (f"le modèle {gagnant} est le moins cher.**" if gagnant != 'A ou B' else "les deux modèles coûtent le même prix.**"))
+    elif nom in ('P8-M14','P8-M23','P8-M25'):
+        if nom == 'P8-M14':
+            manque=v[2]; c_b=a['cost_b'];p_b=a['box_b'];objet='mangas';unite='lots'
+        elif nom == 'P8-M23':
+            manque=v[1];c_b=a['price_b'];p_b=a['bag_b'];objet='kg de compost';unite='sacs'
+        else:
+            manque=v[2];c_b=a['cost_b'];p_b=a['pack_b'];objet='portions';unite='lots'
+        dd,nb=division(manque,p_b,unite)
+        c_a=v[3];cout_b=nb*c_b
+        assert min(c_a,cout_b)==v[4]
+        gagnant = 'A' if c_a<cout_b else 'B' if cout_b<c_a else 'A ou B'
+        etapes[4] = (f"Il manque {manque} {objet} (réponse {3 if nom != 'P8-M23' else 2}).\n\n"
+                     f"**Offre A :** {c_a} € (réponse 4).\n\n"
+                     f"**Offre B :** {dd}\n"
+                     f"Coût : {nb} × {c_b} = **{cout_b} €**.\n\n"
+                     f"**Coût minimal : {v[4]} € — "
+                     +(f"l'offre {gagnant} est la moins chère.**" if gagnant != 'A ou B' else "les offres coûtent le même prix.**"))
+    elif nom == 'P8-M15':
+        # Pour tous les tirages : quotient, reste et quantité de lots, même
+        # lorsqu'un seul lot suffit. Ne rien afficher comme achat si manque = 0.
+        besoin_b = 3 * a['target']
+        manque_b = max(0, besoin_b - a['batteries'])
+        if manque_b:
+            etapes[3] = (f"Pour {a['target']} robots : {a['target']} × 3 = {besoin_b} batteries. "
+                         f"Il manque {besoin_b} − {a['batteries']} = **{manque_b} batteries**.")
+        else:
+            etapes[3] = (f"Pour {a['target']} robots : {a['target']} × 3 = {besoin_b} batteries. "
+                         f"Le club en possède {a['batteries']} : **aucune batterie ne manque**.")
+
+        besoin_m = 2 * a['target']
+        manque_m = max(0, besoin_m - a['motors'])
+
+        def achat_en_lots(manque, taille, prix, composant):
+            # La même règle s'applique aux moteurs et aux batteries.
+            if manque == 0:
+                return 'Aucun achat nécessaire. Coût : **0 €**.', 0
+            quotient, reste = divmod(manque, taille)
+            nb_lots = quotient + (1 if reste else 0)
+            pluriel = 'lot' if nb_lots == 1 else 'lots'
+            methode = (f"{manque} ÷ {taille} = {quotient}, reste {reste}. "
+                       f"Il faut donc **{nb_lots} {pluriel} de {taille} {composant}**.")
+            cout = nb_lots * prix
+            return methode + f"\nCoût : {nb_lots} × {prix} = **{cout} €**.", cout
+
+        calcul_m, cout_m = achat_en_lots(manque_m, a['packmot'], a['costmot'], 'moteurs')
+        calcul_b, cout_b = achat_en_lots(manque_b, a['packbat'], a['costbat'], 'batteries')
+        assert cout_m + cout_b == v[4]
+
+        detail_m = (f"{besoin_m} − {a['motors']} = {manque_m} moteurs manquants.\n{calcul_m}"
+                    if manque_m else
+                    f"Le stock de {a['motors']} moteurs suffit pour {a['target']} robots. {calcul_m}")
+        detail_b = (f"{manque_b} batteries manquantes (réponse 4).\n{calcul_b}"
+                    if manque_b else
+                    f"Les batteries disponibles suffisent (réponse 4). {calcul_b}")
+        etapes[4] = (f"Pour {a['target']} robots : {a['target']} × 2 = {besoin_m} moteurs "
+                     f"et {besoin_b} batteries (réponse 4).\n\n"
+                     f"**Moteurs :** {detail_m}\n\n"
+                     f"**Batteries :** {detail_b}\n\n"
+                     f"**Coût total : {cout_m} + {cout_b} = {f(v[4])} €.**")
+    elif nom == 'P8-M21':
+        manque=v[3];ord_=a['normal'];rare=a['rare']
+        q,r=divmod(manque,ord_);n=q+(r>0)
+        reste=max(0,manque-rare);q2,r2=divmod(reste,ord_);n2=1+q2+(r2>0)
+        assert min(n,n2)==v[4]
+        etapes[4]=(f"Cristaux manquants : **{manque}** (réponse 4).\n\n"
+                    f"**Missions ordinaires seules :** {manque} ÷ {ord_} = {q}, reste {r}. "
+                    f"Il faut **{n} missions**.\n\n"
+                    f"**Avec une mission rare :** {manque} − {rare} = {reste} cristaux à gagner. "
+                    f"{reste} ÷ {ord_} = {q2}, reste {r2}. "
+                    f"Il faut {q2+(r2>0)} missions ordinaires et 1 rare, soit **{n2} missions**.\n\n"
+                    f"**Minimum : {v[4]} missions.**")
+    elif nom == 'P8-M06':
+        t=ex['enonce']
+        m=re.search(r'(\d+) nouvelles équipes',t)
+        pu=re.search(r'coûtent (\d+)\s*€ chacun à l.unité',t)
+        lot=re.search(r'(\d+)\s*€ par lot indivisible de (\d+) kits',t)
+        budget=re.search(r'budget de\s*\*\*(\d+)\s*€',t)
+        if all((m,pu,lot,budget)):
+            n=int(m[1]);p=int(pu[1]);lp=int(lot[1]);taille=int(lot[2]);bd=int(budget[1])
+            q,r=divmod(n,taille);nb=q+(r>0)
+            cu=n*p;cl=nb*lp;minimum=min(cu,cl)
+            assert max(0,v[2]+minimum-bd)==v[4]
+            etapes[4]=(f"**Commande initiale :** {v[2]} € (réponse 3, remise et livraison incluses).\n\n"
+                       f"**Commande complémentaire :** {n} nouveaux kits, sans nouvelle remise ni livraison.\n"
+                       f"À l'unité : {n} × {p} = **{cu} €**.\n"
+                       f"Par lots : {n} ÷ {taille} = {q}, reste {r}. Il faut {nb} {'lot' if nb==1 else 'lots'}. "
+                       f"{nb} × {lp} = **{cl} €**.\n\n"
+                       f"**Total des deux commandes :** {v[2]} + {minimum} = {v[2]+minimum} €.\n"
+                       f"**Financement nécessaire : {f(v[4])} €** "
+                       + (f"({v[2]+minimum} − {bd})." if v[4]>0 else "(budget suffisant)."))
+    elif nom == 'P8-M01':
+        t=etapes[4]
+        m=re.search(r'pour (\d+) clubs il faut (\d+) × (\d+) = (\d+) €',t,re.I)
+        if m:
+            nbclubs,cible,total= int(m[1]),int(m[3]),int(m[4])
+            assert nbclubs*cible==total and total-v[3]==v[4]
+            etapes[4]=(f"Pour {nbclubs} clubs, il faut {nbclubs} × {cible} = {total} € à partager. "
+                       f"Somme déjà disponible : {v[3]} € (réponse 4).\n"
+                       f"{total} − {v[3]} = **{v[4]} € de recettes supplémentaires**.")
+    elif nom == 'P8-M07':
+        t=ex['enonce']
+        m=re.search(r'Dans .*?, (\d+) robinets',t)
+        objectif=re.search(r'au moins ([\d,.]+)\s*L',t)
+        if m and objectif:
+            robinets=int(m[1]);cible=float(objectif[1].replace(',','.'))
+            deja=v[3]; manque=cible-deja; gain=deja/robinets
+            assert abs(manque/gain-v[4])<1 or manque==0
+            etapes[4]=(f"Économie déjà réalisée : {f(deja)} L (réponse 4). "
+                       f"Il reste {f(cible)} − {f(deja)} = {f(manque)} L à économiser.\n"
+                       f"Économie par robinet : {f(deja)} ÷ {robinets} = {f(gain)} L.\n"
+                       f"{f(manque)} ÷ {f(gain)} = {f(manque/gain)}. "
+                       f"Il faut **{v[4]} robinets supplémentaires** (arrondi à l'entier supérieur).")
+    elif nom == 'P8-M05':
+        # Recomposition douce depuis le texte de référence, sans recalculer les éléments.
+        t=etapes[4]
+        t=t.replace('La réserve minimale de', '\n\n**Réserve minimale :**')
+        t=t.replace('Solde final après mise de côté de cette réserve :', '\n\n**Solde final :**')
+        t=re.sub(r'\*\*Réserve minimale :\*\* ([\d,.]+) € doit rester disponible et ne peut servir à payer les achats\.',
+                 r'**Réserve :** \1 € à conserver.',t)
+        t=t.replace('Souvenirs pour', '\n**Souvenirs pour')
+        t=t.replace('équipes : à l’unité', 'équipes :** à l’unité')
+        etapes[4]=t
+    elif nom == 'P8-M04':
+        # Les offres sont nouvelles en Q5 : ne pas supprimer leur calcul.
+        t=etapes[4]
+        t=t.replace('Offre A :','\n\n**Offre A :**').replace('Offre B :','\n\n**Offre B :**')
+        t=t.replace('On compare','\n\nOn compare')
+        etapes[4]=t
+    elif nom == 'P8-M12':
+        total=a['n']+a['add'];ca=a['cap_a'];cb=a['cap_b']
+        qa,ra=divmod(total,ca);qb,rb=divmod(total,cb)
+        na=qa+(ra>0);nb=qb+(rb>0)
+        cout_a=na*a['price_a'];cout_b=nb*a['price_b']
+        assert min(cout_a,cout_b)==v[4]
+        gagnant='A' if cout_a<cout_b else 'B' if cout_b<cout_a else 'A ou B'
+        etapes[4]=(f"Nouveau groupe : {a['n']} + {a['add']} = {total} personnes.\n\n"
+                   f"**Offre A :** {total} ÷ {ca} = {qa}, reste {ra}. "
+                   f"Il faut {na} navettes. Coût : {na} × {a['price_a']} = **{cout_a} €**.\n\n"
+                   f"**Offre B :** {total} ÷ {cb} = {qb}, reste {rb}. "
+                   f"Il faut {nb} navettes. Coût : {nb} × {a['price_b']} = **{cout_b} €**.\n\n"
+                   f"**Coût minimal : {v[4]} € — "
+                   +(f"l'offre {gagnant} est la moins chère.**" if gagnant != 'A ou B' else 'les deux offres sont équivalentes.**'))
+    elif nom in ('P8-M08','P8-M10','P8-M16','P8-M20'):
+        t=etapes[4]
+        t=t.replace('Détour A :','\n\n**Détour A :**').replace('Détour B :','\n\n**Détour B :**')
+        t=t.replace('Entreprise A :','\n\n**Entreprise A :**').replace('Entreprise B :','\n\n**Entreprise B :**')
+        t=t.replace(' A :','\n\n**A :**').replace(' B :','\n\n**B :**')
+        etapes[4]=t
+
+    # Économie de texte: une expression complète ne doit pas dupliquer
+    # un calcul déjà présenté dans cette même réponse.
+    def compact(s, attendu):
+        source=s
+        s = re.sub(r'Expression complète\s*:\s*[^.\n]*\.', '', s)
+        # Si la formule d'ensemble était la seule à donner le résultat,
+        # elle est obligatoire et doit être conservée pour la pédagogie.
+        nombre=f(attendu) if isinstance(attendu,(int,float)) and not isinstance(attendu,bool) else str(attendu)
+        if not re.search(r'(?<![\d,.])'+re.escape(nombre)+r'(?![\d,.])', s):
+            s=source
+
+        s = re.sub(r'(?<!\d)(\d+),00\b',r'\1',s)
+        s = re.sub(r'[ \t]+',' ',s).strip()
+        s = re.sub(r'[ \t]*\n[ \t]*','\n',s)
+        s = re.sub(r'\n{3,}','\n\n',s)
+        s = re.sub(r'(?<!\w)(\d+)(?=[A-Za-zÀ-ÿ])',r'\1 ',s)
+        s = re.sub(r'(\d+) boîtes entière\(s\)',lambda m: m[1]+' boîte entière' if m[1]=='1' else m[1]+' boîtes entières',s)
+        s = re.sub(r'(\d+) boîtes?\(s\)',lambda m: m[1]+(' boîte' if m[1]=='1' else ' boîtes'),s)
+        s = s.replace('en arrondissant au supérieur si nécessaire', 'car il reste des batteries à placer')
+        return s.strip()
+
+    pieces=[]
+    for i,(c,exp) in enumerate(zip(champs,etapes),1):
+        label = c.get('libelle',f'Question {i}').strip().rstrip('?: ')
+        if nom == 'P8-M19':
+            label = {1:'Économie d’un économiseur A', 4:'Nombre d’économiseurs A supplémentaires',
+                     5:'Coût minimal des nouveaux économiseurs'}.get(i,label)
+        detail=compact(exp,c['attendu'])
+        if not detail:
+            raise ValueError('Correction vide pour '+nom+' réponse '+str(i))
+        pieces.append(f'**Réponse {i} — {label}**\n\n{detail}')
+    corr='\n\n'.join(pieces)
+    if corr.count('**Réponse ')!=5 or 'Réponses attendues' in corr:
+        raise ValueError('Mauvais format pour '+nom)
+    ex['correction']=_mc_n8_numeriques_lisibles(corr)
+    ex['mathicap_revision_corrections']='2026-11-19-n8-modele-compact-valide'
+    return ex
+
+
 def _mc_n8_polish(ex):
     """Corrections N8 complètes : une réponse suivie de la méthode détaillée.
 
@@ -8913,7 +9160,7 @@ def _mc_n8_polish(ex):
     ex['enonce']=_mc_n8_accords(ex['enonce'])
     ex['correction']=_mc_n8_accords(ex['correction'])
     ex['mathicap_revision_corrections']='2026-11-18-n8-audits-claude-gemini'
-    return ex
+    return _mc_n8_modele_eleve_20261119(ex, etapes)
 
 
 def _mc_n8_numeriques_lisibles(texte):
