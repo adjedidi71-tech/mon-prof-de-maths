@@ -6,7 +6,7 @@ Difficultés :
     3 = niveau 9
 
 Les exercices sont écrits et conservés : aucune API d'IA n'est appelée.
-Modèles actifs du chapitre : 26 au niveau 7 ; 24 au niveau 8 ; 26 au niveau 9.
+Modèles actifs du chapitre : 26 au niveau 7 ; 22 au niveau 8 ; 28 au niveau 9.
 """
 
 from copy import deepcopy
@@ -10688,6 +10688,136 @@ def generer_modele_p8_m26_portails(seed=None):
             'portail_gagnant': gagnant
         }
     }
+
+
+# ================================================================
+# MATHICAP — ÉQUILIBRAGE DES COMPARAISONS N8 (19 novembre 2026)
+# Une seule sortie A/B par tirage ; cibles aléatoires 50/50.
+# L'algorithme régénère un cas NUMÉRIQUE COMPLET, sans toucher aux
+# réponses ni aux corrections calculées par les générateurs d'origine.
+# Les modèles sans choix sont exclus ; « les deux » et « aucun » ne sont
+# pas introduits artificiellement.
+# La graine retournée correspond à la graine d'entrée (reproductible).
+# ================================================================
+def _mc_n8_choix_observe_20261119(ex):
+    import re as _re
+    mid = ex['id']
+    champs = ex['champs_reponse']
+    def val(i):
+        return champs[i-1]['attendu']
+    a = ex.get('_mathicap_audit_nouveau') or {}
+    def moins_cher(a_prix, b_prix):
+        return 'A' if a_prix < b_prix else ('B' if b_prix < a_prix else 'egalite')
+
+    if mid == 'P8-M04':
+        r5 = ex['correction'].split('**Réponse 5 —')[-1]
+        prix = _re.findall(r'Coût\s*:\s*[^\n]*?=\s*\*\*(\d+)\s*€\*\*', r5)
+        if len(prix) != 2:
+            raise ValueError('P8-M04 : les deux coûts sont introuvables dans R5')
+        return moins_cher(int(prix[0]), int(prix[1]))
+    if mid == 'P8-M08':
+        return val(5)
+    if mid == 'P8-M10':
+        # Après la hausse : prix A − prix B (négatif = A moins chère).
+        return 'A' if val(5) < 0 else ('B' if val(5) > 0 else 'egalite')
+    if mid == 'P8-M12':
+        groupe = a['n'] + a['add']
+        ca = ((groupe + a['cap_a'] - 1)//a['cap_a'])*a['price_a']
+        cb = ((groupe + a['cap_b'] - 1)//a['cap_b'])*a['price_b']
+        return moins_cher(ca, cb)
+    if mid == 'P8-M14':
+        manque = a['reserved'] - (a['start'] + a['received'] - a['loans'])
+        ca = ((manque + a['box_a'] - 1)//a['box_a'])*a['cost_a']
+        cb = ((manque + a['box_b'] - 1)//a['box_b'])*a['cost_b']
+        return moins_cher(ca, cb)
+    if mid == 'P8-M16':
+        groupe = a['n'] + a['add']
+        return moins_cher(a['fee_a'] + groupe*a['each_a'],
+                           a['fee_b'] + groupe*a['each_b'])
+    if mid == 'P8-M19':
+        manque = a['goal'] - a['faucets']*a['liters']*a['days']
+        econ_a = a['liters']*a['days']
+        econ_b = a['liters_b']*a['days']
+        ca = ((manque + econ_a - 1)//econ_a)*a['price_a']
+        cb = ((manque + econ_b - 1)//econ_b)*a['price_b']
+        return moins_cher(ca, cb)
+    if mid == 'P8-M20':
+        n = a['classes']*a['per'] + a['teachers']
+        ca = ((n + a['cap'] - 1)//a['cap'])*a['buscost']
+        return moins_cher(ca, a['groupbuscost'])
+    if mid == 'P8-M22':
+        return moins_cher(a['a']+a['detour'], a['b'])
+    if mid == 'P8-M23':
+        manque = a['surface']*a['qty']-a['stock']
+        ca = ((manque + a['bag_a'] - 1)//a['bag_a'])*a['price_a']
+        cb = ((manque + a['bag_b'] - 1)//a['bag_b'])*a['price_b']
+        return moins_cher(ca, cb)
+    if mid == 'P8-M25':
+        manque = val(3)
+        ca = ((manque + a['pack_a'] - 1)//a['pack_a'])*a['cost_a']
+        cb = ((manque + a['pack_b'] - 1)//a['pack_b'])*a['cost_b']
+        return moins_cher(ca, cb)
+    if mid == 'P8-M24':
+        return 'A' if val(5) > 0 else ('B' if val(5) < 0 else 'egalite')
+    raise KeyError(f'Pas de contrôle A/B pour {mid}')
+
+
+def _mc_n8_equilibrer_generateur_20261119(fonction):
+    # Capture l'original, préserve les appels sans argument et les graines.
+    accepte_seed = 'seed' in fonction.__code__.co_varnames[:fonction.__code__.co_argcount]
+    def _equilibre(seed=None):
+        if seed is None:
+            seed = random.randrange(1, 2**31-1)
+        graine = int(seed)
+        # Le choix est tiré AVANT la génération : pas de sélection post hoc
+        # donnant une préférence à l'une des offres.
+        cible = random.Random(f'choix-n8:{fonction.__name__}:{graine}').choice(('A','B'))
+        for essai in range(250):
+            graine_essai = graine + essai*1_000_003
+            if accepte_seed:
+                ex = fonction(seed=graine_essai)
+            else:
+                # Certains anciens modèles utilisent le RNG global ; leur
+                # état est sauvegardé/restauré pour rendre le tirage reproductible.
+                etat = random.getstate()
+                try:
+                    random.seed(graine_essai)
+                    ex = fonction()
+                finally:
+                    random.setstate(etat)
+            decision = _mc_n8_choix_observe_20261119(ex)
+            if decision == cible:
+                ex['seed'] = graine
+                ex['mathicap_equilibre_choix'] = {
+                    'version': '2026-11-19', 'choix': cible,
+                    'nombre_essais': essai + 1,
+                }
+                return ex
+        raise RuntimeError(f'{fonction.__name__} : aucun tirage pour le choix {cible}')
+    _equilibre.__name__ = fonction.__name__
+    _equilibre.__doc__ = fonction.__doc__
+    return _equilibre
+
+# P8-M08 a déjà un choix unique valide ; on rééquilibre A/B sans changer
+# la règle. P8-M19 était presque équilibré mais pouvait produire des égalités.
+# P8-M24 ne compare pas des offres : A = temps restant, B = dépassement.
+for _mc_n8_nom in (
+    'generer_modele_p8_robotique',
+    'generer_modele_p8_parcours',
+    'generer_modele_p8_transport',
+    'generer_modele_p8_m12',
+    'generer_modele_p8_m14',
+    'generer_modele_p8_m16',
+    'generer_modele_p8_m19',
+    'generer_modele_p8_m20',
+    'generer_modele_p8_m22',
+    'generer_modele_p8_m23',
+    'generer_modele_p8_m24',
+    'generer_modele_p8_m25',
+):
+    globals()[_mc_n8_nom] = _mc_n8_equilibrer_generateur_20261119(globals()[_mc_n8_nom])
+del _mc_n8_nom
+
 
 def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """Tire des modèles distincts, en privilégiant les moins récemment vus.
