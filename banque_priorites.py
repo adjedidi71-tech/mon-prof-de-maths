@@ -6,7 +6,7 @@ Difficultés :
     3 = niveau 9
 
 Les exercices sont écrits et conservés : aucune API d'IA n'est appelée.
-Modèles actifs du chapitre : 26 au niveau 7 ; 22 au niveau 8 ; 28 au niveau 9.
+Modèles actifs du chapitre : 26 au niveau 7 ; 24 au niveau 8 ; 26 au niveau 9.
 """
 
 from copy import deepcopy
@@ -10351,7 +10351,7 @@ def _mc_new_n9(idx,seed=None):
             double=rng.randint(single+9,2*single-5)
             matches=teams*(teams-1)//2
             def duree(extra):
-                slots=_mc_new_ceil(matches,courts+extra)
+                slots=_mc_new_ceil(matches,min(courts+extra, teams//2))
                 return slots*duration+(slots-1)*rest
             initialdur=duree(0);min_dur=duree(3)
             if min_dur<initialdur-8:break
@@ -10365,7 +10365,7 @@ def _mc_new_n9(idx,seed=None):
         assert feasible
         best=min(feasible)
         return _mc_new_problem(9,idx,seed,'Le championnat et les terrains à louer',[
-            f'{teams} équipes jouent chacune contre toutes les autres une fois. Chaque match dure {duration} minutes. Entre deux séries de matchs, il faut {rest} minutes de pause, sauf après la dernière.',
+            f'{teams} équipes jouent chacune contre toutes les autres une fois. Chaque match dure {duration} minutes. Entre deux séries de matchs, il faut {rest} minutes de pause, sauf après la dernière. Une équipe ne peut pas jouer deux matchs dans une même série.',
             f'Le gymnase dispose de {courts} terrains. Le championnat doit finir en {limit} minutes au maximum.',
             f'Pour tout le tournoi, on peut louer un terrain supplémentaire pour {single} €, ou un ensemble de deux terrains pour {double} €. On peut combiner au maximum trois terrains supplémentaires ; au plus un ensemble de deux est proposé.'
         ],['Combien de matchs distincts faut-il organiser ?','Combien de séries faut-il avec les terrains actuels ?','Quelle serait la durée totale avec les terrains actuels, pauses comprises ?','Combien de minutes faudrait-il gagner sur cette durée initiale pour respecter la limite ?','Quel est le coût minimal de location de terrains supplémentaires, en comparant les terrains seuls et l’ensemble de deux ?'],
@@ -10828,9 +10828,9 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     """
     if difficulte not in BANQUE_PRIORITES:
         raise ValueError("Difficulté attendue : 1, 2 ou 3.")
-    # 26 modèles N7, 22 N8 et 28 N9 : la banque statique contient seulement
+    # 26 modèles N7, 24 N8 et 26 N9 : la banque statique contient seulement
     # cinq exemples historiques par niveau, remplacés par les générateurs.
-    capacite_reelle = {1: 26, 2: 22, 3: 28}[difficulte]
+    capacite_reelle = {1: 26, 2: 24, 3: 26}[difficulte]
     if not isinstance(nombre, int) or isinstance(nombre, bool) or not 1 <= nombre <= capacite_reelle:
         raise ValueError(
             "Nombre d’exercices demandé supérieur aux modèles disponibles pour ce niveau."
@@ -10904,6 +10904,12 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         banque.append(generer_modele_p8_m23())
         banque.append(generer_modele_p8_m24())
         banque.append(generer_modele_p8_m25())
+        # Deux anciens N9 reclassés vers N8 APRES l'audit pédagogique.
+        for _f in (generer_modele_p9_potager, generer_modele_p9_m13):
+            _ex=_f()
+            _ex['mathicap_niveau_pedagogique']=8
+            _ex['mathicap_reclassement']='N9 vers N8 le 2026-11-20 — diagnostic E'
+            banque.append(_ex)
         
 
     if difficulte == 3:
@@ -10914,7 +10920,6 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
             ]
         ]
 
-        banque.append(generer_modele_p9_potager())
         banque.append(generer_modele_p9_tournoi())
         banque.append(generer_modele_p9_festival())
         banque.append(generer_modele_p9_cristaux())
@@ -10927,7 +10932,6 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
         # Quinze nouveaux modèles, sans suppression des dix modèles existants.
         banque.append(generer_modele_p9_m11())
         banque.append(generer_modele_p9_m12())
-        banque.append(generer_modele_p9_m13())
         banque.append(generer_modele_p9_m14())
         banque.append(generer_modele_p9_m15())
         banque.append(generer_modele_p9_m16())
@@ -10987,3 +10991,685 @@ def generer_exercices_priorites(difficulte, nombre=1, historique_modeles=None):
     return exercices
 
 
+
+
+# ========================================================================
+# MathiCap N9 — Révision rédactionnelle et mathématique (20/11/2026)
+# Toutes les corrections N9 sont organisées en cinq réponses explicatives.
+# Les exercices historiques P8-M03/M05/M06 (devenus N9) restent inchangés.
+# ========================================================================
+
+def _n9_fr(value):
+    if isinstance(value, float) and value.is_integer(): return str(int(value))
+    if isinstance(value, float): return (f'{value:.6f}'.rstrip('0').rstrip('.')).replace('.', ',')
+    return str(value)
+
+
+def _n9_div(a, b):
+    q, r = divmod(a, b)
+    return f'{a} ÷ {b} = {q}, reste {r}', q + int(r > 0)
+
+
+def _n9_plural(n, sing, plur=None):
+    if sing=='BD':return f'{n} BD'
+    singular={'navettes':'navette','boîtes':'boîte','rouleaux':'rouleau','trajets':'trajet','paquets':'paquet','colis':'colis','missions':'mission','terrains':'terrain','carreaux':'carreau','cristaux':'cristal','séries':'série','énigmes':'énigme','ensembles':'ensemble'}.get(sing,sing)
+    forms={'navette':'navettes','boîte':'boîtes','rouleau':'rouleaux','trajet':'trajets','paquet':'paquets','colis':'colis','mission':'missions','terrain':'terrains','carreau':'carreaux','cristal':'cristaux','série':'séries','énigme':'énigmes','ensemble':'ensembles','boîte':'boîtes'}
+    return f'{n} {singular if n==1 else (plur or forms.get(singular,singular+"s"))}'
+
+
+def _n9_simple(text):
+    """Corrige seulement la graphie; ne change pas les opérations."""
+    text = str(text).replace('\r', '').replace('×', ' × ').replace('−', ' − ')
+    text = re.sub(r'\s*×\s*', ' × ', text)
+    text = re.sub(r'\s*−\s*', ' − ', text)
+    text = re.sub(r'(?<=\d)\.(?=\d)', ',', text)
+    text = re.sub(r'(?m)^\s*\*\*Expression complète[^\n]*\*\*.*?(?=\n\*\*|\Z)', '', text, flags=re.S)
+    text = re.sub(r'\b1\s+(doses|unités|tirages|mangas|terrains|carreaux|boîtes|colis|lots|sachets|missions|équipe?s)\b',
+                  lambda m:'1 '+{'doses':'dose','unités':'unité','tirages':'tirage','mangas':'manga','terrains':'terrain','carreaux':'carreau','boîtes':'boîte','colis':'colis','lots':'lot','sachets':'sachet','missions':'mission','équipes':'équipe'}.get(m.group(1),m.group(1)), text)
+    text = re.sub(r'\b(\d+)\s+(boîte|kit|lot|paquet|mission|rouleau|carreau|terrain|dose|unité|tirage|colis|trajet|énigme)\(s\)',
+                  lambda m:_n9_plural(int(m.group(1)),m.group(2)), text)
+    text = text.replace('terrain(s)', 'terrains').replace('ensemble(s)', 'ensembles')
+    text = re.sub(r'\s+([,;.])', r'\1', text)
+    text = re.sub(r' {2,}', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    text=re.sub(r'(?<=\d)=(?=\d)', ' = ', text)
+    text=re.sub(r'(?<=\d)\+(?=\d)', ' + ', text)
+    return text.strip()
+
+
+def _n9_steps(ex):
+    source=ex['correction'].split('**Méthode et calculs détaillés**')[-1]
+    items=re.split(r'(?m)^\*\*Étape(?:\s+\d+)?\s*(?:—|:)\s*([^*\n]+)\*\*\s*', source)
+    return [(items[i].strip(),items[i+1].strip()) for i in range(1,len(items),2)]
+
+
+def _n9_div_expr(text, container='lot'):
+    def ceilmul(m):
+        a,b,price,ans=map(int,m.groups()); calc,n=_n9_div(a,b)
+        return f'{calc}. Il faut {_n9_plural(n,container)}. Coût : {n} × {price} = {ans} €'
+    text = re.sub(r'⌈(\d+)\s*/\s*(\d+)⌉\s*×\s*(\d+)\s*=\s*(\d+)\s*€',ceilmul,text)
+    def ceil(m):
+        a,b,_=map(int,m.groups());calc,n=_n9_div(a,b);return f'{calc}. Il faut {_n9_plural(n,container)}'
+    text = re.sub(r'⌈(\d+)\s*/\s*(\d+)⌉\s*=\s*(\d+)',ceil,text)
+    text=re.sub(r'(?<!\d)(\d+)\s*//\s*(\d+)\s*=\s*(\d+)',
+                lambda m:_n9_div(int(m.group(1)),int(m.group(2)))[0],text)
+    text=re.sub(r'(Il faut \d+ (\w+))(?:\s+\2)\b',r'\1',text)
+    return _n9_simple(text)
+
+
+def _n9_mini_essais(options, best, max_rows=7):
+    """Sélectionne des essais représentatifs; optimum vérifié sur TOUS les cas."""
+    options=sorted(options, key=lambda x:x[0]) # b, a, cost, text
+    if len(options)<=max_rows:
+        chosen=options
+    else:
+        b_opt=best[0]
+        chosen_vals={options[0][0], options[-1][0], b_opt, b_opt-1, b_opt+1}
+        chosen=sorted([x for x in options if x[0] in chosen_vals],key=lambda x:x[0])
+        if len(chosen)<max_rows:
+            for x in sorted(options,key=lambda x:x[2]):
+                if x not in chosen:chosen.append(x)
+                if len(chosen)>=max_rows:break
+            chosen.sort(key=lambda x:x[0])
+    result='\n'.join('- '+x[3]+(' **(minimum)**' if x[0]==best[0] and x[2]==best[2] else '') for x in chosen)
+    if len(chosen)<len(options):
+        result+='\nLes autres quantités possibles ont aussi été vérifiées : aucune ne revient moins cher.'
+    return result
+
+
+def _n9_optim_1d(need, sa, pa, sb, pb, unit_a='colis', unit_b='colis', max_b=None, fee=0):
+    bmax = min(max_b if max_b is not None else (need+sb-1)//sb+1,30)
+    options=[]
+    for b in range(bmax+1):
+        a=max(0,(need-b*sb+sa-1)//sa)
+        cost=a*pa+b*pb+(fee if b else 0)
+        detail=f'{b} B + {a} A : {a} × {pa} + {b} × {pb}'
+        if fee and b:detail+=f' + {fee} (livraison)'
+        detail+=f' = {cost} €'
+        options.append((b,a,cost,detail))
+    best=min(options,key=lambda v:(v[2],v[0]+v[1]))
+    return _n9_mini_essais(options,best),best,options
+
+
+def _n9_optim_2d(nx,ny,ax,ay,pa,bx,by,pb,max_b=16):
+    opts=[]
+    for b in range(max_b+1):
+        a=max(0,(nx-b*bx+ax-1)//ax,(ny-b*by+ay-1)//ay)
+        cost=a*pa+b*pb
+        opts.append((b,a,cost,f'{b} B + {a} A : {a} × {pa} + {b} × {pb} = {cost}'))
+    best=min(opts,key=lambda x:(x[2],x[0]+x[1]))
+    return _n9_mini_essais(opts,best),best
+
+
+def _n9_new_q5(ex):
+    a=ex.get('_mathicap_audit_nouveau') or {}; k=a.get('kind'); v=lambda j:ex['champs_reponse'][j-1]['attendu']
+    def required(cond,msg):
+        if not cond:raise ValueError(ex['id']+': '+msg)
+    if k in ('n9_bd','n9_mosaique','n9_navettes','n9_cosplay','n9_collecte','n9_rubans'):
+        if k=='n9_bd':
+            need=v(2); sa=a['a_size']; pa=a['pa']; sb=a['b_size'];pb=a['pb']; fee=0; cap=None
+            intro=f'{need} BD à acquérir (réponse 2).'
+        elif k=='n9_mosaique':
+            need=v(2);sa=a['a_size'];pa=a['pa'];sb=a['b_size'];pb=a['pb'];fee=0;cap=None
+            intro=f'Besoin total : {need} carreaux (réponse 2).'
+        elif k=='n9_navettes':
+            need=a['n'];sa=a['cap_a'];pa=a['pa'];sb=a['cap_b'];pb=a['pb'];fee=0;cap=3
+            intro=f'{need} personnes à transporter, au plus 3 navettes B.'
+        elif k=='n9_cosplay':
+            need=a['need'];sa=a['a_size'];pa=a['pa'];sb=a['b_size'];pb=a['pb'];fee=a['fee'];cap=None
+            intro=f'{need} accessoires nécessaires. Frais de livraison : {fee} € une seule fois si B est choisi.'
+        elif k=='n9_collecte':
+            need=a['n'];sa=a['a_size'];pa=a['pa'];sb=a['b_size'];pb=a['pb'];fee=0;cap=3
+            intro=f'{need} cartons à transporter ; au maximum 3 trajets B.'
+        else:
+            length=2*a['side']+a['base'] # ribbon per flag
+            need=a['flags'];sa=a['len_a']//length;sb=a['len_b']//length
+            pa=a['pa'];pb=a['pb'];fee=0;cap=None
+            intro=f'{need} fanions à fabriquer : {sa} fanions par rouleau A et {sb} par rouleau B, sans raccord.'
+        table,best,opts=_n9_optim_1d(need,sa,pa,sb,pb,max_b=cap,fee=fee)
+        required(best[2]==v(5),f'optimum {best[2]} différent de {v(5)}')
+        name={'n9_navettes':'navettes','n9_collecte':'trajets','n9_rubans':'rouleaux','n9_cosplay':'paquets','n9_mosaique':'boîtes','n9_bd':'colis'}[k]
+        return f'{intro}\n\n{table}\n\n**Coût minimal : {best[2]} € ({_n9_plural(best[1],name)} A et {_n9_plural(best[0],name)} B).**'
+    if k=='n9_robotique':
+        tm=a['target']; nm=tm*2-a['motors'];nb=tm*3-a['batteries']
+        def option(need,size,price,label):
+            calc,nb_lots=_n9_div(need,size)
+            return f'{label} : {calc} → {_n9_plural(nb_lots,"lot")}. Coût : {nb_lots} × {price} = {nb_lots*price} €.'
+        op1=option(nm,a['ms1'],a['mp1'],'M1');op2=option(nm,a['ms2'],a['mp2'],'M2')
+        op3=option(nb,a['bs1'],a['bp1'],'B1');op4=option(nb,a['bs2'],a['bp2'],'B2')
+        bm=min(((nm+a['ms1']-1)//a['ms1'])*a['mp1'],((nm+a['ms2']-1)//a['ms2'])*a['mp2'])
+        bb=min(((nb+a['bs1']-1)//a['bs1'])*a['bp1'],((nb+a['bs2']-1)//a['bs2'])*a['bp2'])
+        required(bm+bb==v(5),'somme des coûts')
+        return (f'Pour {tm} robots : moteurs manquants = {tm} × 2 − {a["motors"]} = {nm}. '
+                f'Batteries manquantes : {nb} (réponse 4).\n\n'
+                f'**Moteurs :**\n{op1}\n{op2}\n\n**Batteries :**\n{op3}\n{op4}\n\n'
+                f'**Coût minimal : {bm} + {bb} = {v(5)} €.**')
+    if k=='n9_terrains':
+        n=a['teams'];match=n*(n-1)//2;dur=a['duration'];rest=a['rest'];courts=a['courts']
+        def d(extra):
+            slots=(match+min(courts+extra,n//2)-1)//min(courts+extra,n//2)
+            return slots, slots*dur+(slots-1)*rest
+        rows=[]; feasible=[]
+        for singles,doubles in [(0,0),(1,0),(2,0),(3,0),(0,1),(1,1)]:
+            extra=singles+2*doubles;slots,dt=d(extra);cost=singles*a['single']+doubles*a['double']
+            msg='respectée' if dt<=a['limit'] else 'dépassée'
+            if dt<=a['limit']: feasible.append((cost,extra,singles,doubles,dt))
+            rows.append(f'- {_n9_plural(singles,"terrain")} loué'+('s' if singles!=1 else '')+f' et {_n9_plural(doubles,"ensemble")} de deux : {slots} séries, '
+                        f'{dt} min, {cost} € — limite {msg}.')
+        required(bool(feasible),'aucune location admissible')
+        best=min(feasible)
+        required(best[0]==v(5),'coût de location')
+        return (f'{n} équipes : au plus {n//2} matchs simultanés, quel que soit le nombre de terrains. '
+                f'Limite : {a["limit"]} min.\n\n'+'\n'.join(rows)+
+                f'\n\n**Coût minimal : {best[0]} €**, pour {best[4]} min de tournoi.')
+    if k=='n9_spectacle':
+        gain_e=a['price_s']-a['program'];gain_a=a['price_a']-a['program'];missing=v(4);places=v(3)
+        options=[]
+        for adult in range(a['extra_cap']+1):
+            need=max(0,missing-adult*gain_a)
+            calc,student=_n9_div(need,gain_e)
+            total=adult+student
+            ok=total<=places
+            options.append((adult,student,total,ok))
+        selected=[x for x in options if x[3]]
+        required(selected and min(x[2] for x in selected)==v(5),'billets minimum')
+        rows='\n'.join(f'- {adult} adultes + {student} élèves = {total} billets'+('' if ok else ' (places insuffisantes)') for adult,student,total,ok in options)
+        return (f'Gain par billet : élève = {a["price_s"]} − {a["program"]} = {gain_e} € ; '
+                f'adulte = {a["price_a"]} − {a["program"]} = {gain_a} €.\n'
+                f'Il manque {missing} € (réponse 4) et il reste {places} places (réponse 3).\n\n'
+                f'{rows}\n\n**Minimum : {v(5)} billets supplémentaires.**')
+    if k=='n9_missions':
+        needed=v(2);rows=[];valid=[]
+        for r in range(a['maxrare']+1):
+            shortage=max(0,needed-r*a['rare']);division,s=_n9_div(shortage,a['regular']);energy=r*a['energy_rare']+s*a['energy_regular'];tot=r+s
+            msg='possible' if energy<=a['energy_cap'] else 'impossible (énergie insuffisante)'
+            if energy<=a['energy_cap']:valid.append((tot,r,s,energy))
+            rows.append(f'- {r} mission'+('s' if r!=1 else '')+' rare'+('s' if r!=1 else '')+f' : {shortage} cristaux à obtenir, {division} → {s} ordinaires, '
+                        f'{tot} missions, {energy} points d’énergie — {msg}.')
+        required(valid and min(x[0] for x in valid)==v(5),'minimum des missions')
+        return f'Objectif : {needed} cristaux (réponse 2) ; énergie disponible : {a["energy_cap"]} points.\n\n'+ '\n'.join(rows)+f'\n\n**Minimum : {v(5)} missions réalisables.**'
+    if k=='n9_engrais' or k=='n9_energy_capped':
+        nx=a['needx'];ny=a['needy'];pa=a['pa'];pb=a['pb'];maxb= (a.get('max_b',16) if k=='n9_energy_capped' else 16)
+        table,best=_n9_optim_2d(nx,ny,a['ax'],a['ay'],pa,a['bx'],a['by'],pb,max_b=maxb)
+        if k=='n9_engrais':
+            table=re.sub(r'(?m)(= \d+)(?=\s*(?:\*\*|\n|$))',r'\1 €',table)
+        required(best[2]==v(5),'optimum des deux ressources')
+        return (f'Besoins : {nx} doses d’azote et {ny} doses de potassium. '
+                f'Chaque solution doit satisfaire les deux besoins.\n\n{table}\n\n'
+                f'{best[1]} A + {best[0]} B fournissent '
+                f'{best[1]*a["ax"]+best[0]*a["bx"]} et {best[1]*a["ay"]+best[0]*a["by"]} unités.\n'
+                f'**Coût minimal : {v(5)} €**.' if k=='n9_engrais' else
+                f'Besoins : {nx} unités de carburant et {ny} de bouclier.\n\n{table}\n\n'
+                f'{best[1]} A + {best[0]} B fournissent '
+                f'{best[1]*a["ax"]+best[0]*a["bx"]} unités de carburant et '
+                f'{best[1]*a["ay"]+best[0]*a["by"]} unités de bouclier.\n'
+                f'**Coût minimal : {v(5)} cristaux.**')
+    if k=='n9_enigmes_temps':
+        opts=[]
+        for h in range(a['maxhard']+1):
+            if h*a['time_hard']>a['limit']:continue
+            e=(a['limit']-h*a['time_hard'])//a['time_easy']
+            pts=e*a['easy']+h*a['hard'];time=e*a['time_easy']+h*a['time_hard'];opts.append((pts,e,h,time))
+        best=max(x[0] for x in opts)
+        required(best==v(5),'maximum de points')
+        rows='\n'.join(f'- {h} énigme'+('s' if h!=1 else '')+' difficile'+('s' if h!=1 else '')+f' + {e} énigme'+('s' if e!=1 else '')+' facile'+('s' if e!=1 else '')+f' : {h} × {a["hard"]} + {e} × {a["easy"]} = {p} points ({time} min).'
+                       for p,e,h,time in opts)
+        return f'Temps disponible : {a["limit"]} min.\n\n{rows}\n\n**Maximum : {best} points.** Une solution possible est indiquée ci-dessus.'
+    if k=='n9_photo':
+        need=a['need'];limit=need+a['waste']; opts=[]
+        for b in range(limit//a['szb']+1):
+            for x in range(limit//a['sza']+1):
+                units=x*a['sza']+b*a['szb']
+                if need<=units<=limit:
+                    cost=x*a['pa']+b*a['pb'];opts.append((b,x,cost,units))
+        required(opts and min(x[2] for x in opts)==v(5),'optimum stock photo')
+        opts.sort(key=lambda x:(x[2],x[0]+x[1]))
+        chosen=opts[:6]
+        rows='\n'.join(f'- {x} A + {b} B : {units} tirages, {cost} €.' for b,x,cost,units in chosen)
+        if len(opts)>6:rows+='\nLes autres mélanges admissibles ont été comparés : aucun ne coûte moins cher.'
+        return f'Il faut entre {need} et {limit} tirages, pas davantage.\n\n{rows}\n\n**Coût minimal : {v(5)} €.**'
+    if k=='n9_cinema':
+        n=a['people']+a['extra'];capA=a['cap_a'];capB=a['cap_b'];extra=a['upgrade'];fa=a['fee_a'];fb=a['fee_b'];pa=a['each_a'];pb=a['each_b'];fee=a['upgrade_fee']
+        def offer(cap,base,each):
+            if n>cap+extra:return None
+            return base+n*each+(fee if n>cap else 0)
+        ca=offer(capA,fa,pa);cb=offer(capB,fb,pb)
+        minimum=min(v for v in (ca,cb) if v is not None)
+        required(max(0,minimum-a['budget'])==v(5),'financement projet')
+        lines=[]
+        for name,cost,cap,fix,each in [('A',ca,capA,fa,pa),('B',cb,capB,fb,pb)]:
+            if cost is None:
+                lines.append(f'**Salle {name} :** capacité {cap}+{extra} places, insuffisante pour {n} personnes.')
+            else:
+                supplement=f' + {fee} (extension)' if n>cap else ''
+                lines.append(f'**Salle {name} :** {cap} places'+(f' (+{extra} avec extension)' if n>cap else ', suffisantes')+
+                             f'. Coût : {fix} + {n} × {each}{supplement} = {cost} €.')
+        return (f'Nouveau groupe : {a["people"]} + {a["extra"]} = {n} participants.\n\n'+'\n'.join(lines)+
+                f'\n\nBudget : {a["budget"]} €. Dépense minimale : {minimum} €.\n'
+                f'**Financement supplémentaire : {v(5)} €.**')
+    raise ValueError(ex['id']+': type de problème non pris en charge '+str(k))
+
+
+def _n9_old_q5(ex, steps):
+    """Calcule les explications avec les données du tirage (anciens P9-M01..10)."""
+    mid=ex['id']; en=ex['enonce']; last=steps[-1][1];v=lambda j:ex['champs_reponse'][j-1]['attendu']
+    if mid=='P9-M01':
+        m=re.search(r'reste\s+(\d+)\s*€\s*; coût par parcelle\s+(.+?)\s*=\s*(\d+)\s*€',last)
+        if m:
+            reste,cost=int(m[1]),int(m[3]);calc,n=_n9_div(reste,cost)
+            q,_=divmod(reste,cost)
+            return f'Budget restant : {reste} €. Coût d’une parcelle supplémentaire : {m[2].strip()} = {cost} €.\n{calc}.\n**Maximum : {_n9_plural(q,"parcelle")} supplémentaire'+('s' if q>1 else '')+'.**'
+    if mid=='P9-M02':
+        m=re.search(r'A, sans publicité\s*=\s*(-?\d+)\s*€; B, sans publicité\s*=\s*(-?\d+)\s*€; A, avec publicité\s*=\s*(-?\d+)\s*€; B, avec publicité\s*=\s*(-?\d+)\s*€',last)
+        if m:
+            vals=list(map(int,m.groups()))
+            c=re.search(r'campagne de publicité à (\d+) €.*?exactement (\d+) joueurs supplémentaires',en,re.S)
+            if c:
+                adcost,extra=map(int,c.groups())
+                participation=re.search(r'\*\*(\d+) joueurs\*\* participent et versent chacun \*\*(\d+) €',en)
+                price=int(participation[2]) if participation else 0
+                supplies=re.findall(r'Fournitures : (\d+) € par joueur',en)
+                if len(supplies)==2 and price:
+                    sa,sb=map(int,supplies)
+                    return (f'**A sans publicité :** {vals[0]} € (réponse 2).\n'
+                            f'**B sans publicité :** {vals[1]} € (réponse 3).\n'
+                            f'**A avec publicité :** {vals[0]} + {extra} × ({price} − {sa}) − {adcost} = {vals[2]} €.\n'
+                            f'**B avec publicité :** {vals[1]} + {extra} × ({price} − {sb}) − {adcost} = {vals[3]} €.\n'
+                            f'**Bénéfice maximal : {max(vals)} €.**')
+            return ('**Organisation A sans publicité :** '+str(vals[0])+' €.\n'
+                   '**Organisation B sans publicité :** '+str(vals[1])+' €.\n'
+                   '**Organisation A avec publicité :** '+str(vals[2])+' €.\n'
+                   '**Organisation B avec publicité :** '+str(vals[3])+' €.\n'
+                   f'**Bénéfice maximal : {max(vals)} €.**')
+    if mid=='P9-M03':
+        m=re.search(r'A\s*=\s*(\d+)\s*€\s*;\s*B\s*=\s*(\d+)\s*€',last)
+        n=re.search(r'\*\*Nouveau défi :\*\* (\d+) personnes supplémentaires.*?augmentation fixe de (\d+) €',en,re.S)
+        ta=re.search(r'\*\*Transport A\*\*.*?Frais fixes : (\d+) €.*?(\d+) € par kilomètre',en,re.S)
+        tb=re.search(r'\*\*Transport B\*\*.*?Frais fixes : (\d+) €.*?(\d+) € par personne',en,re.S)
+        dist=re.search(r'situé à \*\*(\d+) km',en)
+        entree=re.search(r"Chaque personne paie (\d+) € d['’]entrée.*?(\d+) € pour le repas",en,re.S)
+        if m and n and ta and tb and dist and entree:
+            a_b,b_b=map(int,m.groups());extra,hausse=map(int,n.groups()); fa,pk=map(int,ta.groups());fb,pp=map(int,tb.groups())
+            distance=int(dist[1]);ticket,repas=map(int,entree.groups());personnes=v(1)+extra;com=ticket+repas
+            ca=fa+2*distance*pk+personnes*com
+            cb=fb+hausse+personnes*pp+personnes*com
+            if (ca,cb)==(a_b,b_b):
+                return (f'Nouveau groupe : {v(1)} + {extra} = {personnes} personnes.\n'
+                        f'**Formule A :** {fa} + 2 × {distance} × {pk} + {personnes} × {com} = {ca} €.\n'
+                        f'**Formule B :** {fb} + {hausse} + {personnes} × {pp} + {personnes} × {com} = {cb} €.\n'
+                        f'{max(ca,cb)} − {min(ca,cb)} = {abs(ca-cb)} €.\n'
+                        f'**Économie : {_n9_fr(v(5))} € avec la formule moins chère.**')
+    if mid=='P9-M04':
+        m=re.search(r'manque\s+(\d+)\s+cristaux\s*; gain ordinaire\s+(\d+), gain rare\s+(\d+)',last)
+        if m:
+            missing,regular,rare=map(int,m.groups());rows=[];sol=[]
+            for r in range(3):
+                shortage=max(0,missing-r*rare);calc,n=_n9_div(shortage,regular)
+                rows.append(f'- {r} mission'+('s' if r>1 else '')+f' rare'+('s' if r>1 else '')+f' : {calc} → {n} mission'+('s' if n>1 else '')+f' ordinaire'+('s' if n>1 else '')+f', soit {r+n} missions.')
+                sol.append(r+n)
+            if min(sol)==v(5):return f'Cristaux à gagner : {missing}.\n'+'\n'.join(rows)+f'\n\n**Minimum : {v(5)} missions.**'
+    if mid=='P9-M05':
+        m=re.search(r'stock après retour et retrait\s+(\d+)\s*; manque\s+(\d+)\s+mangas',last)
+        t=re.search(r'colis A de (\d+) mangas à (\d+) € et des colis B de (\d+) mangas à (\d+) €',en)
+        if m and t:
+            shortage=int(m[2]);sa,pa,sb,pb=map(int,t.groups());rows,best,_=_n9_optim_1d(shortage,sa,pa,sb,pb)
+            if best[2]==v(5):return f'Mangas manquants : {shortage}.\n\n{rows}\n\n**Coût minimal : {v(5)} €.**'
+    if mid=='P9-M06':
+        p=re.search(r'Gain net par nouveau billet\s*:\s*(\d+)\s*-\s*(\d+)\s*=\s*(\d+)\s*€\s*; augmentation à financer\s*:\s*(\d+)\s*€',last)
+        if p:
+            price,cost,net,need=map(int,p.groups());calc,n=_n9_div(need,net)
+            place_m=re.search(r'Places\s*:\s*(\d+)\s*-\s*(\d+)\s*-\s*(\d+)\s*=',last)
+            places=f'{place_m[1]} − {place_m[2]} − {n} = {v(5)}' if place_m else str(v(5))
+            note=f'Il manque {abs(v(5))} places.' if v(5)<0 else f'Il reste {v(5)} places.'
+            return f'Gain net par billet supplémentaire : {price} − {cost} = {net} €.\n{calc} → {n} billets nécessaires.\nPlaces restantes : {places}.\n**{note}**'
+    if mid=='P9-M07':
+        m=re.search(r'masse\s+(\d+)\s*g\s*; conteneur A\s+(\d+)\s*g pour\s+(\d+)\s*€\s*; conteneur B\s+(\d+)\s*g pour\s+(\d+)\s*€',last)
+        if m:
+            need,sa,pa,sb,pb=map(int,m.groups());table,best,_=_n9_optim_1d(need,sa,pa,sb,pb)
+            if best[2]==v(5):return f'Masse à stocker : {need} g.\n\n{table}\n\n**Coût minimal : {v(5)} €.**'
+    if mid=='P9-M08':
+        m=re.search(r'effectif\s+(\d+)\s*; capacité A\s+(\d+)\s*\(\+(\d+) avec option\)\s*; B\s+(\d+)\s*\(\+\d+\).*?A\s+(\d+)\s*€\s*\(possible\)\s*; B\s+(\d+)\s*€\s*\(possible\)',last)
+        if m:
+            n,cap_a,up,cap_b,ca,cb=map(int,m.groups()); budget=re.search(r'budget\s+(\d+)\s*€',last)
+            b=int(budget[1]) if budget else min(ca,cb)-v(5)
+            # Facturation d'extension UNIQUEMENT lorsque la capacité est dépassée.
+            infos=[]
+            for nom,cap,cost in [('A',cap_a,ca),('B',cap_b,cb)]:
+                room=re.search(r'\*\*Salle '+nom+r'\*\*(.*?)(?=\*\*Salle [AB]\*\*|\*\*Questions)',en,re.S)
+                if not room:break
+                fee=re.search(r'forfait de réservation\s*:\s*(\d+) €',room[1]);pp=re.search(r'(\d+) € par participant',room[1])
+                upgrade=re.search(r'coût fixe (\d+) € en A ou (\d+) € en B',en)
+                if not fee or not pp or not upgrade:break
+                fix,price=int(fee[1]),int(pp[1]);upprice=int(upgrade[1 if nom=='A' else 2]) if n>cap else 0
+                if fix+n*price+upprice!=cost:break
+                text=f'**Salle {nom} :** '+(f'{cap} + {up} places avec extension' if n>cap else f'{cap} places suffisantes')+'. '
+                text+=f'Coût : {fix} + {n} × {price}'+(f' + {upprice} (extension)' if upprice else '')+f' = {cost} €.'
+                infos.append(text)
+            if len(infos)==2:
+                return f'Nouveau groupe : {n} personnes.\n'+ '\n'.join(infos)+f'\nLe moins cher : {min(ca,cb)} €. Budget : {b} €.\n**Financement manquant : {_n9_fr(v(5))} €.**'
+            return (f'Nouveau groupe : {n} personnes.\n'
+                    f'**Salle A :** {cap_a} places'+(f' (+{up} en option)' if n>cap_a else ', suffisantes')+f'. Coût : {ca} €.\n'
+                    f'**Salle B :** {cap_b} places'+(f' (+{up} en option)' if n>cap_b else ', suffisantes')+f'. Coût : {cb} €.\n'
+                    f'Salle la moins chère : {min(ca,cb)} €. Budget : {b} €.\n'
+                    f'**Financement manquant : {_n9_fr(v(5))} €.**')
+    if mid=='P9-M09':
+        m=re.search(r'Châssis à acheter\s*:\s*(\d+)\s*à\s*(\d+)\s*€\s*; hélices manquantes\s+(\d+)\s+en sachets de\s+(\d+)\s+à\s+(\d+)\s*€\s*; batteries manquantes\s+(\d+)\s+en boîtes de\s+(\d+)\s+à\s+(\d+)\s*€',last)
+        if m:
+            c,pc,h,sh,ph,b,sb,pb=map(int,m.groups());calc_h,nh=_n9_div(h,sh);calc_b,nb=_n9_div(b,sb)
+            total=c*pc+nh*ph+nb*pb
+            if total==v(5):return (f'**Châssis :** {c} à acheter. Coût : {c} × {pc} = {c*pc} €.\n'
+                        f'**Hélices :** {calc_h} → {nh} sachets. Coût : {nh} × {ph} = {nh*ph} €.\n'
+                        f'**Batteries :** {calc_b} → {nb} boîtes. Coût : {nb} × {pb} = {nb*pb} €.\n'
+                        f'**Coût total : {c*pc} + {nh*ph} + {nb*pb} = {v(5)} €.**')
+    if mid=='P9-M10':
+        m=re.search(r'besoin\s+(\d+)\s+carreaux\s*; boîte A\s*:\s*(\d+)\s*à\s*(\d+)\s*€\s*[,;]\s*boîte B\s*:\s*(\d+)\s*à\s*(\d+)\s*€',last)
+        if m:
+            need,sa,pa,sb,pb=map(int,m.groups());table,best,_=_n9_optim_1d(need,sa,pa,sb,pb)
+            if best[2]==v(5):return f'Nouveau besoin : {need} carreaux.\n\n{table}\n\n**Coût minimal : {v(5)} €.**'
+    # Aucune valeur inventée : conserver la vraie méthode d'origine si le
+    # texte propre au modèle change lors d'une évolution future.
+    return _n9_simple(last.replace('**Défi final', '**Comparaison finale').replace('**Nouveau défi', '**Nouveau calcul'))
+
+
+def _n9_old_sections(ex):
+    mid=ex['id']; st=_n9_steps(ex);v=lambda j:ex['champs_reponse'][j-1]['attendu']
+    plain=[x[1].split('**Expression complète')[0].strip() for x in st]
+    if len(plain)<2:raise ValueError(mid+': correction sans méthode')
+    def step(i):return _n9_simple(plain[i]) if i<len(plain) else ''
+    if mid=='P9-M01':
+        lines=[x for x in step(0).splitlines() if x.strip()]
+        sections=[lines[0], lines[1] if len(lines)>1 else f'Il faut {v(2)} plants.', step(1),step(2),_n9_old_q5(ex,st)]
+    elif mid=='P9-M02':
+        rev=step(0); cost=step(1).splitlines();profit=step(2).splitlines()
+        sections=[rev, '\n'.join([s for s in cost if s.startswith('A :')]+[s for s in profit if s.startswith('A :')]),
+                  '\n'.join([s for s in cost if s.startswith('B :')]+[s for s in profit if s.startswith('B :')]),step(3),_n9_old_q5(ex,st)]
+    elif mid=='P9-M03':
+        both=step(3).splitlines()
+        sections=[step(0),step(2), '\n'.join(s for s in both if s.startswith('Transport A') or s.startswith('A, ')),
+                  '\n'.join(s for s in both if s.startswith('Transport B') or s.startswith('B, ')),_n9_old_q5(ex,st)]
+    elif mid=='P9-M04':
+        m=re.search(r'Un équipement coûte\s*\*\*(\d+)\s+cristaux\*\*',ex['enonce']);price=int(m[1]) if m else 1
+        k=re.search(r'conserver au moins\s*\*\*(\d+)\s+cristaux\*\*',ex['enonce']);reserve=int(k[1]) if k else 0
+        avent=re.search(r'\*\*(\d+) aventuriers\*\*',ex['enonce']);avent=int(avent[1]) if avent else 0
+        sections=[step(0),step(1),f'Après avoir gardé {reserve} cristaux : {v(2)} − {reserve} = {v(2)-reserve}. '
+                  f'{v(2)-reserve} ÷ {price} = {(v(2)-reserve)//price}, reste {(v(2)-reserve)%price}. '
+                  f'Au plus {v(3)} équipements utiles pour {avent} aventuriers.',
+                  f'{v(2)} − {v(3)} × {price} = {v(4)} cristaux.',_n9_old_q5(ex,st)]
+    elif mid=='P9-M05':
+        sections=[step(0),step(1),step(2),step(3),_n9_old_q5(ex,st)]
+    elif mid=='P9-M06':
+        sections=[step(1),step(2),step(3),f'{v(2)} − {v(3)} = {v(4)} €.',_n9_old_q5(ex,st)]
+    elif mid=='P9-M07':
+        s=step(2).splitlines()
+        ca=[x for x in s if x.startswith('Offre A') or 'Quotient' in x or x.startswith('Il faut')]
+        sections=[step(0),step(1),step(2)+'\n'+step(3).splitlines()[0] if False else step(3).splitlines()[0]+'\n'+step(3).splitlines()[1],step(3).splitlines()[2] if len(step(3).splitlines())>2 else '',_n9_old_q5(ex,st)]
+        # Quota et reste sont produits à partir de la masse commune.
+        initial_g=int(round(v(2)*1000))
+        caps=re.findall(r'Chaque conteneur peut recevoir au maximum ([\d,]+) kg',ex['enonce'])
+        tariffs=re.findall(r'Location\s*:\s*(\d+)\s*€',ex['enonce'])
+        if len(caps)>=2 and len(tariffs)>=2:
+            for i in (0,1):
+                cap=int(round(float(caps[i].replace(',','.'))*1000)); price=int(tariffs[i]); calc,boxes=_n9_div(initial_g,cap)
+                sections[i+2]=f'{calc} (en grammes) → {boxes} conteneurs.\nCoût : {boxes} × {price} = {boxes*price} €.'
+    elif mid=='P9-M08':
+        names=['R1','R2','R3','R4']
+        s=step(1).splitlines();cost=step(2).splitlines()
+        sections=[step(0), '\n'.join(x for x in s if x.startswith('A :')), '\n'.join(x for x in cost if x.startswith('A :')), '\n'.join(x for x in cost if x.startswith('B :')), _n9_old_q5(ex,st)]
+    elif mid=='P9-M09':
+        sections=[step(0),step(1),step(2),step(3).split('Batteries')[0].strip(),_n9_old_q5(ex,st)]
+    elif mid=='P9-M10':
+        ans1=v(1);step3=step(2).splitlines()
+        sizes=re.findall(r'(\d+) carreaux par boîte',ex['enonce'])
+        sections=[step(0), '\n'.join([s for s in step(1).splitlines() if s.startswith('Offre A')]+[s for s in step3 if s.startswith('A :')]),
+                  '\n'.join([s for s in step(1).splitlines() if s.startswith('Offre B')]+[s for s in step3 if s.startswith('B :')]), step(3), _n9_old_q5(ex,st)]
+    else:raise ValueError(mid)
+    return sections
+
+
+def _n9_reviser_exercice(ex):
+    """Révision non intrusive : réponses évaluées inchangées, sauf tournoi réparé dans le générateur."""
+    mid=ex.get('id','');res=deepcopy(ex)
+    if mid not in {f'P9-M{i:02d}' for i in range(1,26)}:
+        # Trois modèles P8 reclassés précédemment : leurs corrigés étaient
+        # déjà au format validé, ne pas les modifier.
+        return res
+    if mid.startswith('P9-M') and int(mid[-2:])<=10:
+        sections=_n9_old_sections(res)
+    else:
+        src=_n9_steps(res)
+        if len(src)!=5:raise AssertionError(mid+': nombre d’étapes différent de 5')
+        sections=[_n9_div_expr(src[i][1],container={11:'colis',14:'série',15:'mission',16:'boîte',17:'navette',18:'paquet',19:'kit',20:'trajet',21:'énigme',22:'lot',23:'coffre',25:'rouleau'}.get(int(mid[-2:]),'lot')) for i in range(4)] + [_n9_new_q5(res)]
+        if mid=='P9-M17':
+            a=res['_mathicap_audit_nouveau'];nombre=a['n'];places=3*a['cap_b'];manque=max(0,nombre-places)
+            sections[3]=(f'{nombre} − {places} = {nombre-places} places après les trois navettes B. ' if nombre>places else f'Les trois navettes B disposent de {places} places pour {nombre} personnes. ')+f'**{manque} personne'+('s' if manque!=1 else '')+' à transporter par A.**'
+    # Remplacer les dernières notations informatiques dans les corrections
+    # du fournisseur d'engrais, des trajets et des énigmes.
+    if mid=='P9-M19':
+        z=res['_mathicap_audit_nouveau']; x=z['needx'];y=z['needy']
+        _,a1=_n9_div(x,z['ax']);_,a2=_n9_div(y,z['ay'])
+        _,b1=_n9_div(x,z['bx']);_,b2=_n9_div(y,z['by'])
+        sections[2]=(f'Besoin 1 : {_n9_div(x,z["ax"])[0]} → {a1} kits A. '
+                     f'Besoin 2 : {_n9_div(y,z["ay"])[0]} → {a2} kits A.\n'
+                     f'Il faut {max(a1,a2)} kits pour satisfaire les deux besoins. '
+                     f'Coût : {max(a1,a2)} × {z["pa"]} = {res["champs_reponse"][2]["attendu"]} €.')
+        sections[3]=(f'Besoin 1 : {_n9_div(x,z["bx"])[0]} → {b1} kits B. '
+                     f'Besoin 2 : {_n9_div(y,z["by"])[0]} → {b2} kits B.\n'
+                     f'Il faut {max(b1,b2)} kits pour satisfaire les deux besoins. '
+                     f'Coût : {max(b1,b2)} × {z["pb"]} = {res["champs_reponse"][3]["attendu"]} €.')
+    if mid=='P9-M20':
+        z=res['_mathicap_audit_nouveau']; n=z['n'];cap=3*z['b_size'];restant=max(0,n-cap)
+        sections[3]=f'{n} − {cap} = {n-cap}. '+(f'Il reste **{restant} cartons** à transporter par A.' if restant else 'Les trois trajets B suffisent : **0 carton** pour A.')
+    if mid=='P9-M21':
+        z=res['_mathicap_audit_nouveau'];diff=abs(z['score_a']-z['score_b']);t=z['limit'];te=z['time_easy'];th=z['time_hard'];hard=min(z['maxhard'],t//th)
+        sections[0]=f'{max(z["score_a"],z["score_b"])} − {min(z["score_a"],z["score_b"])} = **{diff} points**.'
+        sections[1]=f'{_n9_div(t,te)[0]}. Il peut réaliser **{t//te} énigmes faciles**.'
+        sections[2]=f'{_n9_div(t,th)[0]}. Il reste au plus {z["maxhard"]} énigmes difficiles : **{hard} possibles**.'
+    if len(sections)!=5:raise AssertionError(mid+': correction incomplète')
+    # Deux détails de l'énoncé créent des contradictions ou données superflues.
+    en=res['enonce']
+    if mid=='P9-M03':
+        en=en.replace('La compagnie B, annonce','La compagnie B annonce').replace('la compagnie B, annonce','la compagnie B annonce')
+    if mid=='P9-M06':
+        en=re.sub(r"\s*Le collège souhaite dégager un bénéfice d['’]au moins \d+ €\.","",en)
+    if mid=='P9-M07':
+        en=re.sub(r'(B propose) une promotion',r'\1 un nouveau tarif',en)
+    if mid=='P9-M09':
+        en=re.sub(r"\n\nL'objectif est de fabriquer\s*\*\*\d+ drones complets\*\*\.",'',en)
+    en=re.sub(r'(?<=\d)\.(?=\d)',',',en)
+    en=re.sub(r'\b1 (doses|unités|tirages|mangas|terrains|carreaux)\b',
+              lambda m:'1 '+m.group(1)[:-1],en)
+    res['enonce']=en
+    correction=[]
+    for i,(champ,body) in enumerate(zip(res['champs_reponse'],sections),1):
+        label=champ['libelle'];val=_n9_fr(champ['attendu']);unit=champ.get('unite','')
+        if champ['type']=='nombre' and int(champ['attendu'])==1 and unit in ('parcelles','missions','boîtes','séries','lots','tirages','terrains','mangas'):
+            unit={'parcelles':'parcelle','missions':'mission','boîtes':'boîte','séries':'série','lots':'lot','tirages':'tirage','terrains':'terrain','mangas':'manga'}[unit]
+        header=f'**Réponse {i} — {label} : {val}{(" "+unit) if unit and champ["type"]=="nombre" else ""}**'
+        body=_n9_simple(body)
+        if not body:raise AssertionError(mid+f': R{i} vide')
+        correction.append(header+'\n\n'+body)
+    res['correction']='\n\n'.join(correction)
+    res['mathicap_revision_n9']='audit-claude-gemini-et-harmonisation-20261120'
+    return res
+
+
+def _n9_wrapper(f):
+    def revised(*args,**kwargs):
+        return _n9_reviser_exercice(f(*args,**kwargs))
+    revised.__name__=f.__name__
+    return revised
+
+for _name in ('generer_modele_p9_potager','generer_modele_p9_tournoi',
+              'generer_modele_p9_festival','generer_modele_p9_cristaux',
+              'generer_modele_p9_bibliotheque','generer_modele_p9_spectacle',
+              'generer_modele_p9_recyclage','generer_modele_p9_salles',
+              'generer_modele_p9_drones','generer_modele_p9_mosaique',
+              *(f'generer_modele_p9_m{i}' for i in range(11,26))):
+    globals()[_name]=_n9_wrapper(globals()[_name])
+del _name
+# -*- coding: utf-8 -*-
+# mathicap 2026-11-20 | équilibreur des choix réels des anciens 28 modèles N9
+# Seuls les problèmes ayant une décision binaire sont concernés.
+# Modèles d'optimisation à multiples combinaisons: aucune répartition arbitraire.
+
+def _mc_n9_decisions_20261120(ex):
+    import re as _re
+    mid=ex['id']
+    vv=[c['attendu'] for c in ex['champs_reponse']]
+    audit=ex.get('_mathicap_audit_nouveau') or {}
+    section=ex['correction'].split('**Réponse 5')[-1]
+    def compare(a,b,minimum=True):
+        if a==b: return 'egalite'
+        return 'A' if ((a<b) if minimum else (a>b)) else 'B'
+    if mid in ('P9-M01','P9-M07','P9-M11','P9-M16'):
+        return {'offre':compare(vv[2],vv[3])}
+    if mid=='P9-M10':
+        return {'offre':compare(vv[1],vv[2])}
+    if mid=='P9-M18':
+        return {'offre':compare(vv[1],vv[3])}
+    if mid=='P9-M02':
+        candidates=[]
+        for line in section.splitlines():
+            mm=_re.match(r'^\*\*([AB]) (sans|avec) publicité\s*:\*\*\s*(.*)',line.strip())
+            if mm:
+                org,mode,rest=mm.groups()
+                if mode=='sans':
+                    z=_re.search(r'(-?\d+)\s*€',rest)
+                else:
+                    z=_re.search(r'=\s*(-?\d+)\s*€',rest)
+                if not z:raise ValueError(mid+': prix publicité non identifiable '+repr(line))
+                candidates.append((org,mode,int(z.group(1))))
+        if len(candidates)!=4:raise ValueError(mid+': quatre stratégies incomplètes '+repr(candidates))
+        best=max(i[2] for i in candidates)
+        orgs={c[0] for c in candidates if c[2]==best}
+        return {'organisateur': next(iter(orgs)) if len(orgs)==1 else 'egalite'}
+    if mid=='P9-M03':
+        mat=_re.search(r'(?<!\w)A\s*=\s*(\d+)\s*€\s*;\s*B\s*=\s*(\d+)\s*€',section)
+        if mat:
+            return {'cout_final':compare(int(mat[1]),int(mat[2]))}
+        found={}
+        for line in section.splitlines():
+            mm=_re.search(r'\*\*Formule ([AB])\s*:\*\*[^\n]*?=\s*(\d+)\s*€',line)
+            if mm:found[mm[1]]=int(mm[2])
+        if len(found)!=2:raise ValueError(mid+': couts finaux introuvables')
+        return {'cout_final':compare(found['A'],found['B'])}
+    if mid=='P9-M06':
+        return {'capacite':'A' if vv[4]>=0 else 'B'} # A: faisable; B: places insuffisantes
+    if mid=='P9-M08':
+        found={}
+        for line in section.splitlines():
+            mm=_re.search(r'\*\*Salle ([AB])\s*:\*\*',line)
+            if mm:
+                z=_re.findall(r'=\s*(\d+)\s*€',line)
+                if not z:z=_re.findall(r'Coût\s*:\s*(\d+)\s*€',line)
+                if z:found[mm[1]]=int(z[-1])
+        if len(found)!=2:
+            # Certains tirages n'ont qu'une salle admissible : la correction
+            # indique alors explicitement "retenu A/B" sans détail final.
+            candidat=_re.search(r'retenu ([AB]) pour\s*\d+\s*€',section)
+            if candidat:return {'cout_final':candidat.group(1)}
+            raise ValueError(mid+': prix salles final introuvables '+repr(section[-800:]))
+        return {'cout_final':compare(found['A'],found['B'])}
+    if mid=='P9-M13':
+        ret={}
+        for name,missing,s1,s2,p1,p2 in (
+            ('moteurs',max(0,2*audit['target']-audit['motors']),audit['ms1'],audit['ms2'],audit['mp1'],audit['mp2']),
+            ('batteries',max(0,3*audit['target']-audit['batteries']),audit['bs1'],audit['bs2'],audit['bp1'],audit['bp2']),
+        ):
+            c1=((missing+s1-1)//s1)*p1;c2=((missing+s2-1)//s2)*p2
+            ret[name]=compare(c1,c2)
+        return ret
+    if mid=='P9-M14':
+        a=audit;n=a['teams'];match=n*(n-1)//2
+        candidates=[]
+        for singles,doubles in [(0,0),(1,0),(2,0),(3,0),(0,1),(1,1)]:
+            # maximum de rencontres par série = min(terrains, équipes//2)
+            cap=min(a['courts']+singles+2*doubles,n//2)
+            series=(match+cap-1)//cap
+            duration=series*a['duration']+(series-1)*a['rest']
+            if duration<=a['limit']:
+                price=singles*a['single']+doubles*a['double']
+                candidates.append((price, singles,doubles))
+        if not candidates:raise ValueError(mid+': aucune solution de location')
+        best=min(candidates)
+        if best[0]==0: return {'location':'egalite'}
+        return {'location':'A' if best[2]==0 else 'B'} # A: unités; B: ensemble de deux
+    if mid=='P9-M24':
+        a=audit;n=a['people']+a['extra']
+        ca=None if n>a['cap_a']+a['upgrade'] else a['fee_a']+n*a['each_a']+(a['upgrade_fee'] if n>a['cap_a'] else 0)
+        cb=None if n>a['cap_b'] else a['fee_b']+n*a['each_b']
+        if ca is None and cb is None:raise ValueError(mid+': aucune salle faisable')
+        if ca is None:return {'cout_final':'B'}
+        if cb is None:return {'cout_final':'A'}
+        return {'cout_final':compare(ca,cb)}
+    if mid=='P8-M03':
+        return {'chemin': 'A' if vv[4]>0 else 'B' if vv[4]<0 else 'egalite'}
+    if mid=='P8-M05':
+        return {'budget':'A' if vv[4]>0 else 'B' if vv[4]<0 else 'egalite'}
+    if mid=='P8-M06':
+        return {'budget':'A' if vv[3] in ('Oui','oui',True) else 'B'}
+    raise KeyError('Pas de comparaison binaire pour '+mid)
+
+
+def _mc_n9_equilibrer_20261120(f,axes):
+    """Sélectionne un tirage complet réalisant un choix cible 50/50.
+
+    Aucune valeur attendue ni correction n'est éditée; une seule graine d'entrée
+    produit toujours le même exercice, même quand le générateur utilise le RNG global.
+    """
+    def genere(seed=None):
+        if seed is None:
+            seed=random.randrange(1,2**31)
+        origine=int(seed)
+        cibles={axis:random.Random(f'v20261120|{f.__name__}|{axis}|{origine}').choice(('A','B')) for axis in axes}
+        # Conserver le générateur original intact : réessayer avec une nouvelle
+        # graine locale change les paramètres, pas le résultat après le calcul.
+        for num in range(400):
+            sous_graine=origine+num*1000003
+            etat=random.getstate()
+            try:
+                random.seed(sous_graine)
+                if f.__name__.startswith('generer_modele_p8_jeu_piste') or f.__name__.startswith('generer_modele_p8_jeu_video'):
+                    ex=f()
+                else:
+                    ex=f(seed=sous_graine)
+            finally:
+                random.setstate(etat)
+            result=_mc_n9_decisions_20261120(ex)
+            if all(result.get(axis)==cible for axis,cible in cibles.items()):
+                ex['seed']=origine
+                ex['mathicap_choix_n9']={
+                    'version':'2026-11-20',
+                    'resultats':result,
+                    'essais':num+1,
+                }
+                return ex
+        raise RuntimeError(f'{f.__name__}: pas de cas répondant aux cibles {cibles}')
+    genere.__name__=f.__name__
+    genere.__doc__=f.__doc__
+    return genere
+
+# Seulement les exercices présentant un véritable arbitrage binaire.
+# En P9-M13, deux achats indépendants (moteurs et batteries) sont équilibrés.
+# Les optimisations à plusieurs combinaisons sont volontairement exclues.
+_MC_N9_CIBLES_20261120={
+    'generer_modele_p9_potager':('offre',),
+    'generer_modele_p9_tournoi':('organisateur',),
+    'generer_modele_p9_festival':('cout_final',),
+    'generer_modele_p9_spectacle':('capacite',),
+    'generer_modele_p9_recyclage':('offre',),
+    'generer_modele_p9_salles':('cout_final',),
+    'generer_modele_p9_mosaique':('offre',),
+    'generer_modele_p9_m11':('offre',),
+    'generer_modele_p9_m13':('moteurs','batteries'),
+    'generer_modele_p9_m14':('location',),
+    'generer_modele_p9_m16':('offre',),
+    'generer_modele_p9_m18':('offre',),
+    'generer_modele_p9_m24':('cout_final',),
+    'generer_modele_p8_jeu_video':('chemin',),
+    'generer_modele_p8_jeu_piste':('budget',),
+    'generer_modele_p8_kits':('budget',),
+}
+for _f_n9,_axes_n9 in _MC_N9_CIBLES_20261120.items():
+    globals()[_f_n9]=_mc_n9_equilibrer_20261120(globals()[_f_n9],_axes_n9)
+del _f_n9,_axes_n9
