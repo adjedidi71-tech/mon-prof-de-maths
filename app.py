@@ -2473,6 +2473,51 @@ st.markdown("""
     .mc-exos-serie-meta { margin: 10px 0 6px; padding: 10px 11px; }
 }
 
+/* Série affichée — le sélecteur remplace la pastille Série, sans second bandeau. */
+.st-key-mc_exos_serie_entete_interactif {
+    max-width: 820px;
+    margin: 14px 0 8px;
+    padding: 10px 14px;
+    background: #f6f9ff;
+    border: 1px solid #dbe7f6;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+.st-key-mc_exos_serie_entete_interactif .mc-exos-serie-entete-titre {
+    display: block;
+    color: #174776;
+    font-size: .9rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.st-key-mc_exos_serie_entete_interactif .st-key-mc_exos_serie_entete_ligne {
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px 9px !important;
+}
+.st-key-mc_exos_serie_entete_interactif [data-testid="stSelectbox"] {
+    min-width: 133px !important;
+    max-width: 133px !important;
+}
+.st-key-mc_exos_serie_entete_interactif [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    background: #fff;
+    border: 1px solid #dde8f6;
+    border-radius: 999px;
+    min-height: 29px;
+    height: 29px;
+    box-shadow: none;
+}
+.st-key-mc_exos_serie_entete_interactif [data-testid="stSelectbox"] [data-baseweb="select"] * {
+    color: #355473;
+    font-size: .84rem;
+}
+@media (max-width: 640px) {
+    .st-key-mc_exos_serie_entete_interactif {
+        margin: 10px 0 6px;
+        padding: 10px 11px;
+    }
+}
+
 /* MathiCap — une hiérarchie de trois espacements, plutôt qu'un gap
    identique sur tous les éléments imbriqués de Streamlit.
    Tous ces sélecteurs restent confinés à une famille d'exercices. */
@@ -4962,6 +5007,7 @@ if page_mathicap != "Mes séries":
 # du script (quand les fonctions de vérification/sauvegarde sont définies).
 _mc_emplacement_serie_inline = None
 _mc_fiche_serie_inline = None
+_mc_choix_serie_inline = None
 
 if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
@@ -5174,6 +5220,11 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 choix = str(st.session_state.get(cle_selecteur, ""))
                 fiche_cible = fiches_par_id.get(choix)
                 if not fiche_cible or not _mc_ouvrir_serie_depliee(fiche_cible):
+                    # Un échec de lecture ne doit pas afficher une série différente
+                    # de celle réellement restaurée.
+                    st.session_state[cle_selecteur] = str(
+                        st.session_state.get(cle_serie_depliee, "")
+                    )
                     return
                 # La cible doit devenir visible sous sa propre carte, même
                 # lorsqu'elle se trouvait sur une autre page ou un autre chapitre.
@@ -5594,28 +5645,29 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                             "id": str(serie["id"]),
                             "numero": numero_serie,
                         }
-                        autres = [f for f in fiches_series
-                                  if f["niveaux"] == fiche["niveaux"]]
+                        # Le sélecteur n'est plus affiché au-dessus du bandeau :
+                        # il remplacera la pastille « Série N » DANS le bandeau
+                        # « Série affichée », plus bas dans le fragment.
+                        autres = sorted(
+                            (f for f in fiches_series
+                             if f["niveaux"] == fiche["niveaux"]),
+                            key=lambda f: (f["titre_chapitre"], f["numero"]),
+                        )
+                        _mc_choix_serie_inline = None
                         if len(autres) > 1:
-                            options_serie = [str(f["serie"]["id"]) for f in autres]
-                            descriptions_serie = {
-                                str(f["serie"]["id"]): (
-                                    f"Série {f['numero']} · {f['titre_chapitre']}"
-                                ) for f in autres
-                            }
                             selecteur = (f"_mc_choix_autre_serie_"
                                          f"{eleve_courant}_{serie['id']}")
-                            st.selectbox(
-                                "Passer à une autre série du même niveau",
-                                options=options_serie,
-                                index=options_serie.index(str(serie["id"])),
-                                format_func=lambda id_: descriptions_serie.get(str(id_), str(id_)),
-                                key=selecteur,
-                                on_change=_mc_changer_serie_depliee,
-                                args=(selecteur,),
-                            )
-                        else:
-                            st.caption("Aucune autre série de ce niveau enregistrée.")
+                            _mc_choix_serie_inline = {
+                                "options": [str(f["serie"]["id"]) for f in autres],
+                                "libelles": {
+                                    str(f["serie"]["id"]): f"Série {f['numero']}"
+                                    for f in autres
+                                },
+                                "cle": selecteur,
+                                "cle_depliee": cle_serie_depliee,
+                                "id_actuel": str(serie["id"]),
+                                "changer": _mc_changer_serie_depliee,
+                            }
                         _mc_fiche_serie_inline = fiche
                         _mc_emplacement_serie_inline = st.empty()
 
@@ -8459,7 +8511,7 @@ if page_mathicap == "Exercices":
 # Les saisies ne relancent plus toute l'application (en-tête, menus et statistiques).
 # Le fragment garde le défilement plus stable lors de la sauvegarde automatique.
 @st.fragment
-def _mathicap_afficher_serie_et_reponses():
+def _mathicap_afficher_serie_et_reponses(choix_serie_inline=None):
     with st.container(key="mathicap_zone_exercices_affichage"):
         if st.session_state.pop("_mc_diag_entrainement_cree_v1", False):
             st.info("Trois exercices du même modèle et du même niveau ont été "
@@ -8557,7 +8609,9 @@ def _mathicap_afficher_serie_et_reponses():
                                     break
                     except Exception:
                         pass
-            etiquettes = ([f"Série {numero_visible}"] if numero_visible else [])
+            afficher_menu = bool(choix_serie_inline and numero_visible is not None)
+            etiquettes = ([] if afficher_menu else
+                          ([f"Série {numero_visible}"] if numero_visible else []))
             etiquettes.extend([titre_chapitre_ouvert, etiquette_niveau])
             if categorie_ouverte:
                 etiquettes.append(categorie_ouverte)
@@ -8565,12 +8619,52 @@ def _mathicap_afficher_serie_et_reponses():
             etiquettes_html = "".join(
                 f"<span>{escape(etiquette)}</span>" for etiquette in etiquettes
             )
-            st.html(
-                '<section class="mc-exos-serie-meta" aria-label="Série affichée">'
-                '<strong>Série affichée</strong>'
-                f'<div class="mc-exos-serie-meta-items">{etiquettes_html}</div>'
-                '</section>'
-            )
+            if afficher_menu:
+                # Streamlit n'autorise pas de widget interactif dans st.html.
+                # Reconstruire le même bandeau avec un conteneur natif, et
+                # placer le sélecteur exactement à la place de la pastille Série.
+                with st.container(key="mc_exos_serie_entete_interactif"):
+                    st.html('<strong class="mc-exos-serie-entete-titre">'
+                            'Série affichée</strong>')
+                    with st.container(
+                        horizontal=True,
+                        wrap=True,
+                        vertical_alignment="center",
+                        horizontal_alignment="left",
+                        gap="small",
+                        key="mc_exos_serie_entete_ligne",
+                    ):
+                        choix_ids = choix_serie_inline["options"]
+                        st.selectbox(
+                            "Passer à une autre série du même niveau",
+                            options=choix_ids,
+                            index=choix_ids.index(choix_serie_inline["id_actuel"]),
+                            format_func=lambda id_: choix_serie_inline["libelles"].get(
+                                str(id_), str(id_)
+                            ),
+                            key=choix_serie_inline["cle"],
+                            on_change=choix_serie_inline["changer"],
+                            args=(choix_serie_inline["cle"],),
+                            label_visibility="collapsed",
+                            width=133,
+                        )
+                        st.html(
+                            f'<div class="mc-exos-serie-meta-items">'
+                            f'{etiquettes_html}</div>'
+                        )
+                # Changer un widget d'un fragment ne relance normalement que
+                # ce fragment. Après le callback, refaire toute la page pour
+                # déplacer la série ouverte sous sa propre carte (pagination).
+                if (str(st.session_state.get(choix_serie_inline["cle_depliee"]))
+                        != choix_serie_inline["id_actuel"]):
+                    st.rerun(scope="app")
+            else:
+                st.html(
+                    '<section class="mc-exos-serie-meta" aria-label="Série affichée">'
+                    '<strong>Série affichée</strong>'
+                    f'<div class="mc-exos-serie-meta-items">{etiquettes_html}</div>'
+                    '</section>'
+                )
             for numero, exercice in enumerate(st.session_state.exercices_actuels, start=1):
                 with st.container(border=True, key=f"mc_exercice_famille_{numero}"):
                     st.subheader(f"Exercice {numero}")           
@@ -9040,7 +9134,9 @@ elif (page_mathicap == "Mes séries"
     if (st.session_state.get("exercices_actuels")
             and str(st.session_state.get("serie_id_actuel")) == str(serie_courante["id"])):
         with _mc_emplacement_serie_inline.container():
-            _mathicap_afficher_serie_et_reponses()
+            _mathicap_afficher_serie_et_reponses(
+                choix_serie_inline=_mc_choix_serie_inline,
+            )
             st.button(
                 "↑ Replier la série et retrouver la liste",
                 key=f"_mc_replier_bas_{serie_courante['id']}",
