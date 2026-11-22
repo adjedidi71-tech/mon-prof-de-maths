@@ -4531,11 +4531,9 @@ if _vue_mathicap != "exercices":
 if est_connecte and st.query_params.get("vue") == "profil":
     st.stop()
 
-# Une série ouverte depuis « Mes séries » s'affiche dans « Exercices ».
-# La navigation est préparée ici, avant la création du widget de menu.
-if st.session_state.pop("_mathicap_ouvrir_serie", False):
-    st.session_state["mathicap_page"] = "Exercices"
-    st.session_state["afficher_series"] = False
+# Une série ouverte depuis « Mes séries » reste désormais dans cette rubrique.
+# L'ancien drapeau ne doit plus déplacer automatiquement l'élève.
+st.session_state.pop("_mathicap_ouvrir_serie", None)
 
 # Tableau de bord : lecture du compte connecté, jamais d'un autre élève.
 # Seules les séries sauvegardées sont comptées ; aucune note inventée.
@@ -4960,6 +4958,11 @@ if page_mathicap != "Mes séries":
     # Au retour après une nouvelle vérification, actualiser le bilan autonome.
     st.session_state.pop("_mc_heat_cache", None)
 
+# Un seul emplacement pour rendre la série active dans sa carte, à la fin
+# du script (quand les fonctions de vérification/sauvegarde sont définies).
+_mc_emplacement_serie_inline = None
+_mc_fiche_serie_inline = None
+
 if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     # La rubrique « Mes séries » ouvre directement la liste enregistrée.
     try:
@@ -5106,6 +5109,100 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             cle_etat = f"mathicap_series_filtre_etat_{eleve_courant}"
             cle_taille_page = f"mathicap_series_taille_page_{eleve_courant}"
             cle_page = f"mathicap_series_page_{eleve_courant}"
+            cle_serie_depliee = f"_mc_serie_depliee_{eleve_courant}"
+            fiches_par_id = {str(f["serie"]["id"]): f for f in fiches_series}
+            if st.query_params.get("vue") == "series":
+                # Le lien vue=series&serie_id=... peut rouvrir la même série après
+                # actualisation, uniquement si elle appartient à cet élève.
+                id_url = str(st.query_params.get("serie_id", ""))
+                if (id_url in fiches_par_id
+                        and not st.session_state.get(cle_serie_depliee)):
+                    st.session_state[cle_serie_depliee] = id_url
+            id_serie_depliee = str(st.session_state.get(cle_serie_depliee, ""))
+            if id_serie_depliee not in fiches_par_id:
+                id_serie_depliee = ""
+                st.session_state.pop(cle_serie_depliee, None)
+
+            def _mc_fermer_serie_depliee():
+                # Ne jamais effacer les réponses enregistrées. Replier = masquer.
+                st.session_state.pop(cle_serie_depliee, None)
+                st.query_params.pop("serie_id", None)
+                st.query_params["vue"] = "series"
+                # Actualiser les barres de progression après les réponses saisies.
+                st.session_state.pop("_mathicap_series_pagination_cache", None)
+
+            def _mc_ouvrir_serie_depliee(fiche_cible):
+                """Relit la série enregistrée, sans réutiliser une copie périmée.
+
+                Cette lecture par élève protège la sauvegarde et la reprise des
+                nouvelles réponses, même après 60 s sur la page Mes séries.
+                """
+                id_cible = str(fiche_cible["serie"]["id"])
+                try:
+                    if not (id_cible.isascii() and id_cible.isdigit()):
+                        raise ValueError("Identifiant de série invalide")
+                    resultat = (supabase_privee.table("series_exercices")
+                        .select("id, code_reprise, exercices, reponses, progression")
+                        .eq("eleve_id", eleve_courant)
+                        .eq("id", int(id_cible))
+                        .limit(1).execute())
+                    enregistree = (resultat.data or [None])[0]
+                    if not enregistree or not _mathicap_retablir_serie(
+                            enregistree, nouvelle_version=True):
+                        raise ValueError("Série indisponible")
+                except Exception:
+                    st.session_state["_mc_erreur_ouvrir_inline"] = (
+                        "Impossible d'ouvrir cette série. Tes réponses sont conservées."
+                    )
+                    return False
+                # Ne pas recycler l'ancien choix d'un sélecteur Streamlit qui
+                # avait déjà été affiché pour cette série lors d'une visite.
+                st.session_state.pop(
+                    f"_mc_choix_autre_serie_{eleve_courant}_{id_cible}", None
+                )
+                st.session_state[cle_serie_depliee] = id_cible
+                st.session_state["_mc_numero_serie_cache"] = {
+                    "eleve_id": eleve_courant, "id": id_cible,
+                    "numero": fiche_cible["numero"],
+                }
+                st.session_state["mathicap_page"] = "Mes séries"
+                st.session_state["afficher_series"] = True
+                st.query_params["vue"] = "series"
+                st.query_params["serie_id"] = id_cible
+                return True
+
+            def _mc_changer_serie_depliee(cle_selecteur):
+                choix = str(st.session_state.get(cle_selecteur, ""))
+                fiche_cible = fiches_par_id.get(choix)
+                if not fiche_cible or not _mc_ouvrir_serie_depliee(fiche_cible):
+                    return
+                # La cible doit devenir visible sous sa propre carte, même
+                # lorsqu'elle se trouvait sur une autre page ou un autre chapitre.
+                niveau_cible = fiche_cible["niveaux"]
+                st.session_state[cle_chapitre] = "Tous les chapitres"
+                st.session_state[cle_niveau] = (
+                    f"Niveau {niveau_cible[0]}" if len(niveau_cible) == 1
+                    else "Tous les niveaux"
+                )
+                st.session_state[cle_etat] = "Tous les avancements"
+                st.query_params["ms_chapitre"] = "Tous les chapitres"
+                st.query_params["ms_niveau"] = st.session_state[cle_niveau]
+                st.query_params["ms_avancement"] = "Tous les avancements"
+                candidats = [
+                    f for f in fiches_series
+                    if not niveau_cible or f["niveaux"] == niveau_cible
+                ] if len(niveau_cible) == 1 else list(fiches_series)
+                position = next(
+                    (i for i, f in enumerate(candidats)
+                     if str(f["serie"]["id"]) == choix), 0
+                )
+                taille = st.session_state.get(cle_taille_page, 5)
+                st.session_state[cle_page] = position // taille + 1
+                st.query_params["ms_page"] = str(st.session_state[cle_page])
+                st.session_state.pop("_mathicap_series_pagination_cache", None)
+
+            if st.session_state.pop("_mc_erreur_ouvrir_inline", None):
+                st.warning("Impossible d'ouvrir cette série. Tes réponses sont conservées.")
 
             # Les widgets Streamlit sont recréés lors d'une actualisation complète.
             # Ne conserver dans l'URL que les préférences d'affichage ; jamais
@@ -5148,6 +5245,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 st.session_state.pop("suppression_en_attente", None)
 
             def reinitialiser_selection_apres_filtre():
+                _mc_fermer_serie_depliee()
                 effacer_selection_series()
                 st.session_state[cle_page] = 1
                 memoriser_filtres_dans_url()
@@ -5155,6 +5253,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 st.query_params["vue"] = "series"
 
             def changer_taille_page():
+                _mc_fermer_serie_depliee()
                 effacer_selection_series()
                 st.session_state[cle_page] = 1
                 st.query_params["ms_taille"] = str(st.session_state[cle_taille_page])
@@ -5163,6 +5262,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
 
             def naviguer_page(decalage):
                 # Callback : exécuté avant la création du sélecteur de page.
+                _mc_fermer_serie_depliee()
                 st.session_state[cle_page] += decalage
                 st.query_params["ms_page"] = str(st.session_state[cle_page])
                 st.query_params["vue"] = "series"
@@ -5381,6 +5481,10 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                     if s["id"] in ids_supprimes
                                 }
 
+                                if (mode == "toutes" or
+                                        str(st.session_state.get(cle_serie_depliee, ""))
+                                        in {str(i) for i in ids_supprimes}):
+                                    _mc_fermer_serie_depliee()
                                 if (
                                     mode == "toutes"
                                     or st.session_state.get("code_actuel")
@@ -5455,19 +5559,20 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                             gap="small",
                             key=f"mathicap_series_actions_{serie['id']}",
                         ):
-                            if st.button(
+                            serie_est_depliee = (str(serie["id"]) == id_serie_depliee)
+                            if not serie_est_depliee and st.button(
                                 "Ouvrir",
                                 key=f"reprendre_serie_{serie['id']}",
                                 type="primary",
                             ):
-                                if _mathicap_retablir_serie(serie, nouvelle_version=True):
-                                    st.session_state["afficher_series"] = False
-                                    st.session_state["_mathicap_ouvrir_serie"] = True
-                                    st.query_params["vue"] = "exercices"
-                                    st.query_params["serie_id"] = str(serie["id"])
+                                if _mc_ouvrir_serie_depliee(fiche):
                                     st.rerun()
-                                else:
-                                    st.error("Cette série ne peut pas être restaurée.")
+                            if serie_est_depliee:
+                                st.button(
+                                    "Replier la série",
+                                    key=f"mathicap_replier_carte_{serie['id']}",
+                                    on_click=_mc_fermer_serie_depliee,
+                                )
 
                             if st.button(
                                 "Supprimer",
@@ -5482,6 +5587,38 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                     "eleve_id": st.session_state["eleve_id"],
                                 }
                                 st.rerun()
+
+                    # Sous l'en-tête de la fiche : un seul contenu de série à la fois.
+                    if str(serie["id"]) == id_serie_depliee:
+                        st.session_state["_mc_numero_serie_cache"] = {
+                            "eleve_id": eleve_courant,
+                            "id": str(serie["id"]),
+                            "numero": numero_serie,
+                        }
+                        autres = [f for f in fiches_series
+                                  if f["niveaux"] == fiche["niveaux"]]
+                        if len(autres) > 1:
+                            options_serie = [str(f["serie"]["id"]) for f in autres]
+                            descriptions_serie = {
+                                str(f["serie"]["id"]): (
+                                    f"Série {f['numero']} · {f['titre_chapitre']}"
+                                ) for f in autres
+                            }
+                            selecteur = (f"_mc_choix_autre_serie_"
+                                         f"{eleve_courant}_{serie['id']}")
+                            st.selectbox(
+                                "Passer à une autre série du même niveau",
+                                options=options_serie,
+                                index=options_serie.index(str(serie["id"])),
+                                format_func=lambda id_: descriptions_serie.get(str(id_), str(id_)),
+                                key=selecteur,
+                                on_change=_mc_changer_serie_depliee,
+                                args=(selecteur,),
+                            )
+                        else:
+                            st.caption("Aucune autre série de ce niveau enregistrée.")
+                        _mc_fiche_serie_inline = fiche
+                        _mc_emplacement_serie_inline = st.empty()
 
             # Taille de page hors du cadre de filtres et hors de la barre de navigation.
             # Le sélecteur reste utilisable avec les mêmes clés/callbacks, sans
@@ -5529,9 +5666,10 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
     except Exception:
         st.error("Impossible de récupérer tes exercices.")
 
-# Ne jamais afficher le générateur au-dessous de la liste des séries.
-if page_mathicap == "Mes séries":
-    st.stop()
+# Sur « Mes séries », les générateurs restent inactifs (demande_generation=False).
+# Ne pas arrêter le script : les fonctions de sauvegarde et le composant
+# d'affichage sont définis plus bas et servent à la série dépliée.
+
 
 def generer_code_reprise():
     caracteres = string.ascii_uppercase + string.digits
@@ -8380,7 +8518,48 @@ def _mathicap_afficher_serie_et_reponses():
                 for n in niveaux_ouverts
             }
             categorie_ouverte = next(iter(groupes)) if len(groupes) == 1 else None
-            etiquettes = [titre_chapitre_ouvert, etiquette_niveau]
+            numero_visible = None
+            identifiant_visible = st.session_state.get("serie_id_actuel")
+            compte_courant = st.session_state.get("eleve_id")
+            if identifiant_visible is not None and compte_courant:
+                numero_cache = st.session_state.get("_mc_numero_serie_cache")
+                if (isinstance(numero_cache, dict)
+                        and numero_cache.get("eleve_id") == compte_courant
+                        and str(numero_cache.get("id")) == str(identifiant_visible)):
+                    numero_visible = numero_cache.get("numero")
+                elif page_mathicap == "Exercices":
+                    # Une seule lecture à l'ouverture d'une série non présente
+                    # dans Mes séries (ex. série nouvellement générée).
+                    try:
+                        lignes_num = recuperer_exercices_eleve(compte_courant)
+                        compteur = 0
+                        for ligne_num in reversed(lignes_num):
+                            chapitres_num = {
+                                ex.get("mathicap_chapitre", "").strip()
+                                for ex in (ligne_num.get("exercices") or [])
+                                if isinstance(ex, dict)
+                                and isinstance(ex.get("mathicap_chapitre"), str)
+                                and ex.get("mathicap_chapitre", "").strip()
+                            }
+                            titre_num = (
+                                next(iter(chapitres_num)) if len(chapitres_num) == 1
+                                else "Plusieurs chapitres" if chapitres_num
+                                else "Chapitre non précisé"
+                            )
+                            if titre_num == titre_chapitre_ouvert:
+                                compteur += 1
+                                if str(ligne_num.get("id")) == str(identifiant_visible):
+                                    numero_visible = compteur
+                                    st.session_state["_mc_numero_serie_cache"] = {
+                                        "eleve_id": compte_courant,
+                                        "id": str(identifiant_visible),
+                                        "numero": numero_visible,
+                                    }
+                                    break
+                    except Exception:
+                        pass
+            etiquettes = ([f"Série {numero_visible}"] if numero_visible else [])
+            etiquettes.extend([titre_chapitre_ouvert, etiquette_niveau])
             if categorie_ouverte:
                 etiquettes.append(categorie_ouverte)
             etiquettes.append(f"{len(exercices_ouverts)} exercice(s)")
@@ -8846,5 +9025,26 @@ def _mathicap_afficher_serie_et_reponses():
                     # série Supabase sans gonfler les scores ni la pagination.
                     _mc_sim_bloc(numero, exercice)
 
-_mathicap_afficher_serie_et_reponses()
+if page_mathicap == "Exercices":
+    _mathicap_afficher_serie_et_reponses()
+elif (page_mathicap == "Mes séries"
+      and _mc_emplacement_serie_inline is not None
+      and _mc_fiche_serie_inline is not None):
+    fiche_courante = _mc_fiche_serie_inline
+    serie_courante = fiche_courante["serie"]
+    if (str(st.session_state.get("serie_id_actuel")) != str(serie_courante["id"])
+            or not st.session_state.get("exercices_actuels")
+            or _mc_champs_a_restaurer_au_retour()):
+        # Réhydratation après actualisation complète ou nettoyage des widgets.
+        # Les données de référence sont relues dans Supabase, par compte.
+        _mc_ouvrir_serie_depliee(fiche_courante)
+    if (st.session_state.get("exercices_actuels")
+            and str(st.session_state.get("serie_id_actuel")) == str(serie_courante["id"])):
+        with _mc_emplacement_serie_inline.container():
+            _mathicap_afficher_serie_et_reponses()
+            st.button(
+                "↑ Replier la série et retrouver la liste",
+                key=f"_mc_replier_bas_{serie_courante['id']}",
+                on_click=_mc_fermer_serie_depliee,
+            )
 
