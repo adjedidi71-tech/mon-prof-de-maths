@@ -5165,7 +5165,6 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     "eleve_id": eleve_courant, "id": id_cible,
                     "numero": fiche_cible["numero"],
                 }
-                st.session_state["mathicap_page"] = "Mes séries"
                 st.session_state["afficher_series"] = True
                 st.query_params["vue"] = "series"
                 st.query_params["serie_id"] = id_cible
