@@ -11673,3 +11673,557 @@ _MC_N9_CIBLES_20261120={
 for _f_n9,_axes_n9 in _MC_N9_CIBLES_20261120.items():
     globals()[_f_n9]=_mc_n9_equilibrer_20261120(globals()[_f_n9],_axes_n9)
 del _f_n9,_axes_n9
+
+# ============================================================================
+# MathiCap — Révision N9 validée le 21/11/2026, intégration le 22/11/2026.
+# Ne change ni le tirage N7 ni la sélection N8, où P9-M01/M13 sont déjà présents.
+# Les transformations pédagogiques portent sur les 26 modèles N9 ACTIFS.
+# ============================================================================
+
+def _n9_v2_ceil(x,y):
+    return -(-max(0,x)//y)
+
+def _n9_v2_fmt(x):
+    return (f'{x:.2f}'.rstrip('0').rstrip('.') if isinstance(x,float) else str(x)).replace('.',',')
+
+def _n9_v2_cap(need,size):
+    q,r=divmod(max(0,need),size)
+    return (q+(r>0), f'{max(0,need)} ÷ {size} = {q}, reste {r}; '+('il faut '+str(q+1) if r else 'il faut '+str(q)))
+
+def _n9_v2_sections(ex):
+    cor=ex['correction']; chunks=re.split(r'(?=\*\*Réponse [1-5]\s*[—–-])',cor)
+    sections={}
+    for ch in chunks:
+        m=re.match(r'\*\*Réponse ([1-5])\s*[—–-][^\n]*\*\*\s*',ch)
+        if m: sections[int(m[1])]=ch[m.end():].strip()
+    if set(sections)!=set(range(1,6)):
+        raise AssertionError(f"{ex['id']}: les cinq réponses n'ont pas été retrouvées")
+    return sections
+
+def _n9_v2_questions(ex):
+    stmt=ex['enonce'].split('**Questions**',1)[1]
+    stmt=stmt.split('*Écris',1)[0]
+    qs={}
+    matches=list(re.finditer(r'(?m)^([1-5])\.\s+',stmt))
+    for i,m in enumerate(matches):
+        qs[int(m.group(1))]=stmt[m.end():matches[i+1].start() if i+1<len(matches) else len(stmt)].strip()
+    if len(qs)!=5:raise AssertionError(f'{ex["id"]} Q incomplètes')
+    return qs
+
+def _n9_v2_update(ex,questions=None,bodies=None,answers=None,labels=None,prepend=None,title=None):
+    out=deepcopy(ex)
+    qs=_n9_v2_questions(out);sections=_n9_v2_sections(out)
+    qs.update(questions or {});sections.update(bodies or {})
+    if answers:
+        for i,v in answers.items():
+            c=out['champs_reponse'][i-1]
+            c['attendu']=v
+            c['type']='nombre' if isinstance(v,(float,int)) else 'choix'
+            if c['type']=='nombre':c.pop('options',None)
+    if labels:
+        for i,label in labels.items():out['champs_reponse'][i-1]['libelle']=label
+    if title:out['titre']=title
+    intro=prepend if prepend is not None else out['enonce'].split('**Questions**',1)[0].strip()
+    if title:
+        intro=re.sub(r'^\*\*.*?\*\*',f'**{title}**',intro,count=1)
+    # "Nouveau défi" doit être un paragraphe indépendant, jamais un morceau
+    # de la Q4 ni une question numérotée. Écarter l'ancien défi remplacé.
+    if qs[5].startswith('**Nouveau défi :**'):
+        if '**Nouveau défi :**' in qs[4]:
+            qs[4]=qs[4].split('**Nouveau défi :**',1)[0].strip()
+        challenge,finalquestion=qs[5].split('\n\n',1)
+        questionlines=[f'{i}. {qs[i]}' for i in range(1,5)]+[challenge,'5. '+finalquestion.strip()]
+    else:
+        questionlines=[f'{i}. {qs[i]}' for i in range(1,6)]
+    out['enonce']=intro+'\n\n**Questions**\n\n'+'\n\n'.join(questionlines)+'\n\n*Écris tes calculs et ton raisonnement au brouillon. Les champs de réponse sont notés automatiquement ; compare ta méthode avec la correction.*'
+    fragments=[]
+    for i in range(1,6):
+        c=out['champs_reponse'][i-1];v=_n9_v2_fmt(c['attendu']);unit=c.get('unite','') if c['type']=='nombre' else ''
+        if unit and v=='1':unit={'boîtes':'boîte','séries':'série','colis':'colis','billets':'billet','missions':'mission','lots':'lot','terrains':'terrain','mangas':'manga','conteneurs':'conteneur','équipes':'équipe','pièces':'pièce','accessoires':'accessoire','rouleaux':'rouleau','kits':'kit'}.get(unit,unit)
+        parts=[f'**Réponse {i} — {c["libelle"]} : {v}'+(f' {unit}' if unit else '')+'**',sections[i]]
+        # Accords, y compris dans les calculs détaillés produits par les modèles.
+        parts[1]=re.sub(r'\b1 (conteneurs|navettes|paquets|kits|boîtes|lots|colis|rouleaux|missions|cristaux|ordinaires|rares|difficiles|faciles|terrains|tirages|unités|doses|carreaux|coffres|aventuriers|pièces|batteries|équipes|séries|souvenirs|spectateurs|billets)\b',
+               lambda m:'1 '+{'conteneurs':'conteneur','navettes':'navette','paquets':'paquet','kits':'kit','boîtes':'boîte','lots':'lot','colis':'colis','rouleaux':'rouleau','missions':'mission','cristaux':'cristal','ordinaires':'ordinaire','rares':'rare','difficiles':'difficile','faciles':'facile','terrains':'terrain','tirages':'tirage','unités':'unité','doses':'dose','carreaux':'carreau','coffres':'coffre','aventuriers':'aventurier','pièces':'pièce','batteries':'batterie','équipes':'équipe','séries':'série','souvenirs':'souvenir','spectateurs':'spectateur','billets':'billet'}[m[1]],parts[1])
+        fragments.append('\n\n'.join(parts))
+    out['correction']='\n\n'.join(fragments)
+    out['mathicap_revision_n9']='relecture-pedagogique-20261122'
+    return out
+
+def _n9_v2_make_1d(need, sa,pa,sb,pb, maxb, noun='colis', fee=0, minb=0, stop_when_covered=True):
+    if sa<=0 or sb<=0:raise ValueError('Capacite nulle')
+    # Lorsque B seul couvre le besoin, des achats B supplémentaires sont dominés.
+    bmax=min(maxb,_n9_v2_ceil(need,sb)) if stop_when_covered else maxb
+    if bmax<minb:raise ValueError('Nombre de B impossible')
+    options=[];rows=[]
+    for b in range(minb,bmax+1):
+        remain=max(0,need-b*sb);a,division=_n9_v2_cap(remain,sa)
+        cost=a*pa+b*pb+(fee if b else 0)
+        # Brève justification du nombre de lots A avant le coût.
+        if b==0:head=f'{b} B : {need} ÷ {sa} → {a} A'
+        else:head=f'{b} B : ({need} − {b} × {sb}) ÷ {sa} → {a} A'
+        row=f'- {head}. Coût : {a} × {pa} + {b} × {pb}'
+        if b and fee:row+=f' + {fee} (livraison)'
+        row+=f' = {cost} €.'
+        rows.append(row);options.append((cost,a+b,b,a))
+    best=min(options)
+    return '\n'.join(rows),best,options
+
+def _n9_v2_make_2d(nx,ny,ax,ay,pa,bx,by,pb,maxb):
+    rows=[];opts=[]
+    for b in range(maxb+1):
+        a=max(_n9_v2_ceil(nx-b*bx,ax),_n9_v2_ceil(ny-b*by,ay))
+        cost=a*pa+b*pb
+        nx_done=a*ax+b*bx;ny_done=a*ay+b*by
+        rows.append(f'- {b} B : {a} A nécessaires ; {nx_done} N et {ny_done} K. Coût : {a} × {pa} + {b} × {pb} = {cost} €.')
+        opts.append((cost,a+b,b,a))
+    return '\n'.join(rows),min(opts),opts
+
+def _n9_v2_change_challenge(q5,challenge):
+    return '**Nouveau défi :** '+challenge+'\n\n'+q5
+
+def _n9_v2_seed(seed,suffix):
+    return random.Random(f'MathiCap-V20261122|{seed}|{suffix}')
+
+# -------------------------------------------------------------------------
+# Transformations ciblées de problèmes N9 : une seule réponse notée par Q.
+# -------------------------------------------------------------------------
+
+def _n9_v2_reviser(ex):
+    mid=ex['id']; qs={};ans={};b={};labels={}; title=None
+    a=ex.get('_mathicap_audit_nouveau') or {}; v=lambda j:ex['champs_reponse'][j-1]['attendu']
+    oldqs=_n9_v2_questions(ex);oldb=_n9_v2_sections(ex);en=ex['enonce'];seed=ex.get('seed') or 1
+    rng=_n9_v2_seed(seed,mid)
+    def find(pattern, flags=re.S):
+        m=re.search(pattern,en,flags)
+        if not m:raise ValueError(f'{mid}: motif manquant: {pattern}')
+        return m
+    def num(t):return float(t.replace(' ','').replace(',','.'))
+    if mid=='P8-M03':
+        ra=int(v(2)); rb=int(v(3));reserve=rng.randint(40,max(45,min(120,ra,rb)-10))
+        qs[4]=f'Le joueur souhaite garder {reserve} pièces en réserve. Quel montant maximal pourrait-il consacrer à un équipement en choisissant le chemin le plus avantageux ?'
+        budget=max(ra,rb)-reserve;ans[4]=budget;labels[4]='Budget maximal pour un équipement'
+        b[4]=(f'Chemin A : {ra} pièces (réponse 2), soit {ra} − {reserve} = {ra-reserve} pièces.\n'
+              f'Chemin B : {rb} pièces (réponse 3), soit {rb} − {reserve} = {rb-reserve} pièces.\n'
+              f'**Montant maximal : {budget} pièces**, en choisissant le chemin {"A" if ra>rb else "B"}.')
+        chosen=rng.choice(('A','B'))
+        for _ in range(500):
+            toll=rng.randint(18,85);coffers=rng.randint(1,3);gain=rng.randint(15,42);tool=rng.randint(12,44)
+            ca=ra-toll;cb=rb+coffers*gain-tool
+            if ca!=cb and ('A' if ca>cb else 'B')==chosen and abs(ca-cb)<=140:break
+        else:raise ValueError(mid+' choix du chemin impossible')
+        qs[5]=_n9_v2_change_challenge('Après ces changements, combien de pièces de plus le meilleur chemin permet-il de conserver ? Précise le chemin retenu dans ton raisonnement.',
+          f'le chemin A comporte désormais un péage de {toll} pièces. Sur le chemin B, le joueur trouve {coffers} coffre'+('s' if coffers>1 else '')+f' supplémentaire'+('s' if coffers>1 else '')+f' de {gain} pièces chacun, mais doit acheter un outil de {tool} pièces pour les ouvrir.')
+        ans[5]=abs(ca-cb);labels[5]='Avantage du chemin choisi'
+        b[5]=(f'Chemin A : {ra} − {toll} = {ca} pièces (réponse 2).\n'
+              f'Chemin B : {rb} + {coffers} × {gain} − {tool} = {cb} pièces (réponse 3).\n'
+              f'Écart : {max(ca,cb)} − {min(ca,cb)} = {abs(ca-cb)} pièces.\n'
+              f'**Le chemin {"A" if ca>cb else "B"} est le plus avantageux.**')
+    elif mid=='P8-M05':
+        title='Le jeu de piste — budget et souvenirs'
+        teams=int(find(r'\n\n(\d+) équipes participent')[1]);posts=int(find(r'comporte (\d+) postes')[1])
+        envp=num(find(r'chaque enveloppe coûte (\d+[,.]\d+) €')[1]);pocket=num(find(r'pochette de matériel à (\d+[,.]\d+) €')[1])
+        souvenir=num(find(r'Chaque souvenir coûte (\d+[,.]\d+) €')[1]);reserve=num(find(r'au moins \*\*(\d+[,.]\d+) €\*\* de réserve')[1]);budget=num(find(r'budget total de \*\*(\d+[,.]\d+) €\*\*')[1])
+        qs[4]='Après les achats obligatoires, les souvenirs et la réserve prévue, combien d’argent reste-t-il dans le budget ou combien manque-t-il ?'
+        solde=round(v(3)-teams*souvenir-reserve,2);ans[4]=abs(solde);labels[4]='Montant restant ou manquant'
+        b[4]=(f'Argent disponible : {_n9_v2_fmt(v(3))} € (réponse 3).\n'
+              f'Souvenirs : {teams} × {_n9_v2_fmt(souvenir)} = {_n9_v2_fmt(teams*souvenir)} €.\n'
+              f'{_n9_v2_fmt(v(3))} − {_n9_v2_fmt(teams*souvenir)} − {_n9_v2_fmt(reserve)} = {_n9_v2_fmt(solde)} €.\n'
+              +('**Il manque '+_n9_v2_fmt(-solde)+' €.**' if solde<0 else '**Il reste '+_n9_v2_fmt(solde)+' €.**'))
+        newteams=rng.randint(1,3);newn=teams+newteams
+        batch=3;batchprice=round(souvenir*3*rng.choice([0.78,0.87,1.04]),2)
+        individual=round(newn*souvenir,2);bybatch=_n9_v2_ceil(newn,batch)*batchprice
+        chosen=min(individual,bybatch)
+        missing=round(max(0,(posts*envp+pocket)*newteams+chosen+reserve-v(3)),2)
+        qs[5]=_n9_v2_change_challenge('Quel budget supplémentaire le collège doit-il prévoir pour réaliser ce nouveau défi ?',
+            f'{newteams} équipe'+('s' if newteams>1 else '')+f' supplémentaire'+('s' if newteams>1 else '')+f' s’inscri'+('vent' if newteams>1 else 't')+f'. Elles reçoivent les mêmes enveloppes et pochettes que les premières. Le collège offre un souvenir à chacune des {newn} équipes. Les souvenirs coûtent {_n9_v2_fmt(souvenir)} € à l’unité ou {_n9_v2_fmt(batchprice)} € le lot entier de 3, sans mélanger les deux modes d’achat. Le budget initial et la réserve restent inchangés.')
+        ans[5]=missing;labels[5]='Budget supplémentaire nécessaire'
+        b[5]=(f'Coût obligatoire supplémentaire : {newteams} × ({posts} × {_n9_v2_fmt(envp)} + {_n9_v2_fmt(pocket)}) = {_n9_v2_fmt((posts*envp+pocket)*newteams)} €.\n'
+             f'Souvenirs pour {newn} équipes : à l’unité, {newn} × {_n9_v2_fmt(souvenir)} = {_n9_v2_fmt(individual)} € ; par lots, {newn} ÷ 3 → {_n9_v2_ceil(newn,3)} lots, soit {_n9_v2_ceil(newn,3)} × {_n9_v2_fmt(batchprice)} = {_n9_v2_fmt(bybatch)} €.\n'
+             f'On retient {_n9_v2_fmt(chosen)} € pour les souvenirs.\n'
+             f'Solde initial : {_n9_v2_fmt(v(3))} € (réponse 3).\n'
+             f'Dépense à financer : {_n9_v2_fmt((posts*envp+pocket)*newteams)} + {_n9_v2_fmt(chosen)} + {_n9_v2_fmt(reserve)} − {_n9_v2_fmt(v(3))} = {_n9_v2_fmt(round((posts*envp+pocket)*newteams+chosen+reserve-v(3),2))} €.\n'
+             f'**Budget supplémentaire nécessaire : {_n9_v2_fmt(missing)} €.**')
+    elif mid=='P8-M06':
+        title='Le jeu de piste — kits de matériel'
+    elif mid=='P9-M02':
+        title='Le tournoi de jeux vidéo — stratégies et bénéfices'
+        m=find(r'\*\*Nouveau défi\s*:\*\*.*?publicité à (\d+) €.*?exactement (\d+) joueurs supplémentaires')
+        ad,extra=map(int,m.groups());qs[5]=_n9_v2_change_challenge('Quel bénéfice maximal le club peut-il obtenir en comparant les quatre possibilités ?',
+          f'une publicité à {ad} € permet d’accueillir {extra} joueurs supplémentaires. Ils paient la même inscription et nécessitent les mêmes fournitures que les autres joueurs. Les autres frais ne changent pas. Le club peut choisir A ou B, avec ou sans publicité.')
+    elif mid=='P9-M03':
+        qs[2]='Quel est le coût total des entrées et des repas pour l’ensemble des participants ?'
+        qs[5]='Après le nouveau défi, quelle est la différence de coût entre les offres A et B ?'
+        # Le défi précédent est associé à la question 4 dans les sources ;
+        # modifier le libellé sans toucher à ses valeurs numériques.
+        qs[4]=oldqs[4].replace('La compagnie A, annonce','La compagnie A annonce').replace('La compagnie B, annonce','La compagnie B annonce')
+        extra=int(find(r'\*\*Nouveau défi :\*\* (\d+) personnes supplémentaires')[1])
+        fee_inc=int(find(r'\*\*Nouveau défi :\*\*.*?augmentation fixe de (\d+) €')[1])
+        changed=find(r'La compagnie ([AB]),? annonce')[1]
+        total=v(1)+extra
+        distance=int(find(r'situé à \*\*(\d+) km')[1])*2
+        prices=find(r'Chaque personne paie (\d+) € d[’\']entrée.*?(\d+) € pour le repas')
+        entry,meal=map(int,prices.groups())
+        # Coefficients du transport, avec offre A calculée au kilomètre et
+        # offre B calculée par personne.
+        partA=en.split('**Transport A**',1)[1].split('**Transport B**',1)[0]
+        partB=en.split('**Transport B**',1)[1].split('On choisira',1)[0]
+        fa=int(re.search(r'Frais fixes : (\d+) €',partA)[1]);pa=int(re.search(r'(\d+) € par kilomètre',partA)[1])
+        fb=int(re.search(r'Frais fixes : (\d+) €',partB)[1]);pb=int(re.search(r'(\d+) € par personne',partB)[1])
+        extraA=fee_inc if changed=='A' else 0;extraB=fee_inc if changed=='B' else 0
+        ca=fa+extraA+distance*pa+total*(entry+meal)
+        cb=fb+extraB+total*pb+total*(entry+meal)
+        assert abs(ca-cb)==v(5),(mid,ca,cb,v(5))
+        b[5]=(f'Nouveaux participants : {v(1)} + {extra} = {total}.\n'
+              f'**Formule A :** {fa}'+(f' + {extraA} (augmentation)' if extraA else '')+
+              f' + {distance} × {pa} + {total} × ({entry} + {meal}) = {ca} €.\n'
+              f'**Formule B :** {fb}'+(f' + {extraB} (augmentation)' if extraB else '')+
+              f' + {total} × {pb} + {total} × ({entry} + {meal}) = {cb} €.\n'
+              f'Écart : {max(ca,cb)} − {min(ca,cb)} = {abs(ca-cb)} €.\n'
+              f'**La formule {"A" if ca<cb else "B"} est la moins chère.**')
+    elif mid=='P9-M04':
+        title='Les cristaux du jeu vidéo — équipement des aventuriers'
+        stock=int(v(2));equip=int(find(r'Un équipement coûte \*\*(\d+) cristaux')[1]);initial=int(find(r'Son équipe comprend \*\*(\d+) aventuriers')[1]);reserve=int(find(r'conserver au moins \*\*(\d+) cristaux')[1])
+        # Réponse 3 : limiter les achats aux aventuriers actuels.
+        qty=min(initial,max(0,(stock-reserve)//equip));ans[3]=qty;labels[3]='Équipements pour l’équipe'
+        ans[4]=stock-qty*equip
+        qs[3]='Combien d’équipements peut-il acheter pour son équipe ?'
+        qs[4]='Combien de cristaux lui restera-t-il après ces achats ?'
+        b[3]=(f'Cristaux utilisables : {stock} − {reserve} = {stock-reserve}.\n'
+              f'{stock-reserve} ÷ {equip} = {(stock-reserve)//equip}, reste {(stock-reserve)%equip}.\n'
+              f'Il y a {initial} aventuriers : il achète **{qty} équipements** au maximum.')
+        b[4]=f'{stock} − {qty} × {equip} = {ans[4]} cristaux (réponse 3).'
+        target=rng.choice([0,1,2]); params=None
+        for _ in range(1200):
+            extra=rng.randint(1,7);gift=rng.randint(0,14);gain_o=rng.randint(11,20);gain_r=rng.randint(23,39)
+            need=max(0,(initial+extra)*equip+reserve-stock-gift)
+            if need==0:continue
+            options=[(_n9_v2_ceil(need-r*gain_r,gain_o)+r,r,_n9_v2_ceil(need-r*gain_r,gain_o)) for r in range(3)]
+            best=min(options,key=lambda t:(t[0],t[1]))
+            if best[1]==target and 1<=best[0]<=7:params=(extra,gift,gain_o,gain_r,need,options,best);break
+        if not params:raise ValueError(mid+': impossible de diversifier les missions')
+        extra,gift,go,gr,need,options,best=params
+        qs[5]=_n9_v2_change_challenge('Quel est le nombre minimal de missions supplémentaires pour équiper toute l’équipe et garder la réserve ?',
+          f'{extra} aventurier'+('s' if extra>1 else '')+(' rejoignent' if extra>1 else ' rejoint')+f' l’équipe. On repart des {stock} cristaux disponibles avant les achats (réponse 2) et le joueur reçoit {gift} cristaux. Il doit équiper les {initial+extra} aventuriers et conserver {reserve} cristaux. Il peut effectuer des missions ordinaires (+{go} cristaux chacune) ou au plus deux missions rares (+{gr} cristaux chacune). À nombre égal de missions, il préfère faire moins de missions rares.')
+        ans[5]=best[0];labels[5]='Missions minimales'
+        rows=[]
+        for tot,r,o in options:
+            remainder=max(0,need-r*gr)
+            rows.append(f'- {r} rare'+('s' if r>1 else '')+f' : reste {remainder} cristaux, {remainder} ÷ {go} → {o} ordinaires, soit {r}+{o} = {tot} missions.')
+        b[5]=(f'Besoin pour l’équipe et la réserve : {initial+extra} × {equip} + {reserve} = {(initial+extra)*equip} + {reserve} = {(initial+extra)*equip+reserve}.\n'
+             f'Disponible : {stock} + {gift} = {stock+gift}. Cristaux manquants : {(initial+extra)*equip+reserve} − {stock+gift} = {need}.\n'
+             + '\n'.join(rows)+f'\n**Minimum : {best[0]} missions, dont {best[1]} rare'+('s' if best[1]>1 else '')+'.**')
+    elif mid=='P9-M05':
+        title='La bibliothèque de mangas — commande de colis'
+        final=int(find(r'\*\*(\d+) mangas sur les étagères\*\*')[1]);returned=v(2);damaged=int(find(r'Elle retire \*\*(\d+) mangas abîmés')[1]);after=final+returned-damaged
+        variation=int(v(3));ans[3]=abs(variation);labels[3]='Nombre de mangas gagnés ou perdus'
+        qs[3]='Au cours de la semaine, le nombre de mangas sur les étagères a-t-il augmenté ou diminué ? De combien de mangas ?'
+        b[3]=(f'Mangas reçus : {v(1)} (réponse 1). Prêts : {returned} (réponse 2).\n'
+              f'{v(1)} + '+str(int(find(r'puis \*\*(\d+) mangas\*\* offerts')[1]))+' − '+str(damaged)+f' − {returned} = {variation}.\n'
+              +('**Augmentation de '+str(abs(variation))+' mangas.**' if variation>=0 else '**Diminution de '+str(abs(variation))+' mangas.**'))
+        # Générer une cible de manque variable afin de ne pas favoriser systématiquement les mélanges.
+        category=rng.choice(('A','B','MIX'));res=None
+        for _ in range(1500):
+            shortage=rng.randint(8,58);sa=rng.randint(4,8);sb=rng.randint(9,15);pa=rng.randint(8,16);pb=rng.randint(15,27)
+            _,best,opts=_n9_v2_make_1d(shortage,sa,pa,sb,pb,3)
+            if sum(o[0]==best[0] for o in opts)!=1:continue
+            mode='MIX' if best[2]>0 and best[3]>0 else 'B' if best[3]==0 else 'A'
+            if mode==category:res=(shortage,sa,sb,pa,pb,best);break
+        if not res:raise ValueError(mid+': diversification des commandes impossible')
+        shortage,sa,sb,pa,pb,best=res;target=after+shortage
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal de la commande pour atteindre le nouveau stock ?',
+          f'après le retour des emprunts, {damaged} mangas usés sont retirés. La bibliothèque souhaite avoir au moins {target} mangas. Le fournisseur propose des colis A de {sa} mangas à {pa} € et des colis B de {sb} mangas à {pb} €. Au maximum trois colis B sont disponibles, mais les colis A sont sans limite. Les deux types peuvent être combinés ; les colis sont indivisibles.')
+        ans[5]=best[0];labels[5]='Coût minimal de commande'
+        rows,_,opts=_n9_v2_make_1d(shortage,sa,pa,sb,pb,3)
+        b[5]=(f'Après retour et retrait : {final} + {returned} − {damaged} = {after} mangas.\n'
+              f'Besoin : {target} − {after} = {shortage} mangas.\n'+rows+f'\n**Coût minimal : {best[0]} €, avec {best[3]} colis A et {best[2]} colis B.**')
+    elif mid=='P9-M06':
+        title='Le spectacle solidaire — bénéfice et capacité de la salle'
+        target=int(find(r'accroître son bénéfice ACTUEL de \*\*(\d+) €')[1]);oldcap=int(find(r'La salle possède (\d+) rangées de (\d+) places')[1])*int(find(r'La salle possède (\d+) rangées de (\d+) places')[2]);reserve=int(find(r'(\d+) places sont réservées')[1]);places=oldcap-reserve-v(1)
+        price=int(find(r'vend \d+ billets élèves à (\d+) €')[1]);prog=int(find(r'coût de (\d+) € par programme')[1]);net=price-prog;n=_n9_v2_ceil(target,net);balance=places-n
+        qs[5]=_n9_v2_change_challenge('Après cette vente, combien de places resteront libres ou combien de places manqueront ?',
+          f'le collège cherche à augmenter son bénéfice de {target} € en vendant de nouveaux billets élèves. Chaque nouveau spectateur reçoit un programme au même prix. La capacité de la salle ne change pas.')
+        ans[5]=abs(balance);labels[5]='Places libres ou manquantes'
+        b[5]=(f'Gain net par billet : {price} − {prog} = {net} €.\n'
+             f'Billets nécessaires : {target} ÷ {net} → {n}.\n'
+             f'Places disponibles : {oldcap} − {reserve} − {v(1)} = {places}.\n'
+             f'{places} − {n} = {balance}. '+(f'**Il reste {balance} places.**' if balance>=0 else f'**Il manque {-balance} places.**'))
+    elif mid=='P9-M07':
+        # Conserver les paramètres physiques de Q1–Q4, mais non leurs indices de méthode.
+        mass=int(round(v(2)*1000));capA=int(float(find(r'\*\*Offre A\*\*.*?maximum (\d+[,.]\d+) kg')[1].replace(',','.'))*1000)
+        capB=int(float(find(r'\*\*Offre B\*\*.*?maximum (\d+[,.]\d+) kg')[1].replace(',','.'))*1000)
+        priceA=int(find(r'\*\*Offre A\*\*.*?Location : (\d+) €')[1]);initialB=int(find(r'\*\*Offre B\*\*.*?Location : (\d+) €')[1]);
+        qs[3]='Quel est le coût total de location avec l’offre A ?';qs[4]='Quel est le coût total de location avec l’offre B ?'
+        priceOldB=int(find(r'\*\*Offre B\*\*.*?Location : (\d+) €')[1])
+        countA=_n9_v2_ceil(mass,capA);countB=_n9_v2_ceil(mass,capB)
+        qa,ra=divmod(mass,capA);qb,rb=divmod(mass,capB)
+        b[3]=(f'Masse à stocker : {mass} g (réponse 2).\n'
+              f'{mass} ÷ {capA} = {qa}, reste {ra} g. '
+              f'Il faut {countA} conteneurs A.\n'
+              f'Coût : {countA} × {priceA} = {countA*priceA} €.')
+        b[4]=(f'Masse à stocker : {mass} g (réponse 2).\n'
+              f'{mass} ÷ {capB} = {qb}, reste {rb} g. '
+              f'Il faut {countB} conteneurs B.\n'
+              f'Coût : {countB} × {priceOldB} = {countB*priceOldB} €.')
+        assert countA*priceA==v(3) and countB*priceOldB==v(4), mid+' : Q3/Q4 incohérentes'
+        extra=rng.choice([800,1200,1600,1800,2200,2800]);newmass=mass+extra;priceB=rng.randint(max(1,initialB-5),max(1,initialB-1))
+        bmax=min(3,_n9_v2_ceil(newmass,capB))
+        rows,best,_=_n9_v2_make_1d(newmass,capA,priceA,capB,priceB,bmax, minb=1)
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal pour stocker tous les matériaux de la collecte élargie ?',
+          f'le collège collecte encore {_n9_v2_fmt(extra/1000)} kg de matériaux. Les capacités restent identiques. A coûte {priceA} € par conteneur et B propose {priceB} € par conteneur à condition d’en louer au moins un. Au maximum trois B sont disponibles ; les conteneurs A sont sans limite. Tous les conteneurs sont entiers.')
+        ans[5]=best[0];labels[5]='Coût minimal du stockage'
+        b[5]=(f'Masse totale : {mass} g (réponse 2) + {extra} g = {newmass} g.\n'+rows+
+              f'\n**Coût minimal : {best[0]} €, avec {best[3]} conteneurs A et {best[2]} conteneurs B.**')
+    elif mid=='P9-M08':
+        title='La projection de cinéma — extension des salles'
+        qs[5]=oldqs[5]
+        qs[5]=qs[5].replace('Chaque salle peut, en option, ouvrir jusqu\'à 10 places supplémentaires : coût fixe', 'Chaque salle peut ouvrir 10 places supplémentaires ; le prix fixe pour cette extension est de')
+        qs[5]=qs[5].replace('Cette option n\'est facturée que si elle est nécessaire.', 'Ce prix est payé une seule fois, uniquement lorsque les 10 places supplémentaires sont nécessaires.')
+        persons=int(v(1));additional=int(find(r'\*\*Nouveau défi :\*\* (\d+) participants')[1]);newn=persons+additional
+        costext=find(r'coût fixe (\d+) € en A ou (\d+) € en B')
+        extA,extB=map(int,costext.groups());limit=int(find(r'\*\*Nouveau défi :\*\*.*?(\d+) € de budget')[1]);prices=[];rows=[]
+        for label,ext in (('A',extA),('B',extB)):
+            details=find(r'\*\*Salle '+label+r'\*\*(.*?)(?=\*\*Salle [AB]\*\*|Le collège doit choisir)',re.S)[1]
+            dims=re.search(r'(\d+) rangées de (\d+) places',details)
+            fee=re.search(r'forfait de réservation : (\d+) €',details)
+            rate=re.search(r'(\d+) € par participant',details)
+            if not (dims and fee and rate):raise ValueError(mid+' salle '+label+' incomplete')
+            cap=int(dims[1])*int(dims[2]);fix=int(fee[1]);unit=int(rate[1]);needed=newn>cap
+            admissible=newn<=cap+10
+            value=fix+newn*unit+(ext if needed else 0)
+            if admissible:prices.append(value)
+            rows.append(f'**Salle {label} :** {cap} places'+(f' + 10 = {cap+10} avec extension' if needed else ', sans extension')+'. '
+                        +(f'Coût : {fix} + {newn} × {unit}'+(f' + {ext} (extension)' if needed else '')+f' = {value} €.' if admissible else f'Capacité insuffisante même avec extension ({cap+10} places).'))
+        if not prices:raise ValueError(mid+' sans salle admissible')
+        cheapest=min(prices);missing=max(0,cheapest-limit)
+        if missing!=v(5):raise ValueError(mid+' : cout cinéma incohérent')
+        b[5]=(f'Nouveau groupe : {persons} + {additional} = {newn} participants.\n'
+               +'\n'.join(rows)+f'\nBudget : {limit} €. Coût admissible minimal : {cheapest} €.\n'
+               f'**Financement nécessaire : {missing} €.**')
+    elif mid=='P9-M09':
+        # Détail des ressources avant la commande : réponse 5 actuelle validée numériquement.
+        starting=int(find(r'possède (\d+) châssis')[1]);helices=int(v(1));batteries=int(v(2))
+        goal=int(find(r'\*\*Nouveau défi :\*\*.*?construire (\d+) drones')[1]);gift=int(find(r'Un partenaire offre gratuitement (\d+) châssis')[1])
+        r5=oldb[5]
+        b[5]=(f'Pour {goal} drones : {goal} châssis, {4*goal} hélices et {2*goal} batteries nécessaires.\n'
+              f'Châssis disponibles : {starting} + {gift} = {starting+gift}, manque {max(0,goal-starting-gift)}.\n'
+              f'Hélices disponibles : {helices} (réponse 1), manque {max(0,4*goal-helices)}.\n'
+              f'Batteries disponibles : {batteries} (réponse 2), manque {max(0,2*goal-batteries)}.\n'+r5)
+    elif mid=='P9-M10':
+        title='La mosaïque du collège — agrandissement'
+        need=int(v(1));newneed=int(find(r'\*\*Nouveau défi :\*\* (\d+) carreaux supplémentaires')[1])+need
+        boxA=int(find(r'\*\*Offre A\*\*.*?(\d+) carreaux par boîte')[1]);boxB=int(find(r'\*\*Offre B\*\*.*?(\d+) carreaux par boîte')[1]);priceA=int(find(r'\*\*Offre A\*\*.*?(\d+) € par boîte')[1]);priceB=int(find(r'\*\*Offre B\*\*.*?(\d+) € par boîte')[1]);maxB=4
+        rows,best,_=_n9_v2_make_1d(newneed,boxA,priceA,boxB,priceB,maxB)
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal des boîtes pour réaliser la mosaïque agrandie ?',
+         f'avant la commande, les élèves ajoutent {newneed-need} carreaux à leur besoin. Le magasin ne dispose que de quatre boîtes B, mais les boîtes A sont sans limite. Les deux formats peuvent être mélangés ; les boîtes sont entières.')
+        ans[5]=best[0];labels[5]='Coût minimal de la mosaïque agrandie'
+        b[5]=(f'Besoin initial : {need} carreaux (réponse 1). Nouveau besoin : {need} + {newneed-need} = {newneed} carreaux.\n'+rows+
+             f'\n**Coût minimal : {best[0]} €, avec {best[3]} boîtes A et {best[2]} boîtes B.**')
+    elif mid=='P9-M11':
+        title='La réserve de bandes dessinées — choix des colis'
+        need=int(v(2));rows,best,_=_n9_v2_make_1d(need,a['a_size'],a['pa'],a['b_size'],a['pb'],4)
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal de cette commande ?',
+            'le fournisseur dispose d’au plus quatre colis B pour cette commande. Les colis A restent disponibles sans limitation. Les deux types peuvent être combinés ; tous les colis sont entiers.')
+        ans[5]=best[0];labels[5]='Coût minimal de la commande'
+        b[5]=(f'BD à acquérir : {need} (réponse 2).\n'+rows+f'\n**Coût minimal : {best[0]} €, avec {best[3]} colis A et {best[2]} colis B.**')
+    elif mid=='P9-M12':
+        title='Le spectacle solidaire — derniers billets disponibles'
+        qs[2]='Quel est le bénéfice avec les billets déjà vendus ?'
+        gain_s=a['price_s']-a['program'];gain_a=a['price_a']-a['program'];need=int(v(4));places=int(v(3))
+        # Le nombre de billets adultes varie avec les tirages. La question fixe
+        # cette quantité (2 à 5) ; les élèves calculent les billets élèves.
+        candidates=[]
+        for adults in range(2,6):
+            students=_n9_v2_ceil(need-adults*gain_a,gain_s);total=adults+students
+            if total<=places:candidates.append((adults,students,total))
+        if not candidates:
+            raise ValueError(mid+': aucun groupe de billets réalisable')
+        adults,students,total=rng.choice(candidates)
+        qs[5]=(f'Le collège prévoit de vendre exactement {adults} billets adultes supplémentaires, et pourra compléter avec des billets élèves. '
+               'Combien de billets supplémentaires doit-il vendre au total au minimum pour atteindre son objectif sans dépasser les places disponibles ?')
+        intro=en.split('**Questions**',1)[0].strip()
+        intro=re.sub(r'Il ne peut encore vendre que \d+ billets adultes au maximum\.[^\n]*\n?',
+                     'Les nouvelles ventes restent limitées par le nombre de places disponibles.\n\n',intro)
+        ans[5]=total;labels[5]='Billets supplémentaires nécessaires'
+        b[5]=(f'Bénéfice supplémentaire nécessaire : {need} € (réponse 4).\n'
+              f'Gain net par billet adulte : {a["price_a"]} − {a["program"]} = {gain_a} €.\n'
+              f'{adults} billets adultes rapportent {adults} × {gain_a} = {adults*gain_a} €.\n'
+              f'Il manque {max(0,need-adults*gain_a)} €.\n'
+              f'Gain net par billet élève : {a["price_s"]} − {a["program"]} = {gain_s} €.\n'
+              f'{max(0,need-adults*gain_a)} ÷ {gain_s} → {students} billets élèves.\n'
+              f'Nombre total : {adults} + {students} = {total} billets.\n'
+              f'{total} ≤ {places} places libres (réponse 3) : **objectif réalisable.**')
+        # Conserver le nouvel énoncé d'introduction en plus des questions.
+        return _n9_v2_update(ex,qs,b,ans,labels,prepend=intro,title=title)
+    elif mid=='P9-M14':
+        n=a['teams'];matches=n*(n-1)//2;max_courts=n//2;existing=a['courts'];maxextra=max(0,max_courts-existing)
+        choices=[(0,0),(1,0),(0,1),(2,0),(1,1)]
+        # Retirer les options dépassant la capacité réelle ou dont le coût est
+        # dominé pour la même capacité (2 terrains isolés > forfait de deux).
+        raw=[]
+        for singles,packs in choices:
+            extra=singles+2*packs
+            if extra>maxextra:continue
+            if packs and singles==2:continue
+            courts=existing+extra;series=_n9_v2_ceil(matches,courts)
+            duration=series*a['duration']+(series-1)*a['rest']
+            price=singles*a['single']+packs*a['double']
+            raw.append((price,duration,series,courts,singles,packs))
+        # Même capacité : supprimer la formule dominée.
+        best_for_capacity={}
+        for opt in raw:
+            courts=opt[3]
+            if courts not in best_for_capacity or opt[0]<best_for_capacity[courts][0]:best_for_capacity[courts]=opt
+        variants=sorted(best_for_capacity.values(),key=lambda x:x[3])
+        feasible=[o for o in variants if o[1]<=a['limit']]
+        if not feasible:raise ValueError(mid+': aucune location ne tient la limite')
+        best=min(feasible,key=lambda x:(x[0],x[1]))
+        qs[2]='Combien de séries de matchs faut-il prévoir avec les terrains actuels ?'
+        qs[5]='Quel est le coût minimal de location permettant de terminer le championnat à temps ?'
+        # Ne pas annoncer des locations supplémentaires au-delà de ce qui peut
+        # être réellement exploité par les équipes.
+        pre=en.split('**Questions**',1)[0]
+        pre=re.sub(r'On peut combiner au maximum trois terrains supplémentaires\s*;',
+                   f'On peut utiliser au maximum {maxextra} terrains supplémentaires ;',pre)
+        pre+= (f'\n\nAvec {n} équipes, au plus {n//2} matchs peuvent se jouer simultanément : '
+               f'le championnat ne peut donc utiliser plus de {max_courts} terrains à la fois.')
+        rows=[]
+        for price,dur,series,courts,singles,packs in variants:
+            head=('aucune location' if singles==packs==0 else
+                  (f'{singles} terrain'+('s' if singles!=1 else '')+' seul'+('s' if singles!=1 else '') if not packs else
+                   ('un ensemble de deux' if singles==0 else 'un ensemble de deux + un terrain')))
+            seriescalc=f'{matches} ÷ {courts} → {series} séries'
+            timecalc=f'{series} × {a["duration"]} + {series-1} × {a["rest"]} = {dur} min'
+            rows.append(f'- **{head} :** {seriescalc} ; {timecalc} ; {price} € — '+('durée respectée' if dur<=a['limit'] else 'trop long')+'.')
+        ans[5]=best[0];labels[5]='Coût minimal de location'
+        b[2]=(f'{matches} matchs (réponse 1) à répartir sur {existing} terrains.\n'
+              f'{matches} ÷ {existing} = {matches//existing}, reste {matches%existing}.\n'
+              f'Il faut **{_n9_v2_ceil(matches,existing)} séries**, car un match restant nécessite une dernière série.' )
+        b[5]=(f'{n} équipes : au maximum {max_courts} matchs simultanés, donc {max_courts} terrains utiles.\n'
+              f'Durée maximale : {a["limit"]} minutes.\n'+'\n'.join(rows)+
+              f'\n**Coût minimal : {best[0]} €, pour une durée de {best[1]} min (limite respectée).**')
+        return _n9_v2_update(ex,qs,b,ans,labels,prepend=pre)
+    elif mid=='P9-M15':
+        title='Les missions du jeu vidéo — réserve d’énergie'
+        qs[5]='Quel est le nombre minimal de missions permettant d’atteindre le nouvel objectif, tout en respectant les limites de missions rares et d’énergie disponible ?'
+        b[5]=oldb[5]
+    elif mid=='P9-M16':
+        title='La grande mosaïque — commande de boîtes'
+        need=int(v(2));rows,best,_=_n9_v2_make_1d(need,a['a_size'],a['pa'],a['b_size'],a['pb'],4)
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal pour réaliser la grande mosaïque avec les boîtes disponibles ?',
+          'pour cette commande, le magasin ne dispose que de quatre boîtes B. Les boîtes A sont sans limite, et les deux formats peuvent être mélangés. Les boîtes sont indivisibles.')
+        ans[5]=best[0];labels[5]='Coût minimal de la grande mosaïque'
+        b[5]=(f'Besoin total : {a["rows"]} × {a["cols"]} + {a["reserve"]} = {need} carreaux (réponse 2).\n'
+              +rows+f'\n**Coût minimal : {best[0]} €, avec {best[3]} boîtes A et {best[2]} boîtes B.**')
+    elif mid=='P9-M17':
+        # La limite historique de 3 navettes B répond au plafond de choix.
+        need=a['n'];rows,best,_=_n9_v2_make_1d(need,a['cap_a'],a['pa'],a['cap_b'],a['pb'],3, noun='navette')
+        ans[5]=best[0]
+        b[5]=(f'{need} personnes à transporter (énoncé) ; au plus trois navettes B.\n'
+              +rows+f'\n**Coût minimal : {best[0]} €, avec {best[3]} navettes A et {best[2]} navettes B.**')
+    elif mid=='P9-M18':
+        need=a['need'];rows,best,_=_n9_v2_make_1d(need,a['a_size'],a['pa'],a['b_size'],a['pb'],4,fee=a['fee'])
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal des accessoires pour le concours ?',
+          'le fournisseur B ne dispose que de quatre paquets pour cette commande. Les paquets A sont disponibles sans limitation. Les frais de livraison de B ne sont payés qu’une seule fois si des paquets B sont commandés.')
+        ans[5]=best[0];labels[5]='Coût minimal des accessoires'
+        b[5]=(f'Besoin : {need} accessoires, comme annoncé dans l’énoncé.\n'+rows+
+             f'\n**Coût minimal : {best[0]} €, avec {best[3]} paquets A et {best[2]} paquets B.**')
+    elif mid=='P9-M19':
+        nx,ny=a['needx'],a['needy'];rows,best,opts=_n9_v2_make_2d(nx,ny,a['ax'],a['ay'],a['pa'],a['bx'],a['by'],a['pb'],4)
+        if sum(x[0]==best[0] for x in opts)>1:raise ValueError(mid+': plusieurs optima au même coût')
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal des kits permettant de satisfaire les deux besoins ?',
+            'le fournisseur ne dispose que de quatre kits B. Les kits A restent disponibles sans limitation et les deux types peuvent être mélangés. Les besoins en azote et en potassium doivent tous deux être respectés.')
+        ans[5]=best[0];labels[5]='Coût minimal de l’engrais'
+        b[5]=(f'Besoins : {nx} doses d’azote et {ny} doses de potassium (énoncé).\n'+rows+
+              f'\n**Coût minimal : {best[0]} €, avec {best[3]} kits A et {best[2]} kits B.**')
+    elif mid=='P9-M20':
+        need=a['n'];rows,best,_=_n9_v2_make_1d(need,a['a_size'],a['pa'],a['b_size'],a['pb'],3)
+        ans[5]=best[0]
+        b[5]=(f'{need} cartons à transporter (énoncé), trois trajets B au maximum.\n'+rows+
+             f'\n**Coût minimal : {best[0]} €, avec {best[3]} trajets A et {best[2]} trajets B.**')
+    elif mid=='P9-M21':
+        # Des énigmes difficiles non disponibles ne peuvent pas être choisies.
+        maxhard=min(a['maxhard'],4);available=a['limit'];opts=[];rows=[]
+        for h in range(maxhard+1):
+            if h*a['time_hard']>available:continue
+            e=(available-h*a['time_hard'])//a['time_easy']
+            used=e*a['time_easy']+h*a['time_hard'];pts=e*a['easy']+h*a['hard']
+            opts.append((pts,e,h,used))
+            rows.append(f'- {h} difficiles + {e} faciles : {h} × {a["hard"]} + {e} × {a["easy"]} = {pts} points ; {h} × {a["time_hard"]} + {e} × {a["time_easy"]} = {used} min.')
+        best=max(x[0] for x in opts)
+        ans[5]=best
+        b[5]=(f'Temps disponible : {available} min (énoncé), au plus {maxhard} énigmes difficiles.\n'
+              + '\n'.join(rows)+f'\n**Maximum : {best} points.**')
+        if a['maxhard']>4:
+            pre=en.split('**Questions**',1)[0]
+            pre=re.sub(r'au maximum \d+ énigmes difficiles', 'au maximum quatre énigmes difficiles',pre)
+            return _n9_v2_update(ex,qs,b,ans,labels,prepend=pre)
+    elif mid=='P9-M22':
+        need=a['need'];limit=need+a['waste'];opts=[]
+        for nB in range(limit//a['szb']+1):
+            for nA in range(limit//a['sza']+1):
+                qty=nA*a['sza']+nB*a['szb']
+                if need<=qty<=limit:opts.append((nA*a['pa']+nB*a['pb'],nA,nB,qty))
+        if len(opts)>5:raise ValueError(mid+': plus de cinq combinaisons admissibles')
+        if not opts:raise ValueError(mid+': pas de solution admissible')
+        best=min(opts)
+        rows='\n'.join(f'- {nA} A + {nB} B : {nA} × {a["sza"]} + {nB} × {a["szb"]} = {qty} tirages ; {nA} × {a["pa"]} + {nB} × {a["pb"]} = {cost} €.' for cost,nA,nB,qty in sorted(opts))
+        ans[5]=best[0]
+        b[5]=(f'Il faut entre {need} (réponse 1) et {limit} tirages (réponse 2).\n'
+              +rows+f'\n**Coût minimal : {best[0]} €.**')
+    elif mid=='P9-M23':
+        title='Les coffres du jeu vidéo — carburant et bouclier'
+        nx,ny=a['needx'],a['needy'];cap=min(a['max_b'],4);rows,best,_=_n9_v2_make_2d(nx,ny,a['ax'],a['ay'],a['pa'],a['bx'],a['by'],a['pb'],cap)
+        ans[5]=best[0]
+        b[5]=(f'Besoin : {nx} unités de carburant et {ny} unités de bouclier (énoncé).\n'
+              +rows.replace(' N et ',' carburant et ').replace(' K.',' bouclier.')+f'\n**Coût minimal : {best[0]} cristaux, avec {best[3]} coffres A et {best[2]} coffres B.**')
+    elif mid=='P9-M24':
+        title='La soirée cinéma — nouvelles inscriptions'
+        b[5]=oldb[5]
+    elif mid=='P9-M25':
+        need=a['flags'];one=2*a['side']+a['base'];sizeA=a['len_a']//one;sizeB=a['len_b']//one
+        rows,best,_=_n9_v2_make_1d(need,sizeA,a['pa'],sizeB,a['pb'],4)
+        qs[5]=_n9_v2_change_challenge('Quel est le coût minimal des rouleaux pour réaliser tous les fanions ?',
+            'le fournisseur ne dispose que de quatre rouleaux B pour la commande. Les rouleaux A restent disponibles sans limitation. Chaque fanion doit être réalisé sans raccord entre deux rouleaux.')
+        ans[5]=best[0];labels[5]='Coût minimal des rouleaux'
+        b[5]=(f'{need} fanions (énoncé). Un rouleau A permet d’en réaliser {sizeA} (réponse 2), '
+              f'un rouleau B {sizeB} (réponse 3).\n'+rows+
+              f'\n**Coût minimal : {best[0]} €, avec {best[3]} rouleaux A et {best[2]} rouleaux B.**')
+    else:
+        raise ValueError(f'{mid}: modèle N9 inconnu')
+    return _n9_v2_update(ex,qs,b,ans,labels,title=title)
+
+# Le banc de sélection existant appelle directement les fonctions globales.
+# On enveloppe uniquement les 26 fonctions N9 réellement actives.
+_N9_V2_FONCTIONS=(
+ 'generer_modele_p8_jeu_video','generer_modele_p8_jeu_piste','generer_modele_p8_kits',
+ 'generer_modele_p9_tournoi','generer_modele_p9_festival','generer_modele_p9_cristaux',
+ 'generer_modele_p9_bibliotheque','generer_modele_p9_spectacle','generer_modele_p9_recyclage',
+ 'generer_modele_p9_salles','generer_modele_p9_drones','generer_modele_p9_mosaique',
+ *(f'generer_modele_p9_m{i}' for i in (11,12,14,15,16,17,18,19,20,21,22,23,24,25)),
+)
+
+def _n9_v2_wrap(old):
+    def new(seed=None):
+        if seed is None:seed=random.randrange(1,2**31)
+        for attempt in range(80):
+            candidate=int(seed)+attempt*3000017
+            try:
+                ex=old(seed=candidate)
+                revised=_n9_v2_reviser(ex)
+                revised['seed']=seed
+                return revised
+            except ValueError as err:
+                # Rejeter uniquement les tirages qui enfreignent les nouvelles
+                # contraintes de faisabilité ou le plafond de cinq cas.
+                if any(z in str(err) for z in ('impossible de diversifier','diversification des commandes impossible',
+                                               'aucun groupe de billets réalisable','plus de cinq combinaisons admissibles',
+                                               'impossible de diversifier les missions','choix du chemin impossible','plusieurs optima au même coût')):
+                    continue
+                raise
+        raise RuntimeError(f'{old.__name__} : impossible de générer une variante conforme')
+    new.__name__=old.__name__;new.__doc__=old.__doc__
+    return new
+
+for _n9v2_name in _N9_V2_FONCTIONS:
+    globals()[_n9v2_name]=_n9_v2_wrap(globals()[_n9v2_name])
+del _n9v2_name
