@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import time
 from html import escape
 from pathlib import Path
@@ -5156,30 +5155,42 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             cle_etat = f"mathicap_series_filtre_etat_{eleve_courant}"
             cle_taille_page = f"mathicap_series_taille_page_{eleve_courant}"
             cle_page = f"mathicap_series_page_{eleve_courant}"
+            # L'emplacement (la carte ouverte) et la série réellement affichée
+            # sont indépendants : changer de série ne doit pas déplacer l'écran.
             cle_serie_depliee = f"_mc_serie_depliee_{eleve_courant}"
+            cle_serie_active = f"_mc_serie_active_{eleve_courant}"
             fiches_par_id = {str(f["serie"]["id"]): f for f in fiches_series}
             if st.query_params.get("vue") == "series":
-                # Le lien vue=series&serie_id=... peut rouvrir la même série après
-                # actualisation, uniquement si elle appartient à cet élève.
                 id_url = str(st.query_params.get("serie_id", ""))
-                if (id_url in fiches_par_id
-                        and not st.session_state.get(cle_serie_depliee)):
-                    st.session_state[cle_serie_depliee] = id_url
+                hote_url = str(st.query_params.get("ms_hote", ""))
+                if id_url in fiches_par_id:
+                    if not st.session_state.get(cle_serie_depliee):
+                        st.session_state[cle_serie_depliee] = (
+                            hote_url if hote_url in fiches_par_id else id_url
+                        )
+                    if not st.session_state.get(cle_serie_active):
+                        st.session_state[cle_serie_active] = id_url
             id_serie_depliee = str(st.session_state.get(cle_serie_depliee, ""))
             if id_serie_depliee not in fiches_par_id:
                 id_serie_depliee = ""
                 st.session_state.pop(cle_serie_depliee, None)
+                st.session_state.pop(cle_serie_active, None)
+            id_serie_active = str(st.session_state.get(cle_serie_active, ""))
+            if id_serie_depliee and id_serie_active not in fiches_par_id:
+                id_serie_active = id_serie_depliee
+                st.session_state[cle_serie_active] = id_serie_active
 
             def _mc_fermer_serie_depliee():
-                # Ne jamais effacer les réponses enregistrées. Replier = masquer.
+                # Replier masque seulement les exercices ; les réponses restent en base.
                 st.session_state.pop(cle_serie_depliee, None)
-                st.session_state.pop("_mc_defilement_serie_attendu", None)
+                st.session_state.pop(cle_serie_active, None)
                 st.query_params.pop("serie_id", None)
+                st.query_params.pop("ms_hote", None)
                 st.query_params["vue"] = "series"
                 # Actualiser les barres de progression après les réponses saisies.
                 st.session_state.pop("_mathicap_series_pagination_cache", None)
 
-            def _mc_ouvrir_serie_depliee(fiche_cible):
+            def _mc_ouvrir_serie_depliee(fiche_cible, *, conserver_emplacement=False):
                 """Relit la série enregistrée, sans réutiliser une copie périmée.
 
                 Cette lecture par élève protège la sauvegarde et la reprise des
@@ -5203,14 +5214,16 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                         "Impossible d'ouvrir cette série. Tes réponses sont conservées."
                     )
                     return False
-                # Ne pas recycler l'ancien choix d'un sélecteur Streamlit qui
-                # avait déjà été affiché pour cette série lors d'une visite.
-                st.session_state.pop(
-                    f"_mc_choix_autre_serie_{eleve_courant}_{id_cible}", None
-                )
-                st.session_state[cle_serie_depliee] = id_cible
-                # Un seul défilement à l'ouverture, jamais lors des saisies.
-                st.session_state["_mc_defilement_serie_attendu"] = id_cible
+                # Lors d'une ouverture initiale, la carte cible devient l'ancre.
+                # Depuis la liste déroulante, ne déplacer ni l'ancre, ni la page.
+                if (not conserver_emplacement
+                        or str(st.session_state.get(cle_serie_depliee, ""))
+                        not in fiches_par_id):
+                    st.session_state.pop(
+                        f"_mc_choix_autre_serie_{eleve_courant}_{id_cible}", None
+                    )
+                    st.session_state[cle_serie_depliee] = id_cible
+                st.session_state[cle_serie_active] = id_cible
                 st.session_state["_mc_numero_serie_cache"] = {
                     "eleve_id": eleve_courant, "id": id_cible,
                     "numero": fiche_cible["numero"],
@@ -5218,42 +5231,24 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                 st.session_state["afficher_series"] = True
                 st.query_params["vue"] = "series"
                 st.query_params["serie_id"] = id_cible
+                st.query_params["ms_hote"] = str(st.session_state[cle_serie_depliee])
                 return True
 
             def _mc_changer_serie_depliee(cle_selecteur):
+                """Callback du fragment : une seule lecture, sans rerun global.
+
+                Les filtres, la page et la carte hôte restent inchangés.
+                """
                 choix = str(st.session_state.get(cle_selecteur, ""))
-                fiche_cible = fiches_par_id.get(choix)
-                if not fiche_cible or not _mc_ouvrir_serie_depliee(fiche_cible):
-                    # Un échec de lecture ne doit pas afficher une série différente
-                    # de celle réellement restaurée.
-                    st.session_state[cle_selecteur] = str(
-                        st.session_state.get(cle_serie_depliee, "")
-                    )
+                if choix == str(st.session_state.get(cle_serie_active, "")):
                     return
-                # La cible doit devenir visible sous sa propre carte, même
-                # lorsqu'elle se trouvait sur une autre page ou un autre chapitre.
-                niveau_cible = fiche_cible["niveaux"]
-                st.session_state[cle_chapitre] = "Tous les chapitres"
-                st.session_state[cle_niveau] = (
-                    f"Niveau {niveau_cible[0]}" if len(niveau_cible) == 1
-                    else "Tous les niveaux"
-                )
-                st.session_state[cle_etat] = "Tous les avancements"
-                st.query_params["ms_chapitre"] = "Tous les chapitres"
-                st.query_params["ms_niveau"] = st.session_state[cle_niveau]
-                st.query_params["ms_avancement"] = "Tous les avancements"
-                candidats = [
-                    f for f in fiches_series
-                    if not niveau_cible or f["niveaux"] == niveau_cible
-                ] if len(niveau_cible) == 1 else list(fiches_series)
-                position = next(
-                    (i for i, f in enumerate(candidats)
-                     if str(f["serie"]["id"]) == choix), 0
-                )
-                taille = st.session_state.get(cle_taille_page, 5)
-                st.session_state[cle_page] = position // taille + 1
-                st.query_params["ms_page"] = str(st.session_state[cle_page])
-                st.session_state.pop("_mathicap_series_pagination_cache", None)
+                fiche_cible = fiches_par_id.get(choix)
+                if not fiche_cible or not _mc_ouvrir_serie_depliee(
+                        fiche_cible, conserver_emplacement=True):
+                    # Ne pas afficher une fausse sélection en cas d'échec réseau.
+                    st.session_state[cle_selecteur] = str(
+                        st.session_state.get(cle_serie_active, "")
+                    )
 
             if st.session_state.pop("_mc_erreur_ouvrir_inline", None):
                 st.warning("Impossible d'ouvrir cette série. Tes réponses sont conservées.")
@@ -5614,16 +5609,13 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                             key=f"mathicap_series_actions_{serie['id']}",
                         ):
                             serie_est_depliee = (str(serie["id"]) == id_serie_depliee)
-                            if not serie_est_depliee:
-                                # Le callback précède le rerun naturel du bouton :
-                                # éviter un second rerun explicite coûteux.
-                                st.button(
-                                    "Ouvrir",
-                                    key=f"reprendre_serie_{serie['id']}",
-                                    type="primary",
-                                    on_click=_mc_ouvrir_serie_depliee,
-                                    args=(fiche,),
-                                )
+                            if not serie_est_depliee and st.button(
+                                "Ouvrir",
+                                key=f"reprendre_serie_{serie['id']}",
+                                type="primary",
+                            ):
+                                if _mc_ouvrir_serie_depliee(fiche):
+                                    st.rerun()
                             if serie_est_depliee:
                                 st.button(
                                     "Replier la série",
@@ -5647,21 +5639,23 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
 
                     # Sous l'en-tête de la fiche : un seul contenu de série à la fois.
                     if str(serie["id"]) == id_serie_depliee:
+                        # La carte courante reste l'emplacement des exercices,
+                        # même lorsque le sélecteur affiche une autre série.
+                        fiche_affichee = fiches_par_id[id_serie_active]
                         st.session_state["_mc_numero_serie_cache"] = {
                             "eleve_id": eleve_courant,
-                            "id": str(serie["id"]),
-                            "numero": numero_serie,
+                            "id": id_serie_active,
+                            "numero": fiche_affichee["numero"],
                         }
-                        # Le sélecteur n'est plus affiché au-dessus du bandeau :
-                        # il remplacera la pastille « Série N » DANS le bandeau
-                        # « Série affichée », plus bas dans le fragment.
                         autres = sorted(
                             (f for f in fiches_series
-                             if f["niveaux"] == fiche["niveaux"]),
+                             if f["niveaux"] == fiche_affichee["niveaux"]),
                             key=lambda f: (f["titre_chapitre"], f["numero"]),
                         )
                         _mc_choix_serie_inline = None
                         if len(autres) > 1:
+                            # La clé appartient à la carte d'origine et ne change
+                            # jamais pendant les sélections dans le fragment.
                             selecteur = (f"_mc_choix_autre_serie_"
                                          f"{eleve_courant}_{serie['id']}")
                             _mc_choix_serie_inline = {
@@ -5671,11 +5665,11 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                                     for f in autres
                                 },
                                 "cle": selecteur,
-                                "cle_depliee": cle_serie_depliee,
-                                "id_actuel": str(serie["id"]),
+                                "cle_active": cle_serie_active,
+                                "id_actuel": id_serie_active,
                                 "changer": _mc_changer_serie_depliee,
                             }
-                        _mc_fiche_serie_inline = fiche
+                        _mc_fiche_serie_inline = fiche_affichee
                         _mc_emplacement_serie_inline = st.empty()
 
             # Taille de page hors du cadre de filtres et hors de la barre de navigation.
@@ -8539,6 +8533,10 @@ def _mathicap_afficher_serie_et_reponses(choix_serie_inline=None):
             st.error("Une réponse n'a pas pu être enregistrée. Vérifie ta connexion avant de quitter cette page.")
         if st.session_state.pop("erreur_reprise_series", False):
             st.warning("Impossible de récupérer automatiquement la dernière série enregistrée.")
+        # Le changement de série ne relance que ce fragment : afficher ici une
+        # éventuelle erreur de lecture, sans attendre un rechargement global.
+        if st.session_state.pop("_mc_erreur_ouvrir_inline", None):
+            st.warning("Impossible d'ouvrir cette série. Tes réponses sont conservées.")
         if st.session_state.exercices_actuels:
             # Renseignements issus de la série visible, jamais des filtres
             # actuels (qui peuvent avoir changé depuis sa génération).
@@ -8642,10 +8640,18 @@ def _mathicap_afficher_serie_et_reponses(choix_serie_inline=None):
                         key="mc_exos_serie_entete_ligne",
                     ):
                         choix_ids = choix_serie_inline["options"]
+                        # Recalcul indispensable : le fragment est relancé sans
+                        # réexécuter le reste de la page (arguments initiaux figés).
+                        choix_actuel = str(st.session_state.get(
+                            choix_serie_inline["cle_active"],
+                            choix_serie_inline["id_actuel"],
+                        ))
+                        if choix_actuel not in choix_ids:
+                            choix_actuel = choix_serie_inline["id_actuel"]
                         st.selectbox(
                             "Passer à une autre série du même niveau",
                             options=choix_ids,
-                            index=choix_ids.index(choix_serie_inline["id_actuel"]),
+                            index=choix_ids.index(choix_actuel),
                             format_func=lambda id_: choix_serie_inline["libelles"].get(
                                 str(id_), str(id_)
                             ),
@@ -8659,12 +8665,8 @@ def _mathicap_afficher_serie_et_reponses(choix_serie_inline=None):
                             f'<div class="mc-exos-serie-meta-items">'
                             f'{etiquettes_html}</div>'
                         )
-                # Changer un widget d'un fragment ne relance normalement que
-                # ce fragment. Après le callback, refaire toute la page pour
-                # déplacer la série ouverte sous sa propre carte (pagination).
-                if (str(st.session_state.get(choix_serie_inline["cle_depliee"]))
-                        != choix_serie_inline["id_actuel"]):
-                    st.rerun(scope="app")
+                # Aucun st.rerun(scope="app") ici : le changement du widget
+                # relance automatiquement ce fragment à l'emplacement initial.
             else:
                 st.html(
                     '<section class="mc-exos-serie-meta" aria-label="Série affichée">'
@@ -9135,9 +9137,9 @@ elif (page_mathicap == "Mes séries"
     if (str(st.session_state.get("serie_id_actuel")) != str(serie_courante["id"])
             or not st.session_state.get("exercices_actuels")
             or _mc_champs_a_restaurer_au_retour()):
-        # Réhydratation après actualisation complète ou nettoyage des widgets.
-        # Les données de référence sont relues dans Supabase, par compte.
-        _mc_ouvrir_serie_depliee(fiche_courante)
+        # Réhydratation après F5 ou nettoyage des widgets : relire la série
+        # sélectionnée sans déplacer le conteneur dans la carte d'origine.
+        _mc_ouvrir_serie_depliee(fiche_courante, conserver_emplacement=True)
     if (st.session_state.get("exercices_actuels")
             and str(st.session_state.get("serie_id_actuel")) == str(serie_courante["id"])):
         with _mc_emplacement_serie_inline.container():
@@ -9148,33 +9150,5 @@ elif (page_mathicap == "Mes séries"
                 "↑ Replier la série et retrouver la liste",
                 key=f"_mc_replier_bas_{serie_courante['id']}",
                 on_click=_mc_fermer_serie_depliee,
-            )
-        # Le navigateur défile vers la CARTE existante, sans modifier la liste.
-        # Le script est envoyé uniquement à l'ouverture ou au changement de série,
-        # pas à chaque vérification de réponse ni à chaque rerun Streamlit.
-        _mc_id_a_defiler = str(serie_courante["id"])
-        if (st.session_state.get("_mc_defilement_serie_attendu")
-                == _mc_id_a_defiler):
-            st.session_state.pop("_mc_defilement_serie_attendu", None)
-            components.html(
-                f"""<script>
-                (function () {{
-                    const classe = 'st-key-mathicap_series_carte_{_mc_id_a_defiler}';
-                    let tentatives = 0;
-                    function positionner() {{
-                        try {{
-                            const cible = window.parent.document.getElementsByClassName(classe)[0];
-                            if (cible) {{
-                                cible.scrollIntoView({{behavior:'instant', block:'start'}});
-                                return;
-                            }}
-                        }} catch (erreur) {{ return; }}
-                        if (++tentatives < 35) window.setTimeout(positionner, 100);
-                    }}
-                    window.setTimeout(positionner, 100);
-                }})();
-                </script>""",
-                height=0,
-                scrolling=False,
             )
 
