@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import time
 from html import escape
 from pathlib import Path
@@ -5172,6 +5173,7 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
             def _mc_fermer_serie_depliee():
                 # Ne jamais effacer les réponses enregistrées. Replier = masquer.
                 st.session_state.pop(cle_serie_depliee, None)
+                st.session_state.pop("_mc_defilement_serie_attendu", None)
                 st.query_params.pop("serie_id", None)
                 st.query_params["vue"] = "series"
                 # Actualiser les barres de progression après les réponses saisies.
@@ -5207,6 +5209,8 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                     f"_mc_choix_autre_serie_{eleve_courant}_{id_cible}", None
                 )
                 st.session_state[cle_serie_depliee] = id_cible
+                # Un seul défilement à l'ouverture, jamais lors des saisies.
+                st.session_state["_mc_defilement_serie_attendu"] = id_cible
                 st.session_state["_mc_numero_serie_cache"] = {
                     "eleve_id": eleve_courant, "id": id_cible,
                     "numero": fiche_cible["numero"],
@@ -5610,13 +5614,16 @@ if page_mathicap == "Mes séries" and st.session_state.get("eleve_id"):
                             key=f"mathicap_series_actions_{serie['id']}",
                         ):
                             serie_est_depliee = (str(serie["id"]) == id_serie_depliee)
-                            if not serie_est_depliee and st.button(
-                                "Ouvrir",
-                                key=f"reprendre_serie_{serie['id']}",
-                                type="primary",
-                            ):
-                                if _mc_ouvrir_serie_depliee(fiche):
-                                    st.rerun()
+                            if not serie_est_depliee:
+                                # Le callback précède le rerun naturel du bouton :
+                                # éviter un second rerun explicite coûteux.
+                                st.button(
+                                    "Ouvrir",
+                                    key=f"reprendre_serie_{serie['id']}",
+                                    type="primary",
+                                    on_click=_mc_ouvrir_serie_depliee,
+                                    args=(fiche,),
+                                )
                             if serie_est_depliee:
                                 st.button(
                                     "Replier la série",
@@ -9141,5 +9148,33 @@ elif (page_mathicap == "Mes séries"
                 "↑ Replier la série et retrouver la liste",
                 key=f"_mc_replier_bas_{serie_courante['id']}",
                 on_click=_mc_fermer_serie_depliee,
+            )
+        # Le navigateur défile vers la CARTE existante, sans modifier la liste.
+        # Le script est envoyé uniquement à l'ouverture ou au changement de série,
+        # pas à chaque vérification de réponse ni à chaque rerun Streamlit.
+        _mc_id_a_defiler = str(serie_courante["id"])
+        if (st.session_state.get("_mc_defilement_serie_attendu")
+                == _mc_id_a_defiler):
+            st.session_state.pop("_mc_defilement_serie_attendu", None)
+            components.html(
+                f"""<script>
+                (function () {{
+                    const classe = 'st-key-mathicap_series_carte_{_mc_id_a_defiler}';
+                    let tentatives = 0;
+                    function positionner() {{
+                        try {{
+                            const cible = window.parent.document.getElementsByClassName(classe)[0];
+                            if (cible) {{
+                                cible.scrollIntoView({{behavior:'instant', block:'start'}});
+                                return;
+                            }}
+                        }} catch (erreur) {{ return; }}
+                        if (++tentatives < 35) window.setTimeout(positionner, 100);
+                    }}
+                    window.setTimeout(positionner, 100);
+                }})();
+                </script>""",
+                height=0,
+                scrolling=False,
             )
 
